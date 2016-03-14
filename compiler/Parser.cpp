@@ -2,7 +2,6 @@
 // Created by Thomas Leese on 13/03/2016.
 //
 
-#include <iostream>
 #include <sstream>
 
 #include "Lexer.h"
@@ -51,8 +50,6 @@ void Parser::readNewlines() {
 Lexer::Token Parser::readToken(Lexer::Rule rule) {
     Lexer::Token token = m_tokens.front();
     m_tokens.pop_front();
-
-    std::cout << "Reading: " << token.lexeme << std::endl;
 
     if (token.rule != rule) {
         throw std::logic_error(std::string("Unexpected token: ") + token.lexeme);
@@ -239,7 +236,6 @@ Selector *Parser::readSelector(AST::Expression *operand) {
 }
 
 Statement *Parser::readStatement() {
-    std::cout << "Reading a statement..." << std::endl;
     if (isToken(Lexer::LetKeyword)) {
         return readLetStatement();
     } else if (isToken(Lexer::DefKeyword)) {

@@ -1,5 +1,3 @@
-module graphics
-
 type Colour
     r as Integer
     g as Integer
@@ -8,6 +6,4 @@ end
 
 def as_html_string(colour)
     "#" + hex(colour.r) + hex(colour.g) + hex(colour.b)
-end
-
 end

@@ -9,10 +9,6 @@
 #include <queue>
 #include <vector>
 
-namespace Types {
-    class Type;
-}
-
 namespace AST {
 
     struct Statement;
