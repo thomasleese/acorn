@@ -8,7 +8,7 @@ A programming language.
 
 - Lexer ✓
 - AST
-- Type Inference ✓
+- Type Checker ✓
 
 ## Ideas
 
@@ -18,3 +18,7 @@ A programming language.
 - Named parameters **only**
 - https://github.com/tj/luna
 - Implicit return
+
+## Future
+
+- Type Inference

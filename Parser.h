@@ -10,6 +10,8 @@
 
 namespace AST {
     struct CodeBlock;
+    struct TypeDeclaration;
+    struct Module;
     struct Parameter;
     struct Expression;
     struct Identifier;
@@ -31,7 +33,7 @@ public:
     explicit Parser(std::vector<Lexer::Token> tokens);
     ~Parser();
 
-    AST::CodeBlock parse();
+    AST::Module *parse(std::string name);
 
 private:
     void skipNewlines();
@@ -44,6 +46,8 @@ private:
     bool isIdentifier() const;
     AST::Identifier *readOperator();
     bool isOperator() const;
+
+    AST::TypeDeclaration *readTypeDeclaration();
 
     AST::Parameter readParameter();
 

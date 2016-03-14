@@ -6,24 +6,20 @@
 
 using namespace std;
 
-void pprint(AST::CodeBlock block) {
-    /*for (AST::Statement statement : block.statements) {
-        //pprint(statement);
-    }*/
-}
-
 int main() {
     Lexer lexer;
 
     std::vector<Lexer::Token> tokens = lexer.tokenise("example.quark");
-    for (Lexer::Token token : tokens) {
+    /*for (Lexer::Token token : tokens) {
         cout << token.lexeme << endl;
-    }
+    }*/
 
     Parser parser(tokens);
-    AST::CodeBlock block = parser.parse();
+    AST::Module *module = parser.parse("example");
 
-    pprint(block);
+    cout << module->pprint() << endl;
+
+    delete module;
 
     return 0;
 }

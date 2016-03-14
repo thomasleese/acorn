@@ -26,15 +26,15 @@ Parser::~Parser() {
 
 }
 
-CodeBlock Parser::parse() {
-    CodeBlock block;
+Module *Parser::parse(std::string name) {
+    Module *module = new Module(name);
 
     while (!m_tokens.empty()) {
         Statement *statement = readStatement();
-        block.statements.push_back(statement);
+        module->code->statements.push_back(statement);
     }
 
-    return block;
+    return module;
 }
 
 void Parser::skipNewlines() {
@@ -90,15 +90,17 @@ Parameter Parser::readParameter() {
     Parameter parameter;
 
     parameter.name = readIdentifier();
-
-    if (isToken(Lexer::AsKeyword)) {
-        readToken(Lexer::AsKeyword);
-        parameter.type = readIdentifier();
-    } else {
-        parameter.type = 0;
-    }
+    parameter.type = readTypeDeclaration();
 
     return parameter;
+}
+
+TypeDeclaration *Parser::readTypeDeclaration() {
+    readToken(Lexer::AsKeyword);
+
+    TypeDeclaration *type = new TypeDeclaration();
+    type->name = readIdentifier();
+    return type;
 }
 
 Expression *Parser::readExpression() {
@@ -255,6 +257,7 @@ LetStatement *Parser::readLetStatement() {
     LetStatement *statement = new LetStatement();
 
     statement->name = readIdentifier();
+    statement->type = readTypeDeclaration();
 
     Identifier *op = readOperator();
     if (op->name != "=") {
@@ -295,6 +298,9 @@ DefStatement *Parser::readDefStatement() {
     }
 
     readToken(Lexer::CloseParenthesis);
+
+    statement->type = readTypeDeclaration();
+
     readNewlines();
 
     while (!isToken(Lexer::EndKeyword)) {
@@ -319,8 +325,7 @@ TypeStatement *Parser::readTypeStatement() {
 
     while (!isToken(Lexer::EndKeyword)) {
         Identifier *fieldName = readIdentifier();
-        readToken(Lexer::AsKeyword);
-        Identifier *fieldType = readIdentifier();
+        TypeDeclaration *fieldType = readTypeDeclaration();
         readNewlines();
 
         statement->fields[fieldName] = fieldType;
