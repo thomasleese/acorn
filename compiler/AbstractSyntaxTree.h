@@ -9,113 +9,163 @@
 #include <queue>
 #include <vector>
 
+// definitions
+
+// expressions
+
+// statements
+
+// module
+
 namespace AST {
 
-    struct Statement;
-    struct Identifier;
+    class Visitor;
 
     struct Node {
         virtual ~Node();
 
-        virtual std::string pprint() const = 0;
+        virtual void accept(Visitor *visitor) = 0;
     };
 
-    struct CodeBlock : Node {
-        std::vector<Statement *> statements;
+    // basic categories
+    struct Expression : Node { };
+    struct Misc : Node { };
+    struct Statement : Node { };
+    struct Definition : Node { };
 
-        std::string pprint() const;
-    };
-
-    struct Module : Node {
-        explicit Module(std::string name);
-
-        std::string name;
-        CodeBlock *code;
-
-        std::string pprint() const;
-    };
-
-    struct TypeDeclaration : Node {
-        Identifier *name;
-
-        std::string pprint() const;
-    };
-
-    struct Parameter : Node {
-        Identifier *name;
-        TypeDeclaration *type;
-
-        std::string pprint() const;
-    };
-
-    struct Expression : Node {
-
-    };
-
+    // expressions
     struct Identifier : Expression {
         std::string name;
 
-        std::string pprint() const;
+        void accept(Visitor *visitor);
     };
 
     struct IntegerLiteral : Expression {
         int value;
 
-        std::string pprint() const;
+        void accept(Visitor *visitor);
     };
 
     struct StringLiteral : Expression {
         std::string value;
 
-        std::string pprint() const;
+        void accept(Visitor *visitor);
     };
 
     struct FunctionCall : Expression {
         Expression *operand;
         std::map<Identifier *, Expression *> arguments;
 
-        std::string pprint() const;
+        void accept(Visitor *visitor);
     };
 
     struct Selector : Expression {
         Expression *operand;
         Identifier *name;
 
-        std::string pprint() const;
+        void accept(Visitor *visitor);
     };
 
-    struct Statement : Node {
+    // misc
+    struct TypeDeclaration : Misc {
+        Identifier *name;
 
+        void accept(Visitor *visitor);
     };
 
-    struct LetStatement : Statement {
+    struct Parameter : Misc {
+        Identifier *name;
+        TypeDeclaration *type;
+
+        void accept(Visitor *visitor);
+    };
+
+    struct CodeBlock : Misc {
+        std::vector<Statement *> statements;
+
+        void accept(Visitor *visitor);
+    };
+
+    // definitions
+    struct VariableDefinition : Definition {
         Identifier *name;
         TypeDeclaration *type;
         Expression *expression;
 
-        std::string pprint() const;
+        void accept(Visitor *visitor);
     };
 
-    struct DefStatement : Statement {
+    struct FunctionDefinition : Definition {
         Identifier *name;
         std::vector<Parameter> parameters;
         CodeBlock code;
         TypeDeclaration *type;
 
-        std::string pprint() const;
+        void accept(Visitor *visitor);
     };
 
-    struct TypeStatement : Statement {
+    struct TypeDefinition : Definition {
         Identifier *name;
         std::map<Identifier *, TypeDeclaration *> fields;
 
-        std::string pprint() const;
+        void accept(Visitor *visitor);
+    };
+
+    // statements
+    struct DefinitionStatement : Statement {
+        explicit DefinitionStatement(Definition *definition);
+
+        Definition *definition;
+
+        void accept(Visitor *visitor);
     };
 
     struct ExpressionStatement : Statement {
+        explicit ExpressionStatement(Expression *expression);
+
         Expression *expression;
 
-        std::string pprint() const;
+        void accept(Visitor *visitor);
+    };
+
+    // module
+    struct Module : Node {
+        explicit Module(std::string name);
+
+        std::string name;
+        CodeBlock *code;
+
+        void accept(Visitor *visitor);
+    };
+
+    // visitor
+    class Visitor {
+    public:
+        virtual ~Visitor();
+
+        // expressions
+        virtual void visit(Identifier *expression) = 0;
+        virtual void visit(IntegerLiteral *expression) = 0;
+        virtual void visit(StringLiteral *expression) = 0;
+        virtual void visit(FunctionCall *expression) = 0;
+        virtual void visit(Selector *expression) = 0;
+
+        // misc
+        virtual void visit(TypeDeclaration *type) = 0;
+        virtual void visit(Parameter *parameter) = 0;
+        virtual void visit(CodeBlock *block) = 0;
+
+        // definitions
+        virtual void visit(VariableDefinition *definition) = 0;
+        virtual void visit(FunctionDefinition *definition) = 0;
+        virtual void visit(TypeDefinition *definition) = 0;
+
+        // statements
+        virtual void visit(DefinitionStatement *statement) = 0;
+        virtual void visit(ExpressionStatement *statement) = 0;
+
+        // module
+        virtual void visit(Module *module) = 0;
     };
 
 };

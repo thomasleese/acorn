@@ -9,22 +9,25 @@
 #include <string>
 
 namespace AST {
-    struct CodeBlock;
-    struct TypeDeclaration;
-    struct Module;
-    struct Parameter;
+    struct Node;
     struct Expression;
+    struct Misc;
+    struct Statement;
+    struct Definition;
     struct Identifier;
-    struct Literal;
     struct IntegerLiteral;
     struct StringLiteral;
-    struct Statement;
-    struct LetStatement;
-    struct DefStatement;
-    struct TypeStatement;
-    struct ExpressionStatement;
     struct FunctionCall;
     struct Selector;
+    struct TypeDeclaration;
+    struct Parameter;
+    struct CodeBlock;
+    struct VariableDefinition;
+    struct FunctionDefinition;
+    struct TypeDefinition;
+    struct DefinitionStatement;
+    struct ExpressionStatement;
+    struct Module;
 }
 
 class Parser {
@@ -42,29 +45,29 @@ private:
     Lexer::Token readToken(Lexer::Rule rule);
     bool isToken(Lexer::Rule rule) const;
 
-    AST::Identifier *readIdentifier();
-    bool isIdentifier() const;
-    AST::Identifier *readOperator();
-    bool isOperator() const;
-
-    AST::TypeDeclaration *readTypeDeclaration();
-
-    AST::Parameter readParameter();
-
+    // expressions
     AST::Expression *readExpression();
-    AST::Expression *readUnaryExpression();
-    AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
-    AST::Expression *readOperandExpression();
+    AST::Identifier *readIdentifier();
+    AST::Identifier *readOperator();
     AST::IntegerLiteral *readIntegerLiteral();
     AST::StringLiteral *readStringLiteral();
     AST::FunctionCall *readFunctionCall(AST::Expression *operand);
     AST::Selector *readSelector(AST::Expression *operand);
+    AST::Expression *readUnaryExpression();
+    AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
+    AST::Expression *readOperandExpression();
 
+    // misc
+    AST::TypeDeclaration *readTypeDeclaration();
+    AST::Parameter readParameter();
+
+    // definitions
+    AST::VariableDefinition *readVariableDefinition();
+    AST::FunctionDefinition *readFunctionDefinition();
+    AST::TypeDefinition *readTypeDefinition();
+
+    // statements
     AST::Statement *readStatement();
-    AST::LetStatement *readLetStatement();
-    AST::DefStatement *readDefStatement();
-    AST::TypeStatement *readTypeStatement();
-    AST::ExpressionStatement *readExpressionStatement();
 
 private:
     std::deque<Lexer::Token> m_tokens;

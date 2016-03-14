@@ -7,6 +7,7 @@
 #include "Lexer.h"
 #include "Parser.h"
 #include "AbstractSyntaxTree.h"
+#include "PrettyPrinter.h"
 #include "Compiler.h"
 
 void Compiler::compile(std::string filename) {
@@ -17,10 +18,15 @@ void Compiler::compile(std::string filename) {
         cout << token.lexeme << endl;
     }*/
 
-    Parser parser(tokens);
-    AST::Module *module = parser.parse(filename);
+    std::string moduleName = filename.substr(0, filename.find("."));
 
-    std::cout << module->pprint() << std::endl;
+    Parser parser(tokens);
+    AST::Module *module = parser.parse(moduleName);
+
+    PrettyPrinter *printer = new PrettyPrinter();
+    module->accept(printer);
+    printer->print();
+    delete printer;
 
     delete module;
 }
