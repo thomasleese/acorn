@@ -2,7 +2,19 @@
 
 A programming language.
 
-## Principles
+> Python with multiple-dispatch and without classes.
 
-- Keyword arguments only.
-- Implicit return.
+## Progress
+
+- Lexer ✓
+- AST
+- Type Inference ✓
+
+## Ideas
+
+- http://docs.julialang.org/en/release-0.4/manual/methods/
+  - Multiple-dispatch
+  - Overloading operators
+- Named parameters **only**
+- https://github.com/tj/luna
+- Implicit return

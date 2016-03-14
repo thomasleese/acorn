@@ -1,0 +1,7 @@
+def range(start = 0, stop, step = 1)
+    let i = start
+    while i < stop
+        yield i
+        i += step
+    end
+end

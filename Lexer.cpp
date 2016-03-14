@@ -18,24 +18,35 @@ Lexer::~Lexer() {
 }
 
 void Lexer::loadRules() {
-    m_rules[Lexer::Whitespace] = "[\\t ]";
-    m_rules[Lexer::Newline] = "\n";
+    m_rules[Lexer::Whitespace] = "[\t ]+";
+    m_rules[Lexer::Newline] = "[\n]+";
+
     m_rules[Lexer::LetKeyword] = "let";
+    m_rules[Lexer::DefKeyword] = "def";
+    m_rules[Lexer::TypeKeyword] = "type";
+    m_rules[Lexer::AsKeyword] = "as";
+    m_rules[Lexer::EndKeyword] = "end";
 
-    m_rules[Lexer::Identifier] = "[[:alpha:]_][[:alpha:]|_]*";
-
+    m_rules[Lexer::BooleanLiteral] = "true|false";
     m_rules[Lexer::IntegerLiteral] = "[0-9]+";
+    m_rules[Lexer::FloatLiteral] = "[0-9]+\\.[0-9]+";
+    m_rules[Lexer::StringLiteral] = "\"(\\.|[^\"])*\"";
+    m_rules[Lexer::ComplexLiteral] = "([0-9]+)|([0-9]+\\.[0-9]+)i([0-9]+)|([0-9]+\\.[0-9]+)";
 
-    m_rules[Lexer::Arrow] = "->";
+    m_rules[Lexer::Operator] = "=|\\+|-";  // replace with unicode Sm
+    m_rules[Lexer::Identifier] = "[[:alpha:]_][[:alpha:]|_|0-9]*";
 
+    m_rules[Lexer::OpenBracket] = "\\[";
+    m_rules[Lexer::CloseBracket] = "]";
     m_rules[Lexer::OpenParenthesis] = "\\(";
     m_rules[Lexer::CloseParenthesis] = "\\)";
     m_rules[Lexer::OpenBrace] = "\\{";
     m_rules[Lexer::CloseBrace] = "\\}";
-
+    m_rules[Lexer::OpenChevron] = "<";
+    m_rules[Lexer::CloseChevron] = ">";
     m_rules[Lexer::Comma] = ",";
-    m_rules[Lexer::Plus] = "\\+";
-    m_rules[Lexer::Assignment] = "=";
+    m_rules[Lexer::Dot] = "\\.";
+    m_rules[Lexer::Colon] = ":";
 }
 
 std::vector<Lexer::Token> Lexer::tokenise(std::string filename) const {
@@ -62,7 +73,6 @@ std::vector<Lexer::Token> Lexer::tokenise(std::string filename) const {
     while (pos < end) {
         std::string substr = buffer.substr(pos, end - pos);
 
-        int col = 0;
         bool found = false;
 
         for (auto it = m_rules.begin(); it != m_rules.end(); it++) {

@@ -1,6 +1,26 @@
 let x = 10
-let y = x + 20
+let y = 20
 
-let z = () -> { y + 30 }
+def add_together(x, y)
+    x + y
+end
 
-print(x, y, z())
+type Vector2
+    x as Integer
+    y as Integer
+end
+
+def +(self as Vector2, other as Vector2)
+    Vector2(x: self.x + other.x, y: self.y + other.y)
+end
+
+let z = add_together(x: x, y: y)
+
+let a = Vector2(x: 10, y: 20)
+let b = Vector2(x: -5, y: -10)
+let c = add_together(x: a, y: b)
+
+print(s: a)
+print(s: b)
+print(s: c)
+print(s: z)

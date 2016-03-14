@@ -15,17 +15,36 @@ public:
     enum Rule {
         Whitespace,
         Newline,
+
+        // keywords
         LetKeyword,
+        DefKeyword,
+        TypeKeyword,
+        AsKeyword,
+        EndKeyword,
+
+        // literals
+        BooleanLiteral,
         IntegerLiteral,
+        FloatLiteral,
+        StringLiteral,
+        ComplexLiteral,
+
         Identifier,
-        Arrow,
+        Operator,
+
+        // delimiters
+        OpenBracket,
+        CloseBracket,
         OpenParenthesis,
         CloseParenthesis,
         OpenBrace,
         CloseBrace,
+        OpenChevron,
+        CloseChevron,
         Comma,
-        Plus,
-        Assignment
+        Dot,
+        Colon
     };
 
     struct Token {
