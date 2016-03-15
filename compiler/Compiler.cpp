@@ -11,13 +11,12 @@
 #include "Compiler.h"
 
 void Compiler::compile(std::string filename) {
-    std::cout << filename << std::endl;
-
     Lexer lexer;
 
-    std::vector<Lexer::Token> tokens = lexer.tokenise(filename);
+    std::vector<Lexer::Token *> tokens = lexer.tokenise(filename);
+
     /*for (Lexer::Token token : tokens) {
-        cout << token.lexeme << endl;
+        std::cout << token.lexeme << std::endl;
     }*/
 
     std::string moduleName = filename.substr(0, filename.find("."));

@@ -29,12 +29,21 @@ namespace AST {
 
     // basic categories
     struct Expression : Node { };
-    struct Misc : Node { };
     struct Statement : Node { };
     struct Definition : Node { };
 
+    // misc
+    struct CodeBlock : Node {
+        std::vector<Statement *> statements;
+
+        void accept(Visitor *visitor);
+    };
+
     // expressions
     struct Identifier : Expression {
+        explicit Identifier();
+        Identifier(std::string name);
+
         std::string name;
 
         void accept(Visitor *visitor);
@@ -52,9 +61,19 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
-    struct FunctionCall : Expression {
+    struct Argument : Node {
+        explicit Argument();
+        Argument(std::string name);
+
+        Identifier *name;
+        Expression *value;
+
+        void accept(Visitor *visitor);
+    };
+
+    struct Call : Expression {
         Expression *operand;
-        std::map<Identifier *, Expression *> arguments;
+        std::vector<Argument *> arguments;
 
         void accept(Visitor *visitor);
     };
@@ -66,23 +85,40 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct While : Expression {
+        Expression *condition;
+        CodeBlock *code;
+
+        void accept(Visitor *visitor);
+    };
+
+    struct For : Expression {
+        Identifier *name;
+        Expression *iterator;
+        CodeBlock *code;
+
+        void accept(Visitor *visitor);
+    };
+
+    struct If : Expression {
+        Expression *condition;
+        CodeBlock *trueCode;
+        CodeBlock *falseCode;
+
+        void accept(Visitor *visitor);
+    };
+
     // misc
-    struct TypeDeclaration : Misc {
+    struct TypeDeclaration : Node {
         Identifier *name;
 
         void accept(Visitor *visitor);
     };
 
-    struct Parameter : Misc {
+    struct Parameter : Node {
         Identifier *name;
         TypeDeclaration *type;
         Expression *defaultExpression;
-
-        void accept(Visitor *visitor);
-    };
-
-    struct CodeBlock : Misc {
-        std::vector<Statement *> statements;
 
         void accept(Visitor *visitor);
     };
@@ -98,7 +134,7 @@ namespace AST {
 
     struct FunctionDefinition : Definition {
         Identifier *name;
-        std::vector<Parameter> parameters;
+        std::vector<Parameter *> parameters;
         CodeBlock code;
         TypeDeclaration *type;
 
@@ -107,7 +143,7 @@ namespace AST {
 
     struct TypeDefinition : Definition {
         Identifier *name;
-        std::map<Identifier *, TypeDeclaration *> fields;
+        std::vector<Parameter *> fields;
 
         void accept(Visitor *visitor);
     };
@@ -144,17 +180,23 @@ namespace AST {
     public:
         virtual ~Visitor();
 
+        // misc
+        virtual void visit(CodeBlock *block) = 0;
+
         // expressions
         virtual void visit(Identifier *expression) = 0;
         virtual void visit(IntegerLiteral *expression) = 0;
         virtual void visit(StringLiteral *expression) = 0;
-        virtual void visit(FunctionCall *expression) = 0;
+        virtual void visit(Argument *expression) = 0;
+        virtual void visit(Call *expression) = 0;
         virtual void visit(Selector *expression) = 0;
+        virtual void visit(While *expression) = 0;
+        virtual void visit(For *expression) = 0;
+        virtual void visit(If *expression) = 0;
 
         // misc
         virtual void visit(TypeDeclaration *type) = 0;
         virtual void visit(Parameter *parameter) = 0;
-        virtual void visit(CodeBlock *block) = 0;
 
         // definitions
         virtual void visit(VariableDefinition *definition) = 0;

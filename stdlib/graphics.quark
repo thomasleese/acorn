@@ -1,9 +1,12 @@
 type Colour
-    r as Integer
-    g as Integer
-    b as Integer
+    r as Byte
+    g as Byte
+    b as Byte
+    a as Byte
 end
 
-def as_html_string(colour)
-    "#" + hex(colour.r) + hex(colour.g) + hex(colour.b)
+let Color as Type = Colour
+
+def to_html_string(colour as Colour) as String
+    "#" + hex(str: colour.r) + hex(str: colour.g) + hex(str: colour.b)
 end

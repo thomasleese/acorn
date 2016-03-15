@@ -4,6 +4,7 @@
 
 #include <sstream>
 
+#include "Errors.h"
 #include "Lexer.h"
 #include "AbstractSyntaxTree.h"
 #include "Parser.h"
@@ -12,7 +13,7 @@
 
 using namespace AST;
 
-Parser::Parser(std::vector<Lexer::Token> tokens) {
+Parser::Parser(std::vector<Lexer::Token *> tokens) {
     for (auto token : tokens) {
         m_tokens.push_back(token);
     }
@@ -30,12 +31,18 @@ Parser::~Parser() {
 Module *Parser::parse(std::string name) {
     Module *module = new Module(name);
 
-    while (!m_tokens.empty()) {
+    skipNewlines();
+
+    while (!isToken(Lexer::EndOfFile)) {
         Statement *statement = readStatement();
         module->code->statements.push_back(statement);
     }
 
     return module;
+}
+
+void Parser::debug(std::string line) {
+    //std::cerr << line << std::endl;
 }
 
 void Parser::skipNewlines() {
@@ -50,22 +57,43 @@ void Parser::readNewlines() {
 }
 
 Lexer::Token Parser::readToken(Lexer::Rule rule) {
-    Lexer::Token token = m_tokens.front();
+    Lexer::Token *token = m_tokens.front();
     m_tokens.pop_front();
 
-    if (token.rule != rule) {
-        throw std::logic_error(std::string("Unexpected token: ") + token.lexeme);
+    if (token->rule != rule) {
+        throw Errors::SyntaxError(token, rule);
     }
 
-    return token;
+    return *token;
 }
 
 bool Parser::isToken(Lexer::Rule rule) const {
-    Lexer::Token token = m_tokens.front();
-    return token.rule == rule;
+    if (m_tokens.empty()) {
+        return false;
+    }
+
+    Lexer::Token *token = m_tokens.front();
+    return token->rule == rule;
+}
+
+CodeBlock *Parser::readCodeBlock() {
+    debug("Reading CodeBlock...");
+
+    CodeBlock *code = new CodeBlock();
+
+    while (!isToken(Lexer::EndKeyword)) {
+        Statement *s = readStatement();
+        code->statements.push_back(s);
+    }
+
+    readToken(Lexer::EndKeyword);
+
+    return code;
 }
 
 Expression *Parser::readExpression() {
+    debug("Reading expression...");
+
     Expression *expr = readUnaryExpression();
     if (isToken(Lexer::Operator)) {
         return readBinaryExpression(expr, 0);
@@ -108,18 +136,22 @@ StringLiteral *Parser::readStringLiteral() {
     return literal;
 }
 
-FunctionCall *Parser::readFunctionCall(Expression *operand) {
+Argument *Parser::readArgument() {
+    Argument *argument = new Argument();
+    argument->name = readIdentifier();
+    readToken(Lexer::Colon);
+    argument->value = readExpression();
+    return argument;
+}
+
+Call *Parser::readCall(Expression *operand) {
     readToken(Lexer::OpenParenthesis);
 
-    FunctionCall *call = new FunctionCall();
+    Call *call = new Call();
     call->operand = operand;
 
     while (!isToken(Lexer::CloseParenthesis)) {
-        Identifier *name = readIdentifier();
-        readToken(Lexer::Colon);
-        Expression *value = readExpression();
-
-        call->arguments[name] = value;
+        call->arguments.push_back(readArgument());
 
         if (isToken(Lexer::Comma)) {
             readToken(Lexer::Comma);
@@ -142,14 +174,80 @@ Selector *Parser::readSelector(AST::Expression *operand) {
     return selector;
 }
 
+While *Parser::readWhile() {
+    readToken(Lexer::WhileKeyword);
+
+    While *expression = new While();
+    expression->condition = readExpression();
+
+    readNewlines();
+    expression->code = readCodeBlock();
+    return expression;
+}
+
+For *Parser::readFor() {
+    debug("Reading For...");
+
+    readToken(Lexer::ForKeyword);
+
+    For *expression = new For();
+    expression->name = readIdentifier();
+
+    debug("Name: " + expression->name->name);
+
+    readToken(Lexer::InKeyword);
+    expression->iterator = readExpression();
+
+    readNewlines();
+
+    expression->code = readCodeBlock();
+
+    debug("Ending For!");
+
+    return expression;
+}
+
+If *Parser::readIf() {
+    readToken(Lexer::IfKeyword);
+
+    If *expression = new If();
+    expression->condition = readExpression();
+    readNewlines();
+
+    expression->trueCode = new CodeBlock();
+    expression->falseCode = 0;
+
+    while (!isToken(Lexer::ElseKeyword) && !isToken(Lexer::EndKeyword)) {
+        Statement *statement = readStatement();
+        expression->trueCode->statements.push_back(statement);
+    }
+
+    if (isToken(Lexer::ElseKeyword)) {
+        readToken(Lexer::ElseKeyword);
+
+        if (isToken(Lexer::IfKeyword)) {
+            readIf();
+        } else {
+            readNewlines();
+            expression->falseCode = readCodeBlock();
+        }
+    } else {
+        readToken(Lexer::EndKeyword);
+    }
+
+    return expression;
+}
+
 Expression *Parser::readUnaryExpression() {
     if (isToken(Lexer::Operator)) {
-        FunctionCall *expr = new FunctionCall();
+        Call *expr = new Call();
         expr->operand = readOperator();
 
-        Identifier *arg = new Identifier();
-        arg->name = "a";
-        expr->arguments[arg] = readUnaryExpression();
+        Argument *arg = new Argument();
+        arg->name = new Identifier("self");
+        arg->value = readUnaryExpression();
+        expr->arguments.push_back(arg);
+
         return expr;
     } else {
         return readOperandExpression();
@@ -157,25 +255,25 @@ Expression *Parser::readUnaryExpression() {
 }
 
 Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
-    while (isToken(Lexer::Operator) && m_operatorPrecendence[m_tokens.front().lexeme] >= minPrecedence) {
+    while (isToken(Lexer::Operator) && m_operatorPrecendence[m_tokens.front()->lexeme] >= minPrecedence) {
         Identifier *op = readOperator();
         Expression *rhs = readOperandExpression();
 
-        while (isToken(Lexer::Operator) && m_operatorPrecendence[m_tokens.front().lexeme] > m_operatorPrecendence[op->name]) {
-            rhs = readBinaryExpression(rhs, m_operatorPrecendence[m_tokens.front().lexeme]);
+        while (isToken(Lexer::Operator) && m_operatorPrecendence[m_tokens.front()->lexeme] > m_operatorPrecendence[op->name]) {
+            rhs = readBinaryExpression(rhs, m_operatorPrecendence[m_tokens.front()->lexeme]);
         }
 
-        FunctionCall *expr = new FunctionCall();
+        Call *expr = new Call();
         expr->operand = op;
 
-        Identifier *lhsArg = new Identifier();
-        lhsArg->name = "a";
+        Argument *lhsArg = new Argument("self");
+        lhsArg->value = lhs;
+        expr->arguments.push_back(lhsArg);
 
-        Identifier *rhsArg = new Identifier();
-        rhsArg->name = "b";
+        Argument *rhsArg = new Argument("other");
+        rhsArg->value = rhs;
+        expr->arguments.push_back(rhsArg);
 
-        expr->arguments[lhsArg] = lhs;
-        expr->arguments[rhsArg] = rhs;
         lhs = expr;
     }
 
@@ -194,15 +292,21 @@ Expression *Parser::readOperandExpression() {
         expr = readIntegerLiteral();
     } else if (isToken(Lexer::StringLiteral)) {
         expr = readStringLiteral();
+    } else if (isToken(Lexer::WhileKeyword)) {
+        expr = readWhile();
+    } else if (isToken(Lexer::ForKeyword)) {
+        expr = readFor();
+    } else if (isToken(Lexer::IfKeyword)) {
+        expr = readIf();
     } else if (isToken(Lexer::Identifier)) {
         expr = readIdentifier();
     } else {
-        throw std::logic_error("Expected operand.");
+        throw Errors::SyntaxError(m_tokens.front(), "operand");
     }
 
     while (true) {
         if (isToken(Lexer::OpenParenthesis)) {
-            expr = readFunctionCall(expr);
+            expr = readCall(expr);
         } else if (isToken(Lexer::Dot)) {
             expr = readSelector(expr);
         } else {
@@ -221,15 +325,15 @@ TypeDeclaration *Parser::readTypeDeclaration() {
     return type;
 }
 
-Parameter Parser::readParameter() {
-    Parameter parameter;
+Parameter *Parser::readParameter() {
+    Parameter *parameter = new Parameter();
 
-    parameter.name = readIdentifier();
-    parameter.type = readTypeDeclaration();
+    parameter->name = readIdentifier();
+    parameter->type = readTypeDeclaration();
 
     if (isToken(Lexer::Colon)) {
         readToken(Lexer::Colon);
-        parameter.defaultExpression = readExpression();
+        parameter->defaultExpression = readExpression();
     }
 
     return parameter;
@@ -243,9 +347,10 @@ VariableDefinition *Parser::readVariableDefinition() {
     definition->name = readIdentifier();
     definition->type = readTypeDeclaration();
 
+    Lexer::Token *token = m_tokens.front();
     Identifier *op = readOperator();
     if (op->name != "=") {
-        throw std::logic_error("Expected assignment operator.");
+        throw Errors::SyntaxError(token, "=");
     }
     delete op;
 
@@ -255,6 +360,8 @@ VariableDefinition *Parser::readVariableDefinition() {
 }
 
 FunctionDefinition *Parser::readFunctionDefinition() {
+    debug("Reading FunctionDefinition...");
+
     readToken(Lexer::DefKeyword);
 
     FunctionDefinition *definition = new FunctionDefinition();
@@ -264,8 +371,10 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     } else if (isToken(Lexer::Operator)) {
         definition->name = readOperator();
     } else {
-        throw std::logic_error("Expected an identifier or operator.");
+        throw Errors::SyntaxError(m_tokens.front(), "identifier or operator");
     }
+
+    debug("Name: " + definition->name->name);
 
     readToken(Lexer::OpenParenthesis);
 
@@ -292,6 +401,8 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 
     readToken(Lexer::EndKeyword);
 
+    debug("Ending FunctionDefinition!");
+
     return definition;
 }
 
@@ -305,11 +416,8 @@ TypeDefinition *Parser::readTypeDefinition() {
     readNewlines();
 
     while (!isToken(Lexer::EndKeyword)) {
-        Identifier *fieldName = readIdentifier();
-        TypeDeclaration *fieldType = readTypeDeclaration();
+        definition->fields.push_back(readParameter());
         readNewlines();
-
-        definition->fields[fieldName] = fieldType;
     }
 
     readToken(Lexer::EndKeyword);
@@ -318,6 +426,8 @@ TypeDefinition *Parser::readTypeDefinition() {
 }
 
 Statement *Parser::readStatement() {
+    debug("Reading Statement...");
+
     Statement *statement;
 
     if (isToken(Lexer::LetKeyword)) {

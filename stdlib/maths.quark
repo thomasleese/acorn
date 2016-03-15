@@ -1,4 +1,53 @@
-def abs(x)
+def sqrt(x as Number) as Number
+    x
+end
+
+type Vector2
+    x as Integer
+    y as Integer
+end
+
+def +(self as Vector2, other as Vector2) as Vector2
+    Vector2(x: self.x + other.x, y: self.y + other.y)
+end
+
+def +=(self as Vector2, other as Vector2) as Void
+    self.x += other.x
+    self.y += other.y
+end
+
+def angle(vec as Vector2) as Number
+    atan2(y: vec.y, x: vec.x)
+end
+
+def length2(vec as Vector2) as Number
+    vec.x ^ 2 + vec.y ^ 2
+end
+
+def length(vec as Vector2) as Number
+    sqrt(x: vec.length())
+end
+
+type Matrix
+    rows as Number
+    cols as Number
+    data as Number
+end
+
+def matrix(rows as Integer, cols as Integer) as Matrix
+    let data as Number = 0 * (mat.rows * mat.cols)
+    Matrix(rows: rows, cols: cols, data: data)
+end
+
+def sum(sequence as Iterator) as Number
+    let result as Number = 0
+    for element in sequence
+        result += element
+    end
+    result
+end
+
+def abs(x as Number) as Number
     if x < 0
         -x
     else if x == 0
@@ -6,54 +55,4 @@ def abs(x)
     else
         x
     end
-end
-
-def sqrt(x)
-    x  # implement
-end
-
-√ = sqrt
-
-typ Vector2
-    mutable x as Integer
-    mutable y as Integer
-end
-
-def +(self, other)
-    Vector2(x: self.x + other.x, y: self.y + other.y)
-end
-
-def +=(self, other)
-    self.x += other.x
-    self.y += other.y
-end
-
-def angle(vec)
-    atan2(vec.y, vec.x)
-end
-
-def length2(vec)
-    vec.x ^ 2 + vec.y ^ 2
-end
-
-def length(vec)
-    √(vec.length())
-end
-
-type Matrix
-    rows as Number
-    cols as Number
-    data as [Number] = []
-end
-
-def new(mat as Matrix)
-    mat.data = [0] * (mat.rows * mat.cols)
-end
-
-def sum(sequence)
-    let mutable result = 0
-    for element in sequence
-        result += element
-    end
-    result
 end

@@ -1,26 +1,6 @@
-let x as Integer = 10
-let y as Integer = 20
+let zero as Integer = 0
+let one as Integer = 1
 
-def add_together(x as Integer, y as Integer) as Integer
-    x + y
-end
-
-type Vector2
-    x as Integer
-    y as Integer
-end
-
-def +(a as Integer, b as Integer) as Vector2
-    Vector2(x: a.x + b.x, y: a.y + b.y)
-end
-
-let z as Integer = add_together(x: x, y: y)
-
-let a as Vector2 = Vector2(x: 10, y: 20)
-let b as Vector2 = Vector2(x: -5, y: -10)
-let c as Integer = add_together(x: a, y: b)
-
-print(s: a)
-print(s: b)
-print(s: c)
-print(s: z)
+print(x: zero)
+print(x: one)
+print(x: 2)

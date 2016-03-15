@@ -14,14 +14,18 @@ namespace AST {
     struct Misc;
     struct Statement;
     struct Definition;
+    struct CodeBlock;
     struct Identifier;
     struct IntegerLiteral;
     struct StringLiteral;
-    struct FunctionCall;
+    struct Argument;
+    struct Call;
     struct Selector;
+    struct While;
+    struct For;
+    struct If;
     struct TypeDeclaration;
     struct Parameter;
-    struct CodeBlock;
     struct VariableDefinition;
     struct FunctionDefinition;
     struct TypeDefinition;
@@ -33,17 +37,22 @@ namespace AST {
 class Parser {
 
 public:
-    explicit Parser(std::vector<Lexer::Token> tokens);
+    explicit Parser(std::vector<Lexer::Token *> tokens);
     ~Parser();
 
     AST::Module *parse(std::string name);
 
 private:
+    void debug(std::string line);
+
     void skipNewlines();
     void readNewlines();
 
     Lexer::Token readToken(Lexer::Rule rule);
     bool isToken(Lexer::Rule rule) const;
+
+    // misc
+    AST::CodeBlock *readCodeBlock();
 
     // expressions
     AST::Expression *readExpression();
@@ -51,15 +60,19 @@ private:
     AST::Identifier *readOperator();
     AST::IntegerLiteral *readIntegerLiteral();
     AST::StringLiteral *readStringLiteral();
-    AST::FunctionCall *readFunctionCall(AST::Expression *operand);
+    AST::Argument *readArgument();
+    AST::Call *readCall(AST::Expression *operand);
     AST::Selector *readSelector(AST::Expression *operand);
+    AST::While *readWhile();
+    AST::For *readFor();
+    AST::If *readIf();
     AST::Expression *readUnaryExpression();
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
     AST::Expression *readOperandExpression();
 
     // misc
     AST::TypeDeclaration *readTypeDeclaration();
-    AST::Parameter readParameter();
+    AST::Parameter *readParameter();
 
     // definitions
     AST::VariableDefinition *readVariableDefinition();
@@ -70,7 +83,7 @@ private:
     AST::Statement *readStatement();
 
 private:
-    std::deque<Lexer::Token> m_tokens;
+    std::deque<Lexer::Token *> m_tokens;
     std::map<std::string, int> m_operatorPrecendence;
 
 };

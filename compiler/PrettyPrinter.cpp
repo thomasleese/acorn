@@ -10,6 +10,18 @@ PrettyPrinter::PrettyPrinter() {
     indent = 0;
 }
 
+void PrettyPrinter::visit(AST::CodeBlock *codeBlock) {
+    ss << indentation() << "(CodeBlock\n";
+    indent++;
+
+    for (auto statement : codeBlock->statements) {
+        statement->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(AST::Identifier *expression) {
     ss << indentation() << "(Identifier " << expression->name << ")\n";
 }
@@ -22,11 +34,26 @@ void PrettyPrinter::visit(AST::StringLiteral *expression) {
     ss << indentation() << "(StringLiteral " << expression->value << ")\n";
 }
 
-void PrettyPrinter::visit(AST::FunctionCall *expression) {
+void PrettyPrinter::visit(AST::Argument *argument) {
+    ss << indentation() << "(Argument\n";
+    indent++;
+
+    argument->name->accept(this);
+    argument->value->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::Call *expression) {
     ss << indentation() << "(FunctionCall\n";
     indent++;
 
     expression->operand->accept(this);
+
+    for (auto argument : expression->arguments) {
+        argument->accept(this);
+    }
 
     indent--;
     ss << indentation() << ")\n";
@@ -38,6 +65,44 @@ void PrettyPrinter::visit(AST::Selector *expression) {
 
     expression->name->accept(this);
     expression->operand->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::While *expression) {
+    ss << indentation() << "(While\n";
+    indent++;
+
+    expression->condition->accept(this);
+    expression->code->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::For *expression) {
+    ss << indentation() << "(For\n";
+    indent++;
+
+    expression->name->accept(this);
+    expression->iterator->accept(this);
+    expression->code->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::If *expression) {
+    ss << indentation() << "(If\n";
+    indent++;
+
+    expression->condition->accept(this);
+    expression->trueCode->accept(this);
+
+    if (expression->falseCode) {
+        expression->falseCode->accept(this);
+    }
 
     indent--;
     ss << indentation() << ")\n";
@@ -60,16 +125,8 @@ void PrettyPrinter::visit(AST::Parameter *parameter) {
     parameter->name->accept(this);
     parameter->type->accept(this);
 
-    indent--;
-    ss << indentation() << ")\n";
-}
-
-void PrettyPrinter::visit(AST::CodeBlock *codeBlock) {
-    ss << indentation() << "(CodeBlock\n";
-    indent++;
-
-    for (auto statement : codeBlock->statements) {
-        statement->accept(this);
+    if (parameter->defaultExpression) {
+        parameter->defaultExpression->accept(this);
     }
 
     indent--;
@@ -94,6 +151,7 @@ void PrettyPrinter::visit(AST::FunctionDefinition *definition) {
 
     definition->name->accept(this);
     definition->type->accept(this);
+    definition->code.accept(this);
 
     indent--;
     ss << indentation() << ")\n";
@@ -104,6 +162,10 @@ void PrettyPrinter::visit(AST::TypeDefinition *definition) {
     indent++;
 
     definition->name->accept(this);
+
+    for (auto field : definition->fields) {
+        field->accept(this);
+    }
 
     indent--;
     ss << indentation() << ")\n";

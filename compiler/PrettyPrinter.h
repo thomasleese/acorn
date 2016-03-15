@@ -16,15 +16,20 @@ public:
     explicit PrettyPrinter();
 
 public:
+    void visit(AST::CodeBlock *block);
+
     void visit(AST::Identifier *expression);
     void visit(AST::IntegerLiteral *expression);
     void visit(AST::StringLiteral *expression);
-    void visit(AST::FunctionCall *expression);
+    void visit(AST::Argument *argument);
+    void visit(AST::Call *expression);
     void visit(AST::Selector *expression);
+    void visit(AST::While *expression);
+    void visit(AST::For *expression);
+    void visit(AST::If *expression);
 
     void visit(AST::TypeDeclaration *type);
     void visit(AST::Parameter *parameter);
-    void visit(AST::CodeBlock *block);
 
     void visit(AST::VariableDefinition *definition);
     void visit(AST::FunctionDefinition *definition);

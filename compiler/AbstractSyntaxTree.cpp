@@ -13,6 +13,18 @@ Node::~Node() {
 
 }
 
+void CodeBlock::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+Identifier::Identifier() {
+
+}
+
+Identifier::Identifier(std::string name) {
+    this->name = name;
+}
+
 void Identifier::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -25,11 +37,35 @@ void StringLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-void FunctionCall::accept(Visitor *visitor) {
+Argument::Argument() {
+
+}
+
+Argument::Argument(std::string name) {
+    this->name = new Identifier(name);
+}
+
+void Argument::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
 void Selector::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+void While::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+void For::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+void If::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -38,10 +74,6 @@ void TypeDeclaration::accept(Visitor *visitor) {
 }
 
 void Parameter::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-void CodeBlock::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

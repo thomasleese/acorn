@@ -15,6 +15,7 @@ public:
     enum Rule {
         Whitespace,
         Newline,
+        EndOfFile,
 
         // keywords
         LetKeyword,
@@ -22,6 +23,11 @@ public:
         TypeKeyword,
         AsKeyword,
         EndKeyword,
+        WhileKeyword,
+        ForKeyword,
+        InKeyword,
+        IfKeyword,
+        ElseKeyword,
 
         // literals
         BooleanLiteral,
@@ -50,6 +56,11 @@ public:
     struct Token {
         std::string lexeme;
         Rule rule;
+
+        std::string filename;
+        std::string line;
+        int lineNumber;
+        int column;
     };
 
 public:
@@ -60,7 +71,7 @@ private:
     void loadRules();
 
 public:
-    std::vector<Token> tokenise(std::string filename) const;
+    std::vector<Token *> tokenise(std::string filename) const;
 
 private:
     std::map<Rule, std::string> m_rules;

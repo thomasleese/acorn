@@ -1,7 +1,24 @@
-def range(start as Integer : 0, stop as Integer, step as Integer : 1)
-    let i = start
-    while i < stop
-        yield i
-        i += step
-    end
+type Enumerate{T}
+    iterator as T
+end
+
+def enumerate(iterator as T) as Enumerate{T}
+    Enumerate{T}(iterator: iterator)
+end
+
+def length(e as Enumerate{T})
+    length(e.iterator
+end
+
+def start(e as Enumerate{T})
+    (0, start(e.iterator))
+end
+
+def next(e as Enumerate{T}, state as Tuple{Integer,})
+    n = next(e.itr, state[1])
+    (state[0], n[0]), (state[0] + 1, n[1])
+end
+
+def done(e as Enumerate, state as )
+    done(e.iterator, state[1])
 end
