@@ -76,6 +76,7 @@ namespace AST {
     struct Parameter : Misc {
         Identifier *name;
         TypeDeclaration *type;
+        Expression *defaultExpression;
 
         void accept(Visitor *visitor);
     };

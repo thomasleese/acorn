@@ -7,8 +7,9 @@ A programming language.
 ## Progress
 
 - Lexer ✓
-- AST
-- Type Checker ✓
+- Parser
+- Error Handler
+- Type Checker
 
 ## Ideas
 

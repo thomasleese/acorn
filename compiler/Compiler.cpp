@@ -11,6 +11,8 @@
 #include "Compiler.h"
 
 void Compiler::compile(std::string filename) {
+    std::cout << filename << std::endl;
+
     Lexer lexer;
 
     std::vector<Lexer::Token> tokens = lexer.tokenise(filename);

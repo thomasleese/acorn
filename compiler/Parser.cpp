@@ -227,6 +227,11 @@ Parameter Parser::readParameter() {
     parameter.name = readIdentifier();
     parameter.type = readTypeDeclaration();
 
+    if (isToken(Lexer::Colon)) {
+        readToken(Lexer::Colon);
+        parameter.defaultExpression = readExpression();
+    }
+
     return parameter;
 }
 
