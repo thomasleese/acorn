@@ -3,7 +3,9 @@
 //
 
 #include <iostream>
+#include <sstream>
 
+#include "AbstractSyntaxTree.h"
 #include "Errors.h"
 
 using namespace Errors;
@@ -14,88 +16,62 @@ std::string rule_string(Lexer::Rule rule) {
             return "whitespace";
         case Lexer::Newline:
             return "new line";
-            break;
+        case Lexer::Comment:
+            return "comment";
         case Lexer::EndOfFile:
             return "end of file";
-            break;
         case Lexer::LetKeyword:
             return "let";
-            break;
         case Lexer::DefKeyword:
             return "def";
-            break;
         case Lexer::TypeKeyword:
             return "type";
-            break;
         case Lexer::AsKeyword:
             return "as";
-            break;
         case Lexer::EndKeyword:
             return "end";
-            break;
         case Lexer::WhileKeyword:
             return "while";
-            break;
         case Lexer::ForKeyword:
             return "for";
-            break;
         case Lexer::InKeyword:
             return "in";
-            break;
         case Lexer::IfKeyword:
             return "if";
-            break;
         case Lexer::ElseKeyword:
             return "else";
-            break;
         case Lexer::BooleanLiteral:
             return "boolean";
-            break;
         case Lexer::IntegerLiteral:
             return "integer";
-            break;
         case Lexer::FloatLiteral:
             return "float";
-            break;
         case Lexer::StringLiteral:
             return "string";
-            break;
         case Lexer::ComplexLiteral:
             return "complex";
-            break;
         case Lexer::Identifier:
             return "name";
-            break;
         case Lexer::Operator:
             return "operator";
-            break;
         case Lexer::OpenBracket:
             return "[";
-            break;
         case Lexer::CloseBracket:
             return "]";
-            break;
         case Lexer::OpenParenthesis:
             return "(";
-            break;
         case Lexer::CloseParenthesis:
             return ")";
-            break;
         case Lexer::OpenBrace:
             return "{";
-            break;
         case Lexer::CloseBrace:
             return "}";
-            break;
         case Lexer::OpenChevron:
             return "<";
-            break;
         case Lexer::CloseChevron:
             return ">";
-            break;
         case Lexer::Comma:
             return ",";
-            break;
         case Lexer::Dot:
             return ".";
         case Lexer::Colon:
@@ -103,50 +79,25 @@ std::string rule_string(Lexer::Rule rule) {
     }
 }
 
-CompilerError::CompilerError(std::string filename) {
+CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) {
     m_filename = filename;
-}
-
-const char* CompilerError::what() const noexcept {
-    return "CompilerError";
-}
-
-SyntaxError::SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got, std::string expectation) : CompilerError(filename) {
     m_lineNumber = lineNumber;
     m_column = column;
     m_line = line;
-    m_got = got;
-    m_expectation = expectation;
 }
 
-SyntaxError::SyntaxError(Lexer::Token *token, std::string expectation) : CompilerError(token->filename) {
-    m_lineNumber = token->lineNumber;
-    m_column = token->column;
-    m_line = token->line;
-    m_got = token->lexeme;
+CompilerError::CompilerError(Lexer::Token *token) :
+        CompilerError(token->filename, token->lineNumber, token->column, token->line) {
 
-    if (m_got.empty()) {
-        m_got = "(" + rule_string(token->rule) + ")";
-    }
-
-    m_expectation = expectation;
 }
 
-SyntaxError::SyntaxError(Lexer::Token *token, Lexer::Rule rule) : CompilerError(token->filename) {
-    m_lineNumber = token->lineNumber;
-    m_column = token->column;
-    m_line = token->line;
-    m_got = token->lexeme;
+CompilerError::CompilerError(AST::Node *node) :
+        CompilerError(node->token) {
 
-    if (m_got.empty()) {
-        m_got = "(" + rule_string(token->rule) + ")";
-    }
-
-    m_expectation = rule_string(rule);
 }
 
-void SyntaxError::print() const {
-    std::cout << "Invalid syntax in " << m_filename << " on line " << m_lineNumber << " column " << m_column << std::endl;
+void CompilerError::print() const {
+    std::cout << m_prefix << " in " << m_filename << " on line " << m_lineNumber << " column " << m_column << std::endl;
     std::cout << std::endl;
 
     std::cout << "    " << m_line << std::endl;
@@ -158,6 +109,47 @@ void SyntaxError::print() const {
     std::cout << "^" << std::endl;
     std::cout << std::endl;
 
-    std::cout << "Expected: " << m_expectation << std::endl;
-    std::cout << "Got: " << m_got << std::endl;
+    std::cout << m_message << std::endl;
+}
+
+SyntaxError::SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got, std::string expectation) :
+        CompilerError(filename, lineNumber, column, line) {
+    m_message = "Got: " + got + "\nExpected: " + expectation;
+}
+
+SyntaxError::SyntaxError(Lexer::Token *token, std::string expectation) :
+        CompilerError(token) {
+    m_prefix = "Invalid syntax";
+
+    std::string got = token->lexeme;
+
+    if (got.empty()) {
+        got = "(" + rule_string(token->rule) + ")";
+    }
+
+    makeMessage(got, expectation);
+}
+
+SyntaxError::SyntaxError(Lexer::Token *token, Lexer::Rule rule) :
+        SyntaxError(token, rule_string(rule)) {
+
+}
+
+void SyntaxError::makeMessage(std::string got, std::string expectation) {
+    std::stringstream ss;
+    ss << "Got: " << got << "\n";
+    ss << "Expected: " << expectation;
+    m_message = ss.str();
+}
+
+UndefinedError::UndefinedError(AST::Node *node, std::string name) :
+        CompilerError(node) {
+    m_prefix = "Undefined error";
+    m_message = name + " is not defined in this scope.";
+}
+
+RedefinedError::RedefinedError(AST::Node *node, std::string name) :
+        CompilerError(node) {
+    m_prefix = "Redefined error";
+    m_message = name + " is already defined in this scope.";
 }

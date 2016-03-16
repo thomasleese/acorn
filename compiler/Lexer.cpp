@@ -20,7 +20,8 @@ Lexer::~Lexer() {
 
 void Lexer::loadRules() {
     m_rules[Lexer::Whitespace] = "[\t ]+";
-    m_rules[Lexer::Newline] = "[\n]+";
+    m_rules[Lexer::Newline] = "[\r\n]+";
+    m_rules[Lexer::Comment] = "#[^\n\r]+";
 
     m_rules[Lexer::LetKeyword] = "let";
     m_rules[Lexer::DefKeyword] = "def";
@@ -95,7 +96,7 @@ std::vector<Lexer::Token *> Lexer::tokenise(std::string filename) const {
                 std::string value = matcher[0];
 
                 if (substr.substr(0, value.length()) == value) {
-                    if (rule != Whitespace) {
+                    if (rule != Whitespace && rule != Comment) {
                         Token *token = new Token();
                         token->rule = rule;
                         token->lexeme = value;

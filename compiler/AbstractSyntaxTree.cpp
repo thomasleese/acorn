@@ -9,6 +9,10 @@
 
 using namespace AST;
 
+Node::Node(Lexer::Token *token) {
+    this->token = token;
+}
+
 Node::~Node() {
 
 }
@@ -17,11 +21,11 @@ void CodeBlock::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Identifier::Identifier() {
+Identifier::Identifier(Lexer::Token *token) : Expression(token) {
 
 }
 
-Identifier::Identifier(std::string name) {
+Identifier::Identifier(Lexer::Token *token, std::string name) : Expression(token) {
     this->name = name;
 }
 
@@ -37,12 +41,12 @@ void StringLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Argument::Argument() {
+Argument::Argument(Lexer::Token *token) : Node(token) {
 
 }
 
-Argument::Argument(std::string name) {
-    this->name = new Identifier(name);
+Argument::Argument(Lexer::Token *token, std::string name) : Node(token) {
+    this->name = new Identifier(token, name);
 }
 
 void Argument::accept(Visitor *visitor) {
@@ -89,7 +93,7 @@ void TypeDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-DefinitionStatement::DefinitionStatement(Definition *definition) {
+DefinitionStatement::DefinitionStatement(Definition *definition) : Statement(definition->token) {
     this->definition = definition;
 }
 
@@ -97,7 +101,7 @@ void DefinitionStatement::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-ExpressionStatement::ExpressionStatement(Expression *expression) {
+ExpressionStatement::ExpressionStatement(Expression *expression) : Statement(expression->token) {
     this->expression = expression;
 }
 
@@ -105,9 +109,9 @@ void ExpressionStatement::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Module::Module(std::string name) {
+Module::Module(Lexer::Token *token, std::string name) : Node(token) {
     this->name = name;
-    this->code = new CodeBlock();
+    this->code = new CodeBlock(token);
 }
 
 void Module::accept(Visitor *visitor) {

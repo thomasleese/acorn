@@ -48,7 +48,7 @@ private:
     void skipNewlines();
     void readNewlines();
 
-    Lexer::Token readToken(Lexer::Rule rule);
+    Lexer::Token *readToken(Lexer::Rule rule);
     bool isToken(Lexer::Rule rule) const;
 
     // misc

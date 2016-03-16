@@ -15,6 +15,7 @@ public:
     enum Rule {
         Whitespace,
         Newline,
+        Comment,
         EndOfFile,
 
         // keywords

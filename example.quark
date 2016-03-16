@@ -1,6 +1,18 @@
 let zero as Integer = 0
 let one as Integer = 1
 
+let two as Integer = 2
+
+two = 3  # should fail, not mutable
+
+def what_is_one() as Integer
+    one
+end
+
+def print(x as Any) as Void
+    # do something
+end
+
 print(x: zero)
-print(x: one)
-print(x: 2)
+print(x: what_is_one())
+print(x: two)

@@ -151,7 +151,7 @@ void PrettyPrinter::visit(AST::FunctionDefinition *definition) {
 
     definition->name->accept(this);
     definition->type->accept(this);
-    definition->code.accept(this);
+    definition->code->accept(this);
 
     indent--;
     ss << indentation() << ")\n";

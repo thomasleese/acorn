@@ -13,7 +13,7 @@ int main() {
         compiler.compile("stdlib/graphics.quark");
         compiler.compile("stdlib/maths.quark");*/
         compiler.compile("example.quark");
-    } catch (Errors::SyntaxError e) {
+    } catch (Errors::CompilerError e) {
         e.print();
         return 1;
     }

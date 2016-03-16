@@ -11,18 +11,29 @@
 
 #include "Lexer.h"
 
+namespace AST {
+    struct Node;
+}
+
 namespace Errors {
 
     class CompilerError : public std::exception {
     public:
-        explicit CompilerError(std::string filename);
+        explicit CompilerError(std::string filename, int lineNumber, int column, std::string line);
+        CompilerError(Lexer::Token *token);
+        CompilerError(AST::Node *node);
 
-        const char *what() const noexcept;
+        void print() const;
 
-        virtual void print() const = 0;
+    private:
+        std::string m_filename;
+        int m_lineNumber;
+        int m_column;
+        std::string m_line;
 
     protected:
-        std::string m_filename;
+        std::string m_prefix;
+        std::string m_message;
     };
 
     class SyntaxError : public CompilerError {
@@ -31,14 +42,18 @@ namespace Errors {
         SyntaxError(Lexer::Token *token, std::string expectation);
         SyntaxError(Lexer::Token *token, Lexer::Rule rule);
 
-        void print() const;
-
     private:
-        int m_lineNumber;
-        int m_column;
-        std::string m_line;
-        std::string m_got;
-        std::string m_expectation;
+        void makeMessage(std::string got, std::string expectation);
+    };
+
+    class UndefinedError : public CompilerError {
+    public:
+        explicit UndefinedError(AST::Node *node, std::string name);
+    };
+
+    class RedefinedError : public CompilerError {
+    public:
+        explicit RedefinedError(AST::Node *node, std::string name);
     };
 
 };
