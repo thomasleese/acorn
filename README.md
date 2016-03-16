@@ -1,9 +1,9 @@
 # ![Jet][logo]
 
 > Jet is a elegant, minimalistic, high-level programming language implemented
-> in C++ with LLVM. It borrows ideas from MATLAB, Julia, Python and many other
-> programming languages. It supports features such as multiple-dispatch,
-> operating overloading, static typing with inference and concurrency.
+> in C++ with LLVM. It borrows ideas from MATLAB, Julia, Python and many others.
+> It supports features such as multiple-dispatch, operating overloading, static
+> typing with inference and concurrency.
 
 ## Progress
 
