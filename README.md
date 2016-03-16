@@ -11,6 +11,7 @@
 - Parser
 - Error Handler ✓
 - Type Checker
+- Code Generator
 
 ## Ideas
 

@@ -49,6 +49,10 @@ void CodeGenerator::visit(AST::Call *expression) {
 
 }
 
+void CodeGenerator::visit(AST::Assignment *expression) {
+
+}
+
 void CodeGenerator::visit(AST::Selector *expression) {
 
 }

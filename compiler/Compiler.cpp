@@ -37,7 +37,7 @@ void Compiler::compile(std::string filename) {
 
     PrettyPrinter *printer = new PrettyPrinter();
 
-    //module->accept(printer);
+    module->accept(printer);
 
     printer->print();
     delete printer;

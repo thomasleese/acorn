@@ -40,7 +40,8 @@ void Lexer::loadRules() {
     m_rules[Lexer::StringLiteral] = "\"(\\.|[^\"])*\"";
     m_rules[Lexer::ComplexLiteral] = "([0-9]+)|([0-9]+\\.[0-9]+)i([0-9]+)|([0-9]+\\.[0-9]+)";
 
-    m_rules[Lexer::Operator] = "\\+=|>=|<=|==|=|\\^|\\+|\\*|-|<|>";  // replace with unicode Sm
+    m_rules[Lexer::Assignment] = "=";  // replace with unicode Sm
+    m_rules[Lexer::Operator] = "\\+=|>=|<=|==|\\^|\\+|\\*|-|<|>";  // replace with unicode Sm
     m_rules[Lexer::Identifier] = "[[:alpha:]_][[:alpha:]_0-9]*";
 
     m_rules[Lexer::OpenBracket] = "\\[";

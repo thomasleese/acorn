@@ -50,6 +50,8 @@ std::string rule_string(Lexer::Rule rule) {
             return "string";
         case Lexer::ComplexLiteral:
             return "complex";
+        case Lexer::Assignment:
+            return "assignment";
         case Lexer::Identifier:
             return "name";
         case Lexer::Operator:

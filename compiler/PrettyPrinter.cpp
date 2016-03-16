@@ -46,7 +46,7 @@ void PrettyPrinter::visit(AST::Argument *argument) {
 }
 
 void PrettyPrinter::visit(AST::Call *expression) {
-    ss << indentation() << "(FunctionCall\n";
+    ss << indentation() << "(Call\n";
     indent++;
 
     expression->operand->accept(this);
@@ -54,6 +54,17 @@ void PrettyPrinter::visit(AST::Call *expression) {
     for (auto argument : expression->arguments) {
         argument->accept(this);
     }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::Assignment *expression) {
+    ss << indentation() << "(Assignment\n";
+    indent++;
+
+    expression->lhs->accept(this);
+    expression->rhs->accept(this);
 
     indent--;
     ss << indentation() << ")\n";

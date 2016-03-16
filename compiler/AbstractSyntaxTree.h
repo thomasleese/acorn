@@ -91,6 +91,15 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct Assignment : Expression {
+        explicit Assignment(Lexer::Token *token, Expression *lhs, Expression *rhs);
+
+        Expression *lhs;
+        Expression *rhs;
+
+        void accept(Visitor *visitor);
+    };
+
     struct Selector : Expression {
         using Expression::Expression;
 
@@ -220,6 +229,7 @@ namespace AST {
         virtual void visit(StringLiteral *expression) = 0;
         virtual void visit(Argument *expression) = 0;
         virtual void visit(Call *expression) = 0;
+        virtual void visit(Assignment *expression) = 0;
         virtual void visit(Selector *expression) = 0;
         virtual void visit(While *expression) = 0;
         virtual void visit(For *expression) = 0;

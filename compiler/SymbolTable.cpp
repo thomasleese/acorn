@@ -81,6 +81,10 @@ void Builder::visit(AST::Call *expression) {
 
 }
 
+void Builder::visit(AST::Assignment *expression) {
+
+}
+
 void Builder::visit(AST::Selector *expression) {
 
 }

@@ -57,6 +57,15 @@ void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+Assignment::Assignment(Lexer::Token *token, Expression *lhs, Expression *rhs) : Expression(token) {
+    this->lhs = lhs;
+    this->rhs = rhs;
+}
+
+void Assignment::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 void Selector::accept(Visitor *visitor) {
     visitor->visit(this);
 }

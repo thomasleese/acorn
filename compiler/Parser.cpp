@@ -95,7 +95,7 @@ Expression *Parser::readExpression() {
     debug("Reading expression...");
 
     Expression *expr = readUnaryExpression();
-    if (isToken(Lexer::Operator)) {
+    if (isToken(Lexer::Operator) || isToken(Lexer::Assignment)) {
         return readBinaryExpression(expr, 0);
     } else {
         return expr;
@@ -253,28 +253,42 @@ Expression *Parser::readUnaryExpression() {
 }
 
 Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
-    while (isToken(Lexer::Operator) && m_operatorPrecendence[m_tokens.front()->lexeme] >= minPrecedence) {
+    while ((isToken(Lexer::Operator) || isToken(Lexer::Assignment)) && m_operatorPrecendence[m_tokens.front()->lexeme] >= minPrecedence) {
         Lexer::Token *token = m_tokens.front();
 
-        Identifier *op = readOperator();
+        std::string opName = "=";
+
+        Identifier *op = 0;
+        if (isToken(Lexer::Operator)) {
+            op = readOperator();
+            opName = op->name;
+        } else {
+            readToken(Lexer::Assignment);
+        }
+
         Expression *rhs = readOperandExpression();
 
-        while (isToken(Lexer::Operator) && m_operatorPrecendence[m_tokens.front()->lexeme] > m_operatorPrecendence[op->name]) {
+        while ((isToken(Lexer::Operator) || isToken(Lexer::Assignment)) && m_operatorPrecendence[m_tokens.front()->lexeme] > m_operatorPrecendence[opName]) {
             rhs = readBinaryExpression(rhs, m_operatorPrecendence[m_tokens.front()->lexeme]);
         }
 
-        Call *expr = new Call(token);
-        expr->operand = op;
+        if (op) {
+            Call *call = new Call(token);
+            call->operand = op;
 
-        Argument *lhsArg = new Argument(token, "self");
-        lhsArg->value = lhs;
-        expr->arguments.push_back(lhsArg);
+            Argument *lhsArg = new Argument(token, "self");
+            lhsArg->value = lhs;
+            call->arguments.push_back(lhsArg);
 
-        Argument *rhsArg = new Argument(token, "other");
-        rhsArg->value = rhs;
-        expr->arguments.push_back(rhsArg);
+            Argument *rhsArg = new Argument(token, "other");
+            rhsArg->value = rhs;
+            call->arguments.push_back(rhsArg);
 
-        lhs = expr;
+            lhs = call;
+        } else {
+            Assignment *assignment = new Assignment(token, lhs, rhs);
+            lhs = assignment;
+        }
     }
 
     return lhs;
@@ -347,12 +361,7 @@ VariableDefinition *Parser::readVariableDefinition() {
     definition->name = readIdentifier();
     definition->type = readTypeDeclaration();
 
-    token = m_tokens.front();
-    Identifier *op = readOperator();
-    if (op->name != "=") {
-        throw Errors::SyntaxError(token, "=");
-    }
-    delete op;
+    readToken(Lexer::Assignment);
 
     definition->expression = readExpression();
 

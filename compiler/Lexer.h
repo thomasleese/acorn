@@ -37,6 +37,8 @@ public:
         StringLiteral,
         ComplexLiteral,
 
+        // identifiers
+        Assignment,
         Identifier,
         Operator,
 
