@@ -1,6 +1,4 @@
-# Quark
-
-A programming language.
+# ![Jet][logo]
 
 > Python with multiple-dispatch and without classes.
 
@@ -8,7 +6,7 @@ A programming language.
 
 - Lexer ✓
 - Parser
-- Error Handler
+- Error Handler ✓
 - Type Checker
 
 ## Ideas
@@ -23,3 +21,5 @@ A programming language.
 ## Future
 
 - Type Inference
+
+[logo]: https://github.com/thomasleese/jet/raw/master/logo.png
