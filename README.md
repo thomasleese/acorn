@@ -1,6 +1,9 @@
 # ![Jet][logo]
 
-> Python with multiple-dispatch and without classes.
+> Jet is a elegant, minimalistic, high-level programming language implemented
+> in C++ with LLVM. It borrows ideas from MATLAB, Julia, Python and many other
+> programming languages. It supports features such as multiple-dispatch,
+> operating overloading, static typing with inference and concurrency.
 
 ## Progress
 
