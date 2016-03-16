@@ -5,6 +5,7 @@
 #ifndef QUARK_LEXER_H
 #define QUARK_LEXER_H
 
+#include <regex>
 #include <map>
 #include <string>
 #include <vector>
@@ -71,13 +72,14 @@ public:
     ~Lexer();
 
 private:
+    void addRule(Rule rule, std::string regex);
     void loadRules();
 
 public:
     std::vector<Token *> tokenise(std::string filename) const;
 
 private:
-    std::map<Rule, std::string> m_rules;
+    std::map<Rule, std::regex> m_rules;
 };
 
 #endif //QUARK_LEXER_H

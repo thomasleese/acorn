@@ -148,7 +148,7 @@ namespace AST {
     };
 
     struct Parameter : Node {
-        using Node::Node;
+        explicit Parameter(Lexer::Token *token);
 
         Identifier *name;
         TypeDeclaration *type;

@@ -86,6 +86,10 @@ void TypeDeclaration::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+Parameter::Parameter(Lexer::Token *token) : Node(token) {
+    this->defaultExpression = 0;
+}
+
 void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }

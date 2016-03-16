@@ -7,9 +7,9 @@ int main() {
     Compiler compiler;
 
     try {
-        /*compiler.compile("stdlib/builtins.quark");
-        compiler.compile("stdlib/graphics.quark");
-        compiler.compile("stdlib/maths.quark");*/
+        compiler.compile("stdlib/builtins.jet");
+        compiler.compile("stdlib/graphics.jet");
+        compiler.compile("stdlib/maths.jet");
         compiler.compile("example.jet");
     } catch (Errors::CompilerError e) {
         e.print();

@@ -7,14 +7,15 @@
 
 ## Progress
 
-- Lexer ✓
-- Parser
+- Lexer ~
+- Parser ~
 - Error Handler ✓
 - Type Checker
 - Code Generator
 
 ## Ideas
 
+- Full support for Unicode.
 - http://docs.julialang.org/en/release-0.4/manual/methods/
   - Multiple-dispatch
   - Overloading operators
