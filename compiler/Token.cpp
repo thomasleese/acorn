@@ -34,6 +34,40 @@ std::string Token::rule_string(Token::Rule rule) {
             return "if";
         case ElseKeyword:
             return "else";
+        case AndKeyword:
+            return "and";
+        case OrKeyword:
+            return "or";
+        case NotKeyword:
+            return "not";
+        case ContinueKeyword:
+            return "continue";
+        case BreakKeyword:
+            return "break";
+        case TryKeyword:
+            return "try";
+        case ExceptKeyword:
+            return "except";
+        case RaiseKeyword:
+            return "raise";
+        case FinallyKeyword:
+            return "finally";
+        case FromKeyword:
+            return "from";
+        case ImportKeyword:
+            return "import";
+        case ReturnKeyword:
+            return "return";
+        case WithKeyword:
+            return "with";
+        case YieldKeyword:
+            return "yield";
+        case AsyncKeyword:
+            return "async";
+        case DoKeyword:
+            return "do";
+        case UnlessKeyword:
+            return "unless";
         case BooleanLiteral:
             return "boolean";
         case IntegerLiteral:

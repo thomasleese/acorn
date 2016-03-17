@@ -21,6 +21,7 @@ namespace LexicalAnalysis {
 
     private:
         void setRule(Token::Rule rule, std::string regex);
+        void setKeywordRule(Token::Rule rule, std::string keyword);
 
         void loadRules();
 

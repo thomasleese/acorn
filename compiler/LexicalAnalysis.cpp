@@ -27,22 +27,43 @@ void Lexer::setRule(Token::Rule rule, std::string regex) {
     m_rules[rule] = "^" + regex;
 }
 
+void Lexer::setKeywordRule(Token::Rule rule, std::string keyword) {
+    std::string regex = "(" + keyword + ")(?:[\n\r ]+)";
+    setRule(rule, regex);
+}
+
 void Lexer::loadRules() {
     setRule(Token::Whitespace, "([\t ]+)");
     setRule(Token::Newline, "([\r\n]+)");
     setRule(Token::Comment, "(#[^\n\r]+[\n\r]+)");
 
-    std::string keywordSuffix = "(?:[\n\r ]+)";
-    setRule(Token::LetKeyword, "(let)" + keywordSuffix);
-    setRule(Token::DefKeyword, "(def)" + keywordSuffix);
-    setRule(Token::TypeKeyword, "(type)" + keywordSuffix);
-    setRule(Token::AsKeyword, "(as)" + keywordSuffix);
-    setRule(Token::EndKeyword, "(end)" + keywordSuffix);
-    setRule(Token::WhileKeyword, "(while)" + keywordSuffix);
-    setRule(Token::ForKeyword, "(for)" + keywordSuffix);
-    setRule(Token::InKeyword, "(in)" + keywordSuffix);
-    setRule(Token::IfKeyword, "(if)" + keywordSuffix);
-    setRule(Token::ElseKeyword, "(else)" + keywordSuffix);
+    setKeywordRule(Token::LetKeyword, "let");
+    setKeywordRule(Token::DefKeyword, "def");
+    setKeywordRule(Token::TypeKeyword, "type");
+    setKeywordRule(Token::AsKeyword, "as");
+    setKeywordRule(Token::EndKeyword, "end");
+    setKeywordRule(Token::WhileKeyword, "while");
+    setKeywordRule(Token::ForKeyword, "for");
+    setKeywordRule(Token::InKeyword, "in");
+    setKeywordRule(Token::IfKeyword, "if");
+    setKeywordRule(Token::ElseKeyword, "else");
+    setKeywordRule(Token::AndKeyword, "and");
+    setKeywordRule(Token::OrKeyword, "or");
+    setKeywordRule(Token::NotKeyword, "not");
+    setKeywordRule(Token::ContinueKeyword, "continue");
+    setKeywordRule(Token::BreakKeyword, "break");
+    setKeywordRule(Token::TryKeyword, "try");
+    setKeywordRule(Token::ExceptKeyword, "except");
+    setKeywordRule(Token::RaiseKeyword, "raise");
+    setKeywordRule(Token::FinallyKeyword, "finally");
+    setKeywordRule(Token::FromKeyword, "from");
+    setKeywordRule(Token::ImportKeyword, "import");
+    setKeywordRule(Token::ReturnKeyword, "return");
+    setKeywordRule(Token::WithKeyword, "with");
+    setKeywordRule(Token::YieldKeyword, "yield");
+    setKeywordRule(Token::AsyncKeyword, "async");
+    setKeywordRule(Token::DoKeyword, "do");
+    setKeywordRule(Token::UnlessKeyword, "unless");
 
     setRule(Token::BooleanLiteral, "(true|false)");
     setRule(Token::StringLiteral, "(\"(?:\\.|[^\"])*\")");
