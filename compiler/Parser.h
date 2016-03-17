@@ -17,6 +17,7 @@ namespace AST {
     struct CodeBlock;
     struct Identifier;
     struct IntegerLiteral;
+    struct FloatLiteral;
     struct StringLiteral;
     struct Argument;
     struct Call;
@@ -57,6 +58,7 @@ private:
     AST::Identifier *readIdentifier();
     AST::Identifier *readOperator();
     AST::IntegerLiteral *readIntegerLiteral();
+    AST::FloatLiteral *readFloatLiteral();
     AST::StringLiteral *readStringLiteral();
     AST::Argument *readArgument();
     AST::Call *readCall(AST::Expression *operand);

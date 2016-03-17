@@ -4,8 +4,10 @@
 
 #include <iostream>
 #include <fstream>
-#include <regex>
 #include <sstream>
+
+#include <unicode/unistr.h>
+#include <boost/regex/icu.hpp>
 
 #include "Errors.h"
 #include "Lexer.h"
@@ -19,7 +21,7 @@ Lexer::~Lexer() {
 }
 
 void Lexer::addRule(Rule rule, std::string regex) {
-    m_rules[rule] = std::regex("^" + regex, std::regex_constants::ECMAScript);
+    m_rules[rule] = "^" + regex;
 }
 
 void Lexer::loadRules() {
@@ -27,26 +29,23 @@ void Lexer::loadRules() {
     addRule(Lexer::Newline, "([\r\n]+)");
     addRule(Lexer::Comment, "(#[^\n\r]+[\n\r]+)");
 
-    addRule(Lexer::LetKeyword, "(let)(?:[\n\r ]+)");
-    addRule(Lexer::DefKeyword, "(def)(?:[\n\r ]+)");
-    addRule(Lexer::TypeKeyword, "(type)(?:[\n\r ]+)");
-    addRule(Lexer::AsKeyword, "(as)(?:[\n\r ]+)");
-    addRule(Lexer::EndKeyword, "(end)(?:[\n\r ]+)");
-    addRule(Lexer::WhileKeyword, "(while)(?:[\n\r ]+)");
-    addRule(Lexer::ForKeyword, "(for)(?:[\n\r ]+)");
-    addRule(Lexer::InKeyword, "(in)(?:[\n\r ]+)");
-    addRule(Lexer::IfKeyword, "(if)(?:[\n\r ]+)");
-    addRule(Lexer::ElseKeyword, "(else)(?:[\n\r ]+)");
+    std::string keywordSuffix = "(?:[\n\r ]+)";
+    addRule(Lexer::LetKeyword, "(let)" + keywordSuffix);
+    addRule(Lexer::DefKeyword, "(def)" + keywordSuffix);
+    addRule(Lexer::TypeKeyword, "(type)" + keywordSuffix);
+    addRule(Lexer::AsKeyword, "(as)" + keywordSuffix);
+    addRule(Lexer::EndKeyword, "(end)" + keywordSuffix);
+    addRule(Lexer::WhileKeyword, "(while)" + keywordSuffix);
+    addRule(Lexer::ForKeyword, "(for)" + keywordSuffix);
+    addRule(Lexer::InKeyword, "(in)" + keywordSuffix);
+    addRule(Lexer::IfKeyword, "(if)" + keywordSuffix);
+    addRule(Lexer::ElseKeyword, "(else)" + keywordSuffix);
 
     addRule(Lexer::BooleanLiteral, "(true|false)");
-    addRule(Lexer::IntegerLiteral, "([0-9]+)");
-    addRule(Lexer::FloatLiteral, "([0-9]+\\.[0-9]+)");
     addRule(Lexer::StringLiteral, "(\"(?:\\.|[^\"])*\")");
+    addRule(Lexer::FloatLiteral, "([0-9]+\\.[0-9]+)");
     addRule(Lexer::ComplexLiteral, "([0-9]+(?:\\.[0-9])?\\+i[0-9]+(?:\\.[0-9]+)?)");
-
-    addRule(Lexer::Operator, "(\\+=|>=|<=|==|\\^|\\+|\\*|-|<|>)");  // replace with unicode Sm
-    addRule(Lexer::Identifier, "([[:alpha:]_][[:alpha:]_0-9]*)");  // replace with unicode character
-    addRule(Lexer::Assignment, "(=)");
+    addRule(Lexer::IntegerLiteral, "([0-9]+)");
 
     addRule(Lexer::OpenBracket, "(\\[)");
     addRule(Lexer::CloseBracket, "(\\])");
@@ -59,6 +58,12 @@ void Lexer::loadRules() {
     addRule(Lexer::Comma, "(,)");
     addRule(Lexer::Dot, "(\\.)");
     addRule(Lexer::Colon, "(:)");
+
+    std::string nameInitialRegex = "[:L*:][:Nl:][:Sc:][:So:]√";
+    std::string nameAfterRegex = nameInitialRegex + "![:N*:][:M*:][:Sk:][:Pc:]";
+    addRule(Lexer::Assignment, "(=[^=])");
+    addRule(Lexer::Identifier, "([" + nameInitialRegex + "][" + nameAfterRegex + "]*)");
+    addRule(Lexer::Operator, "([:Sm:])");
 }
 
 std::vector<Lexer::Token *> Lexer::tokenise(std::string filename) const {
@@ -84,7 +89,7 @@ std::vector<Lexer::Token *> Lexer::tokenise(std::string filename) const {
     unsigned long pos = 0;
     unsigned long end = buffer.length();
 
-    std::smatch matcher;
+    boost::smatch matcher;
 
     std::vector<Token *> tokens;
 
@@ -95,9 +100,9 @@ std::vector<Lexer::Token *> Lexer::tokenise(std::string filename) const {
 
         for (auto it = m_rules.begin(); it != m_rules.end(); it++) {
             Rule rule = it->first;
-            std::regex pattern = it->second;
+            boost::u32regex pattern = boost::make_u32regex(it->second);
 
-            if (std::regex_search(substr, matcher, pattern)) {
+            if (boost::u32regex_search(substr, matcher, pattern)) {
                 std::string value = matcher.str(1);
 
                 if (substr.substr(0, value.size()) == value) {
@@ -122,7 +127,8 @@ std::vector<Lexer::Token *> Lexer::tokenise(std::string filename) const {
                         currentLine = "";
                         std::getline(std::istringstream(buffer.substr(pos, pos - end)), currentLine);
                     } else {
-                        currentColumn += value.length();
+                        icu::UnicodeString s = icu::UnicodeString::fromUTF8(value);
+                        currentColumn += s.countChar32();
                     }
 
                     found = true;

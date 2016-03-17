@@ -37,6 +37,10 @@ void IntegerLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+void FloatLiteral::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 void StringLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }

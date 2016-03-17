@@ -30,6 +30,10 @@ void PrettyPrinter::visit(AST::IntegerLiteral *expression) {
     ss << indentation() << "(IntegerLiteral " << expression->value << ")\n";
 }
 
+void PrettyPrinter::visit(AST::FloatLiteral *expression) {
+    ss << indentation() << "(FloatLiteral " << expression->value << ")\n";
+}
+
 void PrettyPrinter::visit(AST::StringLiteral *expression) {
     ss << indentation() << "(StringLiteral " << expression->value << ")\n";
 }

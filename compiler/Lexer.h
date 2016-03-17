@@ -5,7 +5,6 @@
 #ifndef QUARK_LEXER_H
 #define QUARK_LEXER_H
 
-#include <regex>
 #include <map>
 #include <string>
 #include <vector>
@@ -33,15 +32,10 @@ public:
 
         // literals
         BooleanLiteral,
-        IntegerLiteral,
-        FloatLiteral,
         StringLiteral,
+        FloatLiteral,
         ComplexLiteral,
-
-        // identifiers
-        Assignment,
-        Identifier,
-        Operator,
+        IntegerLiteral,
 
         // delimiters
         OpenBracket,
@@ -54,7 +48,12 @@ public:
         CloseChevron,
         Comma,
         Dot,
-        Colon
+        Colon,
+
+        // identifiers
+        Assignment,
+        Identifier,
+        Operator,
     };
 
     struct Token {
@@ -79,7 +78,7 @@ public:
     std::vector<Token *> tokenise(std::string filename) const;
 
 private:
-    std::map<Rule, std::regex> m_rules;
+    std::map<Rule, std::string> m_rules;
 };
 
 #endif //QUARK_LEXER_H

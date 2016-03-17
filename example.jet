@@ -3,7 +3,8 @@ let one as Integer = 1
 
 let two as Integer = 2
 
-let as_hello as Integer = 5
+let √ as Function = sqrt
+let π as Float = 3.141
 
 # should fail, not mutable
 two = 3

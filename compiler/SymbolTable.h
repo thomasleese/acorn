@@ -46,6 +46,7 @@ namespace SymbolTable {
 
         void visit(AST::Identifier *expression);
         void visit(AST::IntegerLiteral *expression);
+        void visit(AST::FloatLiteral *expression);
         void visit(AST::StringLiteral *expression);
         void visit(AST::Argument *argument);
         void visit(AST::Call *expression);

@@ -59,7 +59,15 @@ namespace AST {
     struct IntegerLiteral : Expression {
         using Expression::Expression;
 
-        int value;
+        std::string value;
+
+        void accept(Visitor *visitor);
+    };
+
+    struct FloatLiteral : Expression {
+        using Expression::Expression;
+
+        std::string value;
 
         void accept(Visitor *visitor);
     };
@@ -226,6 +234,7 @@ namespace AST {
         // expressions
         virtual void visit(Identifier *expression) = 0;
         virtual void visit(IntegerLiteral *expression) = 0;
+        virtual void visit(FloatLiteral *expression) = 0;
         virtual void visit(StringLiteral *expression) = 0;
         virtual void visit(Argument *expression) = 0;
         virtual void visit(Call *expression) = 0;

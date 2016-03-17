@@ -122,6 +122,15 @@ IntegerLiteral *Parser::readIntegerLiteral() {
     return literal;
 }
 
+FloatLiteral *Parser::readFloatLiteral() {
+    Lexer::Token *token = readToken(Lexer::FloatLiteral);
+
+    FloatLiteral *literal = new FloatLiteral(token);
+    literal->value = token->lexeme;
+
+    return literal;
+}
+
 StringLiteral *Parser::readStringLiteral() {
     Lexer::Token *token = readToken(Lexer::StringLiteral);
 
@@ -303,6 +312,8 @@ Expression *Parser::readOperandExpression() {
         return expr;
     } else if (isToken(Lexer::IntegerLiteral)) {
         expr = readIntegerLiteral();
+    } else if (isToken(Lexer::FloatLiteral)) {
+        expr = readFloatLiteral();
     } else if (isToken(Lexer::StringLiteral)) {
         expr = readStringLiteral();
     } else if (isToken(Lexer::WhileKeyword)) {

@@ -69,6 +69,10 @@ void Builder::visit(AST::IntegerLiteral *expression) {
 
 }
 
+void Builder::visit(AST::FloatLiteral *expression) {
+
+}
+
 void Builder::visit(AST::StringLiteral *expression) {
 
 }

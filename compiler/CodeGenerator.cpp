@@ -37,6 +37,10 @@ void CodeGenerator::visit(AST::IntegerLiteral *expression) {
 
 }
 
+void CodeGenerator::visit(AST::FloatLiteral *expression) {
+
+}
+
 void CodeGenerator::visit(AST::StringLiteral *expression) {
 
 }
