@@ -35,10 +35,14 @@ namespace AST {
     struct Module;
 }
 
+namespace LexicalAnalysis {
+    struct Token;
+}
+
 class Parser {
 
 public:
-    explicit Parser(std::vector<Lexer::Token *> tokens);
+    explicit Parser(std::vector<LexicalAnalysis::Token *> tokens);
     ~Parser();
 
     AST::Module *parse(std::string name);
@@ -46,9 +50,9 @@ public:
 private:
     void debug(std::string line);
 
-    Lexer::Token *readToken(Lexer::Rule rule);
-    Lexer::Token *skipToken(Lexer::Rule rule);
-    bool isToken(Lexer::Rule rule) const;
+    LexicalAnalysis::Token *readToken(LexicalAnalysis::Rule rule);
+    LexicalAnalysis::Token *skipToken(LexicalAnalysis::Rule rule);
+    bool isToken(LexicalAnalysis::Rule rule) const;
 
     // misc
     AST::CodeBlock *readCodeBlock();
@@ -83,7 +87,7 @@ private:
     AST::Statement *readStatement();
 
 private:
-    std::deque<Lexer::Token *> m_tokens;
+    std::deque<LexicalAnalysis::Token *> m_tokens;
     std::map<std::string, int> m_operatorPrecendence;
 
 };

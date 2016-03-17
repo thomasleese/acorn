@@ -6,80 +6,11 @@
 #include <sstream>
 
 #include "AbstractSyntaxTree.h"
+#include "LexicalAnalysis.h"
+
 #include "Errors.h"
 
 using namespace Errors;
-
-std::string Errors::rule_string(Lexer::Rule rule) {
-    switch (rule) {
-        case Lexer::Whitespace:
-            return "whitespace";
-        case Lexer::Newline:
-            return "new line";
-        case Lexer::Comment:
-            return "comment";
-        case Lexer::EndOfFile:
-            return "end of file";
-        case Lexer::LetKeyword:
-            return "let";
-        case Lexer::DefKeyword:
-            return "def";
-        case Lexer::TypeKeyword:
-            return "type";
-        case Lexer::AsKeyword:
-            return "as";
-        case Lexer::EndKeyword:
-            return "end";
-        case Lexer::WhileKeyword:
-            return "while";
-        case Lexer::ForKeyword:
-            return "for";
-        case Lexer::InKeyword:
-            return "in";
-        case Lexer::IfKeyword:
-            return "if";
-        case Lexer::ElseKeyword:
-            return "else";
-        case Lexer::BooleanLiteral:
-            return "boolean";
-        case Lexer::IntegerLiteral:
-            return "integer";
-        case Lexer::FloatLiteral:
-            return "float";
-        case Lexer::StringLiteral:
-            return "string";
-        case Lexer::ComplexLiteral:
-            return "complex";
-        case Lexer::Assignment:
-            return "assignment";
-        case Lexer::Identifier:
-            return "name";
-        case Lexer::Operator:
-            return "operator";
-        case Lexer::OpenBracket:
-            return "[";
-        case Lexer::CloseBracket:
-            return "]";
-        case Lexer::OpenParenthesis:
-            return "(";
-        case Lexer::CloseParenthesis:
-            return ")";
-        case Lexer::OpenBrace:
-            return "{";
-        case Lexer::CloseBrace:
-            return "}";
-        case Lexer::OpenChevron:
-            return "<";
-        case Lexer::CloseChevron:
-            return ">";
-        case Lexer::Comma:
-            return ",";
-        case Lexer::Dot:
-            return ".";
-        case Lexer::Colon:
-            return ":";
-    }
-}
 
 CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) {
     m_filename = filename;
@@ -88,7 +19,7 @@ CompilerError::CompilerError(std::string filename, int lineNumber, int column, s
     m_line = line;
 }
 
-CompilerError::CompilerError(Lexer::Token *token) :
+CompilerError::CompilerError(LexicalAnalysis::Token *token) :
         CompilerError(token->filename, token->lineNumber, token->column, token->line) {
 
 }
@@ -119,21 +50,21 @@ SyntaxError::SyntaxError(std::string filename, int lineNumber, int column, std::
     m_message = "Got: " + got + "\nExpected: " + expectation;
 }
 
-SyntaxError::SyntaxError(Lexer::Token *token, std::string expectation) :
+SyntaxError::SyntaxError(LexicalAnalysis::Token *token, std::string expectation) :
         CompilerError(token) {
     m_prefix = "Invalid syntax";
 
     std::string got = token->lexeme;
 
     if (got.empty()) {
-        got = "(" + rule_string(token->rule) + ")";
+        got = "(" + LexicalAnalysis::rule_string(token->rule) + ")";
     }
 
     makeMessage(got, expectation);
 }
 
-SyntaxError::SyntaxError(Lexer::Token *token, Lexer::Rule rule) :
-        SyntaxError(token, rule_string(rule)) {
+SyntaxError::SyntaxError(LexicalAnalysis::Token *token, LexicalAnalysis::Rule rule) :
+        SyntaxError(token, LexicalAnalysis::rule_string(rule)) {
 
 }
 

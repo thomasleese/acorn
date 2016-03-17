@@ -7,9 +7,6 @@
 
 #include <string>
 
-class Lexer;
-class Parser;
-
 class Compiler {
 
 public:

@@ -9,19 +9,21 @@
 #include <queue>
 #include <vector>
 
-#include "Lexer.h"
+namespace LexicalAnalysis {
+    struct Token;
+}
 
 namespace AST {
 
     class Visitor;
 
     struct Node {
-        explicit Node(Lexer::Token *token);
+        explicit Node(LexicalAnalysis::Token *token);
         virtual ~Node();
 
         virtual void accept(Visitor *visitor) = 0;
 
-        Lexer::Token *token;
+        LexicalAnalysis::Token *token;
     };
 
     // basic categories
@@ -48,8 +50,8 @@ namespace AST {
 
     // expressions
     struct Identifier : Expression {
-        explicit Identifier(Lexer::Token *token);
-        Identifier(Lexer::Token *token, std::string name);
+        explicit Identifier(LexicalAnalysis::Token *token);
+        Identifier(LexicalAnalysis::Token *token, std::string name);
 
         std::string name;
 
@@ -81,8 +83,8 @@ namespace AST {
     };
 
     struct Argument : Node {
-        explicit Argument(Lexer::Token *token);
-        Argument(Lexer::Token *token, std::string name);
+        explicit Argument(LexicalAnalysis::Token *token);
+        Argument(LexicalAnalysis::Token *token, std::string name);
 
         Identifier *name;
         Expression *value;
@@ -100,7 +102,7 @@ namespace AST {
     };
 
     struct Assignment : Expression {
-        explicit Assignment(Lexer::Token *token, Expression *lhs, Expression *rhs);
+        explicit Assignment(LexicalAnalysis::Token *token, Expression *lhs, Expression *rhs);
 
         Expression *lhs;
         Expression *rhs;
@@ -156,7 +158,7 @@ namespace AST {
     };
 
     struct Parameter : Node {
-        explicit Parameter(Lexer::Token *token);
+        explicit Parameter(LexicalAnalysis::Token *token);
 
         Identifier *name;
         TypeDeclaration *type;
@@ -215,7 +217,7 @@ namespace AST {
 
     // module
     struct Module : Node {
-        explicit Module(Lexer::Token *token, std::string name);
+        explicit Module(LexicalAnalysis::Token *token, std::string name);
 
         std::string name;
         CodeBlock *code;

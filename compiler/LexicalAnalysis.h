@@ -9,9 +9,8 @@
 #include <string>
 #include <vector>
 
-class Lexer {
+namespace LexicalAnalysis {
 
-public:
     enum Rule {
         Whitespace,
         Newline,
@@ -56,6 +55,8 @@ public:
         Operator,
     };
 
+    std::string rule_string(Rule rule);
+
     struct Token {
         std::string lexeme;
         Rule rule;
@@ -66,19 +67,24 @@ public:
         int column;
     };
 
-public:
-    explicit Lexer();
-    ~Lexer();
+    class Lexer {
+    public:
+        explicit Lexer();
 
-private:
-    void addRule(Rule rule, std::string regex);
-    void loadRules();
+        ~Lexer();
 
-public:
-    std::vector<Token *> tokenise(std::string filename) const;
+    private:
+        void setRule(Rule rule, std::string regex);
 
-private:
-    std::map<Rule, std::string> m_rules;
-};
+        void loadRules();
+
+    public:
+        std::vector<Token *> tokenise(std::string filename) const;
+
+    private:
+        std::map<Rule, std::string> m_rules;
+    };
+
+}
 
 #endif //QUARK_LEXER_H

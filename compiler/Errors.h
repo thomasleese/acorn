@@ -9,20 +9,20 @@
 
 #include <string>
 
-#include "Lexer.h"
-
 namespace AST {
     struct Node;
 }
 
-namespace Errors {
+namespace LexicalAnalysis {
+    struct Token;
+}
 
-    std::string rule_string(Lexer::Rule rule);
+namespace Errors {
 
     class CompilerError : public std::exception {
     public:
         explicit CompilerError(std::string filename, int lineNumber, int column, std::string line);
-        CompilerError(Lexer::Token *token);
+        CompilerError(LexicalAnalysis::Token *token);
         CompilerError(AST::Node *node);
 
         void print() const;
@@ -41,8 +41,8 @@ namespace Errors {
     class SyntaxError : public CompilerError {
     public:
         explicit SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got, std::string expectation);
-        SyntaxError(Lexer::Token *token, std::string expectation);
-        SyntaxError(Lexer::Token *token, Lexer::Rule rule);
+        SyntaxError(LexicalAnalysis::Token *token, std::string expectation);
+        SyntaxError(LexicalAnalysis::Token *token, LexicalAnalysis::Rule rule);
 
     private:
         void makeMessage(std::string got, std::string expectation);

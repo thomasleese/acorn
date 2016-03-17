@@ -5,7 +5,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "Lexer.h"
+#include "LexicalAnalysis.h"
 #include "Parser.h"
 #include "AbstractSyntaxTree.h"
 #include "PrettyPrinter.h"
@@ -16,12 +16,12 @@
 #include "Compiler.h"
 
 void Compiler::compile(std::string filename) {
-    Lexer lexer;
+    LexicalAnalysis::Lexer lexer;
 
-    std::vector<Lexer::Token *> tokens = lexer.tokenise(filename);
+    std::vector<LexicalAnalysis::Token *> tokens = lexer.tokenise(filename);
 
-    for (Lexer::Token *token : tokens) {
-        std::cout << Errors::rule_string(token->rule) << ": " << token->lexeme << std::endl;
+    for (LexicalAnalysis::Token *token : tokens) {
+        std::cout << LexicalAnalysis::rule_string(token->rule) << ": " << token->lexeme << std::endl;
     }
 
     std::string moduleName = filename.substr(0, filename.find("."));
