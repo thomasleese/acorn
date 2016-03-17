@@ -9,12 +9,10 @@
 
 #include <string>
 
+#include "Token.h"
+
 namespace AST {
     struct Node;
-}
-
-namespace LexicalAnalysis {
-    struct Token;
 }
 
 namespace Errors {
@@ -22,7 +20,7 @@ namespace Errors {
     class CompilerError : public std::exception {
     public:
         explicit CompilerError(std::string filename, int lineNumber, int column, std::string line);
-        CompilerError(LexicalAnalysis::Token *token);
+        CompilerError(Token *token);
         CompilerError(AST::Node *node);
 
         void print() const;
@@ -41,8 +39,8 @@ namespace Errors {
     class SyntaxError : public CompilerError {
     public:
         explicit SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got, std::string expectation);
-        SyntaxError(LexicalAnalysis::Token *token, std::string expectation);
-        SyntaxError(LexicalAnalysis::Token *token, LexicalAnalysis::Rule rule);
+        SyntaxError(Token *token, std::string expectation);
+        SyntaxError(Token *token, Token::Rule rule);
 
     private:
         void makeMessage(std::string got, std::string expectation);

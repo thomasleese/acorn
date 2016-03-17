@@ -9,7 +9,7 @@
 
 using namespace AST;
 
-Node::Node(LexicalAnalysis::Token *token) {
+Node::Node(Token *token) {
     this->token = token;
 }
 
@@ -21,11 +21,11 @@ void CodeBlock::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Identifier::Identifier(LexicalAnalysis::Token *token) : Expression(token) {
+Identifier::Identifier(Token *token) : Expression(token) {
 
 }
 
-Identifier::Identifier(LexicalAnalysis::Token *token, std::string name) : Expression(token) {
+Identifier::Identifier(Token *token, std::string name) : Expression(token) {
     this->name = name;
 }
 
@@ -45,11 +45,11 @@ void StringLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Argument::Argument(LexicalAnalysis::Token *token) : Node(token) {
+Argument::Argument(Token *token) : Node(token) {
 
 }
 
-Argument::Argument(LexicalAnalysis::Token *token, std::string name) : Node(token) {
+Argument::Argument(Token *token, std::string name) : Node(token) {
     this->name = new Identifier(token, name);
 }
 
@@ -61,7 +61,7 @@ void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Assignment::Assignment(LexicalAnalysis::Token *token, Expression *lhs, Expression *rhs) : Expression(token) {
+Assignment::Assignment(Token *token, Expression *lhs, Expression *rhs) : Expression(token) {
     this->lhs = lhs;
     this->rhs = rhs;
 }
@@ -90,7 +90,7 @@ void TypeDeclaration::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Parameter::Parameter(LexicalAnalysis::Token *token) : Node(token) {
+Parameter::Parameter(Token *token) : Node(token) {
     this->defaultExpression = 0;
 }
 
@@ -126,7 +126,7 @@ void ExpressionStatement::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Module::Module(LexicalAnalysis::Token *token, std::string name) : Node(token) {
+Module::Module(Token *token, std::string name) : Node(token) {
     this->name = name;
     this->code = new CodeBlock(token);
 }

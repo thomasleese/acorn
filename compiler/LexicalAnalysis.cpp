@@ -9,82 +9,11 @@
 #include <unicode/unistr.h>
 #include <boost/regex/icu.hpp>
 
-#include "LexicalAnalysis.h"
-
 #include "Errors.h"
 
-using namespace LexicalAnalysis;
+#include "LexicalAnalysis.h"
 
-std::string LexicalAnalysis::rule_string(Rule rule) {
-    switch (rule) {
-        case Whitespace:
-            return "whitespace";
-        case Newline:
-            return "new line";
-        case Comment:
-            return "comment";
-        case EndOfFile:
-            return "end of file";
-        case LetKeyword:
-            return "let";
-        case DefKeyword:
-            return "def";
-        case TypeKeyword:
-            return "type";
-        case AsKeyword:
-            return "as";
-        case EndKeyword:
-            return "end";
-        case WhileKeyword:
-            return "while";
-        case ForKeyword:
-            return "for";
-        case InKeyword:
-            return "in";
-        case IfKeyword:
-            return "if";
-        case ElseKeyword:
-            return "else";
-        case BooleanLiteral:
-            return "boolean";
-        case IntegerLiteral:
-            return "integer";
-        case FloatLiteral:
-            return "float";
-        case StringLiteral:
-            return "string";
-        case ComplexLiteral:
-            return "complex";
-        case Assignment:
-            return "assignment";
-        case Identifier:
-            return "name";
-        case Operator:
-            return "operator";
-        case OpenBracket:
-            return "[";
-        case CloseBracket:
-            return "]";
-        case OpenParenthesis:
-            return "(";
-        case CloseParenthesis:
-            return ")";
-        case OpenBrace:
-            return "{";
-        case CloseBrace:
-            return "}";
-        case OpenChevron:
-            return "<";
-        case CloseChevron:
-            return ">";
-        case Comma:
-            return ",";
-        case Dot:
-            return ".";
-        case Colon:
-            return ":";
-    }
-}
+using namespace LexicalAnalysis;
 
 Lexer::Lexer() {
     loadRules();
@@ -94,50 +23,50 @@ Lexer::~Lexer() {
 
 }
 
-void Lexer::setRule(Rule rule, std::string regex) {
+void Lexer::setRule(Token::Rule rule, std::string regex) {
     m_rules[rule] = "^" + regex;
 }
 
 void Lexer::loadRules() {
-    setRule(Whitespace, "([\t ]+)");
-    setRule(Newline, "([\r\n]+)");
-    setRule(Comment, "(#[^\n\r]+[\n\r]+)");
+    setRule(Token::Whitespace, "([\t ]+)");
+    setRule(Token::Newline, "([\r\n]+)");
+    setRule(Token::Comment, "(#[^\n\r]+[\n\r]+)");
 
     std::string keywordSuffix = "(?:[\n\r ]+)";
-    setRule(LetKeyword, "(let)" + keywordSuffix);
-    setRule(DefKeyword, "(def)" + keywordSuffix);
-    setRule(TypeKeyword, "(type)" + keywordSuffix);
-    setRule(AsKeyword, "(as)" + keywordSuffix);
-    setRule(EndKeyword, "(end)" + keywordSuffix);
-    setRule(WhileKeyword, "(while)" + keywordSuffix);
-    setRule(ForKeyword, "(for)" + keywordSuffix);
-    setRule(InKeyword, "(in)" + keywordSuffix);
-    setRule(IfKeyword, "(if)" + keywordSuffix);
-    setRule(ElseKeyword, "(else)" + keywordSuffix);
+    setRule(Token::LetKeyword, "(let)" + keywordSuffix);
+    setRule(Token::DefKeyword, "(def)" + keywordSuffix);
+    setRule(Token::TypeKeyword, "(type)" + keywordSuffix);
+    setRule(Token::AsKeyword, "(as)" + keywordSuffix);
+    setRule(Token::EndKeyword, "(end)" + keywordSuffix);
+    setRule(Token::WhileKeyword, "(while)" + keywordSuffix);
+    setRule(Token::ForKeyword, "(for)" + keywordSuffix);
+    setRule(Token::InKeyword, "(in)" + keywordSuffix);
+    setRule(Token::IfKeyword, "(if)" + keywordSuffix);
+    setRule(Token::ElseKeyword, "(else)" + keywordSuffix);
 
-    setRule(BooleanLiteral, "(true|false)");
-    setRule(StringLiteral, "(\"(?:\\.|[^\"])*\")");
-    setRule(FloatLiteral, "([0-9]+\\.[0-9]+)");
-    setRule(ComplexLiteral, "([0-9]+(?:\\.[0-9])?\\+i[0-9]+(?:\\.[0-9]+)?)");
-    setRule(IntegerLiteral, "([0-9]+)");
+    setRule(Token::BooleanLiteral, "(true|false)");
+    setRule(Token::StringLiteral, "(\"(?:\\.|[^\"])*\")");
+    setRule(Token::FloatLiteral, "([0-9]+\\.[0-9]+)");
+    setRule(Token::ComplexLiteral, "([0-9]+(?:\\.[0-9])?\\+i[0-9]+(?:\\.[0-9]+)?)");
+    setRule(Token::IntegerLiteral, "([0-9]+)");
 
-    setRule(OpenBracket, "(\\[)");
-    setRule(CloseBracket, "(\\])");
-    setRule(OpenParenthesis, "(\\()");
-    setRule(CloseParenthesis, "(\\))");
-    setRule(OpenBrace, "(\\{)");
-    setRule(CloseBrace, "(\\})");
-    setRule(OpenChevron, "(<)");
-    setRule(CloseChevron, "(>)");
-    setRule(Comma, "(,)");
-    setRule(Dot, "(\\.)");
-    setRule(Colon, "(:)");
+    setRule(Token::OpenBracket, "(\\[)");
+    setRule(Token::CloseBracket, "(\\])");
+    setRule(Token::OpenParenthesis, "(\\()");
+    setRule(Token::CloseParenthesis, "(\\))");
+    setRule(Token::OpenBrace, "(\\{)");
+    setRule(Token::CloseBrace, "(\\})");
+    setRule(Token::OpenChevron, "(<)");
+    setRule(Token::CloseChevron, "(>)");
+    setRule(Token::Comma, "(,)");
+    setRule(Token::Dot, "(\\.)");
+    setRule(Token::Colon, "(:)");
 
     std::string nameInitialRegex = "[:L*:][:Nl:][:Sc:][:So:]√";
     std::string nameAfterRegex = nameInitialRegex + "![:N*:][:M*:][:Sk:][:Pc:]";
-    setRule(Assignment, "(=[^=])");
-    setRule(Identifier, "([" + nameInitialRegex + "][" + nameAfterRegex + "]*)");
-    setRule(Operator, "([:Sm:])");
+    setRule(Token::Assignment, "(=[^=])");
+    setRule(Token::Identifier, "([" + nameInitialRegex + "][" + nameAfterRegex + "]*)");
+    setRule(Token::Operator, "([:Sm:])");
 }
 
 std::vector<Token *> Lexer::tokenise(std::string filename) const {
@@ -173,14 +102,14 @@ std::vector<Token *> Lexer::tokenise(std::string filename) const {
         bool found = false;
 
         for (auto it = m_rules.begin(); it != m_rules.end(); it++) {
-            Rule rule = it->first;
+            Token::Rule rule = it->first;
             boost::u32regex pattern = boost::make_u32regex(it->second);
 
             if (boost::u32regex_search(substr, matcher, pattern)) {
                 std::string value = matcher.str(1);
 
                 if (substr.substr(0, value.size()) == value) {
-                    if (rule != Whitespace && rule != Comment) {
+                    if (rule != Token::Whitespace && rule != Token::Comment) {
                         Token *token = new Token();
                         token->rule = rule;
                         token->lexeme = value;
@@ -195,7 +124,7 @@ std::vector<Token *> Lexer::tokenise(std::string filename) const {
 
                     pos += value.size();
 
-                    if (rule == Newline) {
+                    if (rule == Token::Newline) {
                         currentLineNumber += value.size();  // each newline is a single character
                         currentColumn = 0;
                         currentLine = "";
@@ -218,7 +147,7 @@ std::vector<Token *> Lexer::tokenise(std::string filename) const {
     }
 
     Token *endOfFileToken = new Token();
-    endOfFileToken->rule = EndOfFile;
+    endOfFileToken->rule = Token::EndOfFile;
     endOfFileToken->lexeme = "";
 
     endOfFileToken->filename = filename;

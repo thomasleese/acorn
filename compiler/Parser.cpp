@@ -4,16 +4,16 @@
 
 #include <sstream>
 
-#include "LexicalAnalysis.h"
-#include "Errors.h"
 #include "AbstractSyntaxTree.h"
+#include "Errors.h"
+
 #include "Parser.h"
 
 #include <iostream>
 
 using namespace AST;
 
-Parser::Parser(std::vector<LexicalAnalysis::Token *> tokens) {
+Parser::Parser(std::vector<Token *> tokens) {
     for (auto token : tokens) {
         m_tokens.push_back(token);
     }
@@ -31,9 +31,9 @@ Parser::~Parser() {
 Module *Parser::parse(std::string name) {
     Module *module = new Module(m_tokens.front(), name);
 
-    skipToken(LexicalAnalysis::Newline);
+    skipToken(Token::Newline);
 
-    while (!isToken(LexicalAnalysis::EndOfFile)) {
+    while (!isToken(Token::EndOfFile)) {
         Statement *statement = readStatement();
         module->code->statements.push_back(statement);
     }
@@ -45,8 +45,8 @@ void Parser::debug(std::string line) {
     //std::cerr << line << std::endl;
 }
 
-LexicalAnalysis::Token *Parser::readToken(LexicalAnalysis::Rule rule) {
-    LexicalAnalysis::Token *token = m_tokens.front();
+Token *Parser::readToken(Token::Rule rule) {
+    Token *token = m_tokens.front();
     m_tokens.pop_front();
 
     if (token->rule != rule) {
@@ -56,7 +56,7 @@ LexicalAnalysis::Token *Parser::readToken(LexicalAnalysis::Rule rule) {
     return token;
 }
 
-LexicalAnalysis::Token *Parser::skipToken(LexicalAnalysis::Rule rule) {
+Token *Parser::skipToken(Token::Rule rule) {
     if (isToken(rule)) {
         return readToken(rule);
     } else {
@@ -64,12 +64,12 @@ LexicalAnalysis::Token *Parser::skipToken(LexicalAnalysis::Rule rule) {
     }
 }
 
-bool Parser::isToken(LexicalAnalysis::Rule rule) const {
+bool Parser::isToken(Token::Rule rule) const {
     if (m_tokens.empty()) {
         return false;
     }
 
-    LexicalAnalysis::Token *token = m_tokens.front();
+    Token *token = m_tokens.front();
     return token->rule == rule;
 }
 
@@ -78,12 +78,12 @@ CodeBlock *Parser::readCodeBlock() {
 
     CodeBlock *code = new CodeBlock(m_tokens.front());
 
-    while (!isToken(LexicalAnalysis::EndKeyword)) {
+    while (!isToken(Token::EndKeyword)) {
         Statement *s = readStatement();
         code->statements.push_back(s);
     }
 
-    readToken(LexicalAnalysis::EndKeyword);
+    readToken(Token::EndKeyword);
 
     return code;
 }
@@ -92,7 +92,7 @@ Expression *Parser::readExpression() {
     debug("Reading expression...");
 
     Expression *expr = readUnaryExpression();
-    if (isToken(LexicalAnalysis::Operator) || isToken(LexicalAnalysis::Assignment)) {
+    if (isToken(Token::Operator) || isToken(Token::Assignment)) {
         return readBinaryExpression(expr, 0);
     } else {
         return expr;
@@ -100,18 +100,18 @@ Expression *Parser::readExpression() {
 }
 
 Identifier *Parser::readIdentifier() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::Identifier);
+    Token *token = readToken(Token::Identifier);
     return new Identifier(token, token->lexeme);
 }
 
 Identifier *Parser::readOperator() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::Operator);
+    Token *token = readToken(Token::Operator);
     return new Identifier(token, token->lexeme);
 }
 
 
 IntegerLiteral *Parser::readIntegerLiteral() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::IntegerLiteral);
+    Token *token = readToken(Token::IntegerLiteral);
 
     IntegerLiteral *literal = new IntegerLiteral(token);
 
@@ -123,7 +123,7 @@ IntegerLiteral *Parser::readIntegerLiteral() {
 }
 
 FloatLiteral *Parser::readFloatLiteral() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::FloatLiteral);
+    Token *token = readToken(Token::FloatLiteral);
 
     FloatLiteral *literal = new FloatLiteral(token);
     literal->value = token->lexeme;
@@ -132,7 +132,7 @@ FloatLiteral *Parser::readFloatLiteral() {
 }
 
 StringLiteral *Parser::readStringLiteral() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::StringLiteral);
+    Token *token = readToken(Token::StringLiteral);
 
     StringLiteral *literal = new StringLiteral(token);
     literal->value = token->lexeme;
@@ -143,34 +143,34 @@ StringLiteral *Parser::readStringLiteral() {
 Argument *Parser::readArgument() {
     Argument *argument = new Argument(m_tokens.front());
     argument->name = readIdentifier();
-    readToken(LexicalAnalysis::Colon);
+    readToken(Token::Colon);
     argument->value = readExpression();
     return argument;
 }
 
 Call *Parser::readCall(Expression *operand) {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::OpenParenthesis);
+    Token *token = readToken(Token::OpenParenthesis);
 
     Call *call = new Call(token);
     call->operand = operand;
 
-    while (!isToken(LexicalAnalysis::CloseParenthesis)) {
+    while (!isToken(Token::CloseParenthesis)) {
         call->arguments.push_back(readArgument());
 
-        if (isToken(LexicalAnalysis::Comma)) {
-            readToken(LexicalAnalysis::Comma);
+        if (isToken(Token::Comma)) {
+            readToken(Token::Comma);
         } else {
             break;
         }
     }
 
-    readToken(LexicalAnalysis::CloseParenthesis);
+    readToken(Token::CloseParenthesis);
 
     return call;
 }
 
 Selector *Parser::readSelector(AST::Expression *operand) {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::Dot);
+    Token *token = readToken(Token::Dot);
 
     Selector *selector = new Selector(token);
     selector->operand = operand;
@@ -179,12 +179,12 @@ Selector *Parser::readSelector(AST::Expression *operand) {
 }
 
 While *Parser::readWhile() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::WhileKeyword);
+    Token *token = readToken(Token::WhileKeyword);
 
     While *expression = new While(token);
     expression->condition = readExpression();
 
-    readToken(LexicalAnalysis::Newline);
+    readToken(Token::Newline);
 
     expression->code = readCodeBlock();
     return expression;
@@ -193,17 +193,17 @@ While *Parser::readWhile() {
 For *Parser::readFor() {
     debug("Reading For...");
 
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::ForKeyword);
+    Token *token = readToken(Token::ForKeyword);
 
     For *expression = new For(token);
     expression->name = readIdentifier();
 
     debug("Name: " + expression->name->name);
 
-    readToken(LexicalAnalysis::InKeyword);
+    readToken(Token::InKeyword);
     expression->iterator = readExpression();
 
-    readToken(LexicalAnalysis::Newline);
+    readToken(Token::Newline);
 
     expression->code = readCodeBlock();
 
@@ -213,39 +213,39 @@ For *Parser::readFor() {
 }
 
 If *Parser::readIf() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::IfKeyword);
+    Token *token = readToken(Token::IfKeyword);
 
     If *expression = new If(token);
     expression->condition = readExpression();
 
-    readToken(LexicalAnalysis::Newline);
+    readToken(Token::Newline);
 
     expression->trueCode = new CodeBlock(m_tokens.front());
     expression->falseCode = 0;
 
-    while (!isToken(LexicalAnalysis::ElseKeyword) && !isToken(LexicalAnalysis::EndKeyword)) {
+    while (!isToken(Token::ElseKeyword) && !isToken(Token::EndKeyword)) {
         Statement *statement = readStatement();
         expression->trueCode->statements.push_back(statement);
     }
 
-    if (isToken(LexicalAnalysis::ElseKeyword)) {
-        readToken(LexicalAnalysis::ElseKeyword);
+    if (isToken(Token::ElseKeyword)) {
+        readToken(Token::ElseKeyword);
 
-        if (isToken(LexicalAnalysis::IfKeyword)) {
+        if (isToken(Token::IfKeyword)) {
             readIf();
         } else {
-            readToken(LexicalAnalysis::Newline);
+            readToken(Token::Newline);
             expression->falseCode = readCodeBlock();
         }
     } else {
-        readToken(LexicalAnalysis::EndKeyword);
+        readToken(Token::EndKeyword);
     }
 
     return expression;
 }
 
 Expression *Parser::readUnaryExpression() {
-    if (isToken(LexicalAnalysis::Operator)) {
+    if (isToken(Token::Operator)) {
         Call *expr = new Call(m_tokens.front());
         expr->operand = readOperator();
 
@@ -261,22 +261,22 @@ Expression *Parser::readUnaryExpression() {
 }
 
 Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
-    while ((isToken(LexicalAnalysis::Operator) || isToken(LexicalAnalysis::Assignment)) && m_operatorPrecendence[m_tokens.front()->lexeme] >= minPrecedence) {
-        LexicalAnalysis::Token *token = m_tokens.front();
+    while ((isToken(Token::Operator) || isToken(Token::Assignment)) && m_operatorPrecendence[m_tokens.front()->lexeme] >= minPrecedence) {
+        Token *token = m_tokens.front();
 
         std::string opName = "=";
 
         Identifier *op = 0;
-        if (isToken(LexicalAnalysis::Operator)) {
+        if (isToken(Token::Operator)) {
             op = readOperator();
             opName = op->name;
         } else {
-            readToken(LexicalAnalysis::Assignment);
+            readToken(Token::Assignment);
         }
 
         Expression *rhs = readOperandExpression();
 
-        while ((isToken(LexicalAnalysis::Operator) || isToken(LexicalAnalysis::Assignment)) && m_operatorPrecendence[m_tokens.front()->lexeme] > m_operatorPrecendence[opName]) {
+        while ((isToken(Token::Operator) || isToken(Token::Assignment)) && m_operatorPrecendence[m_tokens.front()->lexeme] > m_operatorPrecendence[opName]) {
             rhs = readBinaryExpression(rhs, m_operatorPrecendence[m_tokens.front()->lexeme]);
         }
 
@@ -305,33 +305,33 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
 Expression *Parser::readOperandExpression() {
     Expression *expr = 0;
 
-    if (isToken(LexicalAnalysis::OpenParenthesis)) {
-        readToken(LexicalAnalysis::OpenParenthesis);
+    if (isToken(Token::OpenParenthesis)) {
+        readToken(Token::OpenParenthesis);
         expr = readExpression();
-        readToken(LexicalAnalysis::CloseParenthesis);
+        readToken(Token::CloseParenthesis);
         return expr;
-    } else if (isToken(LexicalAnalysis::IntegerLiteral)) {
+    } else if (isToken(Token::IntegerLiteral)) {
         expr = readIntegerLiteral();
-    } else if (isToken(LexicalAnalysis::FloatLiteral)) {
+    } else if (isToken(Token::FloatLiteral)) {
         expr = readFloatLiteral();
-    } else if (isToken(LexicalAnalysis::StringLiteral)) {
+    } else if (isToken(Token::StringLiteral)) {
         expr = readStringLiteral();
-    } else if (isToken(LexicalAnalysis::WhileKeyword)) {
+    } else if (isToken(Token::WhileKeyword)) {
         expr = readWhile();
-    } else if (isToken(LexicalAnalysis::ForKeyword)) {
+    } else if (isToken(Token::ForKeyword)) {
         expr = readFor();
-    } else if (isToken(LexicalAnalysis::IfKeyword)) {
+    } else if (isToken(Token::IfKeyword)) {
         expr = readIf();
-    } else if (isToken(LexicalAnalysis::Identifier)) {
+    } else if (isToken(Token::Identifier)) {
         expr = readIdentifier();
     } else {
         throw Errors::SyntaxError(m_tokens.front(), "operand");
     }
 
     while (true) {
-        if (isToken(LexicalAnalysis::OpenParenthesis)) {
+        if (isToken(Token::OpenParenthesis)) {
             expr = readCall(expr);
-        } else if (isToken(LexicalAnalysis::Dot)) {
+        } else if (isToken(Token::Dot)) {
             expr = readSelector(expr);
         } else {
             break;
@@ -342,7 +342,7 @@ Expression *Parser::readOperandExpression() {
 }
 
 TypeDeclaration *Parser::readTypeDeclaration() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::AsKeyword);
+    Token *token = readToken(Token::AsKeyword);
 
     TypeDeclaration *type = new TypeDeclaration(token);
     type->name = readIdentifier();
@@ -355,8 +355,8 @@ Parameter *Parser::readParameter() {
     parameter->name = readIdentifier();
     parameter->type = readTypeDeclaration();
 
-    if (isToken(LexicalAnalysis::Colon)) {
-        readToken(LexicalAnalysis::Colon);
+    if (isToken(Token::Colon)) {
+        readToken(Token::Colon);
         parameter->defaultExpression = readExpression();
     }
 
@@ -364,14 +364,14 @@ Parameter *Parser::readParameter() {
 }
 
 VariableDefinition *Parser::readVariableDefinition() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::LetKeyword);
+    Token *token = readToken(Token::LetKeyword);
 
     VariableDefinition *definition = new VariableDefinition(token);
 
     definition->name = readIdentifier();
     definition->type = readTypeDeclaration();
 
-    readToken(LexicalAnalysis::Assignment);
+    readToken(Token::Assignment);
 
     definition->expression = readExpression();
 
@@ -381,13 +381,13 @@ VariableDefinition *Parser::readVariableDefinition() {
 FunctionDefinition *Parser::readFunctionDefinition() {
     debug("Reading FunctionDefinition...");
 
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::DefKeyword);
+    Token *token = readToken(Token::DefKeyword);
 
     FunctionDefinition *definition = new FunctionDefinition(token);
 
-    if (isToken(LexicalAnalysis::Identifier)) {
+    if (isToken(Token::Identifier)) {
         definition->name = readIdentifier();
-    } else if (isToken(LexicalAnalysis::Operator)) {
+    } else if (isToken(Token::Operator)) {
         definition->name = readOperator();
     } else {
         throw Errors::SyntaxError(m_tokens.front(), "identifier or operator");
@@ -395,23 +395,23 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 
     debug("Name: " + definition->name->name);
 
-    readToken(LexicalAnalysis::OpenParenthesis);
+    readToken(Token::OpenParenthesis);
 
-    while (!isToken(LexicalAnalysis::CloseParenthesis)) {
+    while (!isToken(Token::CloseParenthesis)) {
         definition->parameters.push_back(readParameter());
 
-        if (isToken(LexicalAnalysis::Comma)) {
-            readToken(LexicalAnalysis::Comma);
+        if (isToken(Token::Comma)) {
+            readToken(Token::Comma);
         } else {
             break;  // no more parameters, apparently
         }
     }
 
-    readToken(LexicalAnalysis::CloseParenthesis);
+    readToken(Token::CloseParenthesis);
 
     definition->type = readTypeDeclaration();
 
-    readToken(LexicalAnalysis::Newline);
+    readToken(Token::Newline);
 
     definition->code = readCodeBlock();
 
@@ -421,20 +421,20 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 }
 
 TypeDefinition *Parser::readTypeDefinition() {
-    LexicalAnalysis::Token *token = readToken(LexicalAnalysis::TypeKeyword);
+    Token *token = readToken(Token::TypeKeyword);
 
     TypeDefinition *definition = new TypeDefinition(token);
 
     definition->name = readIdentifier();
 
-    readToken(LexicalAnalysis::Newline);
+    readToken(Token::Newline);
 
-    while (!isToken(LexicalAnalysis::EndKeyword)) {
+    while (!isToken(Token::EndKeyword)) {
         definition->fields.push_back(readParameter());
-        readToken(LexicalAnalysis::Newline);
+        readToken(Token::Newline);
     }
 
-    readToken(LexicalAnalysis::EndKeyword);
+    readToken(Token::EndKeyword);
 
     return definition;
 }
@@ -444,17 +444,17 @@ Statement *Parser::readStatement() {
 
     Statement *statement;
 
-    if (isToken(LexicalAnalysis::LetKeyword)) {
+    if (isToken(Token::LetKeyword)) {
         statement = new DefinitionStatement(readVariableDefinition());
-    } else if (isToken(LexicalAnalysis::DefKeyword)) {
+    } else if (isToken(Token::DefKeyword)) {
         statement = new DefinitionStatement(readFunctionDefinition());
-    } else if (isToken(LexicalAnalysis::TypeKeyword)) {
+    } else if (isToken(Token::TypeKeyword)) {
         statement = new DefinitionStatement(readTypeDefinition());
     } else {
         statement = new ExpressionStatement(readExpression());
     }
 
-    readToken(LexicalAnalysis::Newline);
+    readToken(Token::Newline);
 
     return statement;
 }

@@ -9,63 +9,9 @@
 #include <string>
 #include <vector>
 
+#include "Token.h"
+
 namespace LexicalAnalysis {
-
-    enum Rule {
-        Whitespace,
-        Newline,
-        Comment,
-        EndOfFile,
-
-        // keywords
-        LetKeyword,
-        DefKeyword,
-        TypeKeyword,
-        AsKeyword,
-        EndKeyword,
-        WhileKeyword,
-        ForKeyword,
-        InKeyword,
-        IfKeyword,
-        ElseKeyword,
-
-        // literals
-        BooleanLiteral,
-        StringLiteral,
-        FloatLiteral,
-        ComplexLiteral,
-        IntegerLiteral,
-
-        // delimiters
-        OpenBracket,
-        CloseBracket,
-        OpenParenthesis,
-        CloseParenthesis,
-        OpenBrace,
-        CloseBrace,
-        OpenChevron,
-        CloseChevron,
-        Comma,
-        Dot,
-        Colon,
-
-        // identifiers
-        Assignment,
-        Identifier,
-        Operator,
-    };
-
-    std::string rule_string(Rule rule);
-
-    struct Token {
-        std::string lexeme;
-        Rule rule;
-
-        std::string filename;
-        std::string line;
-        int lineNumber;
-        int column;
-    };
 
     class Lexer {
     public:
@@ -74,7 +20,7 @@ namespace LexicalAnalysis {
         ~Lexer();
 
     private:
-        void setRule(Rule rule, std::string regex);
+        void setRule(Token::Rule rule, std::string regex);
 
         void loadRules();
 
@@ -82,7 +28,7 @@ namespace LexicalAnalysis {
         std::vector<Token *> tokenise(std::string filename) const;
 
     private:
-        std::map<Rule, std::string> m_rules;
+        std::map<Token::Rule, std::string> m_rules;
     };
 
 }

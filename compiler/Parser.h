@@ -8,6 +8,8 @@
 #include <deque>
 #include <string>
 
+#include "Token.h"
+
 namespace AST {
     struct Node;
     struct Expression;
@@ -35,14 +37,10 @@ namespace AST {
     struct Module;
 }
 
-namespace LexicalAnalysis {
-    struct Token;
-}
-
 class Parser {
 
 public:
-    explicit Parser(std::vector<LexicalAnalysis::Token *> tokens);
+    explicit Parser(std::vector<Token *> tokens);
     ~Parser();
 
     AST::Module *parse(std::string name);
@@ -50,9 +48,9 @@ public:
 private:
     void debug(std::string line);
 
-    LexicalAnalysis::Token *readToken(LexicalAnalysis::Rule rule);
-    LexicalAnalysis::Token *skipToken(LexicalAnalysis::Rule rule);
-    bool isToken(LexicalAnalysis::Rule rule) const;
+    Token *readToken(Token::Rule rule);
+    Token *skipToken(Token::Rule rule);
+    bool isToken(Token::Rule rule) const;
 
     // misc
     AST::CodeBlock *readCodeBlock();
@@ -87,7 +85,7 @@ private:
     AST::Statement *readStatement();
 
 private:
-    std::deque<LexicalAnalysis::Token *> m_tokens;
+    std::deque<Token *> m_tokens;
     std::map<std::string, int> m_operatorPrecendence;
 
 };

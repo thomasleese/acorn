@@ -1,6 +1,5 @@
 #include <iostream>
 
-#include "LexicalAnalysis.h"
 #include "Compiler.h"
 #include "Errors.h"
 

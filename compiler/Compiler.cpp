@@ -18,10 +18,10 @@
 void Compiler::compile(std::string filename) {
     LexicalAnalysis::Lexer lexer;
 
-    std::vector<LexicalAnalysis::Token *> tokens = lexer.tokenise(filename);
+    std::vector<Token *> tokens = lexer.tokenise(filename);
 
-    for (LexicalAnalysis::Token *token : tokens) {
-        std::cout << LexicalAnalysis::rule_string(token->rule) << ": " << token->lexeme << std::endl;
+    for (Token *token : tokens) {
+        std::cout << Token::rule_string(token->rule) << ": " << token->lexeme << std::endl;
     }
 
     std::string moduleName = filename.substr(0, filename.find("."));

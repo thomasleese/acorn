@@ -9,21 +9,19 @@
 #include <queue>
 #include <vector>
 
-namespace LexicalAnalysis {
-    struct Token;
-}
+struct Token;
 
 namespace AST {
 
     class Visitor;
 
     struct Node {
-        explicit Node(LexicalAnalysis::Token *token);
+        explicit Node(Token *token);
         virtual ~Node();
 
         virtual void accept(Visitor *visitor) = 0;
 
-        LexicalAnalysis::Token *token;
+        Token *token;
     };
 
     // basic categories
@@ -50,8 +48,8 @@ namespace AST {
 
     // expressions
     struct Identifier : Expression {
-        explicit Identifier(LexicalAnalysis::Token *token);
-        Identifier(LexicalAnalysis::Token *token, std::string name);
+        explicit Identifier(Token *token);
+        Identifier(Token *token, std::string name);
 
         std::string name;
 
@@ -83,8 +81,8 @@ namespace AST {
     };
 
     struct Argument : Node {
-        explicit Argument(LexicalAnalysis::Token *token);
-        Argument(LexicalAnalysis::Token *token, std::string name);
+        explicit Argument(Token *token);
+        Argument(Token *token, std::string name);
 
         Identifier *name;
         Expression *value;
@@ -102,7 +100,7 @@ namespace AST {
     };
 
     struct Assignment : Expression {
-        explicit Assignment(LexicalAnalysis::Token *token, Expression *lhs, Expression *rhs);
+        explicit Assignment(Token *token, Expression *lhs, Expression *rhs);
 
         Expression *lhs;
         Expression *rhs;
@@ -158,7 +156,7 @@ namespace AST {
     };
 
     struct Parameter : Node {
-        explicit Parameter(LexicalAnalysis::Token *token);
+        explicit Parameter(Token *token);
 
         Identifier *name;
         TypeDeclaration *type;
@@ -217,7 +215,7 @@ namespace AST {
 
     // module
     struct Module : Node {
-        explicit Module(LexicalAnalysis::Token *token, std::string name);
+        explicit Module(Token *token, std::string name);
 
         std::string name;
         CodeBlock *code;

@@ -19,7 +19,7 @@ CompilerError::CompilerError(std::string filename, int lineNumber, int column, s
     m_line = line;
 }
 
-CompilerError::CompilerError(LexicalAnalysis::Token *token) :
+CompilerError::CompilerError(Token *token) :
         CompilerError(token->filename, token->lineNumber, token->column, token->line) {
 
 }
@@ -50,21 +50,21 @@ SyntaxError::SyntaxError(std::string filename, int lineNumber, int column, std::
     m_message = "Got: " + got + "\nExpected: " + expectation;
 }
 
-SyntaxError::SyntaxError(LexicalAnalysis::Token *token, std::string expectation) :
+SyntaxError::SyntaxError(Token *token, std::string expectation) :
         CompilerError(token) {
     m_prefix = "Invalid syntax";
 
     std::string got = token->lexeme;
 
     if (got.empty()) {
-        got = "(" + LexicalAnalysis::rule_string(token->rule) + ")";
+        got = "(" + Token::rule_string(token->rule) + ")";
     }
 
     makeMessage(got, expectation);
 }
 
-SyntaxError::SyntaxError(LexicalAnalysis::Token *token, LexicalAnalysis::Rule rule) :
-        SyntaxError(token, LexicalAnalysis::rule_string(rule)) {
+SyntaxError::SyntaxError(Token *token, Token::Rule rule) :
+        SyntaxError(token, Token::rule_string(rule)) {
 
 }
 
