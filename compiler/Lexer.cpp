@@ -25,7 +25,7 @@ void Lexer::addRule(Rule rule, std::string regex) {
 void Lexer::loadRules() {
     addRule(Lexer::Whitespace, "([\t ]+)");
     addRule(Lexer::Newline, "([\r\n]+)");
-    addRule(Lexer::Comment, "(#[^\n\r]+)");
+    addRule(Lexer::Comment, "(#[^\n\r]+[\n\r]+)");
 
     addRule(Lexer::LetKeyword, "(let)(?:[\n\r ]+)");
     addRule(Lexer::DefKeyword, "(def)(?:[\n\r ]+)");

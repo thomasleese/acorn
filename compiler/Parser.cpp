@@ -31,7 +31,7 @@ Parser::~Parser() {
 Module *Parser::parse(std::string name) {
     Module *module = new Module(m_tokens.front(), name);
 
-    skipNewlines();
+    skipToken(Lexer::Newline);
 
     while (!isToken(Lexer::EndOfFile)) {
         Statement *statement = readStatement();
@@ -45,17 +45,6 @@ void Parser::debug(std::string line) {
     //std::cerr << line << std::endl;
 }
 
-void Parser::skipNewlines() {
-    while (isToken(Lexer::Newline)) {
-        readToken(Lexer::Newline);
-    }
-}
-
-void Parser::readNewlines() {
-    readToken(Lexer::Newline);
-    skipNewlines();
-}
-
 Lexer::Token *Parser::readToken(Lexer::Rule rule) {
     Lexer::Token *token = m_tokens.front();
     m_tokens.pop_front();
@@ -65,6 +54,14 @@ Lexer::Token *Parser::readToken(Lexer::Rule rule) {
     }
 
     return token;
+}
+
+Lexer::Token *Parser::skipToken(Lexer::Rule rule) {
+    if (isToken(rule)) {
+        return readToken(rule);
+    } else {
+        return 0;
+    }
 }
 
 bool Parser::isToken(Lexer::Rule rule) const {
@@ -178,7 +175,8 @@ While *Parser::readWhile() {
     While *expression = new While(token);
     expression->condition = readExpression();
 
-    readNewlines();
+    readToken(Lexer::Newline);
+
     expression->code = readCodeBlock();
     return expression;
 }
@@ -196,7 +194,7 @@ For *Parser::readFor() {
     readToken(Lexer::InKeyword);
     expression->iterator = readExpression();
 
-    readNewlines();
+    readToken(Lexer::Newline);
 
     expression->code = readCodeBlock();
 
@@ -210,7 +208,8 @@ If *Parser::readIf() {
 
     If *expression = new If(token);
     expression->condition = readExpression();
-    readNewlines();
+
+    readToken(Lexer::Newline);
 
     expression->trueCode = new CodeBlock(m_tokens.front());
     expression->falseCode = 0;
@@ -226,7 +225,7 @@ If *Parser::readIf() {
         if (isToken(Lexer::IfKeyword)) {
             readIf();
         } else {
-            readNewlines();
+            readToken(Lexer::Newline);
             expression->falseCode = readCodeBlock();
         }
     } else {
@@ -401,7 +400,7 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 
     definition->type = readTypeDeclaration();
 
-    readNewlines();
+    readToken(Lexer::Newline);
 
     definition->code = readCodeBlock();
 
@@ -417,11 +416,11 @@ TypeDefinition *Parser::readTypeDefinition() {
 
     definition->name = readIdentifier();
 
-    readNewlines();
+    readToken(Lexer::Newline);
 
     while (!isToken(Lexer::EndKeyword)) {
         definition->fields.push_back(readParameter());
-        readNewlines();
+        readToken(Lexer::Newline);
     }
 
     readToken(Lexer::EndKeyword);
@@ -444,7 +443,7 @@ Statement *Parser::readStatement() {
         statement = new ExpressionStatement(readExpression());
     }
 
-    readNewlines();
+    readToken(Lexer::Newline);
 
     return statement;
 }

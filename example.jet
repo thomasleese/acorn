@@ -5,7 +5,8 @@ let two as Integer = 2
 
 let as_hello as Integer = 5
 
-two = 3  # should fail, not mutable
+# should fail, not mutable
+two = 3
 
 def what_is_one() as Integer
     one

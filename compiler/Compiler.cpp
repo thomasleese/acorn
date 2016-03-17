@@ -11,6 +11,7 @@
 #include "PrettyPrinter.h"
 #include "SymbolTable.h"
 #include "CodeGenerator.h"
+#include "Errors.h"
 
 #include "Compiler.h"
 
@@ -19,9 +20,9 @@ void Compiler::compile(std::string filename) {
 
     std::vector<Lexer::Token *> tokens = lexer.tokenise(filename);
 
-    /*for (Lexer::Token token : tokens) {
-        std::cout << token.lexeme << std::endl;
-    }*/
+    for (Lexer::Token *token : tokens) {
+        std::cout << Errors::rule_string(token->rule) << ": " << token->lexeme << std::endl;
+    }
 
     std::string moduleName = filename.substr(0, filename.find("."));
 

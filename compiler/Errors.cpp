@@ -10,7 +10,7 @@
 
 using namespace Errors;
 
-std::string rule_string(Lexer::Rule rule) {
+std::string Errors::rule_string(Lexer::Rule rule) {
     switch (rule) {
         case Lexer::Whitespace:
             return "whitespace";

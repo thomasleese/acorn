@@ -45,10 +45,8 @@ public:
 private:
     void debug(std::string line);
 
-    void skipNewlines();
-    void readNewlines();
-
     Lexer::Token *readToken(Lexer::Rule rule);
+    Lexer::Token *skipToken(Lexer::Rule rule);
     bool isToken(Lexer::Rule rule) const;
 
     // misc

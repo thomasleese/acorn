@@ -17,6 +17,8 @@ namespace AST {
 
 namespace Errors {
 
+    std::string rule_string(Lexer::Rule rule);
+
     class CompilerError : public std::exception {
     public:
         explicit CompilerError(std::string filename, int lineNumber, int column, std::string line);
