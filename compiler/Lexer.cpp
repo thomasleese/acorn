@@ -19,46 +19,46 @@ Lexer::~Lexer() {
 }
 
 void Lexer::addRule(Rule rule, std::string regex) {
-    m_rules[rule] = std::regex(regex, std::regex_constants::extended);
+    m_rules[rule] = std::regex("^" + regex, std::regex_constants::ECMAScript);
 }
 
 void Lexer::loadRules() {
-    addRule(Lexer::Whitespace, "[\t ]+");
-    addRule(Lexer::Newline, "[\r\n]+");
-    addRule(Lexer::Comment, "#[^\n\r]+");
+    addRule(Lexer::Whitespace, "([\t ]+)");
+    addRule(Lexer::Newline, "([\r\n]+)");
+    addRule(Lexer::Comment, "(#[^\n\r]+)");
 
-    addRule(Lexer::LetKeyword, "let");
-    addRule(Lexer::DefKeyword, "def");
-    addRule(Lexer::TypeKeyword, "type");
-    addRule(Lexer::AsKeyword, "as");
-    addRule(Lexer::EndKeyword, "end");
-    addRule(Lexer::WhileKeyword, "while");
-    addRule(Lexer::ForKeyword, "for");
-    addRule(Lexer::InKeyword, "in");
-    addRule(Lexer::IfKeyword, "if");
-    addRule(Lexer::ElseKeyword, "else");
+    addRule(Lexer::LetKeyword, "(let)(?:[\n\r ]+)");
+    addRule(Lexer::DefKeyword, "(def)(?:[\n\r ]+)");
+    addRule(Lexer::TypeKeyword, "(type)(?:[\n\r ]+)");
+    addRule(Lexer::AsKeyword, "(as)(?:[\n\r ]+)");
+    addRule(Lexer::EndKeyword, "(end)(?:[\n\r ]+)");
+    addRule(Lexer::WhileKeyword, "(while)(?:[\n\r ]+)");
+    addRule(Lexer::ForKeyword, "(for)(?:[\n\r ]+)");
+    addRule(Lexer::InKeyword, "(in)(?:[\n\r ]+)");
+    addRule(Lexer::IfKeyword, "(if)(?:[\n\r ]+)");
+    addRule(Lexer::ElseKeyword, "(else)(?:[\n\r ]+)");
 
-    addRule(Lexer::BooleanLiteral, "true|false");
-    addRule(Lexer::IntegerLiteral, "[0-9]+");
-    addRule(Lexer::FloatLiteral, "[0-9]+\\.[0-9]+");
-    addRule(Lexer::StringLiteral, "\"(\\.|[^\"])*\"");
-    addRule(Lexer::ComplexLiteral, "([0-9]+)|([0-9]+\\.[0-9]+)i([0-9]+)|([0-9]+\\.[0-9]+)");
+    addRule(Lexer::BooleanLiteral, "(true|false)");
+    addRule(Lexer::IntegerLiteral, "([0-9]+)");
+    addRule(Lexer::FloatLiteral, "([0-9]+\\.[0-9]+)");
+    addRule(Lexer::StringLiteral, "(\"(?:\\.|[^\"])*\")");
+    addRule(Lexer::ComplexLiteral, "([0-9]+(?:\\.[0-9])?\\+i[0-9]+(?:\\.[0-9]+)?)");
 
-    addRule(Lexer::Operator, "\\+=|>=|<=|==|\\^|\\+|\\*|-|<|>");  // replace with unicode Sm
-    addRule(Lexer::Identifier, "[[:alpha:]_][[:alpha:]_0-9]*");
-    addRule(Lexer::Assignment, "=");
+    addRule(Lexer::Operator, "(\\+=|>=|<=|==|\\^|\\+|\\*|-|<|>)");  // replace with unicode Sm
+    addRule(Lexer::Identifier, "([[:alpha:]_][[:alpha:]_0-9]*)");  // replace with unicode character
+    addRule(Lexer::Assignment, "(=)");
 
-    addRule(Lexer::OpenBracket, "\\[");
-    addRule(Lexer::CloseBracket, "]");
-    addRule(Lexer::OpenParenthesis, "\\(");
-    addRule(Lexer::CloseParenthesis, "\\)");
-    addRule(Lexer::OpenBrace, "\\{");
-    addRule(Lexer::CloseBrace, "\\}");
-    addRule(Lexer::OpenChevron, "<");
-    addRule(Lexer::CloseChevron, ">");
-    addRule(Lexer::Comma, ",");
-    addRule(Lexer::Dot, "\\.");
-    addRule(Lexer::Colon, ":");
+    addRule(Lexer::OpenBracket, "(\\[)");
+    addRule(Lexer::CloseBracket, "(\\])");
+    addRule(Lexer::OpenParenthesis, "(\\()");
+    addRule(Lexer::CloseParenthesis, "(\\))");
+    addRule(Lexer::OpenBrace, "(\\{)");
+    addRule(Lexer::CloseBrace, "(\\})");
+    addRule(Lexer::OpenChevron, "(<)");
+    addRule(Lexer::CloseChevron, "(>)");
+    addRule(Lexer::Comma, "(,)");
+    addRule(Lexer::Dot, "(\\.)");
+    addRule(Lexer::Colon, "(:)");
 }
 
 std::vector<Lexer::Token *> Lexer::tokenise(std::string filename) const {
@@ -81,8 +81,8 @@ std::vector<Lexer::Token *> Lexer::tokenise(std::string filename) const {
 
     std::getline(std::istringstream(buffer), currentLine);
 
-    int pos = 0;
-    int end = buffer.length();
+    unsigned long pos = 0;
+    unsigned long end = buffer.length();
 
     std::smatch matcher;
 
@@ -98,9 +98,9 @@ std::vector<Lexer::Token *> Lexer::tokenise(std::string filename) const {
             std::regex pattern = it->second;
 
             if (std::regex_search(substr, matcher, pattern)) {
-                std::string value = matcher[0];
+                std::string value = matcher.str(1);
 
-                if (substr.substr(0, value.length()) == value) {
+                if (substr.substr(0, value.size()) == value) {
                     if (rule != Whitespace && rule != Comment) {
                         Token *token = new Token();
                         token->rule = rule;
@@ -114,10 +114,10 @@ std::vector<Lexer::Token *> Lexer::tokenise(std::string filename) const {
                         tokens.push_back(token);
                     }
 
-                    pos += value.length();
+                    pos += value.size();
 
                     if (rule == Newline) {
-                        currentLineNumber += value.length();  // each newline is a single character
+                        currentLineNumber += value.size();  // each newline is a single character
                         currentColumn = 0;
                         currentLine = "";
                         std::getline(std::istringstream(buffer.substr(pos, pos - end)), currentLine);
