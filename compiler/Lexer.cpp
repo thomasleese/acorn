@@ -11,9 +11,7 @@
 
 #include "Errors.h"
 
-#include "LexicalAnalysis.h"
-
-using namespace LexicalAnalysis;
+#include "Lexer.h"
 
 Lexer::Lexer() {
     loadRules();

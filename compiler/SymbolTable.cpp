@@ -2,7 +2,7 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
-#include "LexicalAnalysis.h"
+#include "Lexer.h"
 #include "Errors.h"
 
 #include "SymbolTable.h"

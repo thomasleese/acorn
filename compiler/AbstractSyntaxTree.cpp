@@ -4,7 +4,7 @@
 
 #include <sstream>
 
-#include "LexicalAnalysis.h"
+#include "Lexer.h"
 #include "AbstractSyntaxTree.h"
 
 using namespace AST;

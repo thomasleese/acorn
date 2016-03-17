@@ -5,7 +5,7 @@
 #include <cassert>
 #include <iostream>
 
-#include "LexicalAnalysis.h"
+#include "Lexer.h"
 #include "Parser.h"
 #include "AbstractSyntaxTree.h"
 #include "PrettyPrinter.h"
@@ -16,7 +16,7 @@
 #include "Compiler.h"
 
 void Compiler::compile(std::string filename) {
-    LexicalAnalysis::Lexer lexer;
+    Lexer lexer;
 
     std::vector<Token *> tokens = lexer.tokenise(filename);
 

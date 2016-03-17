@@ -6,7 +6,7 @@
 #include <sstream>
 
 #include "AbstractSyntaxTree.h"
-#include "LexicalAnalysis.h"
+#include "Lexer.h"
 
 #include "Errors.h"
 
