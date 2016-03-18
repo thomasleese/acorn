@@ -27,7 +27,7 @@ namespace AST {
     struct While;
     struct For;
     struct If;
-    struct TypeDeclaration;
+    struct Type;
     struct Parameter;
     struct VariableDefinition;
     struct FunctionDefinition;
@@ -73,7 +73,7 @@ private:
     AST::Expression *readOperandExpression();
 
     // misc
-    AST::TypeDeclaration *readTypeDeclaration();
+    AST::Type *readType();
     AST::Parameter *readParameter();
 
     // definitions

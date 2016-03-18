@@ -73,7 +73,7 @@ void CodeGenerator::visit(AST::If *expression) {
 
 }
 
-void CodeGenerator::visit(AST::TypeDeclaration *type) {
+void CodeGenerator::visit(AST::Type *type) {
 
 }
 

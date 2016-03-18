@@ -341,10 +341,10 @@ Expression *Parser::readOperandExpression() {
     return expr;
 }
 
-TypeDeclaration *Parser::readTypeDeclaration() {
+Type *Parser::readType() {
     Token *token = readToken(Token::AsKeyword);
 
-    TypeDeclaration *type = new TypeDeclaration(token);
+    Type *type = new Type(token);
     type->name = readIdentifier();
     return type;
 }
@@ -353,7 +353,7 @@ Parameter *Parser::readParameter() {
     Parameter *parameter = new Parameter(m_tokens.front());
 
     parameter->name = readIdentifier();
-    parameter->type = readTypeDeclaration();
+    parameter->type = readType();
 
     if (isToken(Token::Colon)) {
         readToken(Token::Colon);
@@ -369,7 +369,7 @@ VariableDefinition *Parser::readVariableDefinition() {
     VariableDefinition *definition = new VariableDefinition(token);
 
     definition->name = readIdentifier();
-    definition->type = readTypeDeclaration();
+    definition->type = readType();
 
     readToken(Token::Assignment);
 
@@ -409,7 +409,7 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 
     readToken(Token::CloseParenthesis);
 
-    definition->type = readTypeDeclaration();
+    definition->returnType = readType();
 
     readToken(Token::Newline);
 

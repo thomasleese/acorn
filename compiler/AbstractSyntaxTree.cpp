@@ -86,7 +86,7 @@ void If::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-void TypeDeclaration::accept(Visitor *visitor) {
+void Type::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

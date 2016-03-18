@@ -106,7 +106,7 @@ void Builder::visit(AST::If *expression) {
 
 }
 
-void Builder::visit(AST::TypeDeclaration *type) {
+void Builder::visit(AST::Type *type) {
 
 }
 

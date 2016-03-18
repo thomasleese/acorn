@@ -123,8 +123,8 @@ void PrettyPrinter::visit(AST::If *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::TypeDeclaration *type) {
-    ss << indentation() << "(TypeDeclaration\n";
+void PrettyPrinter::visit(AST::Type *type) {
+    ss << indentation() << "(Type\n";
     indent++;
 
     type->name->accept(this);
@@ -165,7 +165,12 @@ void PrettyPrinter::visit(AST::FunctionDefinition *definition) {
     indent++;
 
     definition->name->accept(this);
-    definition->type->accept(this);
+
+    for (auto parameter : definition->parameters) {
+        parameter->accept(this);
+    }
+
+    definition->returnType->accept(this);
     definition->code->accept(this);
 
     indent--;

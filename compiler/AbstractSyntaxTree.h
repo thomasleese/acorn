@@ -147,10 +147,11 @@ namespace AST {
     };
 
     // misc
-    struct TypeDeclaration : Node {
+    struct Type : Node {
         using Node::Node;
 
         Identifier *name;
+        std::vector<Type *> parameters;
 
         void accept(Visitor *visitor);
     };
@@ -159,7 +160,7 @@ namespace AST {
         explicit Parameter(Token *token);
 
         Identifier *name;
-        TypeDeclaration *type;
+        Type *type;
         Expression *defaultExpression;
 
         void accept(Visitor *visitor);
@@ -170,7 +171,7 @@ namespace AST {
         using Definition::Definition;
 
         Identifier *name;
-        TypeDeclaration *type;
+        Type *type;
         Expression *expression;
 
         void accept(Visitor *visitor);
@@ -182,7 +183,7 @@ namespace AST {
         Identifier *name;
         std::vector<Parameter *> parameters;
         CodeBlock *code;
-        TypeDeclaration *type;
+        Type *returnType;
 
         void accept(Visitor *visitor);
     };
@@ -245,7 +246,7 @@ namespace AST {
         virtual void visit(If *expression) = 0;
 
         // misc
-        virtual void visit(TypeDeclaration *type) = 0;
+        virtual void visit(Type *type) = 0;
         virtual void visit(Parameter *parameter) = 0;
 
         // definitions
