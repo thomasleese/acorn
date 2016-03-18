@@ -10,7 +10,9 @@ int main() {
         /*compiler.compile("stdlib/builtins.jet");
         compiler.compile("stdlib/graphics.jet");
         compiler.compile("stdlib/maths.jet");*/
-        compiler.compile("example.jet");
+
+        compiler.compile("examples/types.jet");
+        compiler.compile("examples/strings.jet");
     } catch (Errors::CompilerError e) {
         e.print();
         return 1;

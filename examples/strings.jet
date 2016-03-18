@@ -1,0 +1,11 @@
+"a boring single-line string"
+
+'a just as boring single-line string'
+
+"a string
+that goes over
+multiple lines"
+
+'a string with \" \a \n some escapes'
+
+"a string with a \" quote in it"

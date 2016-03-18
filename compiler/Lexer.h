@@ -2,8 +2,8 @@
 // Created by Thomas Leese on 13/03/2016.
 //
 
-#ifndef QUARK_LEXER_H
-#define QUARK_LEXER_H
+#ifndef JET_LEXER_H
+#define JET_LEXER_H
 
 #include <map>
 #include <string>
@@ -30,4 +30,4 @@ private:
     std::map<Token::Rule, std::string> m_rules;
 };
 
-#endif //QUARK_LEXER_H
+#endif // JET_LEXER_H

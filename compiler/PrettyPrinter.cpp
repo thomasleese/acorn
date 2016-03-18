@@ -26,6 +26,10 @@ void PrettyPrinter::visit(AST::Identifier *expression) {
     ss << indentation() << "(Identifier " << expression->name << ")\n";
 }
 
+void PrettyPrinter::visit(AST::BooleanLiteral *boolean) {
+    ss << indentation() << "(BooleanLiteral " << boolean->value << ")\n";
+}
+
 void PrettyPrinter::visit(AST::IntegerLiteral *expression) {
     ss << indentation() << "(IntegerLiteral " << expression->value << ")\n";
 }
@@ -34,8 +38,37 @@ void PrettyPrinter::visit(AST::FloatLiteral *expression) {
     ss << indentation() << "(FloatLiteral " << expression->value << ")\n";
 }
 
+void PrettyPrinter::visit(AST::ImaginaryLiteral *imaginary) {
+    ss << indentation() << "(ImaginaryLiteral " << imaginary->value << ")\n";
+}
+
 void PrettyPrinter::visit(AST::StringLiteral *expression) {
     ss << indentation() << "(StringLiteral " << expression->value << ")\n";
+}
+
+void PrettyPrinter::visit(AST::SequenceLiteral *sequence) {
+    ss << indentation() << "(SequenceLiteral\n";
+    indent++;
+
+    for (auto element : sequence->elements) {
+        element->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::MappingLiteral *mapping) {
+    ss << indentation() << "(MappingLiteral\n";
+    indent++;
+
+    for (unsigned long i = 0; i < mapping->keys.size(); i++) {
+        mapping->keys[i]->accept(this);
+        mapping->values[i]->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
 }
 
 void PrettyPrinter::visit(AST::Argument *argument) {
@@ -129,6 +162,20 @@ void PrettyPrinter::visit(AST::Type *type) {
 
     type->name->accept(this);
 
+    for (auto parameter : type->parameters) {
+        parameter->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::Cast *cast) {
+    ss << indentation() << "(Cast\n";
+    indent++;
+
+    cast->type->accept(this);
+
     indent--;
     ss << indentation() << ")\n";
 }
@@ -138,7 +185,7 @@ void PrettyPrinter::visit(AST::Parameter *parameter) {
     indent++;
 
     parameter->name->accept(this);
-    parameter->type->accept(this);
+    parameter->cast->accept(this);
 
     if (parameter->defaultExpression) {
         parameter->defaultExpression->accept(this);
@@ -153,7 +200,7 @@ void PrettyPrinter::visit(AST::VariableDefinition *definition) {
     indent++;
 
     definition->name->accept(this);
-    definition->type->accept(this);
+    definition->cast->accept(this);
     definition->expression->accept(this);
 
     indent--;
@@ -170,7 +217,7 @@ void PrettyPrinter::visit(AST::FunctionDefinition *definition) {
         parameter->accept(this);
     }
 
-    definition->returnType->accept(this);
+    definition->returnCast->accept(this);
     definition->code->accept(this);
 
     indent--;

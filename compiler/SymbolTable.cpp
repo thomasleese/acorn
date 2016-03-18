@@ -66,6 +66,10 @@ void Builder::visit(AST::Identifier *expression) {
 
 }
 
+void Builder::visit(AST::BooleanLiteral *boolean) {
+
+}
+
 void Builder::visit(AST::IntegerLiteral *expression) {
 
 }
@@ -74,7 +78,19 @@ void Builder::visit(AST::FloatLiteral *expression) {
 
 }
 
+void Builder::visit(AST::ImaginaryLiteral *imaginary) {
+
+}
+
 void Builder::visit(AST::StringLiteral *expression) {
+
+}
+
+void Builder::visit(AST::SequenceLiteral *sequence) {
+
+}
+
+void Builder::visit(AST::MappingLiteral *mapping) {
 
 }
 
@@ -110,6 +126,10 @@ void Builder::visit(AST::Type *type) {
 
 }
 
+void Builder::visit(AST::Cast *cast) {
+
+}
+
 void Builder::visit(AST::Parameter *parameter) {
     Symbol *symbol = new Symbol(parameter->name->name);
     m_current->insert(parameter, symbol);
@@ -139,7 +159,7 @@ void Builder::visit(AST::FunctionDefinition *definition) {
 }
 
 void Builder::visit(AST::TypeDefinition *definition) {
-    Symbol *symbol = new Symbol(definition->name->name);
+    Symbol *symbol = new Symbol(definition->name->name->name);
     m_current->insert(definition, symbol);
 }
 

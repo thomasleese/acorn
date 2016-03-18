@@ -64,9 +64,9 @@ void Lexer::loadRules() {
     setKeywordRule(Token::UnlessKeyword, "unless");
 
     setRule(Token::BooleanLiteral, "(true|false)");
-    setRule(Token::StringLiteral, "(\"(?:\\.|[^\"])*\")");
+    setRule(Token::StringLiteral, "((['\"])((?:.(?!(?<![\\\\])\\2))*.?)\\2)");
+    setRule(Token::ImaginaryLiteral, "([0-9]+(\\.[0-9]+)?[ij])");
     setRule(Token::FloatLiteral, "([0-9]+\\.[0-9]+)");
-    setRule(Token::ComplexLiteral, "([0-9]+(?:\\.[0-9])?\\+i[0-9]+(?:\\.[0-9]+)?)");
     setRule(Token::IntegerLiteral, "([0-9]+)");
 
     setRule(Token::OpenBracket, "(\\[)");
@@ -80,12 +80,13 @@ void Lexer::loadRules() {
     setRule(Token::Comma, "(,)");
     setRule(Token::Dot, "(\\.)");
     setRule(Token::Colon, "(:)");
+    setRule(Token::Semicolon, "(;)");
 
     std::string nameInitialRegex = "[:L*:][:Nl:][:Sc:][:So:]√";
     std::string nameAfterRegex = nameInitialRegex + "![:N*:][:M*:][:Sk:][:Pc:]";
     setRule(Token::Assignment, "(=[^=])");
     setRule(Token::Identifier, "([" + nameInitialRegex + "][" + nameAfterRegex + "]*)");
-    setRule(Token::Operator, "([:Sm:])");
+    setRule(Token::Operator, "([+[:Sm:]])");
 }
 
 std::vector<Token *> Lexer::tokenise(std::string filename) const {

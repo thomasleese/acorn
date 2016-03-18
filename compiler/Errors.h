@@ -4,8 +4,8 @@
 
 #include <exception>
 
-#ifndef QUARK_ERRORS_H
-#define QUARK_ERRORS_H
+#ifndef JET_ERRORS_H
+#define JET_ERRORS_H
 
 #include <string>
 
@@ -58,4 +58,4 @@ namespace Errors {
 
 };
 
-#endif //QUARK_ERRORS_H
+#endif // JET_ERRORS_H

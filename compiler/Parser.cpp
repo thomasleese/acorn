@@ -10,6 +10,7 @@
 #include "Parser.h"
 
 #include <iostream>
+#include <cassert>
 
 using namespace AST;
 
@@ -109,6 +110,21 @@ Identifier *Parser::readOperator() {
     return new Identifier(token, token->lexeme);
 }
 
+BooleanLiteral *Parser::readBooleanLiteral() {
+    Token *token = readToken(Token::BooleanLiteral);\
+
+    BooleanLiteral *literal = new BooleanLiteral(token);
+
+    if (token->lexeme == "true") {
+        literal->value = true;
+    } else if (token->lexeme == "false") {
+        literal->value = false;
+    } else {
+        assert(false && "Not here!");
+    }
+
+    return literal;
+}
 
 IntegerLiteral *Parser::readIntegerLiteral() {
     Token *token = readToken(Token::IntegerLiteral);
@@ -131,11 +147,65 @@ FloatLiteral *Parser::readFloatLiteral() {
     return literal;
 }
 
+ImaginaryLiteral *Parser::readImaginaryLiteral() {
+    Token *token = readToken(Token::ImaginaryLiteral);
+
+    ImaginaryLiteral *literal = new ImaginaryLiteral(token);
+    literal->value = token->lexeme;
+
+    return literal;
+}
+
 StringLiteral *Parser::readStringLiteral() {
     Token *token = readToken(Token::StringLiteral);
 
     StringLiteral *literal = new StringLiteral(token);
     literal->value = token->lexeme;
+
+    return literal;
+}
+
+SequenceLiteral *Parser::readSequenceLiteral() {
+    Token *token = readToken(Token::OpenBracket);
+
+    SequenceLiteral *literal = new SequenceLiteral(token);
+
+    while (!isToken(Token::CloseBracket)) {
+        literal->elements.push_back(readExpression());
+
+        if (isToken(Token::Comma)) {
+            readToken(Token::Comma);
+        } else {
+            break;
+        }
+    }
+
+    readToken(Token::CloseBracket);
+
+    return literal;
+}
+
+MappingLiteral *Parser::readMappingLiteral() {
+    Token *token = readToken(Token::OpenBrace);
+
+    MappingLiteral *literal = new MappingLiteral(token);
+
+    while (!isToken(Token::CloseBrace)) {
+        Expression *key = readExpression();
+        readToken(Token::Colon);
+        Expression *value = readExpression();
+
+        literal->keys.push_back(key);
+        literal->values.push_back(value);
+
+        if (isToken(Token::Comma)) {
+            readToken(Token::Comma);
+        } else {
+            break;
+        }
+    }
+
+    readToken(Token::CloseBrace);
 
     return literal;
 }
@@ -310,12 +380,20 @@ Expression *Parser::readOperandExpression() {
         expr = readExpression();
         readToken(Token::CloseParenthesis);
         return expr;
+    } else if (isToken(Token::BooleanLiteral)) {
+        expr = readBooleanLiteral();
     } else if (isToken(Token::IntegerLiteral)) {
         expr = readIntegerLiteral();
     } else if (isToken(Token::FloatLiteral)) {
         expr = readFloatLiteral();
+    } else if (isToken(Token::ImaginaryLiteral)) {
+        expr = readImaginaryLiteral();
     } else if (isToken(Token::StringLiteral)) {
         expr = readStringLiteral();
+    } else if (isToken(Token::OpenBracket)) {
+        expr = readSequenceLiteral();
+    } else if (isToken(Token::OpenBrace)) {
+        expr = readMappingLiteral();
     } else if (isToken(Token::WhileKeyword)) {
         expr = readWhile();
     } else if (isToken(Token::ForKeyword)) {
@@ -342,18 +420,42 @@ Expression *Parser::readOperandExpression() {
 }
 
 Type *Parser::readType() {
+    Type *type = new Type(m_tokens.front());
+
+    type->name = readIdentifier();
+
+    if (isToken(Token::OpenBrace)) {
+        readToken(Token::OpenBrace);
+
+        while (!isToken(Token::CloseBrace)) {
+            type->parameters.push_back(readType());
+
+            if (isToken(Token::Comma)) {
+                readToken(Token::Comma);
+            } else {
+                break;
+            }
+        }
+
+        readToken(Token::CloseBrace);
+    }
+
+    return type;
+}
+
+Cast *Parser::readCast() {
     Token *token = readToken(Token::AsKeyword);
 
-    Type *type = new Type(token);
-    type->name = readIdentifier();
-    return type;
+    Cast *cast = new Cast(token);
+    cast->type = readType();
+    return cast;
 }
 
 Parameter *Parser::readParameter() {
     Parameter *parameter = new Parameter(m_tokens.front());
 
     parameter->name = readIdentifier();
-    parameter->type = readType();
+    parameter->cast = readCast();
 
     if (isToken(Token::Colon)) {
         readToken(Token::Colon);
@@ -369,7 +471,7 @@ VariableDefinition *Parser::readVariableDefinition() {
     VariableDefinition *definition = new VariableDefinition(token);
 
     definition->name = readIdentifier();
-    definition->type = readType();
+    definition->cast = readCast();
 
     readToken(Token::Assignment);
 
@@ -409,7 +511,7 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 
     readToken(Token::CloseParenthesis);
 
-    definition->returnType = readType();
+    definition->returnCast = readCast();
 
     readToken(Token::Newline);
 
@@ -425,16 +527,21 @@ TypeDefinition *Parser::readTypeDefinition() {
 
     TypeDefinition *definition = new TypeDefinition(token);
 
-    definition->name = readIdentifier();
+    definition->name = readType();
 
-    readToken(Token::Newline);
-
-    while (!isToken(Token::EndKeyword)) {
-        definition->fields.push_back(readParameter());
+    if (isToken(Token::AsKeyword)) {
+        readToken(Token::AsKeyword);
+        definition->alias = readType();
+    } else {
         readToken(Token::Newline);
-    }
 
-    readToken(Token::EndKeyword);
+        while (!isToken(Token::EndKeyword)) {
+            definition->fields.push_back(readParameter());
+            readToken(Token::Newline);
+        }
+
+        readToken(Token::EndKeyword);
+    }
 
     return definition;
 }

@@ -33,6 +33,10 @@ void Identifier::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+void BooleanLiteral::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 void IntegerLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -41,7 +45,19 @@ void FloatLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+void ImaginaryLiteral::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 void StringLiteral::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+void SequenceLiteral::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+void MappingLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -87,6 +103,10 @@ void If::accept(Visitor *visitor) {
 }
 
 void Type::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+void Cast::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

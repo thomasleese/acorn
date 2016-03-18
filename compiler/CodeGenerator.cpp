@@ -33,6 +33,10 @@ void CodeGenerator::visit(AST::Identifier *expression) {
 
 }
 
+void CodeGenerator::visit(AST::BooleanLiteral *boolean) {
+
+}
+
 void CodeGenerator::visit(AST::IntegerLiteral *expression) {
 
 }
@@ -41,7 +45,19 @@ void CodeGenerator::visit(AST::FloatLiteral *expression) {
 
 }
 
+void CodeGenerator::visit(AST::ImaginaryLiteral *imaginary) {
+
+}
+
 void CodeGenerator::visit(AST::StringLiteral *expression) {
+
+}
+
+void CodeGenerator::visit(AST::SequenceLiteral *sequence) {
+
+}
+
+void CodeGenerator::visit(AST::MappingLiteral *mapping) {
 
 }
 
@@ -74,6 +90,10 @@ void CodeGenerator::visit(AST::If *expression) {
 }
 
 void CodeGenerator::visit(AST::Type *type) {
+
+}
+
+void CodeGenerator::visit(AST::Cast *cast) {
 
 }
 
@@ -113,16 +133,16 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
 }
 
 void CodeGenerator::visit(AST::TypeDefinition *definition) {
-    std::string name = definition->name->name;
+    std::string name = definition->name->name->name;
 
-    std::vector<llvm::Type *> elements;
+    /*std::vector<llvm::Type *> elements;
 
     for (auto field : definition->fields) {
         std::cout << field << std::endl;
         elements.push_back(llvm::IntegerType::getInt64Ty(llvm::getGlobalContext()));
     }
 
-    llvm::StructType::create(elements, name);
+    llvm::StructType::create(elements, name);*/
 }
 
 void CodeGenerator::visit(AST::DefinitionStatement *statement) {

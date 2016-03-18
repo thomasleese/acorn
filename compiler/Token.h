@@ -47,8 +47,8 @@ struct Token {
         // literals
         BooleanLiteral,
         StringLiteral,
+        ImaginaryLiteral,
         FloatLiteral,
-        ComplexLiteral,
         IntegerLiteral,
 
         // delimiters
@@ -63,6 +63,7 @@ struct Token {
         Comma,
         Dot,
         Colon,
+        Semicolon,
 
         // identifiers
         Assignment,
@@ -82,4 +83,4 @@ struct Token {
 
 };
 
-#endif //JET_TOKEN_H
+#endif // JET_TOKEN_H

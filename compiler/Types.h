@@ -11,6 +11,10 @@ class Types {
 
     };
 
+    class Any : public Type {
+
+    };
+
     class Void : public Type {
 
     };
@@ -39,10 +43,6 @@ class Types {
 
     };
 
-    class Float8 : public Type {
-
-    };
-
     class Float16 : public Type {
 
     };
@@ -51,11 +51,23 @@ class Types {
 
     };
 
-    class Record : public Type {
+    class Float64 : public Type {
 
     };
 
-    class Array : public Type {
+    class Float128 : public Type {
+
+    };
+
+    class Sequence : public Type {
+
+    };
+
+    class Tuple : public Type {
+
+    };
+
+    class Mapping : public Type {
 
     };
 
@@ -63,6 +75,14 @@ class Types {
 
     };
 
+    class Record : public Type {
+
+    };
+
+    class Union : public Type {
+
+    };
+
 };
 
-#endif //JET_TYPES_H
+#endif // JET_TYPES_H

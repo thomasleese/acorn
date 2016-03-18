@@ -2,8 +2,8 @@
 // Created by Thomas Leese on 13/03/2016.
 //
 
-#ifndef QUARK_PARSER_H
-#define QUARK_PARSER_H
+#ifndef JET_PARSER_H
+#define JET_PARSER_H
 
 #include <deque>
 #include <string>
@@ -18,9 +18,13 @@ namespace AST {
     struct Definition;
     struct CodeBlock;
     struct Identifier;
+    struct BooleanLiteral;
     struct IntegerLiteral;
     struct FloatLiteral;
+    struct ImaginaryLiteral;
     struct StringLiteral;
+    struct SequenceLiteral;
+    struct MappingLiteral;
     struct Argument;
     struct Call;
     struct Selector;
@@ -28,6 +32,7 @@ namespace AST {
     struct For;
     struct If;
     struct Type;
+    struct Cast;
     struct Parameter;
     struct VariableDefinition;
     struct FunctionDefinition;
@@ -59,9 +64,13 @@ private:
     AST::Expression *readExpression();
     AST::Identifier *readIdentifier();
     AST::Identifier *readOperator();
+    AST::BooleanLiteral *readBooleanLiteral();
     AST::IntegerLiteral *readIntegerLiteral();
     AST::FloatLiteral *readFloatLiteral();
+    AST::ImaginaryLiteral *readImaginaryLiteral();
     AST::StringLiteral *readStringLiteral();
+    AST::SequenceLiteral *readSequenceLiteral();
+    AST::MappingLiteral *readMappingLiteral();
     AST::Argument *readArgument();
     AST::Call *readCall(AST::Expression *operand);
     AST::Selector *readSelector(AST::Expression *operand);
@@ -71,9 +80,10 @@ private:
     AST::Expression *readUnaryExpression();
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
     AST::Expression *readOperandExpression();
+    AST::Type *readType();
+    AST::Cast *readCast();
 
     // misc
-    AST::Type *readType();
     AST::Parameter *readParameter();
 
     // definitions
@@ -91,4 +101,4 @@ private:
 };
 
 
-#endif //QUARK_PARSER_H
+#endif // JET_PARSER_H

@@ -4,8 +4,8 @@
 
 #include "AbstractSyntaxTree.h"
 
-#ifndef QUARK_SYMBOLTABLE_H
-#define QUARK_SYMBOLTABLE_H
+#ifndef JET_SYMBOLTABLE_H
+#define JET_SYMBOLTABLE_H
 
 #include "AbstractSyntaxTree.h"
 
@@ -45,9 +45,13 @@ namespace SymbolTable {
         void visit(AST::CodeBlock *block);
 
         void visit(AST::Identifier *expression);
+        void visit(AST::BooleanLiteral *boolean);
         void visit(AST::IntegerLiteral *expression);
         void visit(AST::FloatLiteral *expression);
+        void visit(AST::ImaginaryLiteral *imaginary);
         void visit(AST::StringLiteral *expression);
+        void visit(AST::SequenceLiteral *sequence);
+        void visit(AST::MappingLiteral *mapping);
         void visit(AST::Argument *argument);
         void visit(AST::Call *expression);
         void visit(AST::Assignment *expression);
@@ -55,8 +59,9 @@ namespace SymbolTable {
         void visit(AST::While *expression);
         void visit(AST::For *expression);
         void visit(AST::If *expression);
-
         void visit(AST::Type *type);
+        void visit(AST::Cast *cast);
+
         void visit(AST::Parameter *parameter);
 
         void visit(AST::VariableDefinition *definition);
@@ -75,4 +80,4 @@ namespace SymbolTable {
 
 };
 
-#endif //QUARK_SYMBOLTABLE_H
+#endif // JET_SYMBOLTABLE_H

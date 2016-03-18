@@ -76,8 +76,8 @@ std::string Token::rule_string(Token::Rule rule) {
             return "float";
         case StringLiteral:
             return "string";
-        case ComplexLiteral:
-            return "complex";
+        case ImaginaryLiteral:
+            return "imaginary";
         case Assignment:
             return "assignment";
         case Identifier:
@@ -106,5 +106,7 @@ std::string Token::rule_string(Token::Rule rule) {
             return ".";
         case Colon:
             return ":";
+        case Semicolon:
+            return ";";
     }
 }

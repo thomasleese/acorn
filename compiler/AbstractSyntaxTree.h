@@ -2,8 +2,8 @@
 // Created by Thomas Leese on 13/03/2016.
 //
 
-#ifndef QUARK_ABSTRACTSYNTAXTREE_H
-#define QUARK_ABSTRACTSYNTAXTREE_H
+#ifndef JET_ABSTRACTSYNTAXTREE_H
+#define JET_ABSTRACTSYNTAXTREE_H
 
 #include <map>
 #include <queue>
@@ -56,6 +56,14 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct BooleanLiteral : Expression {
+        using Expression::Expression;
+
+        bool value;
+
+        void accept(Visitor *visitor);
+    };
+
     struct IntegerLiteral : Expression {
         using Expression::Expression;
 
@@ -72,10 +80,35 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct ImaginaryLiteral : Expression {
+        using Expression::Expression;
+
+        std::string value;
+
+        void accept(Visitor *visitor);
+    };
+
     struct StringLiteral : Expression {
         using Expression::Expression;
 
         std::string value;
+
+        void accept(Visitor *visitor);
+    };
+
+    struct SequenceLiteral : Expression {
+        using Expression::Expression;
+
+        std::vector<Expression *> elements;
+
+        void accept(Visitor *visitor);
+    };
+
+    struct MappingLiteral : Expression {
+        using Expression::Expression;
+
+        std::vector<Expression *> keys;
+        std::vector<Expression *> values;
 
         void accept(Visitor *visitor);
     };
@@ -146,9 +179,8 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
-    // misc
-    struct Type : Node {
-        using Node::Node;
+    struct Type : Expression {
+        using Expression::Expression;
 
         Identifier *name;
         std::vector<Type *> parameters;
@@ -156,11 +188,20 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct Cast : Expression {
+        using Expression::Expression;
+
+        Type *type;
+
+        void accept(Visitor *visitor);
+    };
+
+    // misc
     struct Parameter : Node {
         explicit Parameter(Token *token);
 
         Identifier *name;
-        Type *type;
+        Cast *cast;
         Expression *defaultExpression;
 
         void accept(Visitor *visitor);
@@ -171,7 +212,7 @@ namespace AST {
         using Definition::Definition;
 
         Identifier *name;
-        Type *type;
+        Cast *cast;
         Expression *expression;
 
         void accept(Visitor *visitor);
@@ -183,7 +224,7 @@ namespace AST {
         Identifier *name;
         std::vector<Parameter *> parameters;
         CodeBlock *code;
-        Type *returnType;
+        Cast *returnCast;
 
         void accept(Visitor *visitor);
     };
@@ -191,7 +232,8 @@ namespace AST {
     struct TypeDefinition : Definition {
         using Definition::Definition;
 
-        Identifier *name;
+        Type *name;
+        Type *alias;
         std::vector<Parameter *> fields;
 
         void accept(Visitor *visitor);
@@ -234,9 +276,13 @@ namespace AST {
 
         // expressions
         virtual void visit(Identifier *expression) = 0;
+        virtual void visit(BooleanLiteral *boolean) = 0;
         virtual void visit(IntegerLiteral *expression) = 0;
         virtual void visit(FloatLiteral *expression) = 0;
+        virtual void visit(ImaginaryLiteral *expression) = 0;
         virtual void visit(StringLiteral *expression) = 0;
+        virtual void visit(SequenceLiteral *expression) = 0;
+        virtual void visit(MappingLiteral *expression) = 0;
         virtual void visit(Argument *expression) = 0;
         virtual void visit(Call *expression) = 0;
         virtual void visit(Assignment *expression) = 0;
@@ -244,9 +290,10 @@ namespace AST {
         virtual void visit(While *expression) = 0;
         virtual void visit(For *expression) = 0;
         virtual void visit(If *expression) = 0;
+        virtual void visit(Type *type) = 0;
+        virtual void visit(Cast *type) = 0;
 
         // misc
-        virtual void visit(Type *type) = 0;
         virtual void visit(Parameter *parameter) = 0;
 
         // definitions
@@ -264,4 +311,4 @@ namespace AST {
 
 };
 
-#endif //QUARK_ABSTRACTSYNTAXTREE_H
+#endif // JET_ABSTRACTSYNTAXTREE_H

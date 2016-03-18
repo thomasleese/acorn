@@ -1,10 +1,45 @@
-let array as Array{Integer, 1} = [0, 1, 2, 3]
+"Take a look at the different types available in Jet."
 
-let set as Set{Integer} = {0, 1, 2}
+let list as List{Integer} = [0, 1, 2, 3]
 
-let tuple as Tuple{Integer, Integer, Integer} = 0, 1, 2
+let set as Set{Integer} = [0, 1, 2]
 
-let array2 as Array{Integer, 2} = [0, 1, 2, 3 ;
-                                   4, 5, 6, 7]
+let queue as Queue{Integer} = [0, 1, 2]
+
+let tuple as Tuple{Integer, Integer, Integer} = [0, 1, 2]
 
 let dictionary as Dictionary{Integer, Integer} = {0: 1, 2: 3, 4: 5}
+
+let character as Character = 'H'
+
+type String as Array{Characters}
+
+let string as String = 'Hello, world!'
+
+let boolean as Boolean = true
+
+let float as Float = 3.141
+
+type Complex{T}
+    real as T
+    imaginary as T
+end
+
+def +(a as Float, b as Complex{Float}) as Complex{Float}
+    Complex(real: a + b.real, imaginary: b.imaginary)
+end
+
+let complex as Complex{Float} = 3.141 + 64i
+
+let function as Function{Integer, Integer, Integer} = plus
+
+let nothing as Void = Nothing
+
+type Maybe{T} as Union{Nothing, T}
+
+let maybe1 as Maybe{Integer} = 10
+let maybe2 as Maybe{Integer} = Nothing
+
+type Number as Union{Integer,Float,Complex}
+
+let number as Number = 2.5

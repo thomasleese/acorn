@@ -2,8 +2,8 @@
 // Created by Thomas Leese on 14/03/2016.
 //
 
-#ifndef QUARK_COMPILER_H
-#define QUARK_COMPILER_H
+#ifndef JET_COMPILER_H
+#define JET_COMPILER_H
 
 #include <string>
 
@@ -14,4 +14,4 @@ public:
 
 };
 
-#endif //QUARK_COMPILER_H
+#endif // JET_COMPILER_H
