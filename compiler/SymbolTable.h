@@ -35,6 +35,7 @@ namespace SymbolTable {
         explicit Symbol(std::string name);
 
         std::string name;
+        Types::BaseType *type;
         Namespace *nameSpace;
     };
 
