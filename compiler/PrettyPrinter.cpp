@@ -157,7 +157,7 @@ void PrettyPrinter::visit(AST::If *expression) {
 }
 
 void PrettyPrinter::visit(AST::Type *type) {
-    ss << indentation() << "(Type\n";
+    ss << indentation() << "(TypeType\n";
     indent++;
 
     type->name->accept(this);
@@ -174,7 +174,7 @@ void PrettyPrinter::visit(AST::Cast *cast) {
     ss << indentation() << "(Cast\n";
     indent++;
 
-    cast->type->accept(this);
+    cast->typeNode->accept(this);
 
     indent--;
     ss << indentation() << ")\n";

@@ -11,6 +11,7 @@ using namespace AST;
 
 Node::Node(Token *token) {
     this->token = token;
+    this->type = nullptr;
 }
 
 Node::~Node() {

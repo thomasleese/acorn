@@ -7,93 +7,119 @@
 
 namespace Types {
 
-    class BaseType {
-
-    };
-
-    class Type : public BaseType {
+    class Type {
 
     public:
-        explicit Type(BaseType *type);
+        virtual ~Type();
 
-        BaseType *type;
-
-    };
-
-    class Any : public BaseType {
+        virtual const char *name() const = 0;
 
     };
 
-    class Void : public BaseType {
+    class TypeType : public Type {
+
+    public:
+        explicit TypeType(Type *type);
+
+        const char *name() const;
+
+        Type *type;
 
     };
 
-    class Boolean : public BaseType {
-
+    class Any : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Integer8 : public BaseType {
-
+    class Void : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Integer16 : public BaseType {
-
+    class Boolean : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Integer32 : public BaseType {
-
+    class Integer8 : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Integer64 : public BaseType {
-
+    class Integer16 : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Integer128 : public BaseType {
-
+    class Integer32 : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Float16 : public BaseType {
-
+    class Integer64 : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Float32 : public BaseType {
-
+    class Integer128 : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Float64 : public BaseType {
-
+    class Float16 : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Float128 : public BaseType {
-
+    class Float32 : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Character : public BaseType {
-
+    class Float64 : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Sequence : public BaseType {
-
+    class Float128 : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Tuple : public BaseType {
-
+    class Character : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Mapping : public BaseType {
-
+    class Sequence : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Function : public BaseType {
-
+    class Tuple : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Record : public BaseType {
-
+    class Mapping : public Type {
+    public:
+        const char *name() const;
     };
 
-    class Union : public BaseType {
+    class Function : public Type {
+    public:
+        const char *name() const;
+    };
 
+    class Record : public Type {
+    public:
+        const char *name() const;
+    };
+
+    class Union : public Type {
+    public:
+        const char *name() const;
     };
 
 };

@@ -11,7 +11,7 @@
 #include "AbstractSyntaxTree.h"
 
 namespace Types {
-    class BaseType;
+    class Type;
 }
 
 namespace SymbolTable {
@@ -35,7 +35,7 @@ namespace SymbolTable {
         explicit Symbol(std::string name);
 
         std::string name;
-        Types::BaseType *type;
+        Types::Type *type;
         Namespace *nameSpace;
     };
 

@@ -10,7 +10,7 @@
 - Lexer ~
 - Parser ~
 - Error Handler ✓
-- Type Checker
+- TypeType Checker
 - Code Generator
 
 ## Ideas
@@ -25,6 +25,6 @@
 
 ## Future
 
-- Type Inference
+- TypeType Inference
 
 [logo]: https://github.com/thomasleese/jet/raw/master/logo.png

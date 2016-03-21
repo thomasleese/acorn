@@ -56,6 +56,11 @@ namespace Errors {
         explicit RedefinedError(AST::Node *node, std::string name);
     };
 
+    class TypeMismatchError : public CompilerError {
+    public:
+        explicit TypeMismatchError(AST::Node *node1, AST::Node *node2);
+    };
+
 };
 
 #endif // JET_ERRORS_H

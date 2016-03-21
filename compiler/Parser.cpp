@@ -447,7 +447,7 @@ Cast *Parser::readCast() {
     Token *token = readToken(Token::AsKeyword);
 
     Cast *cast = new Cast(token);
-    cast->type = readType();
+    cast->typeNode = readType();
     return cast;
 }
 

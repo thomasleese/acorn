@@ -1,0 +1,4 @@
+type Integer as Integer32
+type Float as Float32
+
+let i as Integer = 10.5

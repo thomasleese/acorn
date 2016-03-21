@@ -86,3 +86,13 @@ RedefinedError::RedefinedError(AST::Node *node, std::string name) :
     m_prefix = "Redefined error";
     m_message = name + " is already defined in this scope.";
 }
+
+TypeMismatchError::TypeMismatchError(AST::Node *node1, AST::Node *node2) :
+        CompilerError(node1) {
+    m_prefix = "Invalid types";
+
+    std::stringstream ss;
+    ss << "Got: " << node2->type->name() << "\n";
+    ss << "Expected: " << node1->type->name();
+    m_message = ss.str();
+}

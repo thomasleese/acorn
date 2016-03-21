@@ -7,6 +7,7 @@
 
 #include <string>
 #include <vector>
+#include "Types.h"
 
 struct Token;
 
@@ -21,6 +22,7 @@ namespace AST {
         virtual void accept(Visitor *visitor) = 0;
 
         Token *token;
+        Types::Type *type;
     };
 
     // basic categories
@@ -190,7 +192,7 @@ namespace AST {
     struct Cast : Expression {
         using Expression::Expression;
 
-        Type *type;
+        Type *typeNode;
 
         void accept(Visitor *visitor);
     };

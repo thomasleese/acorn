@@ -95,7 +95,7 @@ void CodeGenerator::visit(AST::Type *type) {
 }
 
 void CodeGenerator::visit(AST::Cast *cast) {
-    cast->type->accept(this);
+    cast->typeNode->accept(this);
 }
 
 void CodeGenerator::visit(AST::Parameter *parameter) {
@@ -138,7 +138,7 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
 void CodeGenerator::visit(AST::TypeDefinition *definition) {
     std::string name = definition->name->name->name;
 
-    /*std::vector<llvm::Type *> elements;
+    /*std::vector<llvm::TypeType *> elements;
 
     for (auto field : definition->fields) {
         std::cout << field << std::endl;

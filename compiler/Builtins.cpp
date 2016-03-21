@@ -7,9 +7,9 @@
 
 #include "Builtins.h"
 
-void add_base_type(SymbolTable::Namespace *table, std::string name, Types::BaseType *type) {
+void add_base_type(SymbolTable::Namespace *table, std::string name, Types::Type *type) {
     SymbolTable::Symbol *symbol = new SymbolTable::Symbol(name);
-    symbol->type = new Types::Type(type);
+    symbol->type = new Types::TypeType(type);
     table->insert(0, symbol);
 }
 
@@ -30,6 +30,9 @@ void Builtins::fill_symbol_table(SymbolTable::Namespace *table) {
     add_base_type(table, "Character", new Types::Character());
     add_base_type(table, "Tuple", new Types::Tuple());
     add_base_type(table, "Function", new Types::Function());
+    add_base_type(table, "Sequence", new Types::Sequence());
+    add_base_type(table, "Mapping", new Types::Mapping());
+    add_base_type(table, "Union", new Types::Union());
 
     SymbolTable::Symbol *symbol = new SymbolTable::Symbol("Nothing");
     symbol->type = voidType;

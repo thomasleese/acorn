@@ -1,3 +1,5 @@
+type String as Sequence{Character}
+
 "Take a look at the different types available in Jet."
 
 type List{T} as Sequence{T}
@@ -16,8 +18,6 @@ let tuple as Tuple{Integer, Integer, Integer} = [0, 1, 2]
 let dictionary as Dictionary{Integer, Integer} = {0: 1, 2: 3, 4: 5}
 
 let character as Character = 'H'
-
-type String as Array{Characters}
 
 let string as String = 'Hello, world!'
 
