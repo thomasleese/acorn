@@ -3,3 +3,9 @@
 //
 
 #include "Types.h"
+
+using namespace Types;
+
+Type::Type(BaseType *type) {
+    this->type = type;
+}

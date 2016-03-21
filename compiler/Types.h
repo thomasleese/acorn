@@ -5,81 +5,94 @@
 #ifndef JET_TYPES_H
 #define JET_TYPES_H
 
-class Types {
+namespace Types {
 
-    class Type {
-
-    };
-
-    class Any : public Type {
+    class BaseType {
 
     };
 
-    class Void : public Type {
+    class Type : public BaseType {
+
+    public:
+        explicit Type(BaseType *type);
+
+        BaseType *type;
 
     };
 
-    class Boolean : public Type {
+    class Any : public BaseType {
 
     };
 
-    class Integer8 : public Type {
+    class Void : public BaseType {
 
     };
 
-    class Integer16 : public Type {
+    class Boolean : public BaseType {
 
     };
 
-    class Integer32 : public Type {
+    class Integer8 : public BaseType {
 
     };
 
-    class Integer64 : public Type {
+    class Integer16 : public BaseType {
 
     };
 
-    class Integer128 : public Type {
+    class Integer32 : public BaseType {
 
     };
 
-    class Float16 : public Type {
+    class Integer64 : public BaseType {
 
     };
 
-    class Float32 : public Type {
+    class Integer128 : public BaseType {
 
     };
 
-    class Float64 : public Type {
+    class Float16 : public BaseType {
 
     };
 
-    class Float128 : public Type {
+    class Float32 : public BaseType {
 
     };
 
-    class Sequence : public Type {
+    class Float64 : public BaseType {
 
     };
 
-    class Tuple : public Type {
+    class Float128 : public BaseType {
 
     };
 
-    class Mapping : public Type {
+    class Character : public BaseType {
 
     };
 
-    class Function : public Type {
+    class Sequence : public BaseType {
 
     };
 
-    class Record : public Type {
+    class Tuple : public BaseType {
 
     };
 
-    class Union : public Type {
+    class Mapping : public BaseType {
+
+    };
+
+    class Function : public BaseType {
+
+    };
+
+    class Record : public BaseType {
+
+    };
+
+    class Union : public BaseType {
 
     };
 

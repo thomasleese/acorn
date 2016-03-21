@@ -20,7 +20,7 @@ link_directories(/usr/local/Cellar/icu4c/56.1/lib/)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS} -std=c++11 -Wall -pedantic -Werror")
 set(CMAKE_EXE_LINKER_FLAGS "${LLVM_LD_FLAGS}")
 
-set(SOURCE_FILES compiler/main.cpp compiler/Lexer.cpp compiler/AbstractSyntaxTree.cpp compiler/Parser.cpp compiler/Compiler.cpp compiler/PrettyPrinter.cpp compiler/Errors.cpp compiler/SymbolTable.cpp compiler/CodeGenerator.cpp compiler/Token.cpp compiler/Types.cpp compiler/Types.h)
+set(SOURCE_FILES compiler/main.cpp compiler/Lexer.cpp compiler/AbstractSyntaxTree.cpp compiler/Parser.cpp compiler/Compiler.cpp compiler/PrettyPrinter.cpp compiler/Errors.cpp compiler/SymbolTable.cpp compiler/CodeGenerator.cpp compiler/Token.cpp compiler/Types.cpp compiler/Types.h compiler/Builtins.cpp compiler/Builtins.h)
 set(LIBRARIES ${Boost_LIBRARIES} icuuc icudata ncurses ${LLVM_LIBS})
 
 add_executable(jet ${SOURCE_FILES})

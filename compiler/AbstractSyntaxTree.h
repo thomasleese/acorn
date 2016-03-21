@@ -5,8 +5,7 @@
 #ifndef JET_ABSTRACTSYNTAXTREE_H
 #define JET_ABSTRACTSYNTAXTREE_H
 
-#include <map>
-#include <queue>
+#include <string>
 #include <vector>
 
 struct Token;

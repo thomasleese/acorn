@@ -1,5 +1,10 @@
 "Take a look at the different types available in Jet."
 
+type List{T} as Sequence{T}
+type Set{T} as Sequence{T}
+type Queue{T} as Sequence{T}
+type Dictionary{T, U} as Mapping{T, U}
+
 let list as List{Integer} = [0, 1, 2, 3]
 
 let set as Set{Integer} = [0, 1, 2]
@@ -17,6 +22,9 @@ type String as Array{Characters}
 let string as String = 'Hello, world!'
 
 let boolean as Boolean = true
+
+type Float as Float32
+type Integer as Integer64
 
 let float as Float = 3.141
 

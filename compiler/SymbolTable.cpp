@@ -4,6 +4,7 @@
 
 #include "Lexer.h"
 #include "Errors.h"
+#include "Builtins.h"
 
 #include "SymbolTable.h"
 
@@ -46,6 +47,8 @@ Symbol::Symbol(std::string name) {
 
 Builder::Builder() {
     m_root = m_current = new Namespace();
+
+    Builtins::fill_symbol_table(m_root);
 }
 
 bool Builder::isAtRoot() const {

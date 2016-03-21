@@ -6,6 +6,7 @@
 #define JET_PARSER_H
 
 #include <deque>
+#include <map>
 #include <string>
 
 #include "Token.h"

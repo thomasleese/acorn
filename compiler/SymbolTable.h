@@ -2,14 +2,17 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
-#include "AbstractSyntaxTree.h"
-
 #ifndef JET_SYMBOLTABLE_H
 #define JET_SYMBOLTABLE_H
 
+#include <map>
+#include <string>
+
 #include "AbstractSyntaxTree.h"
 
-#include <string>
+namespace Types {
+    class BaseType;
+}
 
 namespace SymbolTable {
 

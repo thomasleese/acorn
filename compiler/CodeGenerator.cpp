@@ -90,11 +90,12 @@ void CodeGenerator::visit(AST::If *expression) {
 }
 
 void CodeGenerator::visit(AST::Type *type) {
-
+    std::string name = type->name->name;
+    m_namespace->lookup(type, name);
 }
 
 void CodeGenerator::visit(AST::Cast *cast) {
-
+    cast->type->accept(this);
 }
 
 void CodeGenerator::visit(AST::Parameter *parameter) {
@@ -102,6 +103,8 @@ void CodeGenerator::visit(AST::Parameter *parameter) {
 }
 
 void CodeGenerator::visit(AST::VariableDefinition *definition) {
+    definition->cast->accept(this);
+
     llvm::Type *type = llvm::Type::getInt64Ty(llvm::getGlobalContext());
 
     bool isConstant = true;
