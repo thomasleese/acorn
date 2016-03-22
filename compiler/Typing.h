@@ -24,7 +24,9 @@ namespace Typing {
         ~Inferrer();
 
     private:
+        Types::Type *find_type(AST::Node *node, std::string name, std::vector<AST::Type *> parameters);
         Types::Type *find_type(AST::Node *node, std::string name);
+        Types::Type *find_type(AST::Type *type);
 
     public:
         void visit(AST::CodeBlock *block);

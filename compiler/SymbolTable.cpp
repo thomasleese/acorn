@@ -164,6 +164,19 @@ void Builder::visit(AST::FunctionDefinition *definition) {
 void Builder::visit(AST::TypeDefinition *definition) {
     Symbol *symbol = new Symbol(definition->name->name->name);
     m_current->insert(definition, symbol);
+
+    symbol->nameSpace = new Namespace(m_current);
+
+    Namespace *oldNamespace = m_current;
+    m_current = symbol->nameSpace;
+
+    for (auto parameter : definition->name->parameters) {
+        Symbol *sym = new Symbol(parameter->name->name);
+        sym->type = new Types::Parameter(parameter->name->name);
+        m_current->insert(definition, sym);
+    }
+
+    m_current = oldNamespace;
 }
 
 void Builder::visit(AST::DefinitionStatement *statement) {

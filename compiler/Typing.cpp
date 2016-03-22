@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <set>
 
 #include "Typing.h"
 #include "Errors.h"
@@ -19,10 +20,31 @@ Inferrer::~Inferrer() {
 
 }
 
+Types::Type *Inferrer::find_type(AST::Node *node, std::string name, std::vector<AST::Type *> parameters) {
+    for (auto parameter : parameters) {
+        parameter->accept(this);
+    }
+
+    if (name == "Sequence") {
+        return new Types::Sequence(parameters[0]->type);
+    } else {
+        SymbolTable::Symbol *symbol = m_namespace->lookup(node, name);
+        Types::TypeType *typeType = dynamic_cast<Types::TypeType *>(symbol->type);
+        if (typeType) {
+            return typeType->type;
+        } else {
+            Types::Parameter *parameter = dynamic_cast<Types::Parameter *>(symbol->type);
+            return parameter;
+        }
+    }
+}
+
 Types::Type *Inferrer::find_type(AST::Node *node, std::string name) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(node, name);
-    Types::TypeType *typeType = static_cast<Types::TypeType *>(symbol->type);
-    return typeType->type;
+    return find_type(node, name, std::vector<AST::Type *>());
+}
+
+Types::Type *Inferrer::find_type(AST::Type *type) {
+    return find_type(type, type->name->name, type->parameters);
 }
 
 void Inferrer::visit(AST::CodeBlock *block) {
@@ -57,43 +79,59 @@ void Inferrer::visit(AST::StringLiteral *expression) {
 }
 
 void Inferrer::visit(AST::SequenceLiteral *sequence) {
+    for (auto element : sequence->elements) {
+        element->accept(this);
+    }
 
+    std::set<Types::Type *> types;
+    for (auto element : sequence->elements) {
+        types.insert(element->type);
+    }
+
+    if (types.size() != 1) {
+        // FIXME: make/find a union type
+        throw Errors::TypeInferenceError(sequence);
+    }
+
+    Types::Type *elementType = *(types.begin());
+    Types::Sequence *type = new Types::Sequence(elementType);
+    sequence->type = type;
 }
 
 void Inferrer::visit(AST::MappingLiteral *mapping) {
-
+    throw Errors::TypeInferenceError(mapping);
 }
 
 void Inferrer::visit(AST::Argument *argument) {
-
+    throw Errors::TypeInferenceError(argument);
 }
 
 void Inferrer::visit(AST::Call *expression) {
-
+    throw Errors::TypeInferenceError(expression);
 }
 
 void Inferrer::visit(AST::Assignment *expression) {
-
+    throw Errors::TypeInferenceError(expression);
 }
 
 void Inferrer::visit(AST::Selector *expression) {
-
+    throw Errors::TypeInferenceError(expression);
 }
 
 void Inferrer::visit(AST::While *expression) {
-
+    throw Errors::TypeInferenceError(expression);
 }
 
 void Inferrer::visit(AST::For *expression) {
-
+    throw Errors::TypeInferenceError(expression);
 }
 
 void Inferrer::visit(AST::If *expression) {
-
+    throw Errors::TypeInferenceError(expression);
 }
 
 void Inferrer::visit(AST::Type *type) {
-    type->type = find_type(type, type->name->name);
+    type->type = find_type(type);
 }
 
 void Inferrer::visit(AST::Cast *cast) {
@@ -102,7 +140,7 @@ void Inferrer::visit(AST::Cast *cast) {
 }
 
 void Inferrer::visit(AST::Parameter *parameter) {
-
+    throw Errors::TypeInferenceError(parameter);
 }
 
 void Inferrer::visit(AST::VariableDefinition *definition) {
@@ -117,15 +155,18 @@ void Inferrer::visit(AST::VariableDefinition *definition) {
 }
 
 void Inferrer::visit(AST::FunctionDefinition *definition) {
-
+    throw Errors::TypeInferenceError(definition);
 }
 
 void Inferrer::visit(AST::TypeDefinition *definition) {
     SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name->name);
 
+    SymbolTable::Namespace *oldNamespace = m_namespace;
+    m_namespace = symbol->nameSpace;
+
     Types::Type *actualType;
     if (definition->alias) {
-        actualType = find_type(definition, definition->alias->name->name);
+        actualType = find_type(definition->alias);
     } else {
         Types::Record *record = new Types::Record();
         actualType = record;
@@ -134,6 +175,8 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
     Types::TypeType *type = new Types::TypeType(actualType);
     symbol->type = type;
     definition->type = type;
+
+    m_namespace = oldNamespace;
 }
 
 void Inferrer::visit(AST::DefinitionStatement *statement) {
@@ -164,7 +207,8 @@ Checker::~Checker() {
 }
 
 void Checker::check_types(AST::Node *lhs, AST::Node *rhs) {
-    if (lhs->type != rhs->type) {
+    bool same = *(lhs->type) == *(rhs->type);
+    if (!same) {
         throw Errors::TypeMismatchError(lhs, rhs);
     }
 }

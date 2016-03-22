@@ -61,6 +61,11 @@ namespace Errors {
         explicit TypeMismatchError(AST::Node *node1, AST::Node *node2);
     };
 
+    class TypeInferenceError : public CompilerError {
+    public:
+        explicit TypeInferenceError(AST::Node *node);
+    };
+
 };
 
 #endif // JET_ERRORS_H

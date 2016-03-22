@@ -96,3 +96,9 @@ TypeMismatchError::TypeMismatchError(AST::Node *node1, AST::Node *node2) :
     ss << "Expected: " << node1->type->name();
     m_message = ss.str();
 }
+
+TypeInferenceError::TypeInferenceError(AST::Node *node) :
+            CompilerError(node) {
+    m_prefix = "Unknown type";
+    m_message = "Try specifying the type you want.";
+}

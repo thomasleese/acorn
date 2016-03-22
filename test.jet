@@ -1,4 +1,8 @@
 type Integer as Integer32
 type Float as Float32
 
-let i as Integer = 10.5
+let i as Sequence{Integer} = [1, 2, 3]
+
+type List{T} as Sequence{T}
+
+let j as List = [1, 2, 3]

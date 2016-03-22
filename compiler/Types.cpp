@@ -2,12 +2,28 @@
 // Created by Thomas Leese on 18/03/2016.
 //
 
+#include <sstream>
+#include <iostream>
+
 #include "Types.h"
 
 using namespace Types;
 
 Type::~Type() {
 
+}
+
+bool Type::operator==(const Type &other) const {
+    std::cout << strcmp(name(), other.name()) << std::endl;
+    return strcmp(name(), other.name()) == 0;
+}
+
+Parameter::Parameter(std::string name) {
+    m_name = name;
+}
+
+const char *Parameter::name() const {
+    return m_name.c_str();
 }
 
 TypeType::TypeType(Type *type) {
@@ -66,20 +82,18 @@ const char *Float128::name() const {
     return "Float128";
 }
 
-const char *Character::name() const {
-    return "Character";
+Sequence::Sequence(Type *elementType) {
+    m_elementType = elementType;
 }
 
 const char *Sequence::name() const {
-    return "Sequence";
+    std::stringstream ss;
+    ss << "Sequence{" << m_elementType->name() << "}";
+    return ss.str().c_str();
 }
 
-const char *Tuple::name() const {
-    return "Tuple";
-}
-
-const char *Mapping::name() const {
-    return "Mapping";
+const char *Product::name() const {
+    return "Product";
 }
 
 const char *Function::name() const {
@@ -93,4 +107,3 @@ const char *Record::name() const {
 const char *Union::name() const {
     return "Union";
 }
-
