@@ -212,6 +212,7 @@ namespace AST {
     struct VariableDefinition : Definition {
         using Definition::Definition;
 
+        bool is_mutable;
         Identifier *name;
         Cast *cast;
         Expression *expression;

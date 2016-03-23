@@ -62,6 +62,7 @@ void Lexer::loadRules() {
     setKeywordRule(Token::AsyncKeyword, "async");
     setKeywordRule(Token::DoKeyword, "do");
     setKeywordRule(Token::UnlessKeyword, "unless");
+    setKeywordRule(Token::MutableKeyword, "mutable");
 
     setRule(Token::BooleanLiteral, "(true|false)");
     setRule(Token::StringLiteral, "((['\"])((?:.(?!(?<![\\\\])\\2))*.?)\\2)");

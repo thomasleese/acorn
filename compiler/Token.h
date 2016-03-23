@@ -43,6 +43,7 @@ struct Token {
         AsyncKeyword,
         DoKeyword,
         UnlessKeyword,
+        MutableKeyword,
 
         // literals
         BooleanLiteral,

@@ -470,7 +470,15 @@ VariableDefinition *Parser::readVariableDefinition() {
 
     VariableDefinition *definition = new VariableDefinition(token);
 
+    if (isToken(Token::MutableKeyword)) {
+        readToken(Token::MutableKeyword);
+        definition->is_mutable = true;
+    } else {
+        definition->is_mutable = false;
+    }
+
     definition->name = readIdentifier();
+
     definition->cast = readCast();
 
     readToken(Token::Assignment);

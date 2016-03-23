@@ -1,10 +1,12 @@
 type Integer as Integer64
 
-let numbers as Sequence{Integer} = [1, 2, 3, 4, 5]
-
 def sum(numbers as Sequence{Integer}) as Integer
     let mutable total as Integer = 0
     for number in numbers
-        total += number
+        total = total + number
     end
 end
+
+let numbers as Sequence{Integer} = [1, 2, 3, 4, 5]
+print(s: numbers.sum())
+print(s: sum(numbers: numbers))
