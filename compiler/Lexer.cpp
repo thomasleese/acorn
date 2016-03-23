@@ -83,7 +83,7 @@ void Lexer::loadRules() {
     setRule(Token::Colon, "(:)");
     setRule(Token::Semicolon, "(;)");
 
-    std::string nameInitialRegex = "[:L*:][:Nl:][:Sc:][:So:]√";
+    std::string nameInitialRegex = "[:L*:][:Nl:][:Sc:][:So:]√_";
     std::string nameAfterRegex = nameInitialRegex + "![:N*:][:M*:][:Sk:][:Pc:]";
     setRule(Token::Assignment, "(=[^=])");
     setRule(Token::Identifier, "([" + nameInitialRegex + "][" + nameAfterRegex + "]*)");

@@ -137,15 +137,36 @@ void Inferrer::visit(AST::MappingLiteral *mapping) {
 }
 
 void Inferrer::visit(AST::Argument *argument) {
-    throw Errors::TypeInferenceError(argument);
+    argument->value->accept(this);
+    argument->name->type = argument->value->type;
+    argument->type = argument->value->type;
 }
 
 void Inferrer::visit(AST::Call *expression) {
-    throw Errors::TypeInferenceError(expression);
+    expression->operand->accept(this);
+
+    for (auto arg : expression->arguments) {
+        arg->accept(this);
+    }
+
+    Types::Function *function = dynamic_cast<Types::Function *>(expression->operand->type);
+    if (function == nullptr) {
+        expression->type = new Types::Function();
+        throw Errors::TypeMismatchError(expression, expression->operand);
+    }
+
+    std::map<std::string, Types::Type *> args;
+    for (auto arg : expression->arguments) {
+        args[arg->name->name] = arg->type;
+    }
+
+    Types::Method *method = function->find_method(expression, args);
+    expression->type = method->return_type();
 }
 
 void Inferrer::visit(AST::Assignment *expression) {
-    throw Errors::TypeInferenceError(expression);
+    expression->lhs->accept(this);
+    expression->type = expression->lhs->type;
 }
 
 void Inferrer::visit(AST::Selector *expression) {
@@ -157,7 +178,16 @@ void Inferrer::visit(AST::While *expression) {
 }
 
 void Inferrer::visit(AST::For *expression) {
-    throw Errors::TypeInferenceError(expression);
+    expression->code->accept(this);
+
+    Types::Type *type;
+    if (expression->code->statements.empty()) {
+        type = new Types::Void();
+    } else {
+        type = expression->code->statements.back()->type;
+    }
+
+    expression->type = type;
 }
 
 void Inferrer::visit(AST::If *expression) {
@@ -174,7 +204,8 @@ void Inferrer::visit(AST::Cast *cast) {
 }
 
 void Inferrer::visit(AST::Parameter *parameter) {
-    throw Errors::TypeInferenceError(parameter);
+    parameter->cast->accept(this);
+    parameter->type = parameter->cast->type;
 }
 
 void Inferrer::visit(AST::VariableDefinition *definition) {
@@ -189,7 +220,35 @@ void Inferrer::visit(AST::VariableDefinition *definition) {
 }
 
 void Inferrer::visit(AST::FunctionDefinition *definition) {
-    throw Errors::TypeInferenceError(definition);
+    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
+
+    SymbolTable::Namespace *oldNamespace = m_namespace;
+    m_namespace = symbol->nameSpace;
+
+    std::map<std::string, Types::Type *> parameterTypes;
+    for (auto parameter : definition->parameters) {
+        parameter->accept(this);
+        parameterTypes[parameter->name->name] = parameter->type;
+    }
+
+    definition->returnCast->accept(this);
+
+    Types::Function *function;
+    if (symbol->type == nullptr) {
+        function = new Types::Function();
+    } else {
+        function = static_cast<Types::Function *>(symbol->type);
+    }
+
+    Types::Method *method = new Types::Method(parameterTypes, definition->returnCast->type);
+    function->add_method(method);
+
+    symbol->type = function;
+    definition->type = function;
+
+    definition->code->accept(this);
+
+    m_namespace = oldNamespace;
 }
 
 void Inferrer::visit(AST::TypeDefinition *definition) {

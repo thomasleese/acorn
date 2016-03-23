@@ -44,6 +44,7 @@ void Namespace::insert(AST::Node *currentNode, Symbol *symbol) {
 
 Symbol::Symbol(std::string name) {
     this->name = name;
+    this->type = nullptr;
     this->nameSpace = 0;
 }
 

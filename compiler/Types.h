@@ -191,9 +191,29 @@ namespace Types {
         std::string name() const;
     };
 
+    class Method : public Type {
+    public:
+        explicit Method(std::map<std::string, Type *> parameter_types, Type *return_type);
+
+        std::string name() const;
+        Type *return_type() const;
+
+        bool could_be_called_with(std::map<std::string, Type *> parameters);
+
+    private:
+        std::map<std::string, Type *> m_parameter_types;
+        Type *m_return_type;
+    };
+
     class Function : public Type {
     public:
         std::string name() const;
+
+        void add_method(Method *method);
+        Method *find_method(AST::Node *node, std::map<std::string, Type *> parameters) const;
+
+    private:
+        std::vector<Method *> m_methods;
     };
 
     class Record : public Type {

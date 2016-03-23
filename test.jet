@@ -5,8 +5,8 @@ def sum(numbers as Sequence{Integer}) as Integer
     for number in numbers
         total = total + number
     end
+    total
 end
 
 let numbers as Sequence{Integer} = [1, 2, 3, 4, 5]
-print(s: numbers.sum())
-print(s: sum(numbers: numbers))
+_debug_print_(x: sum(numbers: numbers))

@@ -32,5 +32,14 @@ void Builtins::fill_symbol_table(SymbolTable::Namespace *table) {
 
     SymbolTable::Symbol *symbol = new SymbolTable::Symbol("Nothing");
     symbol->type = new Types::Void();
-    table->insert(0, symbol);
+    table->insert(nullptr, symbol);
+
+    SymbolTable::Symbol *symbol2 = new SymbolTable::Symbol("_debug_print_");
+    std::map<std::string,Types::Type *> p;
+    p["x"] = new Types::Integer(64);
+    Types::Method *method = new Types::Method(p, new Types::Void());
+    Types::Function *function = new Types::Function();
+    function->add_method(method);
+    symbol2->type = function;
+    table->insert(nullptr, symbol2);
 }

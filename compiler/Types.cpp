@@ -113,7 +113,18 @@ std::string FunctionConstructor::name() const {
 }
 
 Type *FunctionConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
-    return new Function();
+    Function *function = new Function();
+
+    for (auto parameter : parameters) {
+        Method *method = dynamic_cast<Method *>(parameter);
+        if (method == nullptr) {
+            throw Errors::InvalidTypeParameters(node);
+        }
+
+        function->add_method(method);
+    }
+
+    return function;
 }
 
 RecordConstructor::RecordConstructor() {
@@ -257,8 +268,65 @@ std::string Product::name() const {
     return "Product";
 }
 
+Method::Method(std::map<std::string, Type *> parameter_types, Type *return_type) :
+        m_parameter_types(parameter_types),
+        m_return_type(return_type) {
+
+}
+
+std::string Method::name() const {
+    std::stringstream ss;
+    ss << "Method{";
+    for (auto it = m_parameter_types.begin(); it != m_parameter_types.end(); it++) {
+        ss << (it->second)->name() << ", ";
+    }
+    ss << m_return_type->name();
+    ss << "}" << ", ";
+    return ss.str();
+}
+
+Type *Method::return_type() const {
+    return m_return_type;
+}
+
+bool Method::could_be_called_with(std::map<std::string, Type *> parameters) {
+    unsigned long matches = 0;
+
+    for (auto it = parameters.begin(); it != parameters.end(); it++) {
+        std::string name = it->first;
+        Type *type = it->second;
+
+        if (m_parameter_types[name]->isCompatible(type)) {
+            matches++;
+        }
+    }
+
+    // FIXME deal with default values
+    return matches == m_parameter_types.size();
+}
+
 std::string Function::name() const {
-    return "Function";
+    std::stringstream ss;
+    ss << "Function{";
+    for (auto method : m_methods) {
+        ss << method->name() << ", ";
+    }
+    ss << "}";
+    return ss.str();
+}
+
+void Function::add_method(Method *method) {
+    m_methods.push_back(method);
+}
+
+Method *Function::find_method(AST::Node *node, std::map<std::string, Type *> parameters) const {
+    for (auto method : m_methods) {
+        if (method->could_be_called_with(parameters)) {
+            return method;
+        }
+    }
+
+    throw Errors::UndefinedError(node, "method");
 }
 
 std::string Record::name() const {
@@ -274,8 +342,13 @@ Union::Union(AST::Node *node, std::set<Type *> types) : m_types(types) {
 std::string Union::name() const {
     std::stringstream ss;
     ss << "Union{";
+    unsigned long i = 0;
     for (auto type : m_types) {
-        ss << type->name() << ", ";
+        ss << type->name();
+        if (i < m_types.size() - 1) {
+            ss << ", ";
+        }
+        i++;
     }
     ss << "}";
     return ss.str();
