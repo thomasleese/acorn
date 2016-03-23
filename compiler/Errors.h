@@ -36,6 +36,12 @@ namespace Errors {
         std::string m_message;
     };
 
+    class InternalError : public CompilerError {
+    public:
+        InternalError(Token *token, std::string message);
+        InternalError(AST::Node *node, std::string message);
+    };
+
     class SyntaxError : public CompilerError {
     public:
         explicit SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got, std::string expectation);

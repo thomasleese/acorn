@@ -118,6 +118,17 @@ void PrettyPrinter::visit(AST::Selector *expression) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(AST::Comma *expression) {
+    ss << indentation() << "(Comma\n";
+    indent++;
+
+    expression->lhs->accept(this);
+    expression->rhs->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(AST::While *expression) {
     ss << indentation() << "(While\n";
     indent++;

@@ -125,7 +125,8 @@ namespace AST {
     };
 
     struct Call : Expression {
-        using Expression::Expression;
+        Call(Token *token);
+        Call(std::string name, Token *token);
 
         Expression *operand;
         std::vector<Argument *> arguments;
@@ -147,6 +148,16 @@ namespace AST {
 
         Expression *operand;
         Identifier *name;
+
+        void accept(Visitor *visitor);
+    };
+
+    struct Comma : Expression {
+        Comma(Token *token);
+        Comma(Expression *lhs, Expression *rhs, Token *token);
+
+        Expression *lhs;
+        Expression *rhs;
 
         void accept(Visitor *visitor);
     };
@@ -181,7 +192,8 @@ namespace AST {
     };
 
     struct Type : Expression {
-        using Expression::Expression;
+        Type(Token *token);
+        Type(std::string name, Token *token);
 
         Identifier *name;
         std::vector<Type *> parameters;
@@ -190,7 +202,8 @@ namespace AST {
     };
 
     struct Cast : Expression {
-        using Expression::Expression;
+        Cast(Token *token);
+        Cast(Type *typeNode, Token *token);
 
         Type *typeNode;
 
@@ -210,7 +223,8 @@ namespace AST {
 
     // definitions
     struct VariableDefinition : Definition {
-        using Definition::Definition;
+        VariableDefinition(Token *token);
+        VariableDefinition(std::string name, Token *token);
 
         bool is_mutable;
         Identifier *name;
@@ -289,6 +303,7 @@ namespace AST {
         virtual void visit(Call *expression) = 0;
         virtual void visit(Assignment *expression) = 0;
         virtual void visit(Selector *expression) = 0;
+        virtual void visit(Comma *expression) = 0;
         virtual void visit(While *expression) = 0;
         virtual void visit(For *expression) = 0;
         virtual void visit(If *expression) = 0;
@@ -309,6 +324,44 @@ namespace AST {
 
         // module
         virtual void visit(Module *module) = 0;
+    };
+
+    class Simplifier : public Visitor {
+        void visit(CodeBlock *block);
+
+        void visit(Identifier *expression);
+        void visit(BooleanLiteral *boolean);
+        void visit(IntegerLiteral *expression);
+        void visit(FloatLiteral *expression);
+        void visit(ImaginaryLiteral *expression);
+        void visit(StringLiteral *expression);
+        void visit(SequenceLiteral *expression);
+        void visit(MappingLiteral *expression);
+        void visit(Argument *expression);
+        void visit(Call *expression);
+        void visit(Assignment *expression);
+        void visit(Selector *expression);
+        void visit(Comma *expression);
+        void visit(While *expression);
+        void visit(For *expression);
+        void visit(If *expression);
+        void visit(Type *type);
+        void visit(Cast *type);
+
+        void visit(Parameter *parameter);
+
+        void visit(VariableDefinition *definition);
+        void visit(FunctionDefinition *definition);
+        void visit(TypeDefinition *definition);
+
+        void visit(DefinitionStatement *statement);
+        void visit(ExpressionStatement *statement);
+
+        void visit(Module *module);
+
+    private:
+        std::vector<Statement *> m_insertStatements;
+        bool m_removeStatement;
     };
 
 };

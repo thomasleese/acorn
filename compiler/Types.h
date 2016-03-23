@@ -10,6 +10,8 @@
 #include <vector>
 #include <map>
 
+#include <llvm/IR/Type.h>
+
 namespace AST {
     struct Node;
 }
@@ -24,6 +26,8 @@ namespace Types {
         virtual std::string name() const = 0;
         virtual bool isCompatible(const Type *other) const;
 
+        virtual llvm::Type *create_llvm_type(llvm::LLVMContext &context) const = 0;
+
         bool operator==(const Type &other) const;
     };
 
@@ -31,6 +35,8 @@ namespace Types {
     class Constructor : public Type {
     public:
         virtual Type *create(AST::Node *node, std::vector<Type *> parameters) = 0;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
 
     class AnyConstructor : public Constructor {
@@ -137,6 +143,8 @@ namespace Types {
 
         std::string name() const;
 
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+
     private:
         std::string m_name;
     };
@@ -144,16 +152,22 @@ namespace Types {
     class Any : public Type {
     public:
         std::string name() const;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
 
     class Void : public Type {
     public:
         std::string name() const;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
 
     class Boolean : public Type {
     public:
         std::string name() const;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
 
     class Integer : public Type {
@@ -161,6 +175,8 @@ namespace Types {
         explicit Integer(int size);
 
         std::string name() const;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
     private:
         int m_size;
@@ -172,6 +188,8 @@ namespace Types {
 
         std::string name() const;
 
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+
     private:
         int m_size;
     };
@@ -182,6 +200,8 @@ namespace Types {
 
         std::string name() const;
 
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+
     private:
         Type *m_elementType;
     };
@@ -189,6 +209,8 @@ namespace Types {
     class Product : public Type {
     public:
         std::string name() const;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
 
     class Method : public Type {
@@ -199,6 +221,8 @@ namespace Types {
         Type *return_type() const;
 
         bool could_be_called_with(std::map<std::string, Type *> parameters);
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
     private:
         std::map<std::string, Type *> m_parameter_types;
@@ -212,6 +236,8 @@ namespace Types {
         void add_method(Method *method);
         Method *find_method(AST::Node *node, std::map<std::string, Type *> parameters) const;
 
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+
     private:
         std::vector<Method *> m_methods;
     };
@@ -219,6 +245,8 @@ namespace Types {
     class Record : public Type {
     public:
         std::string name() const;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
 
     class Union : public Type {
@@ -229,6 +257,8 @@ namespace Types {
         std::set<Type *> types() const;
 
         bool isCompatible(const Type *other) const;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
     private:
         std::set<Type *> m_types;

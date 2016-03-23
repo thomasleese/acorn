@@ -173,11 +173,11 @@ void Inferrer::visit(AST::Selector *expression) {
     throw Errors::TypeInferenceError(expression);
 }
 
-void Inferrer::visit(AST::While *expression) {
+void Inferrer::visit(AST::Comma *expression) {
     throw Errors::TypeInferenceError(expression);
 }
 
-void Inferrer::visit(AST::For *expression) {
+void Inferrer::visit(AST::While *expression) {
     expression->code->accept(this);
 
     Types::Type *type;
@@ -188,6 +188,10 @@ void Inferrer::visit(AST::For *expression) {
     }
 
     expression->type = type;
+}
+
+void Inferrer::visit(AST::For *expression) {
+    throw Errors::InternalError(expression, "For should never be in the lowered AST.");
 }
 
 void Inferrer::visit(AST::If *expression) {
@@ -204,8 +208,12 @@ void Inferrer::visit(AST::Cast *cast) {
 }
 
 void Inferrer::visit(AST::Parameter *parameter) {
+    SymbolTable::Symbol *symbol = m_namespace->lookup(parameter, parameter->name->name);
+
     parameter->cast->accept(this);
+
     parameter->type = parameter->cast->type;
+    symbol->type = parameter->type;
 }
 
 void Inferrer::visit(AST::VariableDefinition *definition) {
@@ -244,7 +252,7 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
     function->add_method(method);
 
     symbol->type = function;
-    definition->type = function;
+    definition->type = method;
 
     definition->code->accept(this);
 
@@ -368,6 +376,10 @@ void Checker::visit(AST::Assignment *expression) {
 }
 
 void Checker::visit(AST::Selector *expression) {
+
+}
+
+void Checker::visit(AST::Comma *expression) {
 
 }
 

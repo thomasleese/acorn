@@ -6,6 +6,8 @@
 #include <sstream>
 #include <iostream>
 
+#include <llvm/IR/DerivedTypes.h>
+
 #include "Errors.h"
 
 #include "Types.h"
@@ -22,6 +24,10 @@ bool Type::isCompatible(const Type *other) const {
 
 bool Type::operator==(const Type &other) const {
     return name() == other.name();
+}
+
+llvm::Type *Constructor::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("cannot create llvm type");
 }
 
 std::string AnyConstructor::name() const {
@@ -222,16 +228,32 @@ std::string Parameter::name() const {
     return m_name;
 }
 
+llvm::Type *Parameter::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
+}
+
 std::string Any::name() const {
     return "Any";
+}
+
+llvm::Type *Any::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
 }
 
 std::string Void::name() const {
     return "Void";
 }
 
+llvm::Type *Void::create_llvm_type(llvm::LLVMContext &context) const {
+    return llvm::Type::getVoidTy(context);
+}
+
 std::string Boolean::name() const {
     return "Boolean";
+}
+
+llvm::Type *Boolean::create_llvm_type(llvm::LLVMContext &context) const {
+    return llvm::Type::getInt8Ty(context);
 }
 
 Integer::Integer(int size) : m_size(size) {
@@ -244,6 +266,10 @@ std::string Integer::name() const {
     return ss.str();
 }
 
+llvm::Type *Integer::create_llvm_type(llvm::LLVMContext &context) const {
+    return llvm::Type::getIntNTy(context, m_size);
+}
+
 Float::Float(int size) : m_size(size) {
 
 }
@@ -252,6 +278,10 @@ std::string Float::name() const {
     std::stringstream ss;
     ss << "Float" << m_size;
     return ss.str();
+}
+
+llvm::Type *Float::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
 }
 
 Sequence::Sequence(Type *elementType) {
@@ -264,8 +294,17 @@ std::string Sequence::name() const {
     return ss.str();
 }
 
+llvm::Type *Sequence::create_llvm_type(llvm::LLVMContext &context) const {
+    llvm::Type *elementType = m_elementType->create_llvm_type(context);
+    return llvm::ArrayType::get(elementType, 10);
+}
+
 std::string Product::name() const {
     return "Product";
+}
+
+llvm::Type *Product::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
 }
 
 Method::Method(std::map<std::string, Type *> parameter_types, Type *return_type) :
@@ -305,6 +344,16 @@ bool Method::could_be_called_with(std::map<std::string, Type *> parameters) {
     return matches == m_parameter_types.size();
 }
 
+llvm::Type *Method::create_llvm_type(llvm::LLVMContext &context) const {
+    llvm::Type *returnType = m_return_type->create_llvm_type(context);
+    std::vector<llvm::Type *> paramTypes;
+    for (auto it = m_parameter_types.begin(); it != m_parameter_types.end(); it++) {
+        paramTypes.push_back(it->second->create_llvm_type(context));
+    }
+
+    return llvm::FunctionType::get(returnType, paramTypes, false);
+}
+
 std::string Function::name() const {
     std::stringstream ss;
     ss << "Function{";
@@ -329,8 +378,16 @@ Method *Function::find_method(AST::Node *node, std::map<std::string, Type *> par
     throw Errors::UndefinedError(node, "method");
 }
 
+llvm::Type *Function::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("functions do not map to LLVM, use methods instead");
+}
+
 std::string Record::name() const {
     return "Record";
+}
+
+llvm::Type *Record::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
 }
 
 Union::Union(AST::Node *node, std::set<Type *> types) : m_types(types) {
@@ -366,4 +423,8 @@ bool Union::isCompatible(const Type *other) const {
     }
 
     return false;
+}
+
+llvm::Type *Union::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
 }

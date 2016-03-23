@@ -30,6 +30,9 @@ void Compiler::compile(std::string filename) {
     Parser parser(tokens);
     AST::Module *module = parser.parse(moduleName);
 
+    AST::Simplifier *simplifier = new AST::Simplifier();
+    module->accept(simplifier);
+
     SymbolTable::Builder *symbolTableBuilder = new SymbolTable::Builder();
     module->accept(symbolTableBuilder);
     assert(symbolTableBuilder->isAtRoot());

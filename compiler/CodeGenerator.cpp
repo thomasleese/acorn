@@ -77,6 +77,10 @@ void CodeGenerator::visit(AST::Selector *expression) {
 
 }
 
+void CodeGenerator::visit(AST::Comma *expression) {
+
+}
+
 void CodeGenerator::visit(AST::While *expression) {
 
 }
@@ -105,15 +109,17 @@ void CodeGenerator::visit(AST::Parameter *parameter) {
 void CodeGenerator::visit(AST::VariableDefinition *definition) {
     definition->cast->accept(this);
 
-    llvm::Type *type = llvm::Type::getInt64Ty(llvm::getGlobalContext());
+    llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
+    bool isConstant = !definition->is_mutable;
 
-    bool isConstant = true;
     llvm::GlobalVariable *variable = new llvm::GlobalVariable(type, isConstant, llvm::GlobalValue::ExternalLinkage, 0, definition->name->name);
     variable->setAlignment(4);
 
     variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
 
-    variable->setInitializer(llvm::ConstantInt::get(type, 0, true));
+    definition->expression->accept(this);
+
+    //variable->setInitializer(llvm::ConstantInt::get(type, 0, true));
 }
 
 void CodeGenerator::visit(AST::FunctionDefinition *definition) {
@@ -124,7 +130,11 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    llvm::FunctionType *type = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);
+    Types::Method *methodType = static_cast<Types::Method *>(definition->type);
+
+    llvm::Type *llvmType = methodType->create_llvm_type(llvm::getGlobalContext());
+
+    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(llvmType);
     llvm::Function *function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, name, m_module);
 
     llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);

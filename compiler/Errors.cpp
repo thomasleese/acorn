@@ -45,6 +45,18 @@ void CompilerError::print() const {
     std::cout << m_message << std::endl;
 }
 
+InternalError::InternalError(Token *token, std::string message) :
+        CompilerError(token) {
+    m_prefix = "Internal error";
+    m_message = message + "\nNote: You have probably encountered a bug in Jet, not your code.";
+}
+
+InternalError::InternalError(AST::Node *node, std::string message) :
+        CompilerError(node) {
+    m_prefix = "Internal error";
+    m_message = message + "\nNote: You have probably encountered a bug in Jet, not your code.";
+}
+
 SyntaxError::SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got, std::string expectation) :
         CompilerError(filename, lineNumber, column, line) {
     m_message = "Got: " + got + "\nExpected: " + expectation;
@@ -111,6 +123,6 @@ TypeMismatchError::TypeMismatchError(AST::Node *node1, AST::Node *node2) :
 
 TypeInferenceError::TypeInferenceError(AST::Node *node) :
             CompilerError(node) {
-    m_prefix = "Unknown type";
+    m_prefix = "Type inference error";
     m_message = "Try specifying the type you want.";
 }
