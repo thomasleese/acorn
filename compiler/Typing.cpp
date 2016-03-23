@@ -20,21 +20,43 @@ Inferrer::~Inferrer() {
 
 }
 
+Types::Constructor *Inferrer::find_type_constructor(AST::Node *node, std::string name) {
+    SymbolTable::Symbol *symbol = m_namespace->lookup(node, name);
+    Types::Constructor *typeConstructor = dynamic_cast<Types::Constructor *>(symbol->type);
+    if (typeConstructor) {
+        return typeConstructor;
+    } else {
+        return nullptr;
+    }
+}
+
+Types::Parameter *Inferrer::find_type_parameter(AST::Node *node, std::string name) {
+    SymbolTable::Symbol *symbol = m_namespace->lookup(node, name);
+    Types::Parameter *typeParameter = dynamic_cast<Types::Parameter *>(symbol->type);
+    if (typeParameter) {
+        return typeParameter;
+    } else {
+        return nullptr;
+    }
+}
+
 Types::Type *Inferrer::find_type(AST::Node *node, std::string name, std::vector<AST::Type *> parameters) {
+    std::vector<Types::Type *> parameterTypes;
+
     for (auto parameter : parameters) {
         parameter->accept(this);
+        parameterTypes.push_back(parameter->type);
     }
 
-    if (name == "Sequence") {
-        return new Types::Sequence(parameters[0]->type);
+    Types::Constructor *typeConstructor = find_type_constructor(node, name);
+    if (typeConstructor != nullptr) {
+        return typeConstructor->create(node, parameterTypes);
     } else {
-        SymbolTable::Symbol *symbol = m_namespace->lookup(node, name);
-        Types::TypeType *typeType = dynamic_cast<Types::TypeType *>(symbol->type);
-        if (typeType) {
-            return typeType->type;
+        Types::Parameter *typeParameter = find_type_parameter(node, name);
+        if (typeParameter != nullptr) {
+            return typeParameter;
         } else {
-            Types::Parameter *parameter = dynamic_cast<Types::Parameter *>(symbol->type);
-            return parameter;
+            throw Errors::InvalidTypeConstructor(node);
         }
     }
 }
@@ -85,17 +107,29 @@ void Inferrer::visit(AST::SequenceLiteral *sequence) {
 
     std::set<Types::Type *> types;
     for (auto element : sequence->elements) {
-        types.insert(element->type);
+        bool inList = false;
+        for (auto type : types) {
+            if (*type == *(element->type)) {
+                inList = true;
+                break;
+            }
+        }
+
+        if (!inList) {
+            types.insert(element->type);
+        }
     }
 
-    if (types.size() != 1) {
-        // FIXME: make/find a union type
-        throw Errors::TypeInferenceError(sequence);
+    Types::Type *elementType;
+    if (types.empty()) {
+        elementType = new Types::Any();
+    } else if (types.size() != 1) {
+        elementType = new Types::Union(sequence, types);
+    } else {
+        elementType = *(types.begin());
     }
 
-    Types::Type *elementType = *(types.begin());
-    Types::Sequence *type = new Types::Sequence(elementType);
-    sequence->type = type;
+    sequence->type = new Types::Sequence(elementType);
 }
 
 void Inferrer::visit(AST::MappingLiteral *mapping) {
@@ -164,15 +198,26 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    Types::Type *actualType;
+    Types::Type *type;
     if (definition->alias) {
-        actualType = find_type(definition->alias);
+        std::vector<Types::Type *> inputParameters;
+        for (auto t : definition->name->parameters) {
+            t->accept(this);
+            inputParameters.push_back(t->type);
+        }
+
+        std::vector<Types::Type *> outputParameters;
+        for (auto t : definition->alias->parameters) {
+            t->accept(this);
+            outputParameters.push_back(t->type);
+        }
+
+        type = new Types::AliasConstructor(definition, find_type_constructor(definition, definition->alias->name->name),
+                                           inputParameters, outputParameters);
     } else {
-        Types::Record *record = new Types::Record();
-        actualType = record;
+        type = new Types::RecordConstructor();
     }
 
-    Types::TypeType *type = new Types::TypeType(actualType);
     symbol->type = type;
     definition->type = type;
 
@@ -207,8 +252,8 @@ Checker::~Checker() {
 }
 
 void Checker::check_types(AST::Node *lhs, AST::Node *rhs) {
-    bool same = *(lhs->type) == *(rhs->type);
-    if (!same) {
+    bool compatible = lhs->type->isCompatible(rhs->type);
+    if (!compatible) {
         throw Errors::TypeMismatchError(lhs, rhs);
     }
 }

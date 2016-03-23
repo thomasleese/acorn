@@ -9,31 +9,28 @@
 
 void add_base_type(SymbolTable::Namespace *table, std::string name, Types::Type *type) {
     SymbolTable::Symbol *symbol = new SymbolTable::Symbol(name);
-    symbol->type = new Types::TypeType(type);
+    symbol->type = type;
     table->insert(0, symbol);
 }
 
 void Builtins::fill_symbol_table(SymbolTable::Namespace *table) {
-    Types::Void *voidType = new Types::Void();
-
-    add_base_type(table, "Any", new Types::Any());
-    add_base_type(table, "Void", voidType);
-    add_base_type(table, "Boolean", new Types::Boolean());
-    add_base_type(table, "Integer8", new Types::Integer8());
-    add_base_type(table, "Integer16", new Types::Integer16());
-    add_base_type(table, "Integer32", new Types::Integer32());
-    add_base_type(table, "Integer64", new Types::Integer64());
-    add_base_type(table, "Integer128", new Types::Integer128());
-    add_base_type(table, "Float16", new Types::Float16());
-    add_base_type(table, "Float32", new Types::Float32());
-    add_base_type(table, "Float64", new Types::Float64());
-    add_base_type(table, "Float128", new Types::Float128());
-    add_base_type(table, "Function", new Types::Function());
-    add_base_type(table, "Sequence", new Types::Void());
-    add_base_type(table, "Product", new Types::Product());
-    add_base_type(table, "Union", new Types::Union());
+    add_base_type(table, "Any", new Types::AnyConstructor());
+    add_base_type(table, "Void", new Types::VoidConstructor());
+    add_base_type(table, "Boolean", new Types::BooleanConstructor());
+    add_base_type(table, "Integer8", new Types::IntegerConstructor(8));
+    add_base_type(table, "Integer16", new Types::IntegerConstructor(16));
+    add_base_type(table, "Integer32", new Types::IntegerConstructor(32));
+    add_base_type(table, "Integer64", new Types::IntegerConstructor(64));
+    add_base_type(table, "Integer128", new Types::IntegerConstructor(128));
+    add_base_type(table, "Float16", new Types::FloatConstructor(16));
+    add_base_type(table, "Float32", new Types::FloatConstructor(32));
+    add_base_type(table, "Float64", new Types::FloatConstructor(64));
+    add_base_type(table, "Float128", new Types::FloatConstructor(128));
+    add_base_type(table, "Sequence", new Types::SequenceConstructor());
+    add_base_type(table, "Function", new Types::FunctionConstructor());
+    add_base_type(table, "Union", new Types::UnionConstructor());
 
     SymbolTable::Symbol *symbol = new SymbolTable::Symbol("Nothing");
-    symbol->type = voidType;
+    symbol->type = new Types::Void();
     table->insert(0, symbol);
 }

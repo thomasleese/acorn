@@ -56,6 +56,16 @@ namespace Errors {
         explicit RedefinedError(AST::Node *node, std::string name);
     };
 
+    class InvalidTypeConstructor : public CompilerError {
+    public:
+        explicit InvalidTypeConstructor(AST::Node *node);
+    };
+
+    class InvalidTypeParameters : public CompilerError {
+    public:
+        explicit InvalidTypeParameters(AST::Node *node);
+    };
+
     class TypeMismatchError : public CompilerError {
     public:
         explicit TypeMismatchError(AST::Node *node1, AST::Node *node2);

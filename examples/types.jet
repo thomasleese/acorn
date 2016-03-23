@@ -1,11 +1,19 @@
+type Character as Sequence{Integer8}
 type String as Sequence{Character}
 
 "Take a look at the different types available in Jet."
 
+type Float as Float32
+type Integer as Integer64
+
 type List{T} as Sequence{T}
 type Set{T} as Sequence{T}
 type Queue{T} as Sequence{T}
-type Dictionary{T, U} as Mapping{T, U}
+
+type Dictionary{T, U}
+    keys as Sequence{T}
+    values as Sequence{U}
+end
 
 let list as List{Integer} = [0, 1, 2, 3]
 
@@ -22,9 +30,6 @@ let character as Character = 'H'
 let string as String = 'Hello, world!'
 
 let boolean as Boolean = true
-
-type Float as Float32
-type Integer as Integer64
 
 let float as Float = 3.141
 
@@ -43,11 +48,11 @@ let function as Function{Integer, Integer, Integer} = plus
 
 let nothing as Void = Nothing
 
-type Maybe{T} as Union{Nothing, T}
+type Maybe{T} as Union{Void, T}
 
 let maybe1 as Maybe{Integer} = 10
 let maybe2 as Maybe{Integer} = Nothing
 
-type Number as Union{Integer,Float,Complex}
+type Number as Union{Integer, Float, Complex}
 
 let number as Number = 2.5

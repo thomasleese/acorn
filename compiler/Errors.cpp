@@ -87,6 +87,18 @@ RedefinedError::RedefinedError(AST::Node *node, std::string name) :
     m_message = name + " is already defined in this scope.";
 }
 
+InvalidTypeConstructor::InvalidTypeConstructor(AST::Node *node) :
+        CompilerError(node) {
+    m_prefix = "Invalid type";
+    m_message = "This is not a type constructor.";
+}
+
+InvalidTypeParameters::InvalidTypeParameters(AST::Node *node) :
+        CompilerError(node) {
+    m_prefix = "Invalid type parameters";
+    m_message = "Invalid type parmeters for this type.";
+}
+
 TypeMismatchError::TypeMismatchError(AST::Node *node1, AST::Node *node2) :
         CompilerError(node1) {
     m_prefix = "Invalid types";

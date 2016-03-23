@@ -5,8 +5,14 @@
 #ifndef JET_TYPES_H
 #define JET_TYPES_H
 
+#include <set>
 #include <string>
+#include <vector>
 #include <map>
+
+namespace AST {
+    struct Node;
+}
 
 namespace Types {
 
@@ -15,95 +21,166 @@ namespace Types {
     public:
         virtual ~Type();
 
-        virtual const char *name() const = 0;
+        virtual std::string name() const = 0;
+        virtual bool isCompatible(const Type *other) const;
 
         bool operator==(const Type &other) const;
     };
 
+    // type constructors
+    class Constructor : public Type {
+    public:
+        virtual Type *create(AST::Node *node, std::vector<Type *> parameters) = 0;
+    };
+
+    class AnyConstructor : public Constructor {
+    public:
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+    };
+
+    class VoidConstructor : public Constructor {
+    public:
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+    };
+
+    class BooleanConstructor : public Constructor {
+    public:
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+    };
+
+    class IntegerConstructor : public Constructor {
+    public:
+        explicit IntegerConstructor(int size);
+
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+    private:
+        int m_size;
+    };
+
+    class FloatConstructor : public Constructor {
+    public:
+        explicit FloatConstructor(int size);
+
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+    private:
+        int m_size;
+    };
+
+    class SequenceConstructor : public Constructor {
+
+    public:
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+    };
+
+    class FunctionConstructor : public Constructor {
+    public:
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+    };
+
+    class RecordConstructor : public Constructor {
+
+    public:
+        explicit RecordConstructor();
+
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+    };
+
+    class UnionConstructor : public Constructor {
+
+    public:
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+    };
+
+    class AliasConstructor : public Constructor {
+
+    public:
+        explicit AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Type *> inputParameters, std::vector<Type *> outputParameters);
+
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+    private:
+        Constructor *m_constructor;
+        std::map<int, int> m_parameterMapping;
+        std::vector<Type *> m_knownTypes;
+
+    };
+
+    // concrete types
     class Parameter : public Type {
     public:
-        Parameter(std::string name);
+        explicit Parameter(std::string name);
 
-        const char *name() const;
+        std::string name() const;
 
     private:
         std::string m_name;
     };
 
-    class TypeType : public Type {
-    public:
-        explicit TypeType(Type *type);
-
-        const char *name() const;
-
-        Type *type;
-    };
-
     class Any : public Type {
     public:
-        const char *name() const;
+        std::string name() const;
     };
 
     class Void : public Type {
     public:
-        const char *name() const;
+        std::string name() const;
     };
 
     class Boolean : public Type {
     public:
-        const char *name() const;
+        std::string name() const;
     };
 
-    class Integer8 : public Type {
+    class Integer : public Type {
     public:
-        const char *name() const;
+        explicit Integer(int size);
+
+        std::string name() const;
+
+    private:
+        int m_size;
     };
 
-    class Integer16 : public Type {
+    class Float : public Type {
     public:
-        const char *name() const;
-    };
+        explicit Float(int size);
 
-    class Integer32 : public Type {
-    public:
-        const char *name() const;
-    };
+        std::string name() const;
 
-    class Integer64 : public Type {
-    public:
-        const char *name() const;
-    };
-
-    class Integer128 : public Type {
-    public:
-        const char *name() const;
-    };
-
-    class Float16 : public Type {
-    public:
-        const char *name() const;
-    };
-
-    class Float32 : public Type {
-    public:
-        const char *name() const;
-    };
-
-    class Float64 : public Type {
-    public:
-        const char *name() const;
-    };
-
-    class Float128 : public Type {
-    public:
-        const char *name() const;
+    private:
+        int m_size;
     };
 
     class Sequence : public Type {
     public:
         explicit Sequence(Type *elementType);
 
-        const char *name() const;
+        std::string name() const;
 
     private:
         Type *m_elementType;
@@ -111,22 +188,30 @@ namespace Types {
 
     class Product : public Type {
     public:
-        const char *name() const;
+        std::string name() const;
     };
 
     class Function : public Type {
     public:
-        const char *name() const;
+        std::string name() const;
     };
 
     class Record : public Type {
     public:
-        const char *name() const;
+        std::string name() const;
     };
 
     class Union : public Type {
     public:
-        const char *name() const;
+        explicit Union(AST::Node *node, std::set<Type *> types);
+
+        std::string name() const;
+        std::set<Type *> types() const;
+
+        bool isCompatible(const Type *other) const;
+
+    private:
+        std::set<Type *> m_types;
     };
 
 };

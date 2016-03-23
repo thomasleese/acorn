@@ -2,6 +2,8 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
+#include <iostream>
+
 #include "Lexer.h"
 #include "Errors.h"
 #include "Builtins.h"

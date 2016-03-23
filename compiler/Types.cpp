@@ -2,8 +2,11 @@
 // Created by Thomas Leese on 18/03/2016.
 //
 
+#include <cstring>
 #include <sstream>
 #include <iostream>
+
+#include "Errors.h"
 
 #include "Types.h"
 
@@ -13,97 +16,281 @@ Type::~Type() {
 
 }
 
+bool Type::isCompatible(const Type *other) const {
+    return name() == other->name();
+}
+
 bool Type::operator==(const Type &other) const {
-    std::cout << strcmp(name(), other.name()) << std::endl;
-    return strcmp(name(), other.name()) == 0;
+    return name() == other.name();
 }
 
-Parameter::Parameter(std::string name) {
-    m_name = name;
+std::string AnyConstructor::name() const {
+    return "AnyConstructor";
 }
 
-const char *Parameter::name() const {
-    return m_name.c_str();
+Type *AnyConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    if (parameters.empty()) {
+        return new Any();
+    } else {
+        throw Errors::InvalidTypeConstructor(node);
+    }
 }
 
-TypeType::TypeType(Type *type) {
-    this->type = type;
+std::string VoidConstructor::name() const {
+    return "VoidConstructor";
 }
 
-const char *TypeType::name() const {
-    return "TypeType";
+Type *VoidConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    if (parameters.empty()) {
+        return new Void();
+    } else {
+        throw Errors::InvalidTypeConstructor(node);
+    }
 }
 
-const char *Any::name() const {
+std::string BooleanConstructor::name() const {
+    return "BooleanConstructor";
+}
+
+Type *BooleanConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    if (parameters.empty()) {
+        return new Boolean();
+    } else {
+        throw Errors::InvalidTypeConstructor(node);
+    }
+}
+
+IntegerConstructor::IntegerConstructor(int size) : m_size(size) {
+
+}
+
+std::string IntegerConstructor::name() const {
+    std::stringstream ss;
+    ss << "IntegerConstructor" << m_size;
+    return ss.str();
+}
+
+Type *IntegerConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    if (parameters.empty()) {
+        return new Integer(m_size);
+    } else {
+        throw Errors::InvalidTypeConstructor(node);
+    }
+}
+
+FloatConstructor::FloatConstructor(int size) : m_size(size) {
+
+}
+
+std::string FloatConstructor::name() const {
+    std::stringstream ss;
+    ss << "FloatConstructor" << m_size;
+    return ss.str();
+}
+
+Type *FloatConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    if (parameters.empty()) {
+        return new Float(m_size);
+    } else {
+        throw Errors::InvalidTypeConstructor(node);
+    }
+}
+
+std::string SequenceConstructor::name() const {
+    return "SequenceConstructor";
+}
+
+Type *SequenceConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    if (parameters.size() == 1) {
+        return new Sequence(parameters[0]);
+    } else {
+        throw Errors::InvalidTypeParameters(node);
+    }
+}
+
+std::string FunctionConstructor::name() const {
+    return "FunctionConstructor";
+}
+
+Type *FunctionConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    return new Function();
+}
+
+RecordConstructor::RecordConstructor() {
+
+}
+
+std::string RecordConstructor::name() const {
+    return "RecordConstructor";
+}
+
+Type *RecordConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    return new Record();
+}
+
+std::string UnionConstructor::name() const {
+    return "UnionConstructor";
+}
+
+Type *UnionConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    std::set<Type *> types;
+    for (auto parameter : parameters) {
+        types.insert(parameter);
+    }
+
+    return new Union(node, types);
+}
+
+AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Type *> inputParameters, std::vector<Type *> outputParameters) :
+        m_constructor(constructor) {
+    for (unsigned long i = 0; i < inputParameters.size(); i++) {
+        auto parameter = dynamic_cast<Parameter *>(inputParameters[i]);
+        if (parameter == nullptr) {
+            throw Errors::InvalidTypeParameters(node);
+        }
+
+        int mapping = -1;
+
+        for (unsigned long j = 0; j < outputParameters.size(); j++) {
+            if (*parameter == *(outputParameters[j])) {
+                mapping = j;
+                break;
+            }
+        }
+
+        if (mapping == -1) {
+            throw Errors::InvalidTypeParameters(node);
+        }
+
+        m_parameterMapping[i] = mapping;
+    }
+
+    for (auto t : outputParameters) {
+        if (dynamic_cast<Parameter *>(t) == nullptr) {
+            m_knownTypes.push_back(t);
+        }
+    }
+}
+
+std::string AliasConstructor::name() const {
+    return "AliasConstructor";
+}
+
+Type *AliasConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    if (parameters.size() != m_parameterMapping.size()) {
+        throw Errors::InvalidTypeParameters(node);
+    }
+
+    std::vector<Type *> actualParameters;
+    for (unsigned long i = 0; i < parameters.size() + m_knownTypes.size(); i++) {
+        actualParameters.push_back(nullptr);
+    }
+
+    for (unsigned long i = 0; i < parameters.size(); i++) {
+        if (m_parameterMapping.find(i) != m_parameterMapping.end()) {
+            actualParameters[m_parameterMapping[i]] = parameters[i];
+        }
+    }
+
+    unsigned long j = 0;
+    for (unsigned long i = 0; i < actualParameters.size(); i++) {
+        if (actualParameters[i] == nullptr) {
+            actualParameters[i] = m_knownTypes[j];
+            j++;
+        }
+    }
+
+    return m_constructor->create(node, actualParameters);
+}
+
+Parameter::Parameter(std::string name) : m_name(name) {
+
+}
+
+std::string Parameter::name() const {
+    return m_name;
+}
+
+std::string Any::name() const {
     return "Any";
 }
 
-const char *Void::name() const {
+std::string Void::name() const {
     return "Void";
 }
 
-const char *Boolean::name() const {
+std::string Boolean::name() const {
     return "Boolean";
 }
 
-const char *Integer8::name() const {
-    return "Integer8";
+Integer::Integer(int size) : m_size(size) {
+
 }
 
-const char *Integer16::name() const {
-    return "Integer16";
+std::string Integer::name() const {
+    std::stringstream ss;
+    ss << "Integer" << m_size;
+    return ss.str();
 }
 
-const char *Integer32::name() const {
-    return "Integer32";
+Float::Float(int size) : m_size(size) {
+
 }
 
-const char *Integer64::name() const {
-    return "Integer64";
-}
-
-const char *Integer128::name() const {
-    return "Integer128";
-}
-
-const char *Float16::name() const {
-    return "Float16";
-}
-
-const char *Float32::name() const {
-    return "Float32";
-}
-
-const char *Float64::name() const {
-    return "Float64";
-}
-
-const char *Float128::name() const {
-    return "Float128";
+std::string Float::name() const {
+    std::stringstream ss;
+    ss << "Float" << m_size;
+    return ss.str();
 }
 
 Sequence::Sequence(Type *elementType) {
     m_elementType = elementType;
 }
 
-const char *Sequence::name() const {
+std::string Sequence::name() const {
     std::stringstream ss;
     ss << "Sequence{" << m_elementType->name() << "}";
-    return ss.str().c_str();
+    return ss.str();
 }
 
-const char *Product::name() const {
+std::string Product::name() const {
     return "Product";
 }
 
-const char *Function::name() const {
+std::string Function::name() const {
     return "Function";
 }
 
-const char *Record::name() const {
+std::string Record::name() const {
     return "Record";
 }
 
-const char *Union::name() const {
-    return "Union";
+Union::Union(AST::Node *node, std::set<Type *> types) : m_types(types) {
+    if (m_types.size() <= 1) {
+        throw Errors::InvalidTypeParameters(node);
+    }
+}
+
+std::string Union::name() const {
+    std::stringstream ss;
+    ss << "Union{";
+    for (auto type : m_types) {
+        ss << type->name() << ", ";
+    }
+    ss << "}";
+    return ss.str();
+}
+
+std::set<Type *> Union::types() const {
+    return m_types;
+}
+
+bool Union::isCompatible(const Type *other) const {
+    for (auto type : m_types) {
+        if (type->isCompatible(other)) {
+            return true;
+        }
+    }
+
+    return false;
 }
