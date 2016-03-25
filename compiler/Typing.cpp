@@ -233,10 +233,13 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    std::map<std::string, Types::Type *> parameterTypes;
+    std::vector<Types::Type *> parameterTypes;
+    std::vector<std::string> officialParameterOrder;
     for (auto parameter : definition->parameters) {
         parameter->accept(this);
-        parameterTypes[parameter->name->name] = parameter->type;
+
+        parameterTypes.push_back(parameter->type);
+        officialParameterOrder.push_back(parameter->name->name);
     }
 
     definition->returnCast->accept(this);
@@ -248,7 +251,8 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
         function = static_cast<Types::Function *>(symbol->type);
     }
 
-    Types::Method *method = new Types::Method(parameterTypes, definition->returnCast->type);
+    Types::Method *method = new Types::Method(parameterTypes, definition->returnCast->type,
+                                              officialParameterOrder);
     function->add_method(method);
 
     symbol->type = function;

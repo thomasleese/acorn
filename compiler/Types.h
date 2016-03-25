@@ -215,7 +215,7 @@ namespace Types {
 
     class Method : public Type {
     public:
-        explicit Method(std::map<std::string, Type *> parameter_types, Type *return_type);
+        explicit Method(std::vector<Type *> parameter_types, Type *return_type, std::vector<std::string> official_parameter_order);
 
         std::string name() const;
         Type *return_type() const;
@@ -225,8 +225,9 @@ namespace Types {
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
     private:
-        std::map<std::string, Type *> m_parameter_types;
+        std::vector<Type *> m_parameter_types;
         Type *m_return_type;
+        std::vector<std::string> m_official_parameter_order;
     };
 
     class Function : public Type {
