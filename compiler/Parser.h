@@ -32,6 +32,7 @@ namespace AST {
     struct While;
     struct For;
     struct If;
+    struct Return;
     struct Type;
     struct Cast;
     struct Parameter;
@@ -78,6 +79,7 @@ private:
     AST::While *readWhile();
     AST::For *readFor();
     AST::If *readIf();
+    AST::Return *readReturn();
     AST::Expression *readUnaryExpression();
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
     AST::Expression *readOperandExpression();

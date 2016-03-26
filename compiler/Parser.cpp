@@ -314,13 +314,20 @@ If *Parser::readIf() {
     return expression;
 }
 
+Return *Parser::readReturn() {
+    Token *token = readToken(Token::ReturnKeyword);
+
+    Return *r = new Return(token);
+    r->expression = readExpression();
+    return r;
+}
+
 Expression *Parser::readUnaryExpression() {
     if (isToken(Token::Operator)) {
         Call *expr = new Call(m_tokens.front());
         expr->operand = readOperator();
 
         Argument *arg = new Argument(m_tokens.front());
-        arg->name = new Identifier(m_tokens.front(), "self");
         arg->value = readUnaryExpression();
         expr->arguments.push_back(arg);
 
@@ -354,11 +361,11 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
             Call *call = new Call(token);
             call->operand = op;
 
-            Argument *lhsArg = new Argument(token, "self");
+            Argument *lhsArg = new Argument(token);
             lhsArg->value = lhs;
             call->arguments.push_back(lhsArg);
 
-            Argument *rhsArg = new Argument(token, "other");
+            Argument *rhsArg = new Argument(token);
             rhsArg->value = rhs;
             call->arguments.push_back(rhsArg);
 
@@ -400,6 +407,8 @@ Expression *Parser::readOperandExpression() {
         expr = readFor();
     } else if (isToken(Token::IfKeyword)) {
         expr = readIf();
+    } else if (isToken(Token::ReturnKeyword)) {
+        expr = readReturn();
     } else if (isToken(Token::Identifier)) {
         expr = readIdentifier();
     } else {

@@ -191,6 +191,14 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct Return : Expression {
+        using Expression::Expression;
+
+        Expression *expression;
+
+        void accept(Visitor *visitor);
+    };
+
     struct Type : Expression {
         Type(Token *token);
         Type(std::string name, Token *token);
@@ -307,6 +315,7 @@ namespace AST {
         virtual void visit(While *expression) = 0;
         virtual void visit(For *expression) = 0;
         virtual void visit(If *expression) = 0;
+        virtual void visit(Return *expression) = 0;
         virtual void visit(Type *type) = 0;
         virtual void visit(Cast *type) = 0;
 
@@ -345,6 +354,7 @@ namespace AST {
         void visit(While *expression);
         void visit(For *expression);
         void visit(If *expression);
+        void visit(Return *expression);
         void visit(Type *type);
         void visit(Cast *type);
 

@@ -8,6 +8,7 @@
 
 #include <llvm/IR/DerivedTypes.h>
 
+#include "AbstractSyntaxTree.h"
 #include "Errors.h"
 
 #include "Types.h"
@@ -314,6 +315,24 @@ Method::Method(std::vector<Type *> parameter_types, Type *return_type, std::vect
 
 }
 
+Method::Method(Type *return_type) : m_return_type(return_type) {
+
+}
+
+Method::Method(std::string parameter1_name, Type *parameter1_type, Type *return_type) {
+    m_parameter_types.push_back(parameter1_type);
+    m_official_parameter_order.push_back(parameter1_name);
+    m_return_type = return_type;
+}
+
+Method::Method(std::string parameter1_name, Type *parameter1_type, std::string parameter2_name, Type *parameter2_type, Type *return_type) {
+    m_parameter_types.push_back(parameter1_type);
+    m_parameter_types.push_back(parameter2_type);
+    m_official_parameter_order.push_back(parameter1_name);
+    m_official_parameter_order.push_back(parameter2_name);
+    m_return_type = return_type;
+}
+
 std::string Method::name() const {
     std::stringstream ss;
     ss << "Method{";
@@ -329,16 +348,37 @@ Type *Method::return_type() const {
     return m_return_type;
 }
 
-bool Method::could_be_called_with(std::map<std::string, Type *> parameters) {
+std::string Method::llvm_name(std::string prefix) const {
+    return prefix;
+}
+
+long Method::get_parameter_position(std::string name) const {
+    auto it = std::find(m_official_parameter_order.begin(), m_official_parameter_order.end(), name);
+    if (it == m_official_parameter_order.end()) {
+        return -1;
+    }
+
+    return std::distance(m_official_parameter_order.begin(), it);
+}
+
+bool Method::could_be_called_with(std::vector<AST::Argument *> arguments) {
     unsigned long matches = 0;
 
-    for (auto it = parameters.begin(); it != parameters.end(); it++) {
-        std::string name = it->first;
-        Type *type = it->second;
+    for (unsigned long i = 0; i < arguments.size(); i++) {
+        Type *type = arguments[i]->type;
 
-        auto it2 = std::find(m_official_parameter_order.begin(), m_official_parameter_order.end(), name);
-        auto position = std::distance(m_official_parameter_order.begin(), it2);
-        if (m_parameter_types[position]->isCompatible(type)) {
+        unsigned long index = i;
+        if (arguments[i]->name) {
+            std::string name = arguments[i]->name->name;
+            auto pos = get_parameter_position(name);
+            if (pos < 0) {
+                return false;
+            }
+
+            index = pos;
+        }
+
+        if (m_parameter_types[index]->isCompatible(type)) {
             matches++;
         }
     }
@@ -371,14 +411,18 @@ void Function::add_method(Method *method) {
     m_methods.push_back(method);
 }
 
-Method *Function::find_method(AST::Node *node, std::map<std::string, Type *> parameters) const {
+Method *Function::find_method(AST::Node *node, std::vector<AST::Argument *> arguments) const {
     for (auto method : m_methods) {
-        if (method->could_be_called_with(parameters)) {
+        if (method->could_be_called_with(arguments)) {
             return method;
         }
     }
 
     throw Errors::UndefinedError(node, "method");
+}
+
+Method *Function::get_method(int index) const {
+    return m_methods[index];
 }
 
 llvm::Type *Function::create_llvm_type(llvm::LLVMContext &context) const {

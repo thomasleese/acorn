@@ -1,16 +1,8 @@
 type Integer as Integer64
 
-def start(self as Sequence{Integer}) as Integer
-    0
+def main() as Integer
+    let a as Integer = 10
+    let b as Integer = 20
+    let c as Integer = (a * b) + b
+    return c
 end
-
-def sum(numbers as Sequence{Integer}) as Integer
-    let mutable total as Integer = 0
-    for number in numbers
-        total = total + number
-    end
-    total
-end
-
-let numbers as Sequence{Integer} = [1, 2, 3, 4, 5]
-_debug_print_(x: sum(numbers: numbers))

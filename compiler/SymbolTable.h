@@ -10,6 +10,10 @@
 
 #include "AbstractSyntaxTree.h"
 
+namespace llvm {
+    class AllocaInst;
+}
+
 namespace Types {
     class Type;
 }
@@ -24,6 +28,7 @@ namespace SymbolTable {
         ~Namespace();
 
         Symbol *lookup(AST::Node *currentNode, std::string name) const;
+        Symbol *lookup(AST::Identifier *identifier) const;
         void insert(AST::Node *currentNode, Symbol *symbol);
 
     private:
@@ -36,6 +41,7 @@ namespace SymbolTable {
 
         std::string name;
         Types::Type *type;
+        llvm::AllocaInst *value;
         Namespace *nameSpace;
     };
 
@@ -64,6 +70,7 @@ namespace SymbolTable {
         void visit(AST::While *expression);
         void visit(AST::For *expression);
         void visit(AST::If *expression);
+        void visit(AST::Return *expression);
         void visit(AST::Type *type);
         void visit(AST::Cast *cast);
 

@@ -11,9 +11,11 @@
 #include <map>
 
 #include <llvm/IR/Type.h>
+#include "AbstractSyntaxTree.h"
 
 namespace AST {
     struct Node;
+    struct Argument;
 }
 
 namespace Types {
@@ -215,12 +217,19 @@ namespace Types {
 
     class Method : public Type {
     public:
-        explicit Method(std::vector<Type *> parameter_types, Type *return_type, std::vector<std::string> official_parameter_order);
+        Method(std::vector<Type *> parameter_types, Type *return_type, std::vector<std::string> official_parameter_order);
+        Method(Type *return_type);
+        Method(std::string parameter1_name, Type *parameter1_type, Type *return_type);
+        Method(std::string parameter1_name, Type *parameter1_type, std::string parameter2_name, Type *parameter2_type, Type *return_type);
 
         std::string name() const;
         Type *return_type() const;
 
-        bool could_be_called_with(std::map<std::string, Type *> parameters);
+        std::string llvm_name(std::string prefix) const;
+
+        long get_parameter_position(std::string name) const;
+
+        bool could_be_called_with(std::vector<AST::Argument *> arguments);
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
@@ -235,7 +244,8 @@ namespace Types {
         std::string name() const;
 
         void add_method(Method *method);
-        Method *find_method(AST::Node *node, std::map<std::string, Type *> parameters) const;
+        Method *find_method(AST::Node *node, std::vector<AST::Argument *> arguments) const;
+        Method *get_method(int index) const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 

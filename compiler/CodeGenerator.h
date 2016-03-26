@@ -18,8 +18,12 @@ namespace SymbolTable {
 class CodeGenerator : public AST::Visitor {
 
 public:
-    explicit CodeGenerator(SymbolTable::Namespace *rootNamespace);
+    explicit CodeGenerator(SymbolTable::Namespace *rootNamespace, llvm::TargetMachine *target_machine);
     ~CodeGenerator();
+
+    void debug(std::string line);
+
+    llvm::Module *module() const;
 
     void visit(AST::CodeBlock *block);
 
@@ -39,6 +43,7 @@ public:
     void visit(AST::While *expression);
     void visit(AST::For *expression);
     void visit(AST::If *expression);
+    void visit(AST::Return *expression);
     void visit(AST::Type *type);
     void visit(AST::Cast *cast);
 
@@ -58,6 +63,9 @@ private:
     llvm::Module *m_module;
     llvm::IRBuilder<> *m_irBuilder;
     llvm::MDBuilder *m_mdBuilder;
+    llvm::TargetMachine *m_target_machine;
+
+    std::vector<llvm::Value *> m_llvmValues;
 };
 
 

@@ -65,7 +65,7 @@ void MappingLiteral::accept(Visitor *visitor) {
 }
 
 Argument::Argument(Token *token) : Node(token) {
-
+    this->name = nullptr;
 }
 
 Argument::Argument(Token *token, std::string name) : Node(token) {
@@ -124,6 +124,10 @@ void For::accept(Visitor *visitor) {
 }
 
 void If::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+void Return::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -324,6 +328,10 @@ void Simplifier::visit(For *expression) {
 }
 
 void Simplifier::visit(If *expression) {
+
+}
+
+void Simplifier::visit(Return *expression) {
 
 }
 

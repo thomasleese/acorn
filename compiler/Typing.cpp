@@ -138,7 +138,9 @@ void Inferrer::visit(AST::MappingLiteral *mapping) {
 
 void Inferrer::visit(AST::Argument *argument) {
     argument->value->accept(this);
-    argument->name->type = argument->value->type;
+    if (argument->name) {
+        argument->name->type = argument->value->type;
+    }
     argument->type = argument->value->type;
 }
 
@@ -155,12 +157,7 @@ void Inferrer::visit(AST::Call *expression) {
         throw Errors::TypeMismatchError(expression, expression->operand);
     }
 
-    std::map<std::string, Types::Type *> args;
-    for (auto arg : expression->arguments) {
-        args[arg->name->name] = arg->type;
-    }
-
-    Types::Method *method = function->find_method(expression, args);
+    Types::Method *method = function->find_method(expression, expression->arguments);
     expression->type = method->return_type();
 }
 
@@ -196,6 +193,11 @@ void Inferrer::visit(AST::For *expression) {
 
 void Inferrer::visit(AST::If *expression) {
     throw Errors::TypeInferenceError(expression);
+}
+
+void Inferrer::visit(AST::Return *expression) {
+    expression->expression->accept(this);
+    expression->type = expression->expression->type;
 }
 
 void Inferrer::visit(AST::Type *type) {
@@ -396,6 +398,10 @@ void Checker::visit(AST::For *expression) {
 }
 
 void Checker::visit(AST::If *expression) {
+
+}
+
+void Checker::visit(AST::Return *expression) {
 
 }
 

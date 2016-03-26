@@ -33,6 +33,10 @@ Symbol *Namespace::lookup(AST::Node *currentNode, std::string name) const {
     return it->second;
 }
 
+Symbol *Namespace::lookup(AST::Identifier *identifier) const {
+    return lookup(identifier, identifier->name);
+}
+
 void Namespace::insert(AST::Node *currentNode, Symbol *symbol) {
     auto it = m_symbols.find(symbol->name);
     if (it != m_symbols.end()) {
@@ -45,7 +49,8 @@ void Namespace::insert(AST::Node *currentNode, Symbol *symbol) {
 Symbol::Symbol(std::string name) {
     this->name = name;
     this->type = nullptr;
-    this->nameSpace = 0;
+    this->value = nullptr;
+    this->nameSpace = nullptr;
 }
 
 Builder::Builder() {
@@ -129,6 +134,10 @@ void Builder::visit(AST::For *expression) {
 }
 
 void Builder::visit(AST::If *expression) {
+
+}
+
+void Builder::visit(AST::Return *expression) {
 
 }
 

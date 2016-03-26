@@ -75,7 +75,12 @@ void PrettyPrinter::visit(AST::Argument *argument) {
     ss << indentation() << "(Argument\n";
     indent++;
 
-    argument->name->accept(this);
+    if (argument->name) {
+        argument->name->accept(this);
+    } else {
+        ss << indentation() << "[Unnammed]\n";
+    }
+
     argument->value->accept(this);
 
     indent--;
@@ -162,6 +167,16 @@ void PrettyPrinter::visit(AST::If *expression) {
     if (expression->falseCode) {
         expression->falseCode->accept(this);
     }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::Return *expression) {
+    ss << indentation() << "(Return\n";
+    indent++;
+
+    expression->expression->accept(this);
 
     indent--;
     ss << indentation() << ")\n";
