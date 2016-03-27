@@ -59,8 +59,6 @@ struct Token {
         CloseParenthesis,
         OpenBrace,
         CloseBrace,
-        OpenChevron,
-        CloseChevron,
         Comma,
         Dot,
         Colon,

@@ -78,6 +78,7 @@ namespace Typing {
 
     private:
         void check_types(AST::Node *lhs, AST::Node *rhs);
+        void check_not_null(AST::Node *node);
 
     public:
         void visit(AST::CodeBlock *block);

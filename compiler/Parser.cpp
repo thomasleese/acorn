@@ -291,7 +291,7 @@ If *Parser::readIf() {
     readToken(Token::Newline);
 
     expression->trueCode = new CodeBlock(m_tokens.front());
-    expression->falseCode = 0;
+    expression->falseCode = nullptr;
 
     while (!isToken(Token::ElseKeyword) && !isToken(Token::EndKeyword)) {
         Statement *statement = readStatement();
@@ -302,7 +302,9 @@ If *Parser::readIf() {
         readToken(Token::ElseKeyword);
 
         if (isToken(Token::IfKeyword)) {
-            readIf();
+            expression->falseCode = new CodeBlock(m_tokens.front());
+            If *if_expr = readIf();
+            expression->falseCode->statements.push_back(new ExpressionStatement(if_expr));
         } else {
             readToken(Token::Newline);
             expression->falseCode = readCodeBlock();
@@ -379,53 +381,64 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
     return lhs;
 }
 
-Expression *Parser::readOperandExpression() {
-    Expression *expr = 0;
-
+Expression *Parser::readPrimaryExpression() {
     if (isToken(Token::OpenParenthesis)) {
         readToken(Token::OpenParenthesis);
-        expr = readExpression();
+        Expression *expr = readExpression();
         readToken(Token::CloseParenthesis);
         return expr;
     } else if (isToken(Token::BooleanLiteral)) {
-        expr = readBooleanLiteral();
+        return readBooleanLiteral();
     } else if (isToken(Token::IntegerLiteral)) {
-        expr = readIntegerLiteral();
+        return readIntegerLiteral();
     } else if (isToken(Token::FloatLiteral)) {
-        expr = readFloatLiteral();
+        return readFloatLiteral();
     } else if (isToken(Token::ImaginaryLiteral)) {
-        expr = readImaginaryLiteral();
+        return readImaginaryLiteral();
     } else if (isToken(Token::StringLiteral)) {
-        expr = readStringLiteral();
+        return readStringLiteral();
     } else if (isToken(Token::OpenBracket)) {
-        expr = readSequenceLiteral();
+        return readSequenceLiteral();
     } else if (isToken(Token::OpenBrace)) {
-        expr = readMappingLiteral();
+        return readMappingLiteral();
     } else if (isToken(Token::WhileKeyword)) {
-        expr = readWhile();
+        return readWhile();
     } else if (isToken(Token::ForKeyword)) {
-        expr = readFor();
+        return readFor();
     } else if (isToken(Token::IfKeyword)) {
-        expr = readIf();
+        return readIf();
     } else if (isToken(Token::ReturnKeyword)) {
-        expr = readReturn();
+        return readReturn();
     } else if (isToken(Token::Identifier)) {
-        expr = readIdentifier();
+        return readIdentifier();
     } else {
         throw Errors::SyntaxError(m_tokens.front(), "operand");
     }
+}
+
+Expression *Parser::readOperandExpression() {
+    Expression *left = readPrimaryExpression();
 
     while (true) {
         if (isToken(Token::OpenParenthesis)) {
-            expr = readCall(expr);
+            left = readCall(left);
         } else if (isToken(Token::Dot)) {
-            expr = readSelector(expr);
+            Selector *selector = readSelector(left);
+            if (isToken(Token::OpenParenthesis)) {
+                Call *call = readCall(selector->name);
+                Argument *arg = new Argument(selector->operand->token);
+                arg->value = selector->operand;
+                call->arguments.insert(call->arguments.begin(), arg);
+                left = call;
+            } else {
+                left = selector;
+            }
         } else {
             break;
         }
     }
 
-    return expr;
+    return left;
 }
 
 Type *Parser::readType() {

@@ -27,9 +27,13 @@ namespace SymbolTable {
         explicit Namespace(Namespace *parent = 0);
         ~Namespace();
 
+        bool has(std::string name) const;
         Symbol *lookup(AST::Node *currentNode, std::string name) const;
         Symbol *lookup(AST::Identifier *identifier) const;
         void insert(AST::Node *currentNode, Symbol *symbol);
+        unsigned long size() const;
+
+        std::string to_string() const;
 
     private:
         Namespace *m_parent;
@@ -43,6 +47,9 @@ namespace SymbolTable {
         Types::Type *type;
         llvm::AllocaInst *value;
         Namespace *nameSpace;
+        AST::Node *node;
+
+        std::string to_string() const;
     };
 
     class Builder : public AST::Visitor {

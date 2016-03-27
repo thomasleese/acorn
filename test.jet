@@ -1,8 +1,27 @@
 type Integer as Integer64
 
+def -(n as Integer) as Integer
+    0 - n
+end
+
+def factorial(n as Integer) as Integer
+    if n == 0
+        1
+    else
+        n * (n - 1).factorial()
+    end
+end
+
+def abs(n as Integer) as Integer
+    if n == 0
+        0
+    else if n < 0
+        -n
+    else
+        n
+    end
+end
+
 def main() as Integer
-    let a as Integer = 10
-    let b as Integer = 20
-    let c as Integer = (a * b) + b
-    return c
+    (-5).abs().factorial()
 end

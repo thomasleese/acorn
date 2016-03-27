@@ -254,7 +254,7 @@ std::string Boolean::name() const {
 }
 
 llvm::Type *Boolean::create_llvm_type(llvm::LLVMContext &context) const {
-    return llvm::Type::getInt8Ty(context);
+    return llvm::Type::getInt1Ty(context);
 }
 
 Integer::Integer(int size) : m_size(size) {
@@ -339,6 +339,9 @@ std::string Method::name() const {
     for (auto type : m_parameter_types) {
         ss << type->name() << ", ";
     }
+    for (auto name : m_official_parameter_order) {
+        ss << name << ", ";
+    }
     ss << m_return_type->name();
     ss << "}" << ", ";
     return ss.str();
@@ -361,11 +364,18 @@ long Method::get_parameter_position(std::string name) const {
     return std::distance(m_official_parameter_order.begin(), it);
 }
 
+std::string Method::get_parameter_name(long position) const {
+    return m_official_parameter_order[position];
+}
+
 bool Method::could_be_called_with(std::vector<AST::Argument *> arguments) {
     unsigned long matches = 0;
 
     for (unsigned long i = 0; i < arguments.size(); i++) {
         Type *type = arguments[i]->type;
+        if (!type) {
+            return false;
+        }
 
         unsigned long index = i;
         if (arguments[i]->name) {
@@ -376,6 +386,10 @@ bool Method::could_be_called_with(std::vector<AST::Argument *> arguments) {
             }
 
             index = pos;
+        }
+
+        if (index >= m_parameter_types.size()) {
+            return false;
         }
 
         if (m_parameter_types[index]->isCompatible(type)) {
@@ -418,11 +432,15 @@ Method *Function::find_method(AST::Node *node, std::vector<AST::Argument *> argu
         }
     }
 
-    throw Errors::UndefinedError(node, "method");
+    throw Errors::UndefinedError(node, "Method with these arguments");
 }
 
 Method *Function::get_method(int index) const {
     return m_methods[index];
+}
+
+int Function::no_methods() const {
+    return m_methods.size();
 }
 
 llvm::Type *Function::create_llvm_type(llvm::LLVMContext &context) const {

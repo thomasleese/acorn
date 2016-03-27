@@ -98,10 +98,6 @@ std::string Token::rule_string(Token::Rule rule) {
             return "{";
         case CloseBrace:
             return "}";
-        case OpenChevron:
-            return "<";
-        case CloseChevron:
-            return ">";
         case Comma:
             return ",";
         case Dot:

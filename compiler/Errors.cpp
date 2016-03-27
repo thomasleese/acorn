@@ -57,8 +57,20 @@ InternalError::InternalError(AST::Node *node, std::string message) :
     m_message = message + "\nNote: You have probably encountered a bug in Jet, not your code.";
 }
 
+InternalAstError::InternalAstError(Token *token) :
+        InternalError(token, "Should not be in lowered AST.") {
+
+}
+
+InternalAstError::InternalAstError(AST::Node *node) :
+        InternalError(node, "Should not be in lowered AST.") {
+
+}
+
 SyntaxError::SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got, std::string expectation) :
         CompilerError(filename, lineNumber, column, line) {
+    m_prefix = "Invalid syntax";
+
     m_message = "Got: " + got + "\nExpected: " + expectation;
 }
 
@@ -91,6 +103,12 @@ UndefinedError::UndefinedError(AST::Node *node, std::string name) :
         CompilerError(node) {
     m_prefix = "Undefined error";
     m_message = name + " is not defined in this scope.";
+}
+
+TooManyDefinedError::TooManyDefinedError(AST::Node *node, std::string name) :
+        CompilerError(node) {
+    m_prefix = "Too many defined error";
+    m_message = name + " has multiple definitions.";
 }
 
 RedefinedError::RedefinedError(AST::Node *node, std::string name) :

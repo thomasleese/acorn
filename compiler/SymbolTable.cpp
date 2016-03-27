@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <sstream>
 
 #include "Lexer.h"
 #include "Errors.h"
@@ -18,6 +19,19 @@ Namespace::Namespace(Namespace *parent) : m_parent(parent) {
 
 Namespace::~Namespace() {
 
+}
+
+bool Namespace::has(std::string name) const {
+    auto it = m_symbols.find(name);
+    if (it == m_symbols.end()) {
+        if (m_parent) {
+            return m_parent->has(name);
+        } else {
+            return false;
+        }
+    } else {
+        return true;
+    }
 }
 
 Symbol *Namespace::lookup(AST::Node *currentNode, std::string name) const {
@@ -43,7 +57,27 @@ void Namespace::insert(AST::Node *currentNode, Symbol *symbol) {
         throw Errors::RedefinedError(currentNode, symbol->name);
     }
 
+    symbol->node = currentNode;
     m_symbols[symbol->name] = symbol;
+}
+
+unsigned long Namespace::size() const {
+    return m_symbols.size();
+}
+
+std::string Namespace::to_string() const {
+    std::stringstream ss;
+
+    ss << "{";
+
+    for (auto it = m_symbols.begin(); it != m_symbols.end(); it++) {
+        auto symbol = it->second;
+        ss << symbol->to_string() << ", ";
+    }
+
+    ss << "}";
+
+    return ss.str();
 }
 
 Symbol::Symbol(std::string name) {
@@ -51,6 +85,22 @@ Symbol::Symbol(std::string name) {
     this->type = nullptr;
     this->value = nullptr;
     this->nameSpace = nullptr;
+    this->node = nullptr;
+}
+
+std::string Symbol::to_string() const {
+    std::stringstream ss;
+    ss << this->name;
+
+    if (this->type) {
+        ss << ": " << this->type->name();
+    }
+
+    if (this->nameSpace) {
+        ss << " " << this->nameSpace->to_string();
+    }
+
+    return ss.str();
 }
 
 Builder::Builder() {
@@ -160,10 +210,30 @@ void Builder::visit(AST::VariableDefinition *definition) {
 }
 
 void Builder::visit(AST::FunctionDefinition *definition) {
-    Symbol *symbol = new Symbol(definition->name->name);
-    m_current->insert(definition, symbol);
+    Symbol *functionSymbol;
+    if (m_current->has(definition->name->name)) {
+        functionSymbol = m_current->lookup(definition->name);
+    } else {
+        functionSymbol = new Symbol(definition->name->name);
+        functionSymbol->type = new Types::Function();
+        // we insert the function into the root namespace, allowing
+        // other methods to find and join the same function every time
+        functionSymbol->nameSpace = new Namespace(m_root);
+        m_root->insert(definition, functionSymbol);
+    }
 
+    // the name of methods is just an index (may change in the future)
+    // conveniently variables cannot be named after numbers
+    std::stringstream ss;
+    ss << functionSymbol->nameSpace->size();
+    std::string method_name = ss.str();
+
+    // now we create the symbol for the method, this does not
+    // have the function as the parent, since it should match
+    // the scope of where it is defined
+    Symbol *symbol = new Symbol(method_name);
     symbol->nameSpace = new Namespace(m_current);
+    functionSymbol->nameSpace->insert(definition, symbol);
 
     Namespace *oldNamespace = m_current;
     m_current = symbol->nameSpace;

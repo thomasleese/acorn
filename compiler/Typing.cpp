@@ -4,6 +4,7 @@
 
 #include <iostream>
 #include <set>
+#include <sstream>
 
 #include "Typing.h"
 #include "Errors.h"
@@ -72,6 +73,12 @@ Types::Type *Inferrer::find_type(AST::Type *type) {
 void Inferrer::visit(AST::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
+    }
+
+    if (block->statements.empty()) {
+        block->type = new Types::Void();
+    } else {
+        block->type = block->statements.back()->type;
     }
 }
 
@@ -163,7 +170,8 @@ void Inferrer::visit(AST::Call *expression) {
 
 void Inferrer::visit(AST::Assignment *expression) {
     expression->lhs->accept(this);
-    expression->type = expression->lhs->type;
+    expression->rhs->accept(this);
+    expression->type = expression->rhs->type;
 }
 
 void Inferrer::visit(AST::Selector *expression) {
@@ -175,16 +183,10 @@ void Inferrer::visit(AST::Comma *expression) {
 }
 
 void Inferrer::visit(AST::While *expression) {
+    expression->condition->accept(this);
     expression->code->accept(this);
 
-    Types::Type *type;
-    if (expression->code->statements.empty()) {
-        type = new Types::Void();
-    } else {
-        type = expression->code->statements.back()->type;
-    }
-
-    expression->type = type;
+    expression->type = expression->code->type;
 }
 
 void Inferrer::visit(AST::For *expression) {
@@ -192,7 +194,13 @@ void Inferrer::visit(AST::For *expression) {
 }
 
 void Inferrer::visit(AST::If *expression) {
-    throw Errors::TypeInferenceError(expression);
+    expression->condition->accept(this);
+    expression->trueCode->accept(this);
+    if (expression->falseCode) {
+        expression->falseCode->accept(this);
+    }
+
+    expression->type = expression->trueCode->type;
 }
 
 void Inferrer::visit(AST::Return *expression) {
@@ -230,7 +238,14 @@ void Inferrer::visit(AST::VariableDefinition *definition) {
 }
 
 void Inferrer::visit(AST::FunctionDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
+    SymbolTable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
+    Types::Function *function = static_cast<Types::Function *>(functionSymbol->type);
+
+    // now we have to find the method symbol inside the function namespace
+    std::stringstream ss;
+    ss << function->no_methods();
+
+    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, ss.str());
 
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -246,18 +261,12 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
 
     definition->returnCast->accept(this);
 
-    Types::Function *function;
-    if (symbol->type == nullptr) {
-        function = new Types::Function();
-    } else {
-        function = static_cast<Types::Function *>(symbol->type);
-    }
-
     Types::Method *method = new Types::Method(parameterTypes, definition->returnCast->type,
                                               officialParameterOrder);
+
     function->add_method(method);
 
-    symbol->type = function;
+    symbol->type = method;
     definition->type = method;
 
     definition->code->accept(this);
@@ -285,7 +294,10 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
             outputParameters.push_back(t->type);
         }
 
-        type = new Types::AliasConstructor(definition, find_type_constructor(definition, definition->alias->name->name),
+        auto type_constructor = find_type_constructor(definition, definition->alias->name->name);
+        definition->alias->name->type = type_constructor;
+        definition->alias->type = type_constructor;
+        type = new Types::AliasConstructor(definition, type_constructor,
                                            inputParameters, outputParameters);
     } else {
         type = new Types::RecordConstructor();
@@ -299,10 +311,12 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
 
 void Inferrer::visit(AST::DefinitionStatement *statement) {
     statement->definition->accept(this);
+    statement->type = statement->definition->type;
 }
 
 void Inferrer::visit(AST::ExpressionStatement *statement) {
     statement->expression->accept(this);
+    statement->type = statement->expression->type;
 }
 
 void Inferrer::visit(AST::Module *module) {
@@ -312,6 +326,7 @@ void Inferrer::visit(AST::Module *module) {
     m_namespace = symbol->nameSpace;
 
     module->code->accept(this);
+    module->type = module->code->type;
 
     m_namespace = oldNamespace;
 }
@@ -325,9 +340,18 @@ Checker::~Checker() {
 }
 
 void Checker::check_types(AST::Node *lhs, AST::Node *rhs) {
+    check_not_null(lhs);
+    check_not_null(rhs);
+
     bool compatible = lhs->type->isCompatible(rhs->type);
     if (!compatible) {
         throw Errors::TypeMismatchError(lhs, rhs);
+    }
+}
+
+void Checker::check_not_null(AST::Node *node) {
+    if (!node->type) {
+        throw Errors::InternalError(node, "No type given for: " + Token::rule_string(node->token->rule));
     }
 }
 
@@ -335,106 +359,179 @@ void Checker::visit(AST::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
     }
+
+    check_not_null(block);
 }
 
 void Checker::visit(AST::Identifier *expression) {
-
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::BooleanLiteral *boolean) {
-
+    check_not_null(boolean);
 }
 
 void Checker::visit(AST::IntegerLiteral *expression) {
-
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::FloatLiteral *expression) {
-
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::ImaginaryLiteral *imaginary) {
-
+    check_not_null(imaginary);
 }
 
 void Checker::visit(AST::StringLiteral *expression) {
-
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::SequenceLiteral *sequence) {
+    for (auto element : sequence->elements) {
+        element->accept(this);
+    }
 
+    check_not_null(sequence);
 }
 
 void Checker::visit(AST::MappingLiteral *mapping) {
+    for (int i = 0; i < mapping->keys.size(); i++) {
+        mapping->keys[i]->accept(this);
+        mapping->values[i]->accept(this);
+    }
 
+    check_not_null(mapping);
 }
 
 void Checker::visit(AST::Argument *argument) {
+    if (argument->name) {
+        argument->name->accept(this);
+    }
 
+    argument->value->accept(this);
+
+    check_not_null(argument);
 }
 
 void Checker::visit(AST::Call *expression) {
+    expression->operand->accept(this);
 
+    for (auto arg : expression->arguments) {
+        arg->accept(this);
+    }
+
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::Assignment *expression) {
-
+    expression->lhs->accept(this);
+    expression->rhs->accept(this);
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::Selector *expression) {
-
+    expression->operand->accept(this);
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::Comma *expression) {
-
+    expression->lhs->accept(this);
+    expression->rhs->accept(this);
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::While *expression) {
-
+    expression->condition->accept(this);
+    expression->code->accept(this);
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::For *expression) {
-
+    throw Errors::InternalAstError(expression);
 }
 
 void Checker::visit(AST::If *expression) {
-
+    expression->condition->accept(this);
+    expression->trueCode->accept(this);
+    if (expression->falseCode) {
+        expression->falseCode->accept(this);
+    }
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::Return *expression) {
-
+    expression->expression->accept(this);
+    check_not_null(expression);
 }
 
 void Checker::visit(AST::Type *type) {
-
+    for (auto p : type->parameters) {
+        p->accept(this);
+    }
+    check_not_null(type);
 }
 
 void Checker::visit(AST::Cast *cast) {
-
+    cast->typeNode->accept(this);
+    check_not_null(cast);
 }
 
 void Checker::visit(AST::Parameter *parameter) {
-
+    parameter->cast->accept(this);
+    if (parameter->defaultExpression) {
+        parameter->defaultExpression->accept(this);
+    }
+    check_not_null(parameter);
 }
 
 void Checker::visit(AST::VariableDefinition *definition) {
+    // it's valid for the name not to have a type, since it's doesn't exist
+    // definition->name->accept(this);
+
+    definition->cast->accept(this);
+    definition->expression->accept(this);
+
     check_types(definition, definition->expression);
 }
 
 void Checker::visit(AST::FunctionDefinition *definition) {
+    definition->code->accept(this);
 
+    // it's valid for the name not to have a type, since it's doesn't exist
+    // definition->name->accept(this);
+
+    definition->returnCast->accept(this);
+
+    for (auto p : definition->parameters) {
+        p->accept(this);
+    }
+
+    check_not_null(definition);
 }
 
 void Checker::visit(AST::TypeDefinition *definition) {
+    // it's valid for the name not to have a type, since it's doesn't exist
+    //definition->name->accept(this);
 
+    if (definition->alias) {
+        definition->alias->accept(this);
+    } else {
+        for (auto p : definition->fields) {
+            p->accept(this);
+        }
+    }
+    check_not_null(definition);
 }
 
 void Checker::visit(AST::DefinitionStatement *statement) {
     statement->definition->accept(this);
+    check_not_null(statement);
 }
 
 void Checker::visit(AST::ExpressionStatement *statement) {
     statement->expression->accept(this);
+    check_not_null(statement);
 }
 
 void Checker::visit(AST::Module *module) {
@@ -444,6 +541,8 @@ void Checker::visit(AST::Module *module) {
     m_namespace = symbol->nameSpace;
 
     module->code->accept(this);
+
+    check_not_null(module);
 
     m_namespace = oldNamespace;
 }

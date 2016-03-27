@@ -116,8 +116,8 @@ void PrettyPrinter::visit(AST::Selector *expression) {
     ss << indentation() << "(Selector\n";
     indent++;
 
-    expression->name->accept(this);
     expression->operand->accept(this);
+    expression->name->accept(this);
 
     indent--;
     ss << indentation() << ")\n";

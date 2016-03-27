@@ -37,6 +37,10 @@ Compiler::~Compiler() {
 
 }
 
+void Compiler::debug(std::string line) {
+    //std::cerr << line << std::endl;
+}
+
 template <typename T> std::vector<T> singletonSet(T t) {
     std::vector<T> Vec;
     Vec.push_back(std::move(t));
@@ -46,15 +50,28 @@ template <typename T> std::vector<T> singletonSet(T t) {
 void Compiler::compile(std::string filename) {
     std::string moduleName = filename.substr(0, filename.find("."));
 
+    debug("Lexing...");
+
     Lexer lexer;
     std::vector<Token *> tokens = lexer.tokenise(filename);
+
+    debug("Parsing...");
 
     Parser parser(tokens);
     AST::Module *module = parser.parse(moduleName);
 
+    debug("Simplifying AST...");
+
     AST::Simplifier *simplifier = new AST::Simplifier();
     module->accept(simplifier);
     delete simplifier;
+
+    /*PrettyPrinter *printer = new PrettyPrinter();
+    module->accept(printer);
+    printer->print();
+    delete printer;*/
+
+    debug("Building the Symbol Table...");
 
     SymbolTable::Builder *symbolTableBuilder = new SymbolTable::Builder();
     module->accept(symbolTableBuilder);
@@ -63,27 +80,30 @@ void Compiler::compile(std::string filename) {
     SymbolTable::Namespace *rootNamespace = symbolTableBuilder->rootNamespace();
     delete symbolTableBuilder;
 
+    debug("Inferring types...");
+
     Typing::Inferrer *typeInferrer = new Typing::Inferrer(rootNamespace);
     module->accept(typeInferrer);
     delete typeInferrer;
 
+    debug("Checking types...");
+
     Typing::Checker *typeChecker = new Typing::Checker(rootNamespace);
     module->accept(typeChecker);
     delete typeChecker;
+
+    debug("Generating code...");
 
     CodeGenerator *generator = new CodeGenerator(rootNamespace, m_targetMachine.get());
     module->accept(generator);
     llvm::Module *llvmModule = generator->module();
     delete generator;
 
-    PrettyPrinter *printer = new PrettyPrinter();
-    module->accept(printer);
-    //printer->print();
-    delete printer;
-
     llvmModule->dump();
 
     delete module;
+
+    debug("Running code...");
 
     auto Resolver = llvm::orc::createLambdaResolver(
             [&](const std::string &Name) {
@@ -99,10 +119,14 @@ void Compiler::compile(std::string filename) {
 
     m_modules.push_back(H);
 
-    auto main = findMangledSymbol(mangle("main"));
-    assert(main && "Function not found");
+    debug("Finding main function...");
 
-    int (*fp)() = (int (*)())(intptr_t) main.getAddress();
+    auto main_fn = findMangledSymbol(mangle("main_0"));
+    assert(main_fn && "Function not found");
+
+    debug("Calling main function...");
+
+    int (*fp)() = (int (*)())(intptr_t) main_fn.getAddress();
     std::cout << fp() << std::endl;
 }
 

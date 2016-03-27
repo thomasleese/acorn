@@ -42,6 +42,12 @@ namespace Errors {
         InternalError(AST::Node *node, std::string message);
     };
 
+    class InternalAstError : public InternalError {
+    public:
+        InternalAstError(Token *token);
+        InternalAstError(AST::Node *node);
+    };
+
     class SyntaxError : public CompilerError {
     public:
         explicit SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got, std::string expectation);
@@ -55,6 +61,11 @@ namespace Errors {
     class UndefinedError : public CompilerError {
     public:
         explicit UndefinedError(AST::Node *node, std::string name);
+    };
+
+    class TooManyDefinedError : public CompilerError {
+    public:
+        explicit TooManyDefinedError(AST::Node *node, std::string name);
     };
 
     class RedefinedError : public CompilerError {

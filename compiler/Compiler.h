@@ -24,6 +24,8 @@ public:
     Compiler();
     ~Compiler();
 
+    void debug(std::string line);
+
     void compile(std::string filename);
 
 private:

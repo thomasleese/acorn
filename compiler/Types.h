@@ -228,6 +228,7 @@ namespace Types {
         std::string llvm_name(std::string prefix) const;
 
         long get_parameter_position(std::string name) const;
+        std::string get_parameter_name(long position) const;
 
         bool could_be_called_with(std::vector<AST::Argument *> arguments);
 
@@ -246,6 +247,7 @@ namespace Types {
         void add_method(Method *method);
         Method *find_method(AST::Node *node, std::vector<AST::Argument *> arguments) const;
         Method *get_method(int index) const;
+        int no_methods() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 

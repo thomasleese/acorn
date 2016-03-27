@@ -82,6 +82,7 @@ private:
     AST::Return *readReturn();
     AST::Expression *readUnaryExpression();
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
+    AST::Expression *readPrimaryExpression();
     AST::Expression *readOperandExpression();
     AST::Type *readType();
     AST::Cast *readCast();
