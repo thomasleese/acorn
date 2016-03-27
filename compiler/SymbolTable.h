@@ -11,7 +11,7 @@
 #include "AbstractSyntaxTree.h"
 
 namespace llvm {
-    class AllocaInst;
+    class Value;
 }
 
 namespace Types {
@@ -45,7 +45,7 @@ namespace SymbolTable {
 
         std::string name;
         Types::Type *type;
-        llvm::AllocaInst *value;
+        llvm::Value *value;
         Namespace *nameSpace;
         AST::Node *node;
 

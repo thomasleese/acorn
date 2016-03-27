@@ -121,13 +121,13 @@ void Compiler::compile(std::string filename) {
 
     debug("Finding main function...");
 
-    auto main_fn = findMangledSymbol(mangle("main_0"));
+    auto main_fn = findMangledSymbol(mangle("main"));
     assert(main_fn && "Function not found");
 
     debug("Calling main function...");
 
-    int (*fp)() = (int (*)())(intptr_t) main_fn.getAddress();
-    std::cout << fp() << std::endl;
+    void (*fp)() = (void (*)())(intptr_t) main_fn.getAddress();
+    fp();
 }
 
 std::string Compiler::mangle(const std::string &name) {

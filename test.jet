@@ -1,20 +1,11 @@
 type Integer as Integer64
 
-def after(n as Integer) as Channel{Void}
-    let channel as Channel{Void} = Channel(buffer: 0)
+let a as Integer = 10
+let b as Integer = 20
 
-    def callback() as Void
-        sleep(duration: n)
-        channel <- Nothing
-    end
-
-    spawn callback()
-
-    return channel
+def blah() as Integer
+    return a + b
 end
 
-def main() as Integer
-    let ch as Channel{Void} = 2.after()
-    <- ch  # wait for the channel
-    return 0
-end
+let c as Integer = a + b
+blah()

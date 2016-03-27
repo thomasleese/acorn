@@ -85,6 +85,10 @@ void Inferrer::visit(AST::CodeBlock *block) {
 void Inferrer::visit(AST::Identifier *expression) {
     SymbolTable::Symbol *symbol = m_namespace->lookup(expression, expression->name);
     expression->type = symbol->type;
+
+    if (!symbol->type) {
+        throw Errors::UndefinedError(expression, expression->name);
+    }
 }
 
 void Inferrer::visit(AST::BooleanLiteral *expression) {

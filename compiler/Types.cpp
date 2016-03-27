@@ -432,7 +432,12 @@ Method *Function::find_method(AST::Node *node, std::vector<AST::Argument *> argu
         }
     }
 
-    throw Errors::UndefinedError(node, "Method with these arguments");
+    std::stringstream ss;
+    for (auto arg : arguments) {
+        ss << arg->type->name() << ", ";
+    }
+
+    throw Errors::UndefinedError(node, "Method with arguments " + ss.str());
 }
 
 Method *Function::get_method(int index) const {

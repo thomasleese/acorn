@@ -25,6 +25,8 @@ CodeGenerator::CodeGenerator(SymbolTable::Namespace *rootNamespace, llvm::Target
     m_mdBuilder = new llvm::MDBuilder(llvm::getGlobalContext());
 
     m_target_machine = target_machine;
+
+    m_in_function = false;
 }
 
 CodeGenerator::~CodeGenerator() {
@@ -340,38 +342,44 @@ void CodeGenerator::visit(AST::VariableDefinition *definition) {
 
     debug("Defining a new variable: " + symbol->name);
 
-    /*llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
-    bool isConstant = !definition->is_mutable;
+    if (m_in_function) {
+        llvm::Function *function = m_irBuilder->GetInsertBlock()->getParent();
 
-    llvm::GlobalVariable *variable = new llvm::GlobalVariable(type, isConstant, llvm::GlobalValue::ExternalLinkage, 0, definition->name->name);
-    variable->setAlignment(4);
+        definition->expression->accept(this);
 
-    symbol->value = variable;
+        llvm::Value *initialiser = m_llvmValues.back();
+        m_llvmValues.pop_back();
 
-    variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
+        llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
 
-    definition->expression->accept(this);
+        llvm::IRBuilder<> tmp_ir(&function->getEntryBlock(), function->getEntryBlock().begin());
+        llvm::AllocaInst *variable = tmp_ir.CreateAlloca(type, 0, definition->name->name);
+        m_irBuilder->CreateStore(initialiser, variable);
+        symbol->value = variable;
+    } else {
+        llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
 
-    llvm::Constant *initialiser = static_cast<llvm::Constant *>(m_llvmValues.back());
-    m_llvmValues.pop_back();
-    variable->setInitializer(initialiser);
+        llvm::GlobalVariable *variable = new llvm::GlobalVariable(*m_module, type, false,
+                                                                  llvm::GlobalValue::CommonLinkage,
+                                                                  nullptr, definition->name->name);
+        variable->setAlignment(4);
+        variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
+        variable->setInitializer(llvm::ConstantInt::get(type, 0));
 
-    // need to find a way around this
-    symbol->value = initialiser;*/
+        symbol->value = variable;
 
-    llvm::Function *function = m_irBuilder->GetInsertBlock()->getParent();
+        llvm::Function *function = m_module->getFunction("_init_variables_");
+        m_irBuilder->SetInsertPoint(&function->getEntryBlock());
 
-    definition->expression->accept(this);
+        definition->expression->accept(this);
 
-    llvm::Value *initialiser = m_llvmValues.back();
-    m_llvmValues.pop_back();
+        llvm::Value *value = m_llvmValues.back();
+        m_llvmValues.pop_back();
+        m_irBuilder->CreateStore(value, variable);
 
-    llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
-
-    llvm::IRBuilder<> tmp_ir(&function->getEntryBlock(), function->getEntryBlock().begin());
-    llvm::AllocaInst *variable = tmp_ir.CreateAlloca(type, 0, definition->name->name);
-    m_irBuilder->CreateStore(initialiser, variable);
-    symbol->value = variable;
+        llvm::Function *mainFunction = m_module->getFunction("main");
+        m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
+    }
 }
 
 void CodeGenerator::visit(AST::FunctionDefinition *definition) {
@@ -414,7 +422,11 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
         i++;
     }
 
+    m_in_function = true;
+
     definition->code->accept(this);
+
+    m_in_function = false;
 
     if (definition->code->statements.empty()) {
         m_irBuilder->CreateRetVoid();
@@ -433,6 +445,9 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
     }
 
     m_namespace = oldNamespace;
+
+    llvm::Function *mainFunction = m_module->getFunction("main");
+    m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
 }
 
 void CodeGenerator::visit(AST::TypeDefinition *definition) {
@@ -469,7 +484,24 @@ void CodeGenerator::visit(AST::Module *module) {
 
     Builtins::fill_llvm_module(m_namespace, m_module, m_irBuilder);
 
+    llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);
+    llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);
+    llvm::BasicBlock *bb1 = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);
+
+    fType = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);
+    llvm::Function *mainFunction = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "main", m_module);
+    llvm::BasicBlock *bb2 = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", mainFunction);
+
+    m_irBuilder->SetInsertPoint(bb2);
+    m_irBuilder->CreateCall(function);
+
     module->code->accept(this);
+
+    m_irBuilder->SetInsertPoint(bb1);
+    m_irBuilder->CreateRetVoid();
+
+    m_irBuilder->SetInsertPoint(bb2);
+    m_irBuilder->CreateRetVoid();
 
     std::string str;
     llvm::raw_string_ostream stream(str);
