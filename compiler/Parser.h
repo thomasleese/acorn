@@ -33,6 +33,7 @@ namespace AST {
     struct For;
     struct If;
     struct Return;
+    struct Spawn;
     struct Type;
     struct Cast;
     struct Parameter;
@@ -80,6 +81,7 @@ private:
     AST::For *readFor();
     AST::If *readIf();
     AST::Return *readReturn();
+    AST::Spawn *readSpawn();
     AST::Expression *readUnaryExpression();
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
     AST::Expression *readPrimaryExpression();

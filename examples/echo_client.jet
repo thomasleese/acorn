@@ -1,0 +1,5 @@
+import networking
+
+let target as IPAddress = dns("www.google.com")
+
+let client as TcpSocket

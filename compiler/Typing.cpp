@@ -208,6 +208,11 @@ void Inferrer::visit(AST::Return *expression) {
     expression->type = expression->expression->type;
 }
 
+void Inferrer::visit(AST::Spawn *expression) {
+    expression->call->accept(this);
+    expression->type = expression->call->type;
+}
+
 void Inferrer::visit(AST::Type *type) {
     type->type = find_type(type);
 }
@@ -462,6 +467,11 @@ void Checker::visit(AST::If *expression) {
 
 void Checker::visit(AST::Return *expression) {
     expression->expression->accept(this);
+    check_not_null(expression);
+}
+
+void Checker::visit(AST::Spawn *expression) {
+    expression->call->accept(this);
     check_not_null(expression);
 }
 

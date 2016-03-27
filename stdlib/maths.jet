@@ -56,3 +56,11 @@ def abs(x as Number) as Number
         x
     end
 end
+
+def factorial(n as Integer) as Integer
+    if n == 0
+        1
+    else
+        n * (n - 1).factorial()
+    end
+end

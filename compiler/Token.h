@@ -44,6 +44,7 @@ struct Token {
         DoKeyword,
         UnlessKeyword,
         MutableKeyword,
+        SpawnKeyword,
 
         // literals
         BooleanLiteral,

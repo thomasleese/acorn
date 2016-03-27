@@ -131,6 +131,14 @@ void Return::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+Spawn::Spawn(Token *token, Call *call) : Expression(token) {
+    this->call = call;
+}
+
+void Spawn::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Type::Type(Token *token) : Expression(token) {
 
 }
@@ -332,6 +340,10 @@ void Simplifier::visit(If *expression) {
 }
 
 void Simplifier::visit(Return *expression) {
+
+}
+
+void Simplifier::visit(Spawn *expression) {
 
 }
 

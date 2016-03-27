@@ -324,6 +324,18 @@ Return *Parser::readReturn() {
     return r;
 }
 
+Spawn *Parser::readSpawn() {
+    Token *token = readToken(Token::SpawnKeyword);
+
+    Expression *expr = readExpression();
+    Call *call = dynamic_cast<Call *>(expr);
+    if (call) {
+        return new Spawn(token, call);
+    } else {
+        throw Errors::SyntaxError(expr->token, "function call");
+    }
+}
+
 Expression *Parser::readUnaryExpression() {
     if (isToken(Token::Operator)) {
         Call *expr = new Call(m_tokens.front());
@@ -409,10 +421,12 @@ Expression *Parser::readPrimaryExpression() {
         return readIf();
     } else if (isToken(Token::ReturnKeyword)) {
         return readReturn();
+    } else if (isToken(Token::SpawnKeyword)) {
+        return readSpawn();
     } else if (isToken(Token::Identifier)) {
         return readIdentifier();
     } else {
-        throw Errors::SyntaxError(m_tokens.front(), "operand");
+        throw Errors::SyntaxError(m_tokens.front(), "primary expression");
     }
 }
 

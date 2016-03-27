@@ -1,0 +1,2 @@
+- Change return to be a statement on its own
+- Remove implicit returns

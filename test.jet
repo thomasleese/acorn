@@ -1,27 +1,20 @@
 type Integer as Integer64
 
-def -(n as Integer) as Integer
-    0 - n
-end
+def after(n as Integer) as Channel{Void}
+    let channel as Channel{Void} = Channel(buffer: 0)
 
-def factorial(n as Integer) as Integer
-    if n == 0
-        1
-    else
-        n * (n - 1).factorial()
+    def callback() as Void
+        sleep(duration: n)
+        channel <- Nothing
     end
-end
 
-def abs(n as Integer) as Integer
-    if n == 0
-        0
-    else if n < 0
-        -n
-    else
-        n
-    end
+    spawn callback()
+
+    return channel
 end
 
 def main() as Integer
-    (-5).abs().factorial()
+    let ch as Channel{Void} = 2.after()
+    <- ch  # wait for the channel
+    return 0
 end

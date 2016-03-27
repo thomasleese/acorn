@@ -223,7 +223,7 @@ void CodeGenerator::visit(AST::While *expression) {
 
     debug("Generating loop code...");
     expression->code->accept(this);
-    llvm::Value *then_value = m_llvmValues.back();
+    //llvm::Value *then_value = m_llvmValues.back();
     m_llvmValues.pop_back();
 
     m_irBuilder->CreateBr(while_bb);
@@ -316,6 +316,10 @@ void CodeGenerator::visit(AST::Return *expression) {
 
     llvm::Value *returnValue = m_irBuilder->CreateRet(value);
     m_llvmValues.push_back(returnValue);
+}
+
+void CodeGenerator::visit(AST::Spawn *expression) {
+    debug("Generating spawn statement.");
 }
 
 void CodeGenerator::visit(AST::Type *type) {

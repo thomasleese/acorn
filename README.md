@@ -10,8 +10,8 @@
 - Lexer ~
 - Parser ~
 - Error Handler ✓
-- TypeType Checker
-- Code Generator
+- Type Checker ~
+- Code Generator ~
 
 ## Ideas
 

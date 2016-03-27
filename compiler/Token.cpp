@@ -70,6 +70,8 @@ std::string Token::rule_string(Token::Rule rule) {
             return "unless";
         case MutableKeyword:
             return "mutable";
+        case SpawnKeyword:
+            return "spawn";
         case BooleanLiteral:
             return "boolean";
         case IntegerLiteral:

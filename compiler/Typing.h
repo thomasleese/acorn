@@ -51,6 +51,7 @@ namespace Typing {
         void visit(AST::For *expression);
         void visit(AST::If *expression);
         void visit(AST::Return *expression);
+        void visit(AST::Spawn *expression);
         void visit(AST::Type *type);
         void visit(AST::Cast *cast);
 
@@ -100,6 +101,7 @@ namespace Typing {
         void visit(AST::For *expression);
         void visit(AST::If *expression);
         void visit(AST::Return *expression);
+        void visit(AST::Spawn *expression);
         void visit(AST::Type *type);
         void visit(AST::Cast *cast);
 

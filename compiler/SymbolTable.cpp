@@ -191,6 +191,10 @@ void Builder::visit(AST::Return *expression) {
 
 }
 
+void Builder::visit(AST::Spawn *expression) {
+
+}
+
 void Builder::visit(AST::Type *type) {
 
 }
