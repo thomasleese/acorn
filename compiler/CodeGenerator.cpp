@@ -441,6 +441,7 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
     std::string str;
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
+        function->dump();
         throw Errors::InternalError(definition, stream.str());
     }
 
@@ -506,6 +507,7 @@ void CodeGenerator::visit(AST::Module *module) {
     std::string str;
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyModule(*m_module, &stream)) {
+        m_module->dump();
         throw Errors::InternalError(module, stream.str());
     }
 
