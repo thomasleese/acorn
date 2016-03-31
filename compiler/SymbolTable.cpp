@@ -21,10 +21,10 @@ Namespace::~Namespace() {
 
 }
 
-bool Namespace::has(std::string name) const {
+bool Namespace::has(std::string name, bool follow_parents) const {
     auto it = m_symbols.find(name);
     if (it == m_symbols.end()) {
-        if (m_parent) {
+        if (follow_parents && m_parent) {
             return m_parent->has(name);
         } else {
             return false;
@@ -215,15 +215,16 @@ void Builder::visit(AST::VariableDefinition *definition) {
 
 void Builder::visit(AST::FunctionDefinition *definition) {
     Symbol *functionSymbol;
-    if (m_current->has(definition->name->name)) {
+    if (m_current->has(definition->name->name, false)) {
+        // we don't want to look in any parent scope when we're
+        // defining a new function; it should follow the notion of
+        // variables, i.e. we are hiding the previous binding
         functionSymbol = m_current->lookup(definition->name);
     } else {
         functionSymbol = new Symbol(definition->name->name);
         functionSymbol->type = new Types::Function();
-        // we insert the function into the root namespace, allowing
-        // other methods to find and join the same function every time
-        functionSymbol->nameSpace = new Namespace(m_root);
-        m_root->insert(definition, functionSymbol);
+        functionSymbol->nameSpace = new Namespace(m_current);
+        m_current->insert(definition, functionSymbol);
     }
 
     // the name of methods is just an index (may change in the future)
@@ -232,9 +233,6 @@ void Builder::visit(AST::FunctionDefinition *definition) {
     ss << functionSymbol->nameSpace->size();
     std::string method_name = ss.str();
 
-    // now we create the symbol for the method, this does not
-    // have the function as the parent, since it should match
-    // the scope of where it is defined
     Symbol *symbol = new Symbol(method_name);
     symbol->nameSpace = new Namespace(m_current);
     functionSymbol->nameSpace->insert(definition, symbol);

@@ -27,7 +27,7 @@ namespace SymbolTable {
         explicit Namespace(Namespace *parent = 0);
         ~Namespace();
 
-        bool has(std::string name) const;
+        bool has(std::string name, bool follow_parents = true) const;
         Symbol *lookup(AST::Node *currentNode, std::string name) const;
         Symbol *lookup(AST::Identifier *identifier) const;
         void insert(AST::Node *currentNode, Symbol *symbol);

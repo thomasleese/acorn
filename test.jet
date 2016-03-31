@@ -1,11 +1,11 @@
 type Integer as Integer64
 
-let a as Integer = 10
-let b as Integer = 20
-
-def blah() as Integer
-    return a + b
+def main() as Integer
+    let a as Integer = 10
+    def double() as Integer
+        return a * 2
+    end
+    return double()
 end
 
-let c as Integer = a + b
-blah()
+let c as Integer = double()
