@@ -475,10 +475,10 @@ void CodeGenerator::visit(AST::ExpressionStatement *statement) {
 }
 
 void CodeGenerator::visit(AST::Module *module) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(module, module->name);
+    //SymbolTable::Symbol *symbol = m_namespace->lookup(module, module->name);
 
-    SymbolTable::Namespace *oldNamespace = m_namespace;
-    m_namespace = symbol->nameSpace;
+    //SymbolTable::Namespace *oldNamespace = m_namespace;
+    //m_namespace = symbol->nameSpace;
 
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
     m_module->setDataLayout(m_target_machine->createDataLayout());
@@ -511,5 +511,5 @@ void CodeGenerator::visit(AST::Module *module) {
         throw Errors::InternalError(module, stream.str());
     }
 
-    m_namespace = oldNamespace;
+    //m_namespace = oldNamespace;
 }
