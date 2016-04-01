@@ -1,4 +1,5 @@
 - Running code outside functions
+- Garbage Collection
 - Closures
 - Arrays
 - Channels

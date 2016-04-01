@@ -57,7 +57,7 @@ public:
     void visit(AST::DefinitionStatement *statement);
     void visit(AST::ExpressionStatement *statement);
 
-    void visit(AST::Module *module);
+    void visit(AST::SourceFile *module);
 
 private:
     SymbolTable::Namespace *m_scope;

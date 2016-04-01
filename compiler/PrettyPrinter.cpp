@@ -284,8 +284,8 @@ void PrettyPrinter::visit(AST::ExpressionStatement *statement) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Module *module) {
-    ss << indentation() << "(Module " << module->name << "\n";
+void PrettyPrinter::visit(AST::SourceFile *module) {
+    ss << indentation() << "(SourceFile " << module->name << "\n";
 
     indent++;
     module->code->accept(this);

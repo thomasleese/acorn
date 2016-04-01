@@ -1,0 +1,7 @@
+import 'types'
+
+def exit(code as Integer) as Void
+    ccall(library: 'libc', function: 'exit',
+          return_type: Void, parameter_types: Integer,
+          arguments: code)
+end

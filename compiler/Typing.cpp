@@ -328,7 +328,7 @@ void Inferrer::visit(AST::ExpressionStatement *statement) {
     statement->type = statement->expression->type;
 }
 
-void Inferrer::visit(AST::Module *module) {
+void Inferrer::visit(AST::SourceFile *module) {
     //SymbolTable::Symbol *symbol = m_scope->lookup(module, module->name);
 
     //SymbolTable::Namespace *oldNamespace = m_scope;
@@ -548,7 +548,7 @@ void Checker::visit(AST::ExpressionStatement *statement) {
     check_not_null(statement);
 }
 
-void Checker::visit(AST::Module *module) {
+void Checker::visit(AST::SourceFile *module) {
     //SymbolTable::Symbol *symbol = m_scope->lookup(module, module->name);
 
     //SymbolTable::Namespace *oldNamespace = m_scope;

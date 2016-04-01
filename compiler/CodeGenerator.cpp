@@ -407,6 +407,8 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
     llvm::FunctionType *type = static_cast<llvm::FunctionType *>(llvmType);
     llvm::Function *function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, method_name, m_module);
 
+    // function->setGC("shadow-stack");
+
     llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);
     m_irBuilder->SetInsertPoint(basicBlock);
 
@@ -468,7 +470,7 @@ void CodeGenerator::visit(AST::ExpressionStatement *statement) {
     statement->expression->accept(this);
 }
 
-void CodeGenerator::visit(AST::Module *module) {
+void CodeGenerator::visit(AST::SourceFile *module) {
     //SymbolTable::Symbol *symbol = m_scope->lookup(module, module->name);
 
     //SymbolTable::Namespace *oldNamespace = m_scope;

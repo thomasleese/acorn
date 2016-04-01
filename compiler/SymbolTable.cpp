@@ -279,7 +279,7 @@ void Builder::visit(AST::ExpressionStatement *statement) {
 
 }
 
-void Builder::visit(AST::Module *module) {
+void Builder::visit(AST::SourceFile *module) {
     //Symbol *symbol = new Symbol(module->name);
     //m_current->insert(module, symbol);
 

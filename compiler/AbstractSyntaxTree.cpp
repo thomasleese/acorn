@@ -208,12 +208,12 @@ void ExpressionStatement::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Module::Module(Token *token, std::string name) : Node(token) {
+SourceFile::SourceFile(Token *token, std::string name) : Node(token) {
     this->name = name;
     this->code = new CodeBlock(token);
 }
 
-void Module::accept(Visitor *visitor) {
+void SourceFile::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -379,6 +379,6 @@ void Simplifier::visit(ExpressionStatement *statement) {
     statement->expression->accept(this);
 }
 
-void Simplifier::visit(Module *module) {
+void Simplifier::visit(SourceFile *module) {
     module->code->accept(this);
 }

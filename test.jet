@@ -1,11 +1,3 @@
-type Integer as Integer64
+import 'base/os'
 
-def main() as Integer
-    let a as Integer = 10
-    def double() as Integer
-        return a * 2
-    end
-    return double()
-end
-
-let c as Integer = main()
+exit(code: 1)

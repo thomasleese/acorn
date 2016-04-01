@@ -29,8 +29,8 @@ Parser::~Parser() {
 
 }
 
-Module *Parser::parse(std::string name) {
-    Module *module = new Module(m_tokens.front(), name);
+SourceFile *Parser::parse(std::string name) {
+    SourceFile *module = new SourceFile(m_tokens.front(), name);
 
     skipToken(Token::Newline);
 

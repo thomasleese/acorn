@@ -42,7 +42,7 @@ namespace AST {
     struct TypeDefinition;
     struct DefinitionStatement;
     struct ExpressionStatement;
-    struct Module;
+    struct SourceFile;
 }
 
 class Parser {
@@ -51,7 +51,7 @@ public:
     explicit Parser(std::vector<Token *> tokens);
     ~Parser();
 
-    AST::Module *parse(std::string name);
+    AST::SourceFile *parse(std::string name);
 
 private:
     void debug(std::string line);

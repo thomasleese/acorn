@@ -58,7 +58,7 @@ void Compiler::compile(std::string filename) {
     debug("Parsing...");
 
     Parser parser(tokens);
-    AST::Module *module = parser.parse(moduleName);
+    AST::SourceFile *module = parser.parse(moduleName);
 
     debug("Simplifying AST...");
 

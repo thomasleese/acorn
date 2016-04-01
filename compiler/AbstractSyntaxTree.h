@@ -288,9 +288,9 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
-    // module
-    struct Module : Node {
-        explicit Module(Token *token, std::string name);
+    // source file
+    struct SourceFile : Node {
+        SourceFile(Token *token, std::string name);
 
         std::string name;
         CodeBlock *code;
@@ -341,7 +341,7 @@ namespace AST {
         virtual void visit(ExpressionStatement *statement) = 0;
 
         // module
-        virtual void visit(Module *module) = 0;
+        virtual void visit(SourceFile *module) = 0;
     };
 
     class Simplifier : public Visitor {
@@ -377,7 +377,7 @@ namespace AST {
         void visit(DefinitionStatement *statement);
         void visit(ExpressionStatement *statement);
 
-        void visit(Module *module);
+        void visit(SourceFile *module);
 
     private:
         std::vector<Statement *> m_insertStatements;
