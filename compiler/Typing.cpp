@@ -329,15 +329,15 @@ void Inferrer::visit(AST::ExpressionStatement *statement) {
 }
 
 void Inferrer::visit(AST::Module *module) {
-    //SymbolTable::Symbol *symbol = m_namespace->lookup(module, module->name);
+    //SymbolTable::Symbol *symbol = m_scope->lookup(module, module->name);
 
-    //SymbolTable::Namespace *oldNamespace = m_namespace;
-    //m_namespace = symbol->nameSpace;
+    //SymbolTable::Namespace *oldNamespace = m_scope;
+    //m_scope = symbol->nameSpace;
 
     module->code->accept(this);
     module->type = module->code->type;
 
-    //m_namespace = oldNamespace;
+    //m_scope = oldNamespace;
 }
 
 Checker::Checker(SymbolTable::Namespace *rootNamespace) {
@@ -549,14 +549,14 @@ void Checker::visit(AST::ExpressionStatement *statement) {
 }
 
 void Checker::visit(AST::Module *module) {
-    //SymbolTable::Symbol *symbol = m_namespace->lookup(module, module->name);
+    //SymbolTable::Symbol *symbol = m_scope->lookup(module, module->name);
 
-    //SymbolTable::Namespace *oldNamespace = m_namespace;
-    //m_namespace = symbol->nameSpace;
+    //SymbolTable::Namespace *oldNamespace = m_scope;
+    //m_scope = symbol->nameSpace;
 
     module->code->accept(this);
 
     check_not_null(module);
 
-    //m_namespace = oldNamespace;
+    //m_scope = oldNamespace;
 }

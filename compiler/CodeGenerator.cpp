@@ -19,7 +19,7 @@
 #include "CodeGenerator.h"
 
 CodeGenerator::CodeGenerator(SymbolTable::Namespace *rootNamespace, llvm::TargetMachine *target_machine) {
-    m_namespace = rootNamespace;
+    m_scope = rootNamespace;
 
     m_irBuilder = new llvm::IRBuilder<>(llvm::getGlobalContext());
     m_mdBuilder = new llvm::MDBuilder(llvm::getGlobalContext());
@@ -49,7 +49,7 @@ void CodeGenerator::visit(AST::CodeBlock *block) {
 void CodeGenerator::visit(AST::Identifier *expression) {
     debug("Finding named value: " + expression->name);
 
-    SymbolTable::Symbol *symbol = m_namespace->lookup(expression);
+    SymbolTable::Symbol *symbol = m_scope->lookup(expression);
 
     if (!symbol->value) {
         throw Errors::InternalError(expression, "should not be nullptr");
@@ -106,7 +106,7 @@ void CodeGenerator::visit(AST::Call *expression) {
     if (identifier) {
         debug("Generating a call to: " + identifier->name);
 
-        SymbolTable::Symbol *functionSymbol = m_namespace->lookup(identifier);
+        SymbolTable::Symbol *functionSymbol = m_scope->lookup(identifier);
         Types::Function *functionType = static_cast<Types::Function *>(functionSymbol->type);
 
         Types::Method *method = functionType->find_method(expression, expression->arguments);
@@ -180,7 +180,7 @@ void CodeGenerator::visit(AST::Assignment *expression) {
         llvm::Value *value = m_llvmValues.back();
         m_llvmValues.pop_back();
 
-        llvm::Value *ptr = m_namespace->lookup(identifier)->value;
+        llvm::Value *ptr = m_scope->lookup(identifier)->value;
 
         m_irBuilder->CreateStore(value, ptr);
     } else {
@@ -324,7 +324,7 @@ void CodeGenerator::visit(AST::Spawn *expression) {
 
 void CodeGenerator::visit(AST::Type *type) {
     std::string name = type->name->name;
-    m_namespace->lookup(type, name);
+    m_scope->lookup(type, name);
 }
 
 void CodeGenerator::visit(AST::Cast *cast) {
@@ -336,11 +336,11 @@ void CodeGenerator::visit(AST::Parameter *parameter) {
 }
 
 void CodeGenerator::visit(AST::VariableDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition->name);
+    SymbolTable::Symbol *symbol = m_scope->lookup(definition->name);
 
     debug("Defining a new variable: " + symbol->name);
 
-    if (m_namespace->is_root()) {
+    if (m_scope->is_root()) {
         llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
 
         llvm::GlobalVariable *variable = new llvm::GlobalVariable(*m_module, type, false,
@@ -381,7 +381,7 @@ void CodeGenerator::visit(AST::VariableDefinition *definition) {
 }
 
 void CodeGenerator::visit(AST::FunctionDefinition *definition) {
-    SymbolTable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
+    SymbolTable::Symbol *functionSymbol = m_scope->lookup(definition->name);
 
     Types::Method *method = static_cast<Types::Method *>(definition->type);
 
@@ -396,8 +396,8 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
     }
     assert(symbol);
 
-    SymbolTable::Namespace *oldNamespace = m_namespace;
-    m_namespace = symbol->nameSpace;
+    SymbolTable::Namespace *oldNamespace = m_scope;
+    m_scope = symbol->nameSpace;
 
     llvm::Type *llvmType = method->create_llvm_type(llvm::getGlobalContext());
 
@@ -415,7 +415,7 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
         std::string name2 = method->get_parameter_name(i);
         llvm::AllocaInst *alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, name2);
         m_irBuilder->CreateStore(&arg, alloca);
-        SymbolTable::Symbol *symbol2 = m_namespace->lookup(definition, name2);
+        SymbolTable::Symbol *symbol2 = m_scope->lookup(definition, name2);
         symbol2->value = alloca;
         i++;
     }
@@ -439,7 +439,7 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
         throw Errors::InternalError(definition, stream.str());
     }
 
-    m_namespace = oldNamespace;
+    m_scope = oldNamespace;
 
     llvm::Function *mainFunction = m_module->getFunction("main");
     m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
@@ -469,15 +469,15 @@ void CodeGenerator::visit(AST::ExpressionStatement *statement) {
 }
 
 void CodeGenerator::visit(AST::Module *module) {
-    //SymbolTable::Symbol *symbol = m_namespace->lookup(module, module->name);
+    //SymbolTable::Symbol *symbol = m_scope->lookup(module, module->name);
 
-    //SymbolTable::Namespace *oldNamespace = m_namespace;
-    //m_namespace = symbol->nameSpace;
+    //SymbolTable::Namespace *oldNamespace = m_scope;
+    //m_scope = symbol->nameSpace;
 
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
     m_module->setDataLayout(m_target_machine->createDataLayout());
 
-    Builtins::fill_llvm_module(m_namespace, m_module, m_irBuilder);
+    Builtins::fill_llvm_module(m_scope, m_module, m_irBuilder);
 
     llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);
@@ -505,5 +505,5 @@ void CodeGenerator::visit(AST::Module *module) {
         throw Errors::InternalError(module, stream.str());
     }
 
-    //m_namespace = oldNamespace;
+    //m_scope = oldNamespace;
 }

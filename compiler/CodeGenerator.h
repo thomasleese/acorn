@@ -60,7 +60,7 @@ public:
     void visit(AST::Module *module);
 
 private:
-    SymbolTable::Namespace *m_namespace;
+    SymbolTable::Namespace *m_scope;
     llvm::Module *m_module;
     llvm::IRBuilder<> *m_irBuilder;
     llvm::MDBuilder *m_mdBuilder;
