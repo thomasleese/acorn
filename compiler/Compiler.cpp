@@ -58,12 +58,6 @@ void Compiler::compile(std::string filename) {
     Parser parser(tokens);
     AST::SourceFile *module = parser.parse(filename);
 
-    debug("Simplifying AST...");
-
-    AST::Simplifier *simplifier = new AST::Simplifier();
-    module->accept(simplifier);
-    delete simplifier;
-
     /*PrettyPrinter *printer = new PrettyPrinter();
     module->accept(printer);
     printer->print();

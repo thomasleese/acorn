@@ -366,48 +366,6 @@ namespace AST {
         virtual void visit(SourceFile *module) = 0;
     };
 
-    class Simplifier : public Visitor {
-        void visit(CodeBlock *block);
-
-        void visit(Identifier *expression);
-        void visit(BooleanLiteral *boolean);
-        void visit(IntegerLiteral *expression);
-        void visit(FloatLiteral *expression);
-        void visit(ImaginaryLiteral *expression);
-        void visit(StringLiteral *expression);
-        void visit(SequenceLiteral *expression);
-        void visit(MappingLiteral *expression);
-        void visit(Argument *expression);
-        void visit(Call *expression);
-        void visit(CCall *expression);
-        void visit(Assignment *expression);
-        void visit(Selector *expression);
-        void visit(Comma *expression);
-        void visit(While *expression);
-        void visit(For *expression);
-        void visit(If *expression);
-        void visit(Return *expression);
-        void visit(Spawn *expression);
-        void visit(Type *type);
-        void visit(Cast *type);
-
-        void visit(Parameter *parameter);
-
-        void visit(VariableDefinition *definition);
-        void visit(FunctionDefinition *definition);
-        void visit(TypeDefinition *definition);
-
-        void visit(DefinitionStatement *statement);
-        void visit(ExpressionStatement *statement);
-        void visit(ImportStatement *statement);
-
-        void visit(SourceFile *module);
-
-    private:
-        std::vector<Statement *> m_insertStatements;
-        bool m_removeStatement;
-    };
-
 };
 
 #endif // JET_ABSTRACTSYNTAXTREE_H
