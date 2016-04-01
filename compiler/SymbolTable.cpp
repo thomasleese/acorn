@@ -65,6 +65,10 @@ unsigned long Namespace::size() const {
     return m_symbols.size();
 }
 
+bool Namespace::is_root() const {
+    return m_parent == nullptr;
+}
+
 std::string Namespace::to_string() const {
     std::stringstream ss;
 
@@ -104,7 +108,7 @@ std::string Symbol::to_string() const {
 }
 
 Builder::Builder() {
-    m_root = m_current = new Namespace();
+    m_root = m_current = new Namespace(nullptr);
 
     Builtins::fill_symbol_table(m_root);
 }

@@ -25,8 +25,6 @@ CodeGenerator::CodeGenerator(SymbolTable::Namespace *rootNamespace, llvm::Target
     m_mdBuilder = new llvm::MDBuilder(llvm::getGlobalContext());
 
     m_target_machine = target_machine;
-
-    m_in_function = false;
 }
 
 CodeGenerator::~CodeGenerator() {
@@ -342,21 +340,7 @@ void CodeGenerator::visit(AST::VariableDefinition *definition) {
 
     debug("Defining a new variable: " + symbol->name);
 
-    if (m_in_function) {
-        llvm::Function *function = m_irBuilder->GetInsertBlock()->getParent();
-
-        definition->expression->accept(this);
-
-        llvm::Value *initialiser = m_llvmValues.back();
-        m_llvmValues.pop_back();
-
-        llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
-
-        llvm::IRBuilder<> tmp_ir(&function->getEntryBlock(), function->getEntryBlock().begin());
-        llvm::AllocaInst *variable = tmp_ir.CreateAlloca(type, 0, definition->name->name);
-        m_irBuilder->CreateStore(initialiser, variable);
-        symbol->value = variable;
-    } else {
+    if (m_namespace->is_root()) {
         llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
 
         llvm::GlobalVariable *variable = new llvm::GlobalVariable(*m_module, type, false,
@@ -379,6 +363,20 @@ void CodeGenerator::visit(AST::VariableDefinition *definition) {
 
         llvm::Function *mainFunction = m_module->getFunction("main");
         m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
+    } else {
+        llvm::Function *function = m_irBuilder->GetInsertBlock()->getParent();
+
+        definition->expression->accept(this);
+
+        llvm::Value *initialiser = m_llvmValues.back();
+        m_llvmValues.pop_back();
+
+        llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
+
+        llvm::IRBuilder<> tmp_ir(&function->getEntryBlock(), function->getEntryBlock().begin());
+        llvm::AllocaInst *variable = tmp_ir.CreateAlloca(type, 0, definition->name->name);
+        m_irBuilder->CreateStore(initialiser, variable);
+        symbol->value = variable;
     }
 }
 
@@ -422,11 +420,7 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
         i++;
     }
 
-    m_in_function = true;
-
     definition->code->accept(this);
-
-    m_in_function = false;
 
     if (definition->code->statements.empty()) {
         m_irBuilder->CreateRetVoid();

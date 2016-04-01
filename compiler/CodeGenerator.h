@@ -67,8 +67,6 @@ private:
     llvm::TargetMachine *m_target_machine;
 
     std::vector<llvm::Value *> m_llvmValues;
-
-    bool m_in_function;
 };
 
 

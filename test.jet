@@ -8,4 +8,4 @@ def main() as Integer
     return double()
 end
 
-let c as Integer = double()
+let c as Integer = main()

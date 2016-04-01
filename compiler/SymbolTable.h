@@ -24,7 +24,7 @@ namespace SymbolTable {
 
     class Namespace {
     public:
-        explicit Namespace(Namespace *parent = 0);
+        explicit Namespace(Namespace *parent);
         ~Namespace();
 
         bool has(std::string name, bool follow_parents = true) const;
@@ -33,6 +33,7 @@ namespace SymbolTable {
         void insert(AST::Node *currentNode, Symbol *symbol);
         unsigned long size() const;
 
+        bool is_root() const;
         std::string to_string() const;
 
     private:
