@@ -28,6 +28,7 @@ namespace AST {
     struct MappingLiteral;
     struct Argument;
     struct Call;
+    struct CCall;
     struct Selector;
     struct While;
     struct For;
@@ -68,6 +69,7 @@ private:
     AST::Expression *readExpression();
     AST::Identifier *readIdentifier();
     AST::Identifier *readOperator();
+    AST::Type *readType();
     AST::BooleanLiteral *readBooleanLiteral();
     AST::IntegerLiteral *readIntegerLiteral();
     AST::FloatLiteral *readFloatLiteral();
@@ -77,6 +79,7 @@ private:
     AST::MappingLiteral *readMappingLiteral();
     AST::Argument *readArgument();
     AST::Call *readCall(AST::Expression *operand);
+    AST::CCall *readCCall();
     AST::Selector *readSelector(AST::Expression *operand);
     AST::While *readWhile();
     AST::For *readFor();
@@ -87,7 +90,6 @@ private:
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
     AST::Expression *readPrimaryExpression();
     AST::Expression *readOperandExpression();
-    AST::Type *readType();
     AST::Cast *readCast();
 
     // misc

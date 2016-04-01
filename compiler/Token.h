@@ -45,6 +45,8 @@ struct Token {
         UnlessKeyword,
         MutableKeyword,
         SpawnKeyword,
+        CCallKeyword,
+        UsingKeyword,
 
         // literals
         BooleanLiteral,

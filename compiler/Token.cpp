@@ -72,6 +72,10 @@ std::string Token::rule_string(Token::Rule rule) {
             return "mutable";
         case SpawnKeyword:
             return "spawn";
+        case CCallKeyword:
+            return "ccall";
+        case UsingKeyword:
+            return "using";
         case BooleanLiteral:
             return "boolean";
         case IntegerLiteral:

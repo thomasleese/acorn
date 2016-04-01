@@ -179,7 +179,7 @@ void CodeGenerator::visit(AST::Call *expression) {
 }
 
 void CodeGenerator::visit(AST::CCall *ccall) {
-
+    throw Errors::InternalError(ccall, "ccall not supported yet");
 }
 
 void CodeGenerator::visit(AST::Assignment *expression) {

@@ -136,6 +136,30 @@ Identifier *Parser::readOperator() {
     return new Identifier(token, token->lexeme);
 }
 
+Type *Parser::readType() {
+    Type *type = new Type(m_tokens.front());
+
+    type->name = readIdentifier();
+
+    if (isToken(Token::OpenBrace)) {
+        readToken(Token::OpenBrace);
+
+        while (!isToken(Token::CloseBrace)) {
+            type->parameters.push_back(readType());
+
+            if (isToken(Token::Comma)) {
+                readToken(Token::Comma);
+            } else {
+                break;
+            }
+        }
+
+        readToken(Token::CloseBrace);
+    }
+
+    return type;
+}
+
 BooleanLiteral *Parser::readBooleanLiteral() {
     Token *token = readToken(Token::BooleanLiteral);\
 
@@ -263,6 +287,46 @@ Call *Parser::readCall(Expression *operand) {
     readToken(Token::CloseParenthesis);
 
     return call;
+}
+
+CCall *Parser::readCCall() {
+    Token *token = readToken(Token::CCallKeyword);
+
+    CCall *ccall = new CCall(token);
+    ccall->name = readIdentifier();
+
+    readToken(Token::OpenParenthesis);
+
+    while (!isToken(Token::CloseParenthesis)) {
+        ccall->parameters.push_back(readType());
+
+        if (isToken(Token::Comma)) {
+            readToken(Token::Comma);
+        } else {
+            break;
+        }
+    }
+
+    readToken(Token::CloseParenthesis);
+
+    readToken(Token::AsKeyword);
+    ccall->returnType = readType();
+
+    if (isToken(Token::UsingKeyword)) {
+        readToken(Token::UsingKeyword);
+
+        while (true) {
+            ccall->arguments.push_back(readExpression());
+
+            if (isToken(Token::Comma)) {
+                readToken(Token::Comma);
+            } else {
+                break;
+            }
+        }
+    }
+
+    return ccall;
 }
 
 Selector *Parser::readSelector(AST::Expression *operand) {
@@ -449,6 +513,8 @@ Expression *Parser::readPrimaryExpression() {
         return readReturn();
     } else if (isToken(Token::SpawnKeyword)) {
         return readSpawn();
+    } else if (isToken(Token::CCallKeyword)) {
+        return readCCall();
     } else if (isToken(Token::Identifier)) {
         return readIdentifier();
     } else {
@@ -479,30 +545,6 @@ Expression *Parser::readOperandExpression() {
     }
 
     return left;
-}
-
-Type *Parser::readType() {
-    Type *type = new Type(m_tokens.front());
-
-    type->name = readIdentifier();
-
-    if (isToken(Token::OpenBrace)) {
-        readToken(Token::OpenBrace);
-
-        while (!isToken(Token::CloseBrace)) {
-            type->parameters.push_back(readType());
-
-            if (isToken(Token::Comma)) {
-                readToken(Token::Comma);
-            } else {
-                break;
-            }
-        }
-
-        readToken(Token::CloseBrace);
-    }
-
-    return type;
 }
 
 Cast *Parser::readCast() {
