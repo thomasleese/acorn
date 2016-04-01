@@ -284,6 +284,16 @@ void PrettyPrinter::visit(AST::ExpressionStatement *statement) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(AST::ImportStatement *statement) {
+    ss << indentation() << "(ImportStatement\n";
+    indent++;
+
+    statement->path->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(AST::SourceFile *module) {
     ss << indentation() << "(SourceFile " << module->name << "\n";
 

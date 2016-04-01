@@ -279,16 +279,10 @@ void Builder::visit(AST::ExpressionStatement *statement) {
 
 }
 
+void Builder::visit(AST::ImportStatement *statement) {
+
+}
+
 void Builder::visit(AST::SourceFile *module) {
-    //Symbol *symbol = new Symbol(module->name);
-    //m_current->insert(module, symbol);
-
-    //symbol->nameSpace = new Namespace(m_current);
-
-    //Namespace *oldNamespace = m_current;
-    //m_current = symbol->nameSpace;
-
     module->code->accept(this);
-
-    //m_current = oldNamespace;
 }

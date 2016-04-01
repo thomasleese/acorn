@@ -470,6 +470,10 @@ void CodeGenerator::visit(AST::ExpressionStatement *statement) {
     statement->expression->accept(this);
 }
 
+void CodeGenerator::visit(AST::ImportStatement *statement) {
+
+}
+
 void CodeGenerator::visit(AST::SourceFile *module) {
     //SymbolTable::Symbol *symbol = m_scope->lookup(module, module->name);
 

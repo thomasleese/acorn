@@ -34,6 +34,12 @@ SourceFile *Parser::parse(std::string name) {
 
     skipToken(Token::Newline);
 
+    // read import statements, which must appear at the top of a source file
+    while (isToken(Token::ImportKeyword)) {
+        module->imports.push_back(readImportStatement());
+    }
+
+    // read the remaining statements of the file
     while (!isToken(Token::EndOfFile)) {
         Statement *statement = readStatement();
         module->code->statements.push_back(statement);
@@ -608,4 +614,12 @@ Statement *Parser::readStatement() {
     readToken(Token::Newline);
 
     return statement;
+}
+
+ImportStatement *Parser::readImportStatement() {
+    Token *token = readToken(Token::ImportKeyword);
+    StringLiteral *path = readStringLiteral();
+    readToken(Token::Newline);
+
+    return new ImportStatement(token, path);
 }

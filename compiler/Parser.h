@@ -42,6 +42,7 @@ namespace AST {
     struct TypeDefinition;
     struct DefinitionStatement;
     struct ExpressionStatement;
+    struct ImportStatement;
     struct SourceFile;
 }
 
@@ -99,6 +100,7 @@ private:
 
     // statements
     AST::Statement *readStatement();
+    AST::ImportStatement *readImportStatement();
 
 private:
     std::deque<Token *> m_tokens;

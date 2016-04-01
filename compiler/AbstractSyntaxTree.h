@@ -288,12 +288,21 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct ImportStatement : Statement {
+        ImportStatement(Token *token, StringLiteral *path);
+
+        StringLiteral *path;
+
+        void accept(Visitor *visitor);
+    };
+
     // source file
     struct SourceFile : Node {
         SourceFile(Token *token, std::string name);
 
         std::string name;
         CodeBlock *code;
+        std::vector<ImportStatement *> imports;
 
         void accept(Visitor *visitor);
     };
@@ -339,6 +348,7 @@ namespace AST {
         // statements
         virtual void visit(DefinitionStatement *statement) = 0;
         virtual void visit(ExpressionStatement *statement) = 0;
+        virtual void visit(ImportStatement *statement) = 0;
 
         // module
         virtual void visit(SourceFile *module) = 0;
@@ -376,6 +386,7 @@ namespace AST {
 
         void visit(DefinitionStatement *statement);
         void visit(ExpressionStatement *statement);
+        void visit(ImportStatement *statement);
 
         void visit(SourceFile *module);
 

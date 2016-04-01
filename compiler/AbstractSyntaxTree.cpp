@@ -208,6 +208,14 @@ void ExpressionStatement::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+ImportStatement::ImportStatement(Token *token, StringLiteral *path) : Statement(token) {
+    this->path = path;
+}
+
+void ImportStatement::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 SourceFile::SourceFile(Token *token, std::string name) : Node(token) {
     this->name = name;
     this->code = new CodeBlock(token);
@@ -377,6 +385,10 @@ void Simplifier::visit(DefinitionStatement *statement) {
 
 void Simplifier::visit(ExpressionStatement *statement) {
     statement->expression->accept(this);
+}
+
+void Simplifier::visit(ImportStatement *statement) {
+    statement->path->accept(this);
 }
 
 void Simplifier::visit(SourceFile *module) {

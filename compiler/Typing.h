@@ -63,6 +63,7 @@ namespace Typing {
 
         void visit(AST::DefinitionStatement *statement);
         void visit(AST::ExpressionStatement *statement);
+        void visit(AST::ImportStatement *statement);
 
         void visit(AST::SourceFile *module);
 
@@ -113,6 +114,7 @@ namespace Typing {
 
         void visit(AST::DefinitionStatement *statement);
         void visit(AST::ExpressionStatement *statement);
+        void visit(AST::ImportStatement *statement);
 
         void visit(AST::SourceFile *module);
 
