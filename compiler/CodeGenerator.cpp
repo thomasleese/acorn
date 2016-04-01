@@ -179,7 +179,29 @@ void CodeGenerator::visit(AST::Call *expression) {
 }
 
 void CodeGenerator::visit(AST::CCall *ccall) {
-    throw Errors::InternalError(ccall, "ccall not supported yet");
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+
+    std::vector<llvm::Type *> parameters;
+    llvm::Type *returnType = ccall->returnType->type->create_llvm_type(context);
+
+    for (auto parameter : ccall->parameters) {
+        parameters.push_back(parameter->type->create_llvm_type(context));
+    }
+
+    llvm::FunctionType *functionType = llvm::FunctionType::get(returnType, parameters, false);
+    llvm::Function *function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, ccall->name->name, m_module);
+
+    std::vector<llvm::Value *> arguments;
+    for (auto argument : ccall->arguments) {
+        argument->accept(this);
+
+        llvm::Value *argValue = m_llvmValues.back();
+        m_llvmValues.pop_back();
+        arguments.push_back(argValue);
+    }
+
+    llvm::Value *value = m_irBuilder->CreateCall(function, arguments);
+    m_llvmValues.push_back(value);
 }
 
 void CodeGenerator::visit(AST::Assignment *expression) {
@@ -434,7 +456,8 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
         llvm::Value *value = m_llvmValues.back();
         m_llvmValues.pop_back();
         if (!llvm::isa<llvm::ReturnInst>(value)) {
-            m_irBuilder->CreateRet(value);
+            m_irBuilder->CreateRetVoid();
+            // m_irBuilder->CreateRet(value);
         }
     }
 
