@@ -18,13 +18,11 @@
 
 #include "CodeGenerator.h"
 
-CodeGenerator::CodeGenerator(SymbolTable::Namespace *rootNamespace, llvm::TargetMachine *target_machine) {
+CodeGenerator::CodeGenerator(SymbolTable::Namespace *rootNamespace) {
     m_scope = rootNamespace;
 
     m_irBuilder = new llvm::IRBuilder<>(llvm::getGlobalContext());
     m_mdBuilder = new llvm::MDBuilder(llvm::getGlobalContext());
-
-    m_target_machine = target_machine;
 }
 
 CodeGenerator::~CodeGenerator() {
@@ -508,7 +506,6 @@ void CodeGenerator::visit(AST::SourceFile *module) {
     //m_scope = symbol->nameSpace;
 
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
-    m_module->setDataLayout(m_target_machine->createDataLayout());
 
     Builtins::fill_llvm_module(m_scope, m_module, m_irBuilder);
 
@@ -516,11 +513,11 @@ void CodeGenerator::visit(AST::SourceFile *module) {
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);
     llvm::BasicBlock *bb1 = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);
 
-    fType = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);
+    fType = llvm::FunctionType::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), false);
     llvm::Function *mainFunction = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "main", m_module);
-    llvm::BasicBlock *bb2 = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", mainFunction);
+    llvm::BasicBlock *main_bb = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", mainFunction);
 
-    m_irBuilder->SetInsertPoint(bb2);
+    m_irBuilder->SetInsertPoint(main_bb);
     m_irBuilder->CreateCall(function);
 
     module->code->accept(this);
@@ -528,8 +525,8 @@ void CodeGenerator::visit(AST::SourceFile *module) {
     m_irBuilder->SetInsertPoint(bb1);
     m_irBuilder->CreateRetVoid();
 
-    m_irBuilder->SetInsertPoint(bb2);
-    m_irBuilder->CreateRetVoid();
+    m_irBuilder->SetInsertPoint(main_bb);
+    m_irBuilder->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0));
 
     std::string str;
     llvm::raw_string_ostream stream(str);

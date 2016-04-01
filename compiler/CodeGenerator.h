@@ -18,7 +18,7 @@ namespace SymbolTable {
 class CodeGenerator : public AST::Visitor {
 
 public:
-    explicit CodeGenerator(SymbolTable::Namespace *rootNamespace, llvm::TargetMachine *target_machine);
+    explicit CodeGenerator(SymbolTable::Namespace *rootNamespace);
     ~CodeGenerator();
 
     void debug(std::string line);
@@ -66,7 +66,6 @@ private:
     llvm::Module *m_module;
     llvm::IRBuilder<> *m_irBuilder;
     llvm::MDBuilder *m_mdBuilder;
-    llvm::TargetMachine *m_target_machine;
 
     std::vector<llvm::Value *> m_llvmValues;
 };

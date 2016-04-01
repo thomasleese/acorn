@@ -28,19 +28,6 @@ public:
 
     void compile(std::string filename);
 
-private:
-    std::string mangle(const std::string &name);
-    llvm::orc::JITSymbol findMangledSymbol(const std::string &name);
-
-private:
-    std::unique_ptr<llvm::TargetMachine> m_targetMachine;
-    const llvm::DataLayout m_dataLayout;
-
-    llvm::orc::ObjectLinkingLayer<> m_object_layer;
-    llvm::orc::IRCompileLayer<llvm::orc::ObjectLinkingLayer<> > m_compiler_layer;
-
-    std::vector<llvm::orc::IRCompileLayer<llvm::orc::ObjectLinkingLayer<> >::ModuleSetHandleT > m_modules;
-
 };
 
 #endif // JET_COMPILER_H

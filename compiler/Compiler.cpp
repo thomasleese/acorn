@@ -2,6 +2,7 @@
 // Created by Thomas Leese on 14/03/2016.
 //
 
+#include <cstdio>
 #include <cassert>
 #include <iostream>
 
@@ -13,6 +14,9 @@
 #include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
 #include <llvm/IR/Mangler.h>
 #include <llvm/Support/DynamicLibrary.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Support/TargetRegistry.h>
+#include <llvm/Support/ToolOutputFile.h>
 
 #include "Lexer.h"
 #include "Parser.h"
@@ -25,11 +29,20 @@
 
 #include "Compiler.h"
 
-Compiler::Compiler() :
-        m_targetMachine(llvm::EngineBuilder().selectTarget()),
-        m_dataLayout(m_targetMachine->createDataLayout()),
-        m_compiler_layer(m_object_layer, llvm::orc::SimpleCompiler(*m_targetMachine))
+Compiler::Compiler()
 {
+    llvm::InitializeAllTargets();
+    llvm::InitializeAllTargetMCs();
+    llvm::InitializeAllAsmPrinters();
+    llvm::InitializeAllAsmParsers();
+
+    llvm::PassRegistry *registry = llvm::PassRegistry::getPassRegistry();
+    llvm::initializeCore(*registry);
+    llvm::initializeCodeGen(*registry);
+    llvm::initializeLoopStrengthReducePass(*registry);
+    llvm::initializeLowerIntrinsicsPass(*registry);
+    llvm::initializeUnreachableBlockElimPass(*registry);
+
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 }
 
@@ -41,13 +54,10 @@ void Compiler::debug(std::string line) {
     //std::cerr << line << std::endl;
 }
 
-template <typename T> std::vector<T> singletonSet(T t) {
-    std::vector<T> Vec;
-    Vec.push_back(std::move(t));
-    return Vec;
-}
-
 void Compiler::compile(std::string filename) {
+    std::string outputName = filename + ".o";
+    std::string moduleName = filename.substr(0, filename.find_last_of("."));
+
     debug("Lexing...");
 
     Lexer lexer;
@@ -86,62 +96,64 @@ void Compiler::compile(std::string filename) {
 
     debug("Generating code...");
 
-    CodeGenerator *generator = new CodeGenerator(rootNamespace, m_targetMachine.get());
+    CodeGenerator *generator = new CodeGenerator(rootNamespace);
     module->accept(generator);
     llvm::Module *llvmModule = generator->module();
     delete generator;
 
-    llvmModule->dump();
-
     delete module;
 
-    debug("Running code...");
+    debug("Generating object file...");
 
-    auto Resolver = llvm::orc::createLambdaResolver(
-            [&](const std::string &Name) {
-                if (auto Sym = findMangledSymbol(Name))
-                    return llvm::RuntimeDyld::SymbolInfo(Sym.getAddress(), Sym.getFlags());
-                return llvm::RuntimeDyld::SymbolInfo(nullptr);
-            },
-            [](const std::string &S) { return nullptr; });
+    llvm::Triple triple(llvm::sys::getDefaultTargetTriple());
 
-    auto H = m_compiler_layer.addModuleSet(singletonSet(std::move(llvmModule)),
-    llvm::make_unique<llvm::SectionMemoryManager>(),
-                                       std::move(Resolver));
+    if (triple.getOS() == llvm::Triple::Darwin &&
+        triple.getVendor() == llvm::Triple::Apple) {
+        // Rewrite darwinX.Y triples to macosx10.X'.Y ones.
+        // It affects code generation on our platform.
+        llvm::SmallString<16> osxBuf;
+        llvm::raw_svector_ostream osx(osxBuf);
+        osx << llvm::Triple::getOSTypeName(llvm::Triple::MacOSX);
 
-    m_modules.push_back(H);
+        unsigned major, minor, micro;
+        triple.getMacOSXVersion(major, minor, micro);
+        osx << major << "." << minor;
+        if (micro != 0)
+            osx << "." << micro;
 
-    debug("Finding main function...");
-
-    auto main_fn = findMangledSymbol(mangle("main"));
-    assert(main_fn && "Function not found");
-
-    debug("Calling main function...");
-
-    void (*fp)() = (void (*)())(intptr_t) main_fn.getAddress();
-    fp();
-}
-
-std::string Compiler::mangle(const std::string &name) {
-    std::string MangledName;
-    {
-        llvm::raw_string_ostream MangledNameStream(MangledName);
-        llvm::Mangler::getNameWithPrefix(MangledNameStream, name, m_dataLayout);
+        triple.setOSName(osx.str());
     }
-    return MangledName;
-}
 
-llvm::orc::JITSymbol Compiler::findMangledSymbol(const std::string &name) {
-    // Search modules in reverse order: from last added to first added.
-    // This is the opposite of the usual search order for dlsym, but makes more
-    // sense in a REPL where we want to bind to the newest available definition.
-    for (auto H : llvm::make_range(m_modules.rbegin(), m_modules.rend()))
-        if (auto Sym = m_compiler_layer.findSymbolIn(H, name, true))
-            return Sym;
+    std::string error;
+    const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple.str(), error);
 
-    // If we can't find the symbol in the JIT, try looking in the host process.
-    if (auto SymAddr = llvm::RTDyldMemoryManager::getSymbolAddressInProcess(name))
-        return llvm::orc::JITSymbol(SymAddr, llvm::JITSymbolFlags::Exported);
+    std::string cpu = "x86-64";
+    llvm::CodeGenOpt::Level opt_level = llvm::CodeGenOpt::None;
+    llvm::TargetOptions target_options;
+    std::string target_features;
 
-    return nullptr;
+    llvm::TargetMachine *target_machine = target->createTargetMachine(triple.str(), cpu, target_features, target_options, llvm::Reloc::PIC_, llvm::CodeModel::Default, opt_level);
+
+    llvmModule->setDataLayout(target_machine->createDataLayout());
+    llvmModule->setTargetTriple(triple.str());
+
+    llvmModule->dump();
+
+    llvm::legacy::PassManager pass_manager;
+
+    std::error_code error_code;
+    llvm::tool_output_file output_file(outputName, error_code, llvm::sys::fs::F_None);
+
+    target_machine->addPassesToEmitFile(pass_manager, output_file.os(), llvm::TargetMachine::CGFT_ObjectFile);
+
+    pass_manager.run(*llvmModule);
+
+    output_file.keep();
+
+    output_file.os().close();
+
+    std::string cmd = "clang " + outputName + " -o " + moduleName;
+    system(cmd.c_str());
+
+    remove(outputName.c_str());
 }
