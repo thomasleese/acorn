@@ -89,6 +89,15 @@ void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+CCall::CCall(Token *token) : Expression(token) {
+    this->name = nullptr;
+    this->returnType = nullptr;
+}
+
+void CCall::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Assignment::Assignment(Token *token, Expression *lhs, Expression *rhs) : Expression(token) {
     this->lhs = lhs;
     this->rhs = rhs;
@@ -291,6 +300,10 @@ void Simplifier::visit(Argument *expression) {
 }
 
 void Simplifier::visit(Call *expression) {
+
+}
+
+void Simplifier::visit(CCall *expression) {
 
 }
 

@@ -1,1 +1,5 @@
 import 'base/types'
+
+def exit(code as Integer) as Void
+    ccall exit(Integer) as Void using code
+end

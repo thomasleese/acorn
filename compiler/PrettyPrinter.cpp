@@ -26,6 +26,20 @@ void PrettyPrinter::visit(AST::Identifier *expression) {
     ss << indentation() << "(Identifier " << expression->name << ")\n";
 }
 
+void PrettyPrinter::visit(AST::Type *type) {
+    ss << indentation() << "(Type\n";
+    indent++;
+
+    type->name->accept(this);
+
+    for (auto parameter : type->parameters) {
+        parameter->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(AST::BooleanLiteral *boolean) {
     ss << indentation() << "(BooleanLiteral " << boolean->value << ")\n";
 }
@@ -94,6 +108,26 @@ void PrettyPrinter::visit(AST::Call *expression) {
     expression->operand->accept(this);
 
     for (auto argument : expression->arguments) {
+        argument->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::CCall *ccall) {
+    ss << indentation() << "(CCall\n";
+    indent++;
+
+    ccall->name->accept(this);
+
+    for (auto parameter : ccall->parameters) {
+        parameter->accept(this);
+    }
+
+    ccall->returnType->accept(this);
+
+    for (auto argument : ccall->arguments) {
         argument->accept(this);
     }
 
@@ -177,20 +211,6 @@ void PrettyPrinter::visit(AST::Return *expression) {
     indent++;
 
     expression->expression->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
-void PrettyPrinter::visit(AST::Type *type) {
-    ss << indentation() << "(TypeType\n";
-    indent++;
-
-    type->name->accept(this);
-
-    for (auto parameter : type->parameters) {
-        parameter->accept(this);
-    }
 
     indent--;
     ss << indentation() << ")\n";

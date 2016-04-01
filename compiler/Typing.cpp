@@ -91,6 +91,10 @@ void Inferrer::visit(AST::Identifier *expression) {
     }
 }
 
+void Inferrer::visit(AST::Type *type) {
+    type->type = find_type(type);
+}
+
 void Inferrer::visit(AST::BooleanLiteral *expression) {
     expression->type = find_type(expression, "Boolean");
 }
@@ -172,6 +176,22 @@ void Inferrer::visit(AST::Call *expression) {
     expression->type = method->return_type();
 }
 
+void Inferrer::visit(AST::CCall *ccall) {
+    for (auto param : ccall->parameters) {
+        param->accept(this);
+    }
+
+    for (auto arg : ccall->arguments) {
+        arg->accept(this);
+    }
+
+    // TODO check arg and param types match
+
+    ccall->returnType->accept(this);
+
+    ccall->type = ccall->returnType->type;
+}
+
 void Inferrer::visit(AST::Assignment *expression) {
     expression->lhs->accept(this);
     expression->rhs->accept(this);
@@ -215,10 +235,6 @@ void Inferrer::visit(AST::Return *expression) {
 void Inferrer::visit(AST::Spawn *expression) {
     expression->call->accept(this);
     expression->type = expression->call->type;
-}
-
-void Inferrer::visit(AST::Type *type) {
-    type->type = find_type(type);
 }
 
 void Inferrer::visit(AST::Cast *cast) {
@@ -374,6 +390,13 @@ void Checker::visit(AST::Identifier *expression) {
     check_not_null(expression);
 }
 
+void Checker::visit(AST::Type *type) {
+    for (auto p : type->parameters) {
+        p->accept(this);
+    }
+    check_not_null(type);
+}
+
 void Checker::visit(AST::BooleanLiteral *boolean) {
     check_not_null(boolean);
 }
@@ -431,6 +454,20 @@ void Checker::visit(AST::Call *expression) {
     check_not_null(expression);
 }
 
+void Checker::visit(AST::CCall *ccall) {
+    // ccall->name->accept(this);
+
+    for (auto param : ccall->parameters) {
+        param->accept(this);
+    }
+
+    ccall->returnType->accept(this);
+
+    for (auto arg : ccall->arguments) {
+        arg->accept(this);
+    }
+}
+
 void Checker::visit(AST::Assignment *expression) {
     expression->lhs->accept(this);
     expression->rhs->accept(this);
@@ -475,13 +512,6 @@ void Checker::visit(AST::Return *expression) {
 void Checker::visit(AST::Spawn *expression) {
     expression->call->accept(this);
     check_not_null(expression);
-}
-
-void Checker::visit(AST::Type *type) {
-    for (auto p : type->parameters) {
-        p->accept(this);
-    }
-    check_not_null(type);
 }
 
 void Checker::visit(AST::Cast *cast) {

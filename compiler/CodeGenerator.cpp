@@ -59,6 +59,11 @@ void CodeGenerator::visit(AST::Identifier *expression) {
     m_llvmValues.push_back(value);
 }
 
+void CodeGenerator::visit(AST::Type *type) {
+    std::string name = type->name->name;
+    m_scope->lookup(type, name);
+}
+
 void CodeGenerator::visit(AST::BooleanLiteral *boolean) {
 
 }
@@ -171,6 +176,10 @@ void CodeGenerator::visit(AST::Call *expression) {
     } else {
         throw Errors::InternalError(expression, "Not an identifier.");
     }
+}
+
+void CodeGenerator::visit(AST::CCall *ccall) {
+
 }
 
 void CodeGenerator::visit(AST::Assignment *expression) {
@@ -320,11 +329,6 @@ void CodeGenerator::visit(AST::Return *expression) {
 
 void CodeGenerator::visit(AST::Spawn *expression) {
     debug("Generating spawn statement.");
-}
-
-void CodeGenerator::visit(AST::Type *type) {
-    std::string name = type->name->name;
-    m_scope->lookup(type, name);
 }
 
 void CodeGenerator::visit(AST::Cast *cast) {

@@ -19,6 +19,7 @@ public:
     void visit(AST::CodeBlock *block);
 
     void visit(AST::Identifier *expression);
+    void visit(AST::Type *type);
     void visit(AST::BooleanLiteral *boolean);
     void visit(AST::IntegerLiteral *expression);
     void visit(AST::FloatLiteral *expression);
@@ -28,6 +29,7 @@ public:
     void visit(AST::MappingLiteral *mapping);
     void visit(AST::Argument *argument);
     void visit(AST::Call *expression);
+    void visit(AST::CCall *ccall);
     void visit(AST::Assignment *expression);
     void visit(AST::Selector *expression);
     void visit(AST::Comma *expression);
@@ -35,7 +37,6 @@ public:
     void visit(AST::For *expression);
     void visit(AST::If *expression);
     void visit(AST::Return *expression);
-    void visit(AST::Type *type);
     void visit(AST::Cast *type);
 
     void visit(AST::Parameter *parameter);

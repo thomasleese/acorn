@@ -131,6 +131,10 @@ void Builder::visit(AST::Identifier *expression) {
 
 }
 
+void Builder::visit(AST::Type *type) {
+
+}
+
 void Builder::visit(AST::BooleanLiteral *boolean) {
 
 }
@@ -167,6 +171,10 @@ void Builder::visit(AST::Call *expression) {
 
 }
 
+void Builder::visit(AST::CCall *expression) {
+
+}
+
 void Builder::visit(AST::Assignment *expression) {
 
 }
@@ -196,10 +204,6 @@ void Builder::visit(AST::Return *expression) {
 }
 
 void Builder::visit(AST::Spawn *expression) {
-
-}
-
-void Builder::visit(AST::Type *type) {
 
 }
 

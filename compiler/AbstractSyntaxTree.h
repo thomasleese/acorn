@@ -57,6 +57,16 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct Type : Expression {
+        Type(Token *token);
+        Type(std::string name, Token *token);
+
+        Identifier *name;
+        std::vector<Type *> parameters;
+
+        void accept(Visitor *visitor);
+    };
+
     struct BooleanLiteral : Expression {
         using Expression::Expression;
 
@@ -134,6 +144,17 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct CCall : Expression {
+        CCall(Token *token);
+
+        Identifier *name;
+        std::vector<Type *> parameters;
+        Type *returnType;
+        std::vector<Expression *> arguments;
+
+        void accept(Visitor *visitor);
+    };
+
     struct Assignment : Expression {
         explicit Assignment(Token *token, Expression *lhs, Expression *rhs);
 
@@ -203,16 +224,6 @@ namespace AST {
         Spawn(Token *token, Call *call);
 
         Call *call;
-
-        void accept(Visitor *visitor);
-    };
-
-    struct Type : Expression {
-        Type(Token *token);
-        Type(std::string name, Token *token);
-
-        Identifier *name;
-        std::vector<Type *> parameters;
 
         void accept(Visitor *visitor);
     };
@@ -326,6 +337,7 @@ namespace AST {
         virtual void visit(MappingLiteral *expression) = 0;
         virtual void visit(Argument *expression) = 0;
         virtual void visit(Call *expression) = 0;
+        virtual void visit(CCall *expression) = 0;
         virtual void visit(Assignment *expression) = 0;
         virtual void visit(Selector *expression) = 0;
         virtual void visit(Comma *expression) = 0;
@@ -367,6 +379,7 @@ namespace AST {
         void visit(MappingLiteral *expression);
         void visit(Argument *expression);
         void visit(Call *expression);
+        void visit(CCall *expression);
         void visit(Assignment *expression);
         void visit(Selector *expression);
         void visit(Comma *expression);
