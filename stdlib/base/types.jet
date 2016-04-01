@@ -1,1 +1,8 @@
 type Integer as Integer64
+type Float as Float64
+
+type String as Void
+
+def -(n as Integer) as Integer
+    return 0 - n
+end

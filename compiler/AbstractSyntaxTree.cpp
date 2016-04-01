@@ -6,6 +6,7 @@
 #include <sstream>
 
 #include "Lexer.h"
+#include "Parser.h"
 
 #include "AbstractSyntaxTree.h"
 
@@ -186,6 +187,11 @@ void VariableDefinition::accept(Visitor *visitor) {
 
 void FunctionDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
+}
+
+TypeDefinition::TypeDefinition(Token *token) : Definition(token) {
+    this->alias = nullptr;
+    this->name = nullptr;
 }
 
 void TypeDefinition::accept(Visitor *visitor) {

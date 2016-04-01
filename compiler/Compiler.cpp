@@ -48,8 +48,6 @@ template <typename T> std::vector<T> singletonSet(T t) {
 }
 
 void Compiler::compile(std::string filename) {
-    std::string moduleName = filename.substr(0, filename.find("."));
-
     debug("Lexing...");
 
     Lexer lexer;
@@ -58,7 +56,7 @@ void Compiler::compile(std::string filename) {
     debug("Parsing...");
 
     Parser parser(tokens);
-    AST::SourceFile *module = parser.parse(moduleName);
+    AST::SourceFile *module = parser.parse(filename);
 
     debug("Simplifying AST...");
 

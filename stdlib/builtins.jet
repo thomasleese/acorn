@@ -1,3 +1,0 @@
-def -(n as Integer) as Integer
-    0 - n
-end

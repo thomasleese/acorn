@@ -262,7 +262,7 @@ namespace AST {
     };
 
     struct TypeDefinition : Definition {
-        using Definition::Definition;
+        TypeDefinition(Token *token);
 
         Type *name;
         Type *alias;

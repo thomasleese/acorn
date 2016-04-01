@@ -1,0 +1,68 @@
+import 'maths/constants'
+
+def sqrt(x as Float) as Float
+    x
+end
+
+type Vector2
+    x as Integer
+    y as Integer
+end
+
+def +(self as Vector2, other as Vector2) as Vector2
+    return Vector2(x: self.x + other.x, y: self.y + other.y)
+end
+
+def +=(self as Vector2, other as Vector2) as Void
+    self.x += other.x
+    self.y += other.y
+end
+
+def angle(vec as Vector2) as Number
+    return atan2(y: vec.y, x: vec.x)
+end
+
+def length2(vec as Vector2) as Number
+    return vec.x ^ 2 + vec.y ^ 2
+end
+
+def length(vec as Vector2) as Number
+    return sqrt(x: vec.length())
+end
+
+type Matrix
+    rows as Number
+    cols as Number
+    data as Number
+end
+
+def matrix(rows as Integer, cols as Integer) as Matrix
+    let data as Number = 0 * (mat.rows * mat.cols)
+    Matrix(rows: rows, cols: cols, data: data)
+end
+
+def sum(sequence as Iterator) as Number
+    let result as Number = 0
+    for element in sequence
+        result += element
+    end
+    return result
+end
+
+def abs(x as Number) as Number
+    return if x < 0
+        -x
+    else if x == 0
+        0
+    else
+        x
+    end
+end
+
+def factorial(n as Integer) as Integer
+    return if n == 0
+        1
+    else
+        n * (n - 1).factorial()
+    end
+end

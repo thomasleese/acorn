@@ -45,6 +45,14 @@ void CompilerError::print() const {
     std::cout << m_message << std::endl;
 }
 
+FileNotFoundError::FileNotFoundError(Token *token) : CompilerError(token) {
+    m_prefix = "File not found";
+}
+
+FileNotFoundError::FileNotFoundError(AST::Node *node) : CompilerError(node) {
+    m_prefix = "File not found";
+}
+
 InternalError::InternalError(Token *token, std::string message) :
         CompilerError(token) {
     m_prefix = "Internal error";

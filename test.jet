@@ -1,3 +1,7 @@
-import 'base/os'
+import 'base'
+
+def exit(code as Integer) as Integer
+    return code * code
+end
 
 exit(code: 1)

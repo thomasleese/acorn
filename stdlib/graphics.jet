@@ -1,12 +1,1 @@
-type Colour
-    r as Byte
-    g as Byte
-    b as Byte
-    a as Byte
-end
-
-let Color as TypeType = Colour
-
-def to_html_string(colour as Colour) as String
-    "#" + hex(str: colour.r) + hex(str: colour.g) + hex(str: colour.b)
-end
+import 'graphics/colours'

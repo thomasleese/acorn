@@ -36,6 +36,12 @@ namespace Errors {
         std::string m_message;
     };
 
+    class FileNotFoundError : public CompilerError {
+    public:
+        FileNotFoundError(Token *token);
+        FileNotFoundError(AST::Node *node);
+    };
+
     class InternalError : public CompilerError {
     public:
         InternalError(Token *token, std::string message);

@@ -6,6 +6,7 @@
 
 #include "AbstractSyntaxTree.h"
 #include "Errors.h"
+#include "Lexer.h"
 
 #include "Parser.h"
 
@@ -37,6 +38,25 @@ SourceFile *Parser::parse(std::string name) {
     // read import statements, which must appear at the top of a source file
     while (isToken(Token::ImportKeyword)) {
         module->imports.push_back(readImportStatement());
+    }
+
+    // FIXME, implement a proper module system
+    for (auto import : module->imports) {
+        std::string filename = "stdlib/" + import->path->value + ".jet";
+
+        Lexer lexer;
+        std::vector<Token *> tokens = lexer.tokenise(filename);
+
+        if (tokens.size() <= 1) {  // end of file token
+            throw Errors::FileNotFoundError(import);
+        }
+
+        Parser parser(tokens);
+        AST::SourceFile *module2 = parser.parse(filename);
+
+        for (auto statement : module2->code->statements) {
+            module->code->statements.push_back(statement);
+        }
     }
 
     // read the remaining statements of the file
@@ -166,7 +186,7 @@ StringLiteral *Parser::readStringLiteral() {
     Token *token = readToken(Token::StringLiteral);
 
     StringLiteral *literal = new StringLiteral(token);
-    literal->value = token->lexeme;
+    literal->value = token->lexeme.substr(1, token->lexeme.length() - 2);
 
     return literal;
 }

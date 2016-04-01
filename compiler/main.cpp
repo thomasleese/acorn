@@ -13,13 +13,6 @@ int main() {
     Compiler compiler;
 
     try {
-        /*compiler.compile("stdlib/builtins.jet");
-        compiler.compile("stdlib/graphics.jet");
-        compiler.compile("stdlib/maths.jet");*/
-
-        /*compiler.compile("examples/types.jet");
-        compiler.compile("examples/strings.jet");*/
-
         compiler.compile("test.jet");
     } catch (Errors::CompilerError e) {
         e.print();
