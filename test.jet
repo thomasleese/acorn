@@ -1,3 +1,8 @@
 import 'base'
 
-exit(code: 1)
+def get_exit_code() as Integer
+    return 0
+end
+
+let code as Integer = get_exit_code()
+exit(code: code)

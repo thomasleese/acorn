@@ -127,10 +127,18 @@ void Compiler::compile(std::string filename) {
     std::string error;
     const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple.str(), error);
 
-    std::string cpu = "x86-64";
+    std::string cpu = llvm::sys::getHostCPUName();
     llvm::CodeGenOpt::Level opt_level = llvm::CodeGenOpt::None;
     llvm::TargetOptions target_options;
-    std::string target_features;
+
+    llvm::SubtargetFeatures features;
+
+    llvm::StringMap<bool> host_features;
+    llvm::sys::getHostCPUFeatures(host_features);
+    for (auto &it : host_features) {
+        features.AddFeature(it.first(), it.second);
+    }
+    std::string target_features = features.getString();
 
     llvm::TargetMachine *target_machine = target->createTargetMachine(triple.str(), cpu, target_features, target_options, llvm::Reloc::PIC_, llvm::CodeModel::Default, opt_level);
 

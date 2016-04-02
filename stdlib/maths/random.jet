@@ -1,0 +1,4 @@
+def random() as Float
+    return 0
+end
+

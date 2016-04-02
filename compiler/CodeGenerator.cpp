@@ -500,11 +500,6 @@ void CodeGenerator::visit(AST::ImportStatement *statement) {
 }
 
 void CodeGenerator::visit(AST::SourceFile *module) {
-    //SymbolTable::Symbol *symbol = m_scope->lookup(module, module->name);
-
-    //SymbolTable::Namespace *oldNamespace = m_scope;
-    //m_scope = symbol->nameSpace;
-
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
 
     Builtins::fill_llvm_module(m_scope, m_module, m_irBuilder);
@@ -534,6 +529,4 @@ void CodeGenerator::visit(AST::SourceFile *module) {
         m_module->dump();
         throw Errors::InternalError(module, stream.str());
     }
-
-    //m_scope = oldNamespace;
 }
