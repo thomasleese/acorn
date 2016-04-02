@@ -254,10 +254,21 @@ void Inferrer::visit(AST::Parameter *parameter) {
 void Inferrer::visit(AST::VariableDefinition *definition) {
     SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
 
-    definition->cast->accept(this);
+    Types::Type *type = nullptr;
+
     definition->expression->accept(this);
 
-    Types::Type *type = definition->cast->type;
+    if (definition->cast) {
+        definition->cast->accept(this);
+        type = definition->cast->type;
+    } else {
+        type = definition->expression->type;
+    }
+
+    if (!type) {
+        throw Errors::TypeInferenceError(definition);
+    }
+
     symbol->type = type;
     definition->type = type;
 }
@@ -531,7 +542,10 @@ void Checker::visit(AST::VariableDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     // definition->name->accept(this);
 
-    definition->cast->accept(this);
+    if (definition->cast) {
+        definition->cast->accept(this);
+    }
+
     definition->expression->accept(this);
 
     check_types(definition, definition->expression);

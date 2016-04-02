@@ -583,7 +583,11 @@ VariableDefinition *Parser::readVariableDefinition() {
 
     definition->name = readIdentifier();
 
-    definition->cast = readCast();
+    if (isToken(Token::AsKeyword)) {
+        definition->cast = readCast();
+    } else {
+        definition->cast = nullptr;
+    }
 
     readToken(Token::Assignment);
 
