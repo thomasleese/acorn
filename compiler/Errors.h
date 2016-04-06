@@ -99,6 +99,11 @@ namespace Errors {
         explicit TypeInferenceError(AST::Node *node);
     };
 
+    class ConstantAssignmentError : public CompilerError {
+    public:
+        ConstantAssignmentError(AST::Node *node);
+    };
+
 };
 
 #endif // JET_ERRORS_H

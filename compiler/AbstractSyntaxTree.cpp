@@ -98,7 +98,7 @@ void CCall::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Assignment::Assignment(Token *token, Expression *lhs, Expression *rhs) : Expression(token) {
+Assignment::Assignment(Token *token, Identifier *lhs, Expression *rhs) : Expression(token) {
     this->lhs = lhs;
     this->rhs = rhs;
 }

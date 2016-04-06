@@ -492,6 +492,11 @@ void Checker::visit(AST::Assignment *expression) {
     expression->lhs->accept(this);
     expression->rhs->accept(this);
     check_not_null(expression);
+
+    SymbolTable::Symbol *symbol = m_namespace->lookup(expression->lhs);
+    if (!symbol->is_mutable) {
+        throw Errors::ConstantAssignmentError(expression->lhs);
+    }
 }
 
 void Checker::visit(AST::Selector *expression) {
@@ -558,6 +563,11 @@ void Checker::visit(AST::VariableDefinition *definition) {
 void Checker::visit(AST::FunctionDefinition *definition) {
     definition->code->accept(this);
 
+    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
+
+    SymbolTable::Namespace *oldNamespace = m_namespace;
+    m_namespace = symbol->nameSpace;
+
     // it's valid for the name not to have a type, since it's doesn't exist
     // definition->name->accept(this);
 
@@ -568,11 +578,18 @@ void Checker::visit(AST::FunctionDefinition *definition) {
     }
 
     check_not_null(definition);
+
+    m_namespace = oldNamespace;
 }
 
 void Checker::visit(AST::TypeDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     //definition->name->accept(this);
+
+    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name->name);
+
+    SymbolTable::Namespace *oldNamespace = m_namespace;
+    m_namespace = symbol->nameSpace;
 
     if (definition->alias) {
         definition->alias->accept(this);
@@ -582,6 +599,8 @@ void Checker::visit(AST::TypeDefinition *definition) {
         }
     }
     check_not_null(definition);
+
+    m_namespace = oldNamespace;
 }
 
 void Checker::visit(AST::DefinitionStatement *statement) {

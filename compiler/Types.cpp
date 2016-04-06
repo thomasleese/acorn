@@ -67,7 +67,7 @@ Type *BooleanConstructor::create(AST::Node *node, std::vector<Type *> parameters
     }
 }
 
-IntegerConstructor::IntegerConstructor(int size) : m_size(size) {
+IntegerConstructor::IntegerConstructor(unsigned int size) : m_size(size) {
 
 }
 
@@ -80,6 +80,24 @@ std::string IntegerConstructor::name() const {
 Type *IntegerConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Integer(m_size);
+    } else {
+        throw Errors::InvalidTypeConstructor(node);
+    }
+}
+
+UnsignedIntegerConstructor::UnsignedIntegerConstructor(unsigned int size) : m_size(size) {
+
+}
+
+std::string UnsignedIntegerConstructor::name() const {
+    std::stringstream ss;
+    ss << "UnsignedIntegerConstructor" << m_size;
+    return ss.str();
+}
+
+Type *UnsignedIntegerConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+    if (parameters.empty()) {
+        return new UnsignedInteger(m_size);
     } else {
         throw Errors::InvalidTypeConstructor(node);
     }
@@ -257,7 +275,7 @@ llvm::Type *Boolean::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::Type::getInt1Ty(context);
 }
 
-Integer::Integer(int size) : m_size(size) {
+Integer::Integer(unsigned int size) : m_size(size) {
 
 }
 
@@ -268,6 +286,20 @@ std::string Integer::name() const {
 }
 
 llvm::Type *Integer::create_llvm_type(llvm::LLVMContext &context) const {
+    return llvm::Type::getIntNTy(context, m_size);
+}
+
+UnsignedInteger::UnsignedInteger(unsigned int size) : m_size(size) {
+
+}
+
+std::string UnsignedInteger::name() const {
+    std::stringstream ss;
+    ss << "UnsignedInteger" << m_size;
+    return ss.str();
+}
+
+llvm::Type *UnsignedInteger::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::Type::getIntNTy(context, m_size);
 }
 

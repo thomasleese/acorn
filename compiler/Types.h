@@ -64,14 +64,26 @@ namespace Types {
 
     class IntegerConstructor : public Constructor {
     public:
-        explicit IntegerConstructor(int size);
+        explicit IntegerConstructor(unsigned int size);
 
         std::string name() const;
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
 
     private:
-        int m_size;
+        unsigned int m_size;
+    };
+
+    class UnsignedIntegerConstructor : public Constructor {
+    public:
+        explicit UnsignedIntegerConstructor(unsigned int size);
+
+        std::string name() const;
+
+        Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+    private:
+        unsigned int m_size;
     };
 
     class FloatConstructor : public Constructor {
@@ -174,14 +186,26 @@ namespace Types {
 
     class Integer : public Type {
     public:
-        explicit Integer(int size);
+        explicit Integer(unsigned int size);
 
         std::string name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
     private:
-        int m_size;
+        unsigned int m_size;
+    };
+
+    class UnsignedInteger : public Type {
+    public:
+        explicit UnsignedInteger(unsigned int size);
+
+        std::string name() const;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+
+    private:
+        unsigned int m_size;
     };
 
     class Float : public Type {

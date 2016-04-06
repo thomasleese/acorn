@@ -152,3 +152,9 @@ TypeInferenceError::TypeInferenceError(AST::Node *node) :
     m_prefix = "Type inference error";
     m_message = "Try specifying the type you want.";
 }
+
+ConstantAssignmentError::ConstantAssignmentError(AST::Node *node) :
+        CompilerError(node) {
+    m_prefix = "Assignment to constant";
+    m_message = "Variable is not mutable.";
+}

@@ -156,9 +156,9 @@ namespace AST {
     };
 
     struct Assignment : Expression {
-        explicit Assignment(Token *token, Expression *lhs, Expression *rhs);
+        explicit Assignment(Token *token, Identifier *lhs, Expression *rhs);
 
-        Expression *lhs;
+        Identifier *lhs;
         Expression *rhs;
 
         void accept(Visitor *visitor);
@@ -235,6 +235,7 @@ namespace AST {
         Identifier *name;
         Type *typeNode;
         Expression *defaultExpression;
+        bool is_mutable;
 
         void accept(Visitor *visitor);
     };

@@ -1,4 +1,5 @@
 type Integer as Integer64
+type UnsignedInteger as UnsignedInteger64
 type Float as Float64
 
 type String as Void

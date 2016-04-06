@@ -1,6 +1,3 @@
-- Floating point numbers
-- Unsigned/Signed
-- Mutablility
 - Characters
 - Unit tests
 - Name mangling

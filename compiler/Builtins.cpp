@@ -47,6 +47,11 @@ void add_base_type_constructors(SymbolTable::Namespace *table) {
     add_symbol(table, "Integer32", new Types::IntegerConstructor(32));
     add_symbol(table, "Integer64", new Types::IntegerConstructor(64));
     add_symbol(table, "Integer128", new Types::IntegerConstructor(128));
+    add_symbol(table, "UnsignedInteger8", new Types::UnsignedIntegerConstructor(8));
+    add_symbol(table, "UnsignedInteger16", new Types::UnsignedIntegerConstructor(16));
+    add_symbol(table, "UnsignedInteger32", new Types::UnsignedIntegerConstructor(32));
+    add_symbol(table, "UnsignedInteger64", new Types::UnsignedIntegerConstructor(64));
+    add_symbol(table, "UnsignedInteger128", new Types::UnsignedIntegerConstructor(128));
     add_symbol(table, "Float16", new Types::FloatConstructor(16));
     add_symbol(table, "Float32", new Types::FloatConstructor(32));
     add_symbol(table, "Float64", new Types::FloatConstructor(64));

@@ -475,7 +475,9 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
 
             lhs = call;
         } else {
-            Assignment *assignment = new Assignment(token, lhs, rhs);
+            Identifier *lhs_identifier = dynamic_cast<Identifier *>(lhs);
+            assert(lhs_identifier);
+            Assignment *assignment = new Assignment(token, lhs_identifier, rhs);
             lhs = assignment;
         }
     }
@@ -554,6 +556,13 @@ Type *Parser::readCast() {
 
 Parameter *Parser::readParameter() {
     Parameter *parameter = new Parameter(m_tokens.front());
+
+    if (isToken(Token::MutableKeyword)) {
+        readToken(Token::MutableKeyword);
+        parameter->is_mutable = true;
+    } else {
+        parameter->is_mutable = false;
+    }
 
     parameter->name = readIdentifier();
     parameter->typeNode = readCast();
