@@ -557,13 +557,6 @@ Type *Parser::readCast() {
 Parameter *Parser::readParameter() {
     Parameter *parameter = new Parameter(m_tokens.front());
 
-    if (isToken(Token::MutableKeyword)) {
-        readToken(Token::MutableKeyword);
-        parameter->is_mutable = true;
-    } else {
-        parameter->is_mutable = false;
-    }
-
     parameter->name = readIdentifier();
     parameter->typeNode = readCast();
 
@@ -579,13 +572,6 @@ VariableDefinition *Parser::readVariableDefinition() {
     Token *token = readToken(Token::LetKeyword);
 
     VariableDefinition *definition = new VariableDefinition(token);
-
-    if (isToken(Token::MutableKeyword)) {
-        readToken(Token::MutableKeyword);
-        definition->is_mutable = true;
-    } else {
-        definition->is_mutable = false;
-    }
 
     definition->name = readIdentifier();
 

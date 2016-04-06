@@ -1,8 +1,8 @@
 - Characters
 - Unit tests
-- Name mangling
 - Arrays, tuples, strings
 - Garbage Collection
+- Mutability
 - Running code outside functions
 - Closures
 - Channels

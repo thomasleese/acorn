@@ -169,7 +169,7 @@ void Inferrer::visit(AST::Call *expression) {
     Types::Function *function = dynamic_cast<Types::Function *>(expression->operand->type);
     if (function == nullptr) {
         expression->type = new Types::Function();
-        throw Errors::TypeMismatchError(expression, expression->operand);
+        throw Errors::TypeMismatchError(expression->operand, expression);
     }
 
     Types::Method *method = function->find_method(expression, expression->arguments);
@@ -348,6 +348,10 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
         type = new Types::AliasConstructor(definition, type_constructor,
                                            inputParameters, outputParameters);
     } else {
+        for (auto field : definition->fields) {
+            field->accept(this);
+        }
+
         type = new Types::RecordConstructor();
     }
 
@@ -496,10 +500,8 @@ void Checker::visit(AST::Assignment *expression) {
     expression->rhs->accept(this);
     check_not_null(expression);
 
-    SymbolTable::Symbol *symbol = m_namespace->lookup(expression->lhs);
-    if (!symbol->is_mutable) {
-        throw Errors::ConstantAssignmentError(expression->lhs);
-    }
+    // SymbolTable::Symbol *symbol = m_namespace->lookup(expression->lhs);
+    throw Errors::ConstantAssignmentError(expression->lhs);
 }
 
 void Checker::visit(AST::Selector *expression) {
@@ -544,9 +546,11 @@ void Checker::visit(AST::Spawn *expression) {
 
 void Checker::visit(AST::Parameter *parameter) {
     parameter->typeNode->accept(this);
+
     if (parameter->defaultExpression) {
         parameter->defaultExpression->accept(this);
     }
+
     check_not_null(parameter);
 }
 
@@ -605,6 +609,7 @@ void Checker::visit(AST::TypeDefinition *definition) {
             p->accept(this);
         }
     }
+
     check_not_null(definition);
 
     m_namespace = oldNamespace;

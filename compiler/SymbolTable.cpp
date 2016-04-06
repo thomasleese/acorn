@@ -96,7 +96,6 @@ Symbol::Symbol(std::string name) {
     this->name = name;
     this->type = nullptr;
     this->value = nullptr;
-    this->is_mutable = false;
     this->nameSpace = nullptr;
 }
 
@@ -217,13 +216,11 @@ void Builder::visit(AST::Spawn *expression) {
 
 void Builder::visit(AST::Parameter *parameter) {
     Symbol *symbol = new Symbol(parameter->name->name);
-    symbol->is_mutable = parameter->is_mutable;
     m_current->insert(parameter, symbol);
 }
 
 void Builder::visit(AST::VariableDefinition *definition) {
     Symbol *symbol = new Symbol(definition->name->name);
-    symbol->is_mutable = definition->is_mutable;
     m_current->insert(definition, symbol);
 }
 
@@ -275,6 +272,15 @@ void Builder::visit(AST::TypeDefinition *definition) {
         Symbol *sym = new Symbol(parameter->name->name);
         sym->type = new Types::Parameter(parameter->name->name);
         m_current->insert(definition, sym);
+    }
+
+    if (definition->alias) {
+        // do nothing
+    } else {
+        for (auto field : definition->fields) {
+            Symbol *sym = new Symbol(field->name->name);
+            m_current->insert(field, sym);
+        }
     }
 
     m_current = oldNamespace;

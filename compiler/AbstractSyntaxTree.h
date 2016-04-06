@@ -239,7 +239,6 @@ namespace AST {
         Identifier *name;
         Type *typeNode;
         Expression *defaultExpression;
-        bool is_mutable;
 
         void accept(Visitor *visitor);
     };
@@ -249,7 +248,6 @@ namespace AST {
         VariableDefinition(Token *token);
         VariableDefinition(std::string name, Token *token);
 
-        bool is_mutable;
         Identifier *name;
         Type *typeNode;
         Expression *expression;

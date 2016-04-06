@@ -170,12 +170,11 @@ void Parameter::accept(Visitor *visitor) {
 }
 
 VariableDefinition::VariableDefinition(Token *token) : Definition(token) {
-    this->is_mutable = false;
+
 }
 
 VariableDefinition::VariableDefinition(std::string name, Token *token) : Definition(token) {
     this->name = new Identifier(token, name);
-    this->is_mutable = false;
 }
 
 void VariableDefinition::accept(Visitor *visitor) {

@@ -48,7 +48,6 @@ namespace SymbolTable {
         std::string name;
         Types::Type *type;
         llvm::Value *value;
-        bool is_mutable;
         Namespace *nameSpace;
 
         std::string to_string() const;

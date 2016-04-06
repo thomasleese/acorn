@@ -1,14 +1,9 @@
 import 'base'
 
-def squared(n as Integer) as Integer
-    return n * n
+type Vector2
+    x as Integer
+    y as Integer
 end
 
-let a = 10
-let b = a.squared()
-a.squared()
-let mutable c = 10
-c.squared()
-let d = c.squared()  # type error
 
-exit(code: d)
+exit(code: 0)
