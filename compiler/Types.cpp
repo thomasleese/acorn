@@ -27,6 +27,10 @@ bool Type::operator==(const Type &other) const {
     return name() == other.name();
 }
 
+std::string Constructor::mangled_name() const {
+    throw std::runtime_error("cannot create mangled name");
+}
+
 llvm::Type *Constructor::create_llvm_type(llvm::LLVMContext &context) const {
     throw std::runtime_error("cannot create llvm type");
 }
@@ -247,12 +251,20 @@ std::string Parameter::name() const {
     return m_name;
 }
 
+std::string Parameter::mangled_name() const {
+    return "p";
+}
+
 llvm::Type *Parameter::create_llvm_type(llvm::LLVMContext &context) const {
     throw std::runtime_error("not implemented");
 }
 
 std::string Any::name() const {
     return "Any";
+}
+
+std::string Any::mangled_name() const {
+    return "a";
 }
 
 llvm::Type *Any::create_llvm_type(llvm::LLVMContext &context) const {
@@ -263,12 +275,20 @@ std::string Void::name() const {
     return "Void";
 }
 
+std::string Void::mangled_name() const {
+    return "v";
+}
+
 llvm::Type *Void::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::Type::getVoidTy(context);
 }
 
 std::string Boolean::name() const {
     return "Boolean";
+}
+
+std::string Boolean::mangled_name() const {
+    return "b";
 }
 
 llvm::Type *Boolean::create_llvm_type(llvm::LLVMContext &context) const {
@@ -282,6 +302,12 @@ Integer::Integer(unsigned int size) : m_size(size) {
 std::string Integer::name() const {
     std::stringstream ss;
     ss << "Integer" << m_size;
+    return ss.str();
+}
+
+std::string Integer::mangled_name() const {
+    std::stringstream ss;
+    ss << "i" << m_size;
     return ss.str();
 }
 
@@ -299,6 +325,12 @@ std::string UnsignedInteger::name() const {
     return ss.str();
 }
 
+std::string UnsignedInteger::mangled_name() const {
+    std::stringstream ss;
+    ss << "ui" << m_size;
+    return ss.str();
+}
+
 llvm::Type *UnsignedInteger::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::Type::getIntNTy(context, m_size);
 }
@@ -310,6 +342,12 @@ Float::Float(int size) : m_size(size) {
 std::string Float::name() const {
     std::stringstream ss;
     ss << "Float" << m_size;
+    return ss.str();
+}
+
+std::string Float::mangled_name() const {
+    std::stringstream ss;
+    ss << "f" << m_size;
     return ss.str();
 }
 
@@ -336,6 +374,12 @@ std::string Sequence::name() const {
     return ss.str();
 }
 
+std::string Sequence::mangled_name() const {
+    std::stringstream ss;
+    ss << "s" << m_elementType->mangled_name();
+    return ss.str();
+}
+
 llvm::Type *Sequence::create_llvm_type(llvm::LLVMContext &context) const {
     llvm::Type *elementType = m_elementType->create_llvm_type(context);
     return llvm::ArrayType::get(elementType, 10);
@@ -343,6 +387,10 @@ llvm::Type *Sequence::create_llvm_type(llvm::LLVMContext &context) const {
 
 std::string Product::name() const {
     return "Product";
+}
+
+std::string Product::mangled_name() const {
+    return "pr";
 }
 
 llvm::Type *Product::create_llvm_type(llvm::LLVMContext &context) const {
@@ -388,12 +436,18 @@ std::string Method::name() const {
     return ss.str();
 }
 
-Type *Method::return_type() const {
-    return m_return_type;
+std::string Method::mangled_name() const {
+    std::stringstream ss;
+    ss << "m";
+    for (auto type : m_parameter_types) {
+        ss << type->mangled_name();
+    }
+    ss << m_return_type->mangled_name();
+    return ss.str();
 }
 
-std::string Method::llvm_name(std::string prefix) const {
-    return prefix;
+Type *Method::return_type() const {
+    return m_return_type;
 }
 
 long Method::get_parameter_position(std::string name) const {
@@ -462,6 +516,15 @@ std::string Function::name() const {
     return ss.str();
 }
 
+std::string Function::mangled_name() const {
+    std::stringstream ss;
+    ss << "f";
+    for (auto method : m_methods) {
+        ss << method->mangled_name();
+    }
+    return ss.str();
+}
+
 void Function::add_method(Method *method) {
     m_methods.push_back(method);
 }
@@ -497,6 +560,10 @@ std::string Record::name() const {
     return "Record";
 }
 
+std::string Record::mangled_name() const {
+    return "r";
+}
+
 llvm::Type *Record::create_llvm_type(llvm::LLVMContext &context) const {
     throw std::runtime_error("not implemented");
 }
@@ -519,6 +586,15 @@ std::string Union::name() const {
         i++;
     }
     ss << "}";
+    return ss.str();
+}
+
+std::string Union::mangled_name() const {
+    std::stringstream ss;
+    ss << "u";
+    for (auto type : m_types) {
+        ss << type->mangled_name();
+    }
     return ss.str();
 }
 

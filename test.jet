@@ -1,10 +1,14 @@
 import 'base'
 
-def get_exit_code() as Integer
-    let a = 3.3
-    let b = 4.7
-    return (a + b).to_integer()
+def squared(n as Integer) as Integer
+    return n * n
 end
 
-let code = get_exit_code()
-exit(code: code)
+let a = 10
+let b = a.squared()
+a.squared()
+let mutable c = 10
+c.squared()
+let d = c.squared()  # type error
+
+exit(code: d)

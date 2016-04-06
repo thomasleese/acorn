@@ -11,6 +11,10 @@
 
 struct Token;
 
+namespace Types {
+    class Type;
+}
+
 namespace AST {
 
     class Visitor;

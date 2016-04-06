@@ -13,8 +13,9 @@
 #include <llvm/Support/Casting.h>
 
 #include "Builtins.h"
-#include "SymbolTable.h"
 #include "Errors.h"
+#include "Mangler.h"
+#include "SymbolTable.h"
 
 #include "CodeGenerator.h"
 
@@ -124,19 +125,7 @@ void CodeGenerator::visit(AST::Call *expression) {
 
         Types::Method *method = functionType->find_method(expression, expression->arguments);
 
-        SymbolTable::Symbol *methodSymbol = nullptr;
-        for (int i = 0; i < functionSymbol->nameSpace->size(); i++) {
-            std::stringstream ss;
-            ss << i;
-            SymbolTable::Symbol *m = functionSymbol->nameSpace->lookup(expression, ss.str());
-            if (m->type == method) {
-                methodSymbol = m;
-            }
-        }
-        assert(methodSymbol);
-
-        std::string method_name = functionSymbol->name + "_" + methodSymbol->name;
-
+        std::string method_name = Mangler::mangle_method(functionSymbol->name, method);
         llvm::Function *function = m_module->getFunction(method_name);
         if (!function) {
             throw Errors::InternalError(expression, "No function defined (" + method_name + ").");
@@ -415,27 +404,17 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
 
     Types::Method *method = static_cast<Types::Method *>(definition->type);
 
-    SymbolTable::Symbol *symbol = nullptr;
-    for (int i = 0; i < functionSymbol->nameSpace->size(); i++) {
-        std::stringstream ss;
-        ss << i;
-        SymbolTable::Symbol *s = functionSymbol->nameSpace->lookup(definition, ss.str());
-        if (s->type == method && s->node == definition) {
-            symbol = s;
-        }
-    }
-    assert(symbol);
+    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
+
+    std::string llvm_function_name = Mangler::mangle_method(functionSymbol->name, method);
 
     SymbolTable::Namespace *oldNamespace = m_scope;
     m_scope = symbol->nameSpace;
 
     llvm::Type *llvmType = method->create_llvm_type(llvm::getGlobalContext());
 
-    // the method name is the function name plus the method name
-    std::string method_name = functionSymbol->name + "_" + symbol->name;
-
     llvm::FunctionType *type = static_cast<llvm::FunctionType *>(llvmType);
-    llvm::Function *function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, method_name, m_module);
+    llvm::Function *function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
 
     // function->setGC("shadow-stack");
 

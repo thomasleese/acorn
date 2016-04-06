@@ -31,6 +31,7 @@ namespace SymbolTable {
         Symbol *lookup(AST::Node *currentNode, std::string name) const;
         Symbol *lookup(AST::Identifier *identifier) const;
         void insert(AST::Node *currentNode, Symbol *symbol);
+        void rename(Symbol *symbol, std::string new_name);
         unsigned long size() const;
 
         bool is_root() const;
@@ -49,7 +50,6 @@ namespace SymbolTable {
         llvm::Value *value;
         bool is_mutable;
         Namespace *nameSpace;
-        AST::Node *node;
 
         std::string to_string() const;
     };

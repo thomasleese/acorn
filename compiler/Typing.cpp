@@ -281,9 +281,10 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
     SymbolTable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
     Types::Function *function = static_cast<Types::Function *>(functionSymbol->type);
 
-    // now we have to find the method symbol inside the function namespace
+    // from the symbol table builder
+    auto pointer_location = reinterpret_cast<std::uintptr_t>(definition);
     std::stringstream ss;
-    ss << function->no_methods();
+    ss << pointer_location;
 
     SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, ss.str());
 
@@ -305,6 +306,8 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
                                               officialParameterOrder);
 
     function->add_method(method);
+
+    functionSymbol->nameSpace->rename(symbol, method->mangled_name());
 
     symbol->type = method;
     definition->type = method;
@@ -561,9 +564,13 @@ void Checker::visit(AST::VariableDefinition *definition) {
 }
 
 void Checker::visit(AST::FunctionDefinition *definition) {
-    definition->code->accept(this);
+    check_not_null(definition);
 
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
+    SymbolTable::Symbol *functionSymbol = m_namespace->lookup(definition, definition->name->name);
+
+    Types::Method *method = static_cast<Types::Method *>(definition->type);
+
+    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
 
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -577,7 +584,7 @@ void Checker::visit(AST::FunctionDefinition *definition) {
         p->accept(this);
     }
 
-    check_not_null(definition);
+    definition->code->accept(this);
 
     m_namespace = oldNamespace;
 }

@@ -2,8 +2,10 @@
 // Created by Thomas Leese on 18/03/2016.
 //
 
+#include <iostream>
 #include <sstream>
 
+#include "Mangler.h"
 #include "SymbolTable.h"
 #include "Types.h"
 
@@ -26,10 +28,7 @@ SymbolTable::Symbol *add_base_function(SymbolTable::Namespace *table, std::strin
 }
 
 void add_base_method(SymbolTable::Symbol *function, Types::Method *method) {
-    std::stringstream ss;
-    ss << function->nameSpace->size();
-
-    SymbolTable::Symbol *symbol = new SymbolTable::Symbol(ss.str());
+    SymbolTable::Symbol *symbol = new SymbolTable::Symbol(method->mangled_name());
     symbol->type = method;
     symbol->nameSpace = new SymbolTable::Namespace(function->nameSpace);
     function->nameSpace->insert(nullptr, symbol);
@@ -95,9 +94,7 @@ llvm::Function *create_llvm_function(SymbolTable::Namespace *table, llvm::Module
 
     llvm::LLVMContext &context = module->getContext();
 
-    std::stringstream ss;
-    ss << name << "_" << index;
-    std::string mangled_name = ss.str();
+    std::string mangled_name = Mangler::mangle_method(name, methodType);
 
     llvm::FunctionType *type = static_cast<llvm::FunctionType *>(methodType->create_llvm_type(context));
     llvm::Function *f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, mangled_name, module);
@@ -131,8 +128,7 @@ void initialise_unary_function(llvm::Function *function, llvm::IRBuilder<> *irBu
 }
 
 void Builtins::fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder) {
-    llvm::LLVMContext &context = module->getContext();
-
+    // multiplication
     llvm::Function *f = create_llvm_function(table, module, "*", 0);
     initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateMul(lhs, rhs));

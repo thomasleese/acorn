@@ -57,8 +57,16 @@ void Namespace::insert(AST::Node *currentNode, Symbol *symbol) {
         throw Errors::RedefinedError(currentNode, symbol->name);
     }
 
-    symbol->node = currentNode;
     m_symbols[symbol->name] = symbol;
+}
+
+void Namespace::rename(Symbol *symbol, std::string new_name) {
+    auto it = m_symbols.find(symbol->name);
+    assert(it != m_symbols.end());
+
+    m_symbols.erase(it);
+    symbol->name = new_name;
+    insert(nullptr, symbol);
 }
 
 unsigned long Namespace::size() const {
@@ -90,7 +98,6 @@ Symbol::Symbol(std::string name) {
     this->value = nullptr;
     this->is_mutable = false;
     this->nameSpace = nullptr;
-    this->node = nullptr;
 }
 
 std::string Symbol::to_string() const {
@@ -234,13 +241,12 @@ void Builder::visit(AST::FunctionDefinition *definition) {
         m_current->insert(definition, functionSymbol);
     }
 
-    // the name of methods is just an index (may change in the future)
-    // conveniently variables cannot be named after numbers
+    // this is really hacky...
+    auto pointer_location = reinterpret_cast<std::uintptr_t>(definition);
     std::stringstream ss;
-    ss << functionSymbol->nameSpace->size();
-    std::string method_name = ss.str();
+    ss << pointer_location;
 
-    Symbol *symbol = new Symbol(method_name);
+    Symbol *symbol = new Symbol(ss.str());
     symbol->nameSpace = new Namespace(m_current);
     functionSymbol->nameSpace->insert(definition, symbol);
 

@@ -28,6 +28,7 @@ namespace Types {
         virtual std::string name() const = 0;
         virtual bool isCompatible(const Type *other) const;
 
+        virtual std::string mangled_name() const = 0;
         virtual llvm::Type *create_llvm_type(llvm::LLVMContext &context) const = 0;
 
         bool operator==(const Type &other) const;
@@ -38,6 +39,7 @@ namespace Types {
     public:
         virtual Type *create(AST::Node *node, std::vector<Type *> parameters) = 0;
 
+        std::string mangled_name() const;
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
 
@@ -156,6 +158,7 @@ namespace Types {
         explicit Parameter(std::string name);
 
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
@@ -166,6 +169,7 @@ namespace Types {
     class Any : public Type {
     public:
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
@@ -173,6 +177,7 @@ namespace Types {
     class Void : public Type {
     public:
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
@@ -180,6 +185,7 @@ namespace Types {
     class Boolean : public Type {
     public:
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
@@ -189,6 +195,7 @@ namespace Types {
         explicit Integer(unsigned int size);
 
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
@@ -201,6 +208,7 @@ namespace Types {
         explicit UnsignedInteger(unsigned int size);
 
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
@@ -213,6 +221,7 @@ namespace Types {
         explicit Float(int size);
 
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
@@ -225,6 +234,7 @@ namespace Types {
         explicit Sequence(Type *elementType);
 
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
 
@@ -235,6 +245,7 @@ namespace Types {
     class Product : public Type {
     public:
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
@@ -247,9 +258,9 @@ namespace Types {
         Method(std::string parameter1_name, Type *parameter1_type, std::string parameter2_name, Type *parameter2_type, Type *return_type);
 
         std::string name() const;
-        Type *return_type() const;
+        std::string mangled_name() const;
 
-        std::string llvm_name(std::string prefix) const;
+        Type *return_type() const;
 
         long get_parameter_position(std::string name) const;
         std::string get_parameter_name(long position) const;
@@ -267,6 +278,7 @@ namespace Types {
     class Function : public Type {
     public:
         std::string name() const;
+        std::string mangled_name() const;
 
         void add_method(Method *method);
         Method *find_method(AST::Node *node, std::vector<AST::Argument *> arguments) const;
@@ -282,6 +294,7 @@ namespace Types {
     class Record : public Type {
     public:
         std::string name() const;
+        std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
     };
@@ -291,6 +304,8 @@ namespace Types {
         explicit Union(AST::Node *node, std::set<Type *> types);
 
         std::string name() const;
+        std::string mangled_name() const;
+
         std::set<Type *> types() const;
 
         bool isCompatible(const Type *other) const;
