@@ -37,7 +37,6 @@ public:
     void visit(AST::For *expression);
     void visit(AST::If *expression);
     void visit(AST::Return *expression);
-    void visit(AST::Cast *type);
 
     void visit(AST::Parameter *parameter);
 

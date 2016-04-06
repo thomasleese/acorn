@@ -547,19 +547,16 @@ Expression *Parser::readOperandExpression() {
     return left;
 }
 
-Cast *Parser::readCast() {
-    Token *token = readToken(Token::AsKeyword);
-
-    Cast *cast = new Cast(token);
-    cast->typeNode = readType();
-    return cast;
+Type *Parser::readCast() {
+    readToken(Token::AsKeyword);
+    return readType();
 }
 
 Parameter *Parser::readParameter() {
     Parameter *parameter = new Parameter(m_tokens.front());
 
     parameter->name = readIdentifier();
-    parameter->cast = readCast();
+    parameter->typeNode = readCast();
 
     if (isToken(Token::Colon)) {
         readToken(Token::Colon);
@@ -584,9 +581,9 @@ VariableDefinition *Parser::readVariableDefinition() {
     definition->name = readIdentifier();
 
     if (isToken(Token::AsKeyword)) {
-        definition->cast = readCast();
+        definition->typeNode = readCast();
     } else {
-        definition->cast = nullptr;
+        definition->typeNode = nullptr;
     }
 
     readToken(Token::Assignment);
@@ -627,7 +624,7 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 
     readToken(Token::CloseParenthesis);
 
-    definition->returnCast = readCast();
+    definition->returnType = readCast();
 
     readToken(Token::Newline);
 

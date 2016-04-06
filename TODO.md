@@ -1,10 +1,15 @@
-- Running code outside functions
+- Floating point numbers
+- Unsigned/Signed
+- Mutablility
+- Characters
+- Unit tests
+- Name mangling
+- Arrays, tuples, strings
 - Garbage Collection
+- Running code outside functions
 - Closures
-- Arrays
 - Channels
 - Spawns
-- Tuples
 - Importing modules
 - math stdlib
 

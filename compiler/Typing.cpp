@@ -230,6 +230,15 @@ void Inferrer::visit(AST::If *expression) {
 void Inferrer::visit(AST::Return *expression) {
     expression->expression->accept(this);
     expression->type = expression->expression->type;
+
+    if (m_functionStack.back()) {
+        AST::FunctionDefinition *def = m_functionStack.back();
+        if (!def->returnType->type->isCompatible(expression->type)) {
+            throw Errors::TypeMismatchError(expression, def->returnType);
+        }
+    } else {
+        throw Errors::TypeMismatchError(expression, nullptr);
+    }
 }
 
 void Inferrer::visit(AST::Spawn *expression) {
@@ -237,17 +246,12 @@ void Inferrer::visit(AST::Spawn *expression) {
     expression->type = expression->call->type;
 }
 
-void Inferrer::visit(AST::Cast *cast) {
-    cast->typeNode->accept(this);
-    cast->type = cast->typeNode->type;
-}
-
 void Inferrer::visit(AST::Parameter *parameter) {
     SymbolTable::Symbol *symbol = m_namespace->lookup(parameter, parameter->name->name);
 
-    parameter->cast->accept(this);
+    parameter->typeNode->accept(this);
 
-    parameter->type = parameter->cast->type;
+    parameter->type = parameter->typeNode->type;
     symbol->type = parameter->type;
 }
 
@@ -258,9 +262,9 @@ void Inferrer::visit(AST::VariableDefinition *definition) {
 
     definition->expression->accept(this);
 
-    if (definition->cast) {
-        definition->cast->accept(this);
-        type = definition->cast->type;
+    if (definition->typeNode) {
+        definition->typeNode->accept(this);
+        type = definition->typeNode->type;
     } else {
         type = definition->expression->type;
     }
@@ -295,9 +299,9 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
         officialParameterOrder.push_back(parameter->name->name);
     }
 
-    definition->returnCast->accept(this);
+    definition->returnType->accept(this);
 
-    Types::Method *method = new Types::Method(parameterTypes, definition->returnCast->type,
+    Types::Method *method = new Types::Method(parameterTypes, definition->returnType->type,
                                               officialParameterOrder);
 
     function->add_method(method);
@@ -305,7 +309,12 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
     symbol->type = method;
     definition->type = method;
 
+    m_functionStack.push_back(definition);
+
     definition->code->accept(this);
+
+    assert(m_functionStack.back() == definition);
+    m_functionStack.pop_back();
 
     m_namespace = oldNamespace;
 }
@@ -525,13 +534,8 @@ void Checker::visit(AST::Spawn *expression) {
     check_not_null(expression);
 }
 
-void Checker::visit(AST::Cast *cast) {
-    cast->typeNode->accept(this);
-    check_not_null(cast);
-}
-
 void Checker::visit(AST::Parameter *parameter) {
-    parameter->cast->accept(this);
+    parameter->typeNode->accept(this);
     if (parameter->defaultExpression) {
         parameter->defaultExpression->accept(this);
     }
@@ -542,8 +546,8 @@ void Checker::visit(AST::VariableDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     // definition->name->accept(this);
 
-    if (definition->cast) {
-        definition->cast->accept(this);
+    if (definition->typeNode) {
+        definition->typeNode->accept(this);
     }
 
     definition->expression->accept(this);
@@ -557,7 +561,7 @@ void Checker::visit(AST::FunctionDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     // definition->name->accept(this);
 
-    definition->returnCast->accept(this);
+    definition->returnType->accept(this);
 
     for (auto p : definition->parameters) {
         p->accept(this);

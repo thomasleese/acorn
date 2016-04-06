@@ -1,7 +1,10 @@
 import 'base'
 
 def get_exit_code() as Integer
-    return 0
+    let a = 3.3
+    let b = 4.7
+    let c = a + b
+    return c.to_integer()
 end
 
 let code = get_exit_code()

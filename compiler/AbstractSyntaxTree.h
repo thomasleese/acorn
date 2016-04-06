@@ -228,21 +228,12 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
-    struct Cast : Expression {
-        Cast(Token *token);
-        Cast(Type *typeNode, Token *token);
-
-        Type *typeNode;
-
-        void accept(Visitor *visitor);
-    };
-
     // misc
     struct Parameter : Node {
         explicit Parameter(Token *token);
 
         Identifier *name;
-        Cast *cast;
+        Type *typeNode;
         Expression *defaultExpression;
 
         void accept(Visitor *visitor);
@@ -255,7 +246,7 @@ namespace AST {
 
         bool is_mutable;
         Identifier *name;
-        Cast *cast;
+        Type *typeNode;
         Expression *expression;
 
         void accept(Visitor *visitor);
@@ -267,7 +258,7 @@ namespace AST {
         Identifier *name;
         std::vector<Parameter *> parameters;
         CodeBlock *code;
-        Cast *returnCast;
+        Type *returnType;
 
         void accept(Visitor *visitor);
     };
@@ -347,7 +338,6 @@ namespace AST {
         virtual void visit(Return *expression) = 0;
         virtual void visit(Spawn *expression) = 0;
         virtual void visit(Type *type) = 0;
-        virtual void visit(Cast *type) = 0;
 
         // misc
         virtual void visit(Parameter *parameter) = 0;

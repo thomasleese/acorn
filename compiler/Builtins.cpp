@@ -61,14 +61,12 @@ void Builtins::fill_symbol_table(SymbolTable::Namespace *table) {
 
     add_symbol(table, "Nothing", new Types::Void());
 
-    SymbolTable::Symbol *function = add_base_function(table, "_debug_print_");
-    add_base_method(function, new Types::Method("x", new Types::Integer(64), new Types::Void()));
-
     SymbolTable::Symbol *multiplication = add_base_function(table, "*");
     add_base_method(multiplication, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Integer(64)));
 
     SymbolTable::Symbol *addition = add_base_function(table, "+");
     add_base_method(addition, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Integer(64)));
+    add_base_method(addition, new Types::Method("a", new Types::Float(64), "b", new Types::Float(64), new Types::Float(64)));
 
     SymbolTable::Symbol *subtraction = add_base_function(table, "-");
     add_base_method(subtraction, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Integer(64)));
@@ -81,91 +79,90 @@ void Builtins::fill_symbol_table(SymbolTable::Namespace *table) {
 
     SymbolTable::Symbol *less_than = add_base_function(table, "<");
     add_base_method(less_than, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Boolean()));
+
+    SymbolTable::Symbol *to_integer = add_base_function(table, "to_integer");
+    add_base_method(to_integer, new Types::Method("self", new Types::Float(64), new Types::Integer(64)));
 }
 
-void Builtins::fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder) {
-    Types::Function *functionType = static_cast<Types::Function *>(table->lookup(nullptr, "*")->type);
-    Types::Method *methodType = functionType->get_method(0);
+llvm::Function *create_llvm_function(SymbolTable::Namespace *table, llvm::Module *module, std::string name, int index) {
+    Types::Function *functionType = static_cast<Types::Function *>(table->lookup(nullptr, name)->type);
+    Types::Method *methodType = functionType->get_method(index);
 
     llvm::LLVMContext &context = module->getContext();
 
+    std::stringstream ss;
+    ss << name << "_" << index;
+    std::string mangled_name = ss.str();
+
     llvm::FunctionType *type = static_cast<llvm::FunctionType *>(methodType->create_llvm_type(context));
-    llvm::Function *f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "*_0", module);
+    llvm::Function *f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, mangled_name, module);
+    f->addFnAttr(llvm::Attribute::AlwaysInline);
 
-    llvm::Argument *lhs = &f->getArgumentList().front();
-    llvm::Argument *rhs = &f->getArgumentList().back();
+    return f;
+}
 
-    llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", f);
+static llvm::Argument *self;
+static llvm::Argument *lhs;
+static llvm::Argument *rhs;
+
+void initialise_function_block(llvm::Function *function, llvm::IRBuilder<> *irBuilder) {
+    llvm::LLVMContext &context = function->getContext();
+
+    llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", function);
     irBuilder->SetInsertPoint(basicBlock);
+}
+
+void initialise_binary_function(llvm::Function *function, llvm::IRBuilder<> *irBuilder) {
+    lhs = &function->getArgumentList().front();
+    rhs = &function->getArgumentList().back();
+
+    initialise_function_block(function, irBuilder);
+}
+
+void initialise_unary_function(llvm::Function *function, llvm::IRBuilder<> *irBuilder) {
+    self = &function->getArgumentList().front();
+
+    initialise_function_block(function, irBuilder);
+}
+
+void Builtins::fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder) {
+    llvm::LLVMContext &context = module->getContext();
+
+    llvm::Function *f = create_llvm_function(table, module, "*", 0);
+    initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateMul(lhs, rhs));
 
     // addition
-    functionType = static_cast<Types::Function *>(table->lookup(nullptr, "+")->type);
-    methodType = functionType->get_method(0);
-
-    type = static_cast<llvm::FunctionType *>(methodType->create_llvm_type(context));
-    f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "+_0", module);
-
-    lhs = &f->getArgumentList().front();
-    rhs = &f->getArgumentList().back();
-
-    basicBlock = llvm::BasicBlock::Create(context, "entry", f);
-    irBuilder->SetInsertPoint(basicBlock);
+    f = create_llvm_function(table, module, "+", 0);
+    initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateAdd(lhs, rhs));
 
+    f = create_llvm_function(table, module, "+", 1);
+    initialise_binary_function(f, irBuilder);
+    irBuilder->CreateRet(irBuilder->CreateFAdd(lhs, rhs));
+
     // subtraction
-    functionType = static_cast<Types::Function *>(table->lookup(nullptr, "-")->type);
-    methodType = functionType->get_method(0);
-
-    type = static_cast<llvm::FunctionType *>(methodType->create_llvm_type(context));
-    f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "-_0", module);
-
-    lhs = &f->getArgumentList().front();
-    rhs = &f->getArgumentList().back();
-
-    basicBlock = llvm::BasicBlock::Create(context, "entry", f);
-    irBuilder->SetInsertPoint(basicBlock);
+    f = create_llvm_function(table, module, "-", 0);
+    initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateSub(lhs, rhs));
 
     // equality
-    functionType = static_cast<Types::Function *>(table->lookup(nullptr, "==")->type);
-    methodType = functionType->get_method(0);
-
-    type = static_cast<llvm::FunctionType *>(methodType->create_llvm_type(context));
-    f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "==_0", module);
-
-    lhs = &f->getArgumentList().front();
-    rhs = &f->getArgumentList().back();
-
-    basicBlock = llvm::BasicBlock::Create(context, "entry", f);
-    irBuilder->SetInsertPoint(basicBlock);
+    f = create_llvm_function(table, module, "==", 0);
+    initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateICmpEQ(lhs, rhs));
 
     // not equality
-    functionType = static_cast<Types::Function *>(table->lookup(nullptr, "!=")->type);
-    methodType = functionType->get_method(0);
-
-    type = static_cast<llvm::FunctionType *>(methodType->create_llvm_type(context));
-    f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "!=_0", module);
-
-    lhs = &f->getArgumentList().front();
-    rhs = &f->getArgumentList().back();
-
-    basicBlock = llvm::BasicBlock::Create(context, "entry", f);
-    irBuilder->SetInsertPoint(basicBlock);
+    f = create_llvm_function(table, module, "!=", 0);
+    initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateICmpNE(lhs, rhs));
 
     // less than
-    functionType = static_cast<Types::Function *>(table->lookup(nullptr, "<")->type);
-    methodType = functionType->get_method(0);
-
-    type = static_cast<llvm::FunctionType *>(methodType->create_llvm_type(context));
-    f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, "<_0", module);
-
-    lhs = &f->getArgumentList().front();
-    rhs = &f->getArgumentList().back();
-
-    basicBlock = llvm::BasicBlock::Create(context, "entry", f);
-    irBuilder->SetInsertPoint(basicBlock);
+    f = create_llvm_function(table, module, "<", 0);
+    initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateICmpSLT(lhs, rhs));
+
+    // to integer
+    f = create_llvm_function(table, module, "to_integer", 0);
+    initialise_unary_function(f, irBuilder);
+    irBuilder->CreateRet(irBuilder->CreateFPToSI(self, f->getReturnType()));
 }

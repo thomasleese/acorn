@@ -161,18 +161,6 @@ void Type::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Cast::Cast(Token *token) : Expression(token) {
-    this->typeNode = nullptr;
-}
-
-Cast::Cast(Type *typeNode, Token *token) : Expression(token) {
-    this->typeNode = typeNode;
-}
-
-void Cast::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 Parameter::Parameter(Token *token) : Node(token) {
     this->defaultExpression = 0;
 }

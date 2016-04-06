@@ -216,22 +216,12 @@ void PrettyPrinter::visit(AST::Return *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Cast *cast) {
-    ss << indentation() << "(Cast\n";
-    indent++;
-
-    cast->typeNode->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
 void PrettyPrinter::visit(AST::Parameter *parameter) {
     ss << indentation() << "(Parameter\n";
     indent++;
 
     parameter->name->accept(this);
-    parameter->cast->accept(this);
+    parameter->typeNode->accept(this);
 
     if (parameter->defaultExpression) {
         parameter->defaultExpression->accept(this);
@@ -246,7 +236,7 @@ void PrettyPrinter::visit(AST::VariableDefinition *definition) {
     indent++;
 
     definition->name->accept(this);
-    definition->cast->accept(this);
+    definition->typeNode->accept(this);
     definition->expression->accept(this);
 
     indent--;
@@ -263,7 +253,7 @@ void PrettyPrinter::visit(AST::FunctionDefinition *definition) {
         parameter->accept(this);
     }
 
-    definition->returnCast->accept(this);
+    definition->returnType->accept(this);
     definition->code->accept(this);
 
     indent--;

@@ -47,7 +47,6 @@ public:
     void visit(AST::If *expression);
     void visit(AST::Return *expression);
     void visit(AST::Spawn *expression);
-    void visit(AST::Cast *cast);
 
     void visit(AST::Parameter *parameter);
 

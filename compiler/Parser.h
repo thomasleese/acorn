@@ -36,7 +36,6 @@ namespace AST {
     struct Return;
     struct Spawn;
     struct Type;
-    struct Cast;
     struct Parameter;
     struct VariableDefinition;
     struct FunctionDefinition;
@@ -90,7 +89,7 @@ private:
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
     AST::Expression *readPrimaryExpression();
     AST::Expression *readOperandExpression();
-    AST::Cast *readCast();
+    AST::Type *readCast();
 
     // misc
     AST::Parameter *readParameter();

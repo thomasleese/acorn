@@ -54,7 +54,6 @@ namespace Typing {
         void visit(AST::If *expression);
         void visit(AST::Return *expression);
         void visit(AST::Spawn *expression);
-        void visit(AST::Cast *cast);
 
         void visit(AST::Parameter *parameter);
 
@@ -70,6 +69,7 @@ namespace Typing {
 
     private:
         SymbolTable::Namespace *m_namespace;
+        std::vector<AST::FunctionDefinition *> m_functionStack;
 
     };
 
@@ -106,7 +106,6 @@ namespace Typing {
         void visit(AST::If *expression);
         void visit(AST::Return *expression);
         void visit(AST::Spawn *expression);
-        void visit(AST::Cast *cast);
 
         void visit(AST::Parameter *parameter);
 

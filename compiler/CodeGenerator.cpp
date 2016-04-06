@@ -81,7 +81,17 @@ void CodeGenerator::visit(AST::IntegerLiteral *expression) {
 }
 
 void CodeGenerator::visit(AST::FloatLiteral *expression) {
+    debug("Making float literal: " + expression->value);
 
+    llvm::Type *type = expression->type->create_llvm_type(llvm::getGlobalContext());
+
+    double floatValue;
+    std::stringstream ss;
+    ss << expression->value;
+    ss >> floatValue;
+
+    llvm::Constant *value = llvm::ConstantFP::get(type, floatValue);
+    m_llvmValues.push_back(value);
 }
 
 void CodeGenerator::visit(AST::ImaginaryLiteral *imaginary) {
@@ -349,10 +359,6 @@ void CodeGenerator::visit(AST::Return *expression) {
 
 void CodeGenerator::visit(AST::Spawn *expression) {
     debug("Generating spawn statement.");
-}
-
-void CodeGenerator::visit(AST::Cast *cast) {
-    cast->typeNode->accept(this);
 }
 
 void CodeGenerator::visit(AST::Parameter *parameter) {

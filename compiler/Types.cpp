@@ -282,7 +282,16 @@ std::string Float::name() const {
 }
 
 llvm::Type *Float::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
+    switch (m_size) {
+        case 64:
+            return llvm::Type::getDoubleTy(context);
+        case 32:
+            return llvm::Type::getFloatTy(context);
+        case 16:
+            return llvm::Type::getHalfTy(context);
+        default:
+            throw Errors::InternalError(static_cast<Token *>(nullptr), "Invalid float type.");
+    }
 }
 
 Sequence::Sequence(Type *elementType) {

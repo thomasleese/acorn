@@ -207,10 +207,6 @@ void Builder::visit(AST::Spawn *expression) {
 
 }
 
-void Builder::visit(AST::Cast *cast) {
-
-}
-
 void Builder::visit(AST::Parameter *parameter) {
     Symbol *symbol = new Symbol(parameter->name->name);
     m_current->insert(parameter, symbol);
