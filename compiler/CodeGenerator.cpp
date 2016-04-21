@@ -526,6 +526,7 @@ void CodeGenerator::visit(AST::TypeDefinition *definition) {
     std::string function_name = name + "_new";
 
     llvm::Function *function = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, function_name, m_module);
+    function->addFnAttr(llvm::Attribute::AlwaysInline);
 
     int i = 0;
     for (auto &arg : function->args()) {
