@@ -9,7 +9,15 @@ def length2(v as Vector2) as Integer
     return (v.x * v.x) + (v.y * v.y)
 end
 
+def sqrt(x as Integer) as Float64
+    return ccall sqrt(Float64) as Float64 using x.to_float()
+end
+
+def length(v as Vector2) as Float
+    return v.length2().sqrt()
+end
+
 let v = Vector2(x: 10, y: 10)
-let l = v.length2()
+let l = v.length().to_integer()
 
 exit(code: l)

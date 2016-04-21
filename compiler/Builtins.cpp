@@ -86,6 +86,9 @@ void Builtins::fill_symbol_table(SymbolTable::Namespace *table) {
 
     SymbolTable::Symbol *to_integer = add_base_function(table, "to_integer");
     add_base_method(to_integer, new Types::Method("self", new Types::Float(64), new Types::Integer(64)));
+
+    SymbolTable::Symbol *to_float = add_base_function(table, "to_float");
+    add_base_method(to_float, new Types::Method("self", new Types::Integer(64), new Types::Float(64)));
 }
 
 llvm::Function *create_llvm_function(SymbolTable::Namespace *table, llvm::Module *module, std::string name, int index) {
@@ -166,4 +169,9 @@ void Builtins::fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *mod
     f = create_llvm_function(table, module, "to_integer", 0);
     initialise_unary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateFPToSI(self, f->getReturnType()));
+
+    // to integer
+    f = create_llvm_function(table, module, "to_float", 0);
+    initialise_unary_function(f, irBuilder);
+    irBuilder->CreateRet(irBuilder->CreateSIToFP(self, f->getReturnType()));
 }
