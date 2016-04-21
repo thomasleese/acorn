@@ -167,13 +167,18 @@ void Inferrer::visit(AST::Call *expression) {
     }
 
     Types::Function *function = dynamic_cast<Types::Function *>(expression->operand->type);
-    if (function == nullptr) {
-        expression->type = new Types::Function();
+    Types::RecordConstructor *record = dynamic_cast<Types::RecordConstructor *>(expression->operand->type);
+    if (function == nullptr && record == nullptr) {
+        expression->type = new Types::Union(new Types::Function(), new Types::RecordConstructor());
         throw Errors::TypeMismatchError(expression->operand, expression);
     }
 
-    Types::Method *method = function->find_method(expression, expression->arguments);
-    expression->type = method->return_type();
+    if (record == nullptr) {
+        Types::Method *method = function->find_method(expression, expression->arguments);
+        expression->type = method->return_type();
+    } else {
+        expression->type = record->create(expression, std::vector<Types::Type *>());
+    }
 }
 
 void Inferrer::visit(AST::CCall *ccall) {
@@ -348,11 +353,17 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
         type = new Types::AliasConstructor(definition, type_constructor,
                                            inputParameters, outputParameters);
     } else {
+        std::vector<std::string> field_names;
+        std::vector<Types::Type *> field_types;
+
         for (auto field : definition->fields) {
             field->accept(this);
+
+            field_names.push_back(field->name->name);
+            field_types.push_back(field->type);
         }
 
-        type = new Types::RecordConstructor();
+        type = new Types::RecordConstructor(field_names, field_types);
     }
 
     symbol->type = type;

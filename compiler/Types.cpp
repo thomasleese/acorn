@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Constants.h>
 
 #include "AbstractSyntaxTree.h"
 #include "Errors.h"
@@ -27,12 +28,21 @@ bool Type::operator==(const Type &other) const {
     return name() == other.name();
 }
 
+Type *Constructor::create(AST::Node *node) {
+    std::vector<Type *> parameters;
+    return create(node, parameters);
+}
+
 std::string Constructor::mangled_name() const {
     throw std::runtime_error("cannot create mangled name");
 }
 
 llvm::Type *Constructor::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("cannot create llvm type");
+    throw std::runtime_error("cannot create llvm type of constructor");
+}
+
+llvm::Constant *Constructor::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    throw std::runtime_error("cannot create llvm initialiser of constructor");
 }
 
 std::string AnyConstructor::name() const {
@@ -160,12 +170,27 @@ RecordConstructor::RecordConstructor() {
 
 }
 
+RecordConstructor::RecordConstructor(std::vector<std::string> field_names, std::vector<Type *> field_types) :
+        m_field_names(field_names), m_field_types(field_types) {
+
+}
+
 std::string RecordConstructor::name() const {
-    return "RecordConstructor";
+    std::stringstream ss;
+    ss << "RecordConstructor{";
+    for (auto type : m_field_types) {
+        ss << type->name() << ",";
+    }
+    ss << "}";
+    return ss.str();
 }
 
 Type *RecordConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
-    return new Record();
+    if (parameters.empty()) {
+        return new Record(m_field_names, m_field_types);
+    } else {
+        throw Errors::InvalidTypeParameters(node);
+    }
 }
 
 std::string UnionConstructor::name() const {
@@ -259,6 +284,10 @@ llvm::Type *Parameter::create_llvm_type(llvm::LLVMContext &context) const {
     throw std::runtime_error("not implemented");
 }
 
+llvm::Constant *Parameter::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
+}
+
 std::string Any::name() const {
     return "Any";
 }
@@ -268,6 +297,10 @@ std::string Any::mangled_name() const {
 }
 
 llvm::Type *Any::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
+}
+
+llvm::Constant *Any::create_llvm_initialiser(llvm::LLVMContext &context) const {
     throw std::runtime_error("not implemented");
 }
 
@@ -283,6 +316,10 @@ llvm::Type *Void::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::Type::getVoidTy(context);
 }
 
+llvm::Constant *Void::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
+}
+
 std::string Boolean::name() const {
     return "Boolean";
 }
@@ -293,6 +330,10 @@ std::string Boolean::mangled_name() const {
 
 llvm::Type *Boolean::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::Type::getInt1Ty(context);
+}
+
+llvm::Constant *Boolean::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    return llvm::ConstantInt::get(create_llvm_type(context), 0);
 }
 
 Integer::Integer(unsigned int size) : m_size(size) {
@@ -315,6 +356,10 @@ llvm::Type *Integer::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::Type::getIntNTy(context, m_size);
 }
 
+llvm::Constant *Integer::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    return llvm::ConstantInt::get(create_llvm_type(context), 0);
+}
+
 UnsignedInteger::UnsignedInteger(unsigned int size) : m_size(size) {
 
 }
@@ -333,6 +378,10 @@ std::string UnsignedInteger::mangled_name() const {
 
 llvm::Type *UnsignedInteger::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::Type::getIntNTy(context, m_size);
+}
+
+llvm::Constant *UnsignedInteger::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    return llvm::ConstantInt::get(create_llvm_type(context), 0);
 }
 
 Float::Float(int size) : m_size(size) {
@@ -364,6 +413,10 @@ llvm::Type *Float::create_llvm_type(llvm::LLVMContext &context) const {
     }
 }
 
+llvm::Constant *Float::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    return llvm::ConstantFP::get(create_llvm_type(context), 0);
+}
+
 Sequence::Sequence(Type *elementType) {
     m_elementType = elementType;
 }
@@ -385,6 +438,80 @@ llvm::Type *Sequence::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::ArrayType::get(elementType, 10);
 }
 
+llvm::Constant *Sequence::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
+}
+
+Record::Record(std::vector<std::string> field_names, std::vector<Type *> field_types) :
+        m_field_names(field_names), m_field_types(field_types) {
+
+}
+
+bool Record::has_field(std::string name) {
+    for (auto &field_name : m_field_names) {
+        if (field_name == name) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+long Record::get_field_index(std::string name) {
+    for (long i = 0; i < m_field_names.size(); i++) {
+        if (m_field_names[i] == name) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+Type *Record::get_field_type(std::string name) {
+    long index = get_field_index(name);
+    if (index < 0) {
+        return nullptr;
+    }
+
+    return m_field_types[index];
+}
+
+std::string Record::name() const {
+    std::stringstream ss;
+    ss << "Record{";
+    for (auto type : m_field_types) {
+        ss << type->name() << ", ";
+    }
+    return ss.str();
+}
+
+std::string Record::mangled_name() const {
+    std::stringstream ss;
+    ss << "r";
+    for (auto type : m_field_types) {
+        ss << type->mangled_name();
+    }
+    return ss.str();
+}
+
+llvm::Type *Record::create_llvm_type(llvm::LLVMContext &context) const {
+    std::vector<llvm::Type *> llvm_types;
+    for (auto type : m_field_types) {
+        llvm_types.push_back(type->create_llvm_type(context));
+    }
+    return llvm::StructType::get(context, llvm_types);
+}
+
+llvm::Constant *Record::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    std::vector<llvm::Constant *> constants;
+    for (auto type : m_field_types) {
+        constants.push_back(type->create_llvm_initialiser(context));
+    }
+
+    llvm::StructType *type = static_cast<llvm::StructType *>(create_llvm_type(context));
+    return llvm::ConstantStruct::get(type, constants);
+}
+
 std::string Product::name() const {
     return "Product";
 }
@@ -394,6 +521,10 @@ std::string Product::mangled_name() const {
 }
 
 llvm::Type *Product::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
+}
+
+llvm::Constant *Product::create_llvm_initialiser(llvm::LLVMContext &context) const {
     throw std::runtime_error("not implemented");
 }
 
@@ -506,6 +637,10 @@ llvm::Type *Method::create_llvm_type(llvm::LLVMContext &context) const {
     return llvm::FunctionType::get(returnType, paramTypes, false);
 }
 
+llvm::Constant *Method::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
+}
+
 std::string Function::name() const {
     std::stringstream ss;
     ss << "Function{";
@@ -556,16 +691,13 @@ llvm::Type *Function::create_llvm_type(llvm::LLVMContext &context) const {
     throw std::runtime_error("functions do not map to LLVM, use methods instead");
 }
 
-std::string Record::name() const {
-    return "Record";
+llvm::Constant *Function::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    throw std::runtime_error("functions to not map to LLVM");
 }
 
-std::string Record::mangled_name() const {
-    return "r";
-}
-
-llvm::Type *Record::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
+Union::Union(Type *type1, Type *type2) {
+    m_types.insert(type1);
+    m_types.insert(type2);
 }
 
 Union::Union(AST::Node *node, std::set<Type *> types) : m_types(types) {
@@ -613,5 +745,9 @@ bool Union::isCompatible(const Type *other) const {
 }
 
 llvm::Type *Union::create_llvm_type(llvm::LLVMContext &context) const {
+    throw std::runtime_error("not implemented");
+}
+
+llvm::Constant *Union::create_llvm_initialiser(llvm::LLVMContext &context) const {
     throw std::runtime_error("not implemented");
 }

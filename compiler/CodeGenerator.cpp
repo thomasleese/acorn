@@ -367,7 +367,7 @@ void CodeGenerator::visit(AST::VariableDefinition *definition) {
                                                                   nullptr, definition->name->name);
         variable->setAlignment(4);
         variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
-        variable->setInitializer(llvm::ConstantInt::get(type, 0));
+        variable->setInitializer(definition->type->create_llvm_initialiser(llvm::getGlobalContext()));
 
         symbol->value = variable;
 

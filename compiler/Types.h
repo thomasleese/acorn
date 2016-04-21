@@ -10,7 +10,9 @@
 #include <vector>
 #include <map>
 
+#include <llvm/IR/Constant.h>
 #include <llvm/IR/Type.h>
+
 #include "AbstractSyntaxTree.h"
 
 namespace AST {
@@ -30,6 +32,7 @@ namespace Types {
 
         virtual std::string mangled_name() const = 0;
         virtual llvm::Type *create_llvm_type(llvm::LLVMContext &context) const = 0;
+        virtual llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const = 0;
 
         bool operator==(const Type &other) const;
     };
@@ -37,10 +40,13 @@ namespace Types {
     // type constructors
     class Constructor : public Type {
     public:
+        Type *create(AST::Node *node);
         virtual Type *create(AST::Node *node, std::vector<Type *> parameters) = 0;
 
         std::string mangled_name() const;
+
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
     };
 
     class AnyConstructor : public Constructor {
@@ -119,11 +125,16 @@ namespace Types {
     class RecordConstructor : public Constructor {
 
     public:
-        explicit RecordConstructor();
+        RecordConstructor();
+        RecordConstructor(std::vector<std::string> field_names, std::vector<Type *> field_types);
 
         std::string name() const;
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+    private:
+        std::vector<std::string> m_field_names;
+        std::vector<Type *> m_field_types;
 
     };
 
@@ -161,6 +172,7 @@ namespace Types {
         std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
     private:
         std::string m_name;
@@ -172,6 +184,7 @@ namespace Types {
         std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
     };
 
     class Void : public Type {
@@ -180,6 +193,7 @@ namespace Types {
         std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
     };
 
     class Boolean : public Type {
@@ -188,6 +202,7 @@ namespace Types {
         std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
     };
 
     class Integer : public Type {
@@ -198,6 +213,7 @@ namespace Types {
         std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
     private:
         unsigned int m_size;
@@ -211,6 +227,7 @@ namespace Types {
         std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
     private:
         unsigned int m_size;
@@ -224,6 +241,7 @@ namespace Types {
         std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
     private:
         int m_size;
@@ -237,9 +255,29 @@ namespace Types {
         std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
     private:
         Type *m_elementType;
+    };
+
+    class Record : public Type {
+    public:
+        Record(std::vector<std::string> field_names, std::vector<Type *> field_types);
+
+        bool has_field(std::string name);
+        long get_field_index(std::string name);
+        Type *get_field_type(std::string name);
+
+        std::string name() const;
+        std::string mangled_name() const;
+
+        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+
+    private:
+        std::vector<std::string> m_field_names;
+        std::vector<Type *> m_field_types;
     };
 
     class Product : public Type {
@@ -248,6 +286,7 @@ namespace Types {
         std::string mangled_name() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
     };
 
     class Method : public Type {
@@ -268,6 +307,7 @@ namespace Types {
         bool could_be_called_with(std::vector<AST::Argument *> arguments);
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
     private:
         std::vector<Type *> m_parameter_types;
@@ -286,22 +326,16 @@ namespace Types {
         int no_methods() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
     private:
         std::vector<Method *> m_methods;
     };
 
-    class Record : public Type {
-    public:
-        std::string name() const;
-        std::string mangled_name() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-    };
-
     class Union : public Type {
     public:
-        explicit Union(AST::Node *node, std::set<Type *> types);
+        Union(Type *type1, Type *type2);
+        Union(AST::Node *node, std::set<Type *> types);
 
         std::string name() const;
         std::string mangled_name() const;
@@ -311,6 +345,7 @@ namespace Types {
         bool isCompatible(const Type *other) const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
+        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
     private:
         std::set<Type *> m_types;
