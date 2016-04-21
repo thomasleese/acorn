@@ -120,15 +120,35 @@ void CodeGenerator::visit(AST::Call *expression) {
     if (identifier) {
         debug("Generating a call to: " + identifier->name);
 
-        SymbolTable::Symbol *functionSymbol = m_scope->lookup(identifier);
-        Types::Function *functionType = static_cast<Types::Function *>(functionSymbol->type);
+        SymbolTable::Symbol *symbol = m_scope->lookup(identifier);
+        Types::Function *functionType = dynamic_cast<Types::Function *>(symbol->type);
+        Types::RecordConstructor *recordType = dynamic_cast<Types::RecordConstructor *>(symbol->type);
 
-        Types::Method *method = functionType->find_method(expression, expression->arguments);
+        assert(functionType || recordType);
 
-        std::string method_name = Mangler::mangle_method(functionSymbol->name, method);
-        llvm::Function *function = m_module->getFunction(method_name);
-        if (!function) {
-            throw Errors::InternalError(expression, "No function defined (" + method_name + ").");
+        llvm::Function *function;
+
+        if (recordType == nullptr) {
+            Types::Method *method = functionType->find_method(expression, expression->arguments);
+
+            std::string method_name = Mangler::mangle_method(symbol->name, method);
+            function = m_module->getFunction(method_name);
+            if (!function) {
+                throw Errors::InternalError(expression, "No function defined (" + method_name + ").");
+            }
+        } else {
+            std::string function_name = identifier->name + "_new";
+            function = m_module->getFunction(function_name);
+            if (!function) {
+                throw Errors::InternalError(expression, "No type function defined (" + function_name + ").");
+            }
+        }
+
+        std::map<std::string, uint64_t> arg_positions;
+        uint64_t i = 0;
+        for (auto &arg : function->args()) {
+            arg_positions[arg.getName()] = i;
+            i++;
         }
 
         const unsigned long noArguments = expression->arguments.size();
@@ -147,12 +167,14 @@ void CodeGenerator::visit(AST::Call *expression) {
 
             argument->accept(this);
 
-            long index = i;
+            uint64_t index = i;
             if (argument->name) {
                 debug("Getting parameter position of " + argument->name->name);
-                index = method->get_parameter_position(argument->name->name);
-                if (index < 0) {
+                auto it = arg_positions.find(argument->name->name);
+                if (it == arg_positions.end()) {
                     throw Errors::InternalError(argument, "no argument");
+                } else {
+                    index = it->second;
                 }
             }
 
@@ -217,7 +239,28 @@ void CodeGenerator::visit(AST::Assignment *expression) {
 }
 
 void CodeGenerator::visit(AST::Selector *expression) {
+    llvm::LLVMContext &context = llvm::getGlobalContext();
 
+    expression->operand->accept(this);
+
+    AST::Identifier *identifier = dynamic_cast<AST::Identifier *>(expression->operand);
+    if (!identifier) {
+        throw Errors::InternalError(expression, "N/A");
+    }
+
+    SymbolTable::Symbol *symbol = m_scope->lookup(identifier);
+
+    llvm::Value *instance = symbol->value;
+
+    auto recordType = static_cast<Types::Record *>(expression->operand->type);
+    uint64_t index = recordType->get_field_index(expression->name->name);
+
+    std::vector<llvm::Value *> indexes;
+    indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), 0));
+    indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), index));
+
+    llvm::Value *value = m_irBuilder->CreateInBoundsGEP(instance, indexes);
+    m_llvmValues.push_back(m_irBuilder->CreateLoad(value));
 }
 
 void CodeGenerator::visit(AST::Comma *expression) {
@@ -424,6 +467,7 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
     int i = 0;
     for (auto &arg : function->args()) {
         std::string name2 = method->get_parameter_name(i);
+        arg.setName(method->get_parameter_name(i));
         llvm::AllocaInst *alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, name2);
         m_irBuilder->CreateStore(&arg, alloca);
         SymbolTable::Symbol *symbol2 = m_scope->lookup(definition, name2);
@@ -460,14 +504,60 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
 void CodeGenerator::visit(AST::TypeDefinition *definition) {
     std::string name = definition->name->name->name;
 
-    /*std::vector<llvm::TypeType *> elements;
-
-    for (auto field : definition->fields) {
-        std::cout << field << std::endl;
-        elements.push_back(llvm::IntegerType::getInt64Ty(llvm::getGlobalContext()));
+    if (definition->alias) {
+        // ignore
+        return;
     }
 
-    llvm::StructType::create(elements, name);*/
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+
+    // FIXME deal with generics
+
+    // create initialiser function
+    llvm::Type *return_type = static_cast<Types::Constructor *>(definition->type)->create(definition)->create_llvm_type(context);
+
+    std::vector<llvm::Type *> element_types;
+    for (auto field : definition->fields) {
+        element_types.push_back(field->type->create_llvm_type(context));
+    }
+
+    llvm::FunctionType *function_type = llvm::FunctionType::get(return_type, element_types, false);
+
+    std::string function_name = name + "_new";
+
+    llvm::Function *function = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, function_name, m_module);
+
+    int i = 0;
+    for (auto &arg : function->args()) {
+        arg.setName(definition->fields[i]->name->name);
+        i++;
+    }
+
+    llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", function);
+    m_irBuilder->SetInsertPoint(basicBlock);
+
+    auto instance = m_irBuilder->CreateAlloca(return_type);
+
+    llvm::Function::arg_iterator args = function->arg_begin();
+
+    auto index0 = llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), 0);
+    for (int i = 0; i < definition->fields.size(); i++) {
+        auto index = llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), i);
+
+        std::vector<llvm::Value *> indexes;
+        indexes.push_back(index0);
+        indexes.push_back(index);
+
+        auto ptr = m_irBuilder->CreateInBoundsGEP(instance, indexes);
+
+        llvm::Argument *arg = &(*(args++));
+        m_irBuilder->CreateStore(arg, ptr);
+    }
+
+    m_irBuilder->CreateRet(m_irBuilder->CreateLoad(instance));
+
+    llvm::Function *mainFunction = m_module->getFunction("main");
+    m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
 }
 
 void CodeGenerator::visit(AST::DefinitionStatement *statement) {

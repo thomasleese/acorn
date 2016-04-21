@@ -204,7 +204,19 @@ void Inferrer::visit(AST::Assignment *expression) {
 }
 
 void Inferrer::visit(AST::Selector *expression) {
-    throw Errors::TypeInferenceError(expression);
+    expression->operand->accept(this);
+
+    auto recordType = dynamic_cast<Types::Record *>(expression->operand->type);
+    if (!recordType) {
+        throw Errors::TypeInferenceError(expression);
+    }
+
+    auto fieldType = recordType->get_field_type(expression->name->name);
+    if (!fieldType) {
+        throw Errors::TypeInferenceError(expression);
+    }
+
+    expression->type = fieldType;
 }
 
 void Inferrer::visit(AST::Comma *expression) {

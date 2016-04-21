@@ -5,5 +5,11 @@ type Vector2
     y as Integer
 end
 
+def length2(v as Vector2) as Integer
+    return (v.x * v.x) + (v.y * v.y)
+end
 
-exit(code: 0)
+let v = Vector2(x: 10, y: 10)
+let l = v.length2()
+
+exit(code: l)
