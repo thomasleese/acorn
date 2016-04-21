@@ -64,7 +64,7 @@ void CodeGenerator::visit(AST::Type *type) {
 }
 
 void CodeGenerator::visit(AST::BooleanLiteral *boolean) {
-
+    throw Errors::InternalError(boolean, "N/A");
 }
 
 void CodeGenerator::visit(AST::IntegerLiteral *expression) {
@@ -96,19 +96,19 @@ void CodeGenerator::visit(AST::FloatLiteral *expression) {
 }
 
 void CodeGenerator::visit(AST::ImaginaryLiteral *imaginary) {
-
+    throw Errors::InternalError(imaginary, "N/A");
 }
 
 void CodeGenerator::visit(AST::StringLiteral *expression) {
-
+    throw Errors::InternalError(expression, "N/A");
 }
 
 void CodeGenerator::visit(AST::SequenceLiteral *sequence) {
-
+    throw Errors::InternalError(sequence, "N/A");
 }
 
 void CodeGenerator::visit(AST::MappingLiteral *mapping) {
-
+    throw Errors::InternalError(mapping, "N/A");
 }
 
 void CodeGenerator::visit(AST::Argument *argument) {
@@ -221,7 +221,7 @@ void CodeGenerator::visit(AST::Selector *expression) {
 }
 
 void CodeGenerator::visit(AST::Comma *expression) {
-
+    throw Errors::InternalError(expression, "N/A");
 }
 
 void CodeGenerator::visit(AST::While *expression) {
@@ -351,7 +351,7 @@ void CodeGenerator::visit(AST::Spawn *expression) {
 }
 
 void CodeGenerator::visit(AST::Parameter *parameter) {
-
+    throw Errors::InternalError(parameter, "N/A");
 }
 
 void CodeGenerator::visit(AST::VariableDefinition *definition) {
@@ -481,7 +481,7 @@ void CodeGenerator::visit(AST::ExpressionStatement *statement) {
 }
 
 void CodeGenerator::visit(AST::ImportStatement *statement) {
-
+    throw Errors::InternalError(statement, "N/A");
 }
 
 void CodeGenerator::visit(AST::SourceFile *module) {
