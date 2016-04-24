@@ -13,6 +13,8 @@ namespace SymbolTable {
 
 namespace Types {
     class Type;
+    class Constructor;
+    class Parameter;
 }
 
 namespace Typing {

@@ -8,6 +8,7 @@
 
 #include "Typing.h"
 #include "Errors.h"
+#include "Types.h"
 
 #include "SymbolTable.h"
 

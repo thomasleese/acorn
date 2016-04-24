@@ -16,6 +16,7 @@
 #include "Errors.h"
 #include "Mangler.h"
 #include "SymbolTable.h"
+#include "Types.h"
 
 #include "CodeGenerator.h"
 

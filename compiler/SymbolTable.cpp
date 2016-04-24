@@ -8,6 +8,7 @@
 #include "Lexer.h"
 #include "Errors.h"
 #include "Builtins.h"
+#include "Types.h"
 
 #include "SymbolTable.h"
 

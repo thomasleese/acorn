@@ -7,6 +7,7 @@
 
 #include "AbstractSyntaxTree.h"
 #include "Lexer.h"
+#include "Types.h"
 
 #include "Errors.h"
 

@@ -13,8 +13,6 @@
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Type.h>
 
-#include "AbstractSyntaxTree.h"
-
 namespace AST {
     struct Node;
     struct Argument;
