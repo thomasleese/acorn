@@ -1,6 +1,3 @@
 import 'base'
 
-type Vector{T} as Array{T, 1}
-type Matrix{T} as Array{T, 2}
-
-let a as Vector{Integer} = [0, 1, 2, 3]
+let a as Array{Integer} = [0, 1, 2, 3]

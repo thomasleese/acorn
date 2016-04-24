@@ -72,7 +72,7 @@ void CodeGenerator::visit(AST::IntegerLiteral *expression) {
 
     llvm::Type *type = expression->type->create_llvm_type(llvm::getGlobalContext());
 
-    int integer;
+    uint64_t integer;
     std::stringstream ss;
     ss << expression->value;
     ss >> integer;
@@ -104,7 +104,9 @@ void CodeGenerator::visit(AST::StringLiteral *expression) {
 }
 
 void CodeGenerator::visit(AST::SequenceLiteral *sequence) {
-    throw Errors::InternalError(sequence, "N/A");
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+    llvm::Value *value = llvm::UndefValue::get(sequence->type->create_llvm_type(context));
+    m_llvmValues.push_back(value);
 }
 
 void CodeGenerator::visit(AST::MappingLiteral *mapping) {
@@ -410,7 +412,8 @@ void CodeGenerator::visit(AST::VariableDefinition *definition) {
                                                                   nullptr, definition->name->name);
         variable->setAlignment(4);
         variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
-        variable->setInitializer(definition->type->create_llvm_initialiser(llvm::getGlobalContext()));
+        variable->setInitializer(llvm::UndefValue::get(type));
+        //variable->setInitializer(definition->type->create_llvm_initialiser(llvm::getGlobalContext()));
 
         symbol->value = variable;
 

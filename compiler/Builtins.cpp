@@ -55,7 +55,7 @@ void add_base_type_constructors(SymbolTable::Namespace *table) {
     add_symbol(table, "Float32", new Types::FloatConstructor(32));
     add_symbol(table, "Float64", new Types::FloatConstructor(64));
     add_symbol(table, "Float128", new Types::FloatConstructor(128));
-    add_symbol(table, "Sequence", new Types::SequenceConstructor());
+    add_symbol(table, "Array", new Types::ArrayConstructor());
     add_symbol(table, "Function", new Types::FunctionConstructor());
     add_symbol(table, "Union", new Types::UnionConstructor());
 }

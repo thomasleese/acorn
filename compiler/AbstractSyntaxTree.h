@@ -74,7 +74,7 @@ namespace AST {
     struct BooleanLiteral : Expression {
         using Expression::Expression;
 
-        bool value;
+        std::string value;
 
         void accept(Visitor *visitor);
     };

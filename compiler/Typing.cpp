@@ -144,7 +144,7 @@ void Inferrer::visit(AST::SequenceLiteral *sequence) {
         elementType = *(types.begin());
     }
 
-    sequence->type = new Types::Sequence(elementType);
+    sequence->type = new Types::Array(elementType);
 }
 
 void Inferrer::visit(AST::MappingLiteral *mapping) {

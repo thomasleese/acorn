@@ -12,7 +12,7 @@ namespace SymbolTable {
 }
 
 namespace Types {
-    class TypeType;
+    class Type;
 }
 
 namespace Typing {

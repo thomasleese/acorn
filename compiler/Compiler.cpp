@@ -51,7 +51,7 @@ Compiler::~Compiler() {
 }
 
 void Compiler::debug(std::string line) {
-    //std::cerr << line << std::endl;
+    std::cerr << line << std::endl;
 }
 
 void Compiler::compile(std::string filename) {

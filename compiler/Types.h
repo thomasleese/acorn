@@ -106,7 +106,7 @@ namespace Types {
         int m_size;
     };
 
-    class SequenceConstructor : public Constructor {
+    class ArrayConstructor : public Constructor {
 
     public:
         std::string name() const;
@@ -247,9 +247,9 @@ namespace Types {
         int m_size;
     };
 
-    class Sequence : public Type {
+    class Array : public Type {
     public:
-        explicit Sequence(Type *elementType);
+        explicit Array(Type *element_type);
 
         std::string name() const;
         std::string mangled_name() const;
@@ -258,7 +258,7 @@ namespace Types {
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
     private:
-        Type *m_elementType;
+        Type *m_element_type;
     };
 
     class Record : public Type {
@@ -275,18 +275,14 @@ namespace Types {
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
-    private:
+    protected:
         std::vector<std::string> m_field_names;
         std::vector<Type *> m_field_types;
     };
 
-    class Product : public Type {
+    class Tuple : public Record {
     public:
-        std::string name() const;
-        std::string mangled_name() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+        Tuple(std::vector<Type *> field_types);
     };
 
     class Method : public Type {

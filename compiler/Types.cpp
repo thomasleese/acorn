@@ -29,8 +29,7 @@ bool Type::operator==(const Type &other) const {
 }
 
 Type *Constructor::create(AST::Node *node) {
-    std::vector<Type *> parameters;
-    return create(node, parameters);
+    return create(node, std::vector<Type *>());
 }
 
 std::string Constructor::mangled_name() const {
@@ -135,13 +134,13 @@ Type *FloatConstructor::create(AST::Node *node, std::vector<Type *> parameters) 
     }
 }
 
-std::string SequenceConstructor::name() const {
-    return "SequenceConstructor";
+std::string ArrayConstructor::name() const {
+    return "ArrayConstructor";
 }
 
-Type *SequenceConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *ArrayConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
     if (parameters.size() == 1) {
-        return new Sequence(parameters[0]);
+        return new Array(parameters[0]);
     } else {
         throw Errors::InvalidTypeParameters(node);
     }
@@ -281,11 +280,11 @@ std::string Parameter::mangled_name() const {
 }
 
 llvm::Type *Parameter::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
+    throw std::runtime_error("not implemented (parameter)");
 }
 
 llvm::Constant *Parameter::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
+    throw std::runtime_error("not implemented (parameter)");
 }
 
 std::string Any::name() const {
@@ -297,11 +296,11 @@ std::string Any::mangled_name() const {
 }
 
 llvm::Type *Any::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
+    throw std::runtime_error("not implemented (any)");
 }
 
 llvm::Constant *Any::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
+    throw std::runtime_error("not implemented (any)");
 }
 
 std::string Void::name() const {
@@ -317,7 +316,7 @@ llvm::Type *Void::create_llvm_type(llvm::LLVMContext &context) const {
 }
 
 llvm::Constant *Void::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
+    return llvm::UndefValue::get(create_llvm_type(context));
 }
 
 std::string Boolean::name() const {
@@ -417,28 +416,36 @@ llvm::Constant *Float::create_llvm_initialiser(llvm::LLVMContext &context) const
     return llvm::ConstantFP::get(create_llvm_type(context), 0);
 }
 
-Sequence::Sequence(Type *elementType) {
-    m_elementType = elementType;
+Array::Array(Type *element_type) {
+    m_element_type = element_type;
 }
 
-std::string Sequence::name() const {
+std::string Array::name() const {
     std::stringstream ss;
-    ss << "Sequence{" << m_elementType->name() << "}";
+    ss << "Array{" << m_element_type->name() << "}";
     return ss.str();
 }
 
-std::string Sequence::mangled_name() const {
+std::string Array::mangled_name() const {
     std::stringstream ss;
-    ss << "s" << m_elementType->mangled_name();
+    ss << "a" << m_element_type->mangled_name();
     return ss.str();
 }
 
-llvm::Type *Sequence::create_llvm_type(llvm::LLVMContext &context) const {
-    llvm::Type *elementType = m_elementType->create_llvm_type(context);
-    return llvm::ArrayType::get(elementType, 10);
+llvm::Type *Array::create_llvm_type(llvm::LLVMContext &context) const {
+    llvm::Type *elementType = m_element_type->create_llvm_type(context);
+
+    std::vector<llvm::Type *> fields;
+
+    // pointer to elements
+    fields.push_back(llvm::PointerType::get(elementType, 0));
+    // size
+    fields.push_back(llvm::IntegerType::getInt64Ty(context));
+
+    return llvm::StructType::get(context, fields);
 }
 
-llvm::Constant *Sequence::create_llvm_initialiser(llvm::LLVMContext &context) const {
+llvm::Constant *Array::create_llvm_initialiser(llvm::LLVMContext &context) const {
     throw std::runtime_error("not implemented");
 }
 
@@ -512,20 +519,12 @@ llvm::Constant *Record::create_llvm_initialiser(llvm::LLVMContext &context) cons
     return llvm::ConstantStruct::get(type, constants);
 }
 
-std::string Product::name() const {
-    return "Product";
-}
-
-std::string Product::mangled_name() const {
-    return "pr";
-}
-
-llvm::Type *Product::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
-}
-
-llvm::Constant *Product::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
+Tuple::Tuple(std::vector<Type *> field_types) : Record(std::vector<std::string>(), field_types) {
+    for (int i = 0; i < field_types.size(); i++) {
+        std::stringstream ss;
+        ss << i;
+        m_field_names.push_back(ss.str());
+    }
 }
 
 Method::Method(std::vector<Type *> parameter_types, Type *return_type, std::vector<std::string> official_parameter_order) :
