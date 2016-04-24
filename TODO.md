@@ -1,6 +1,10 @@
+- Arrays
+- Tuples
+- Sets
+- Dictionaries
 - Characters
+- Strings
 - Unit tests
-- Arrays, tuples, strings
 - Garbage Collection
 - Mutability
 - Running code outside functions
