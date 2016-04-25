@@ -5,10 +5,8 @@
 #ifndef JET_GENERICS_H
 #define JET_GENERICS_H
 
+namespace Generics {
 
-class Generics {
-
-};
-
+}
 
 #endif //JET_GENERICS_H

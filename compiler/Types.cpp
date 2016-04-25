@@ -142,7 +142,7 @@ Type *ArrayConstructor::create(AST::Node *node, std::vector<Type *> parameters) 
     if (parameters.size() == 1) {
         return new Array(parameters[0]);
     } else {
-        throw Errors::InvalidTypeParameters(node);
+        throw Errors::InvalidTypeParameters(node, parameters.size(), 1);
     }
 }
 
@@ -156,7 +156,7 @@ Type *FunctionConstructor::create(AST::Node *node, std::vector<Type *> parameter
     for (auto parameter : parameters) {
         Method *method = dynamic_cast<Method *>(parameter);
         if (method == nullptr) {
-            throw Errors::InvalidTypeParameters(node);
+            throw Errors::InvalidTypeParameters(node, 0, 0);
         }
 
         function->add_method(method);
@@ -188,7 +188,7 @@ Type *RecordConstructor::create(AST::Node *node, std::vector<Type *> parameters)
     if (parameters.empty()) {
         return new Record(m_field_names, m_field_types);
     } else {
-        throw Errors::InvalidTypeParameters(node);
+        throw Errors::InvalidTypeParameters(node, parameters.size(), 0);
     }
 }
 

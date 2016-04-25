@@ -358,7 +358,7 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
 }
 
 void Inferrer::visit(AST::TypeDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name->name);
+    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
 
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -366,7 +366,7 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
     Types::Type *type;
     if (definition->alias) {
         std::vector<Types::Type *> inputParameters;
-        for (auto t : definition->name->parameters) {
+        for (auto t : definition->parameters) {
             t->accept(this);
             inputParameters.push_back(t->type);
         }
@@ -644,7 +644,7 @@ void Checker::visit(AST::TypeDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     //definition->name->accept(this);
 
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name->name);
+    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
 
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;

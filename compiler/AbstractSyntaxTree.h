@@ -142,6 +142,7 @@ namespace AST {
         Call(std::string name, Token *token);
 
         Expression *operand;
+        std::vector<Identifier *> type_parameters;
         std::vector<Argument *> arguments;
 
         void accept(Visitor *visitor);
@@ -267,6 +268,7 @@ namespace AST {
         using Definition::Definition;
 
         Identifier *name;
+        std::vector<Identifier *> type_parameters;
         std::vector<Parameter *> parameters;
         CodeBlock *code;
         Type *returnType;
@@ -277,7 +279,9 @@ namespace AST {
     struct TypeDefinition : Definition {
         TypeDefinition(Token *token);
 
-        Type *name;
+        Identifier *name;
+        std::vector<Identifier *> parameters;
+
         Type *alias;
         std::vector<Parameter *> fields;
 

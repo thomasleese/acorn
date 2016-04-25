@@ -269,9 +269,28 @@ Argument *Parser::readArgument() {
 }
 
 Call *Parser::readCall(Expression *operand) {
+    std::vector<Identifier *> type_parameters;
+
+    if (isToken(Token::OpenBrace)) {
+        readToken(Token::OpenBrace);
+
+        while (!isToken(Token::CloseBrace)) {
+            type_parameters.push_back(readIdentifier());
+
+            if (isToken(Token::Comma)) {
+                readToken(Token::Comma);
+            } else {
+                break;
+            }
+        }
+
+        readToken(Token::CloseBrace);
+    }
+
     Token *token = readToken(Token::OpenParenthesis);
 
     Call *call = new Call(token);
+    call->type_parameters = type_parameters;
     call->operand = operand;
 
     while (!isToken(Token::CloseParenthesis)) {
@@ -540,13 +559,13 @@ Expression *Parser::readOperandExpression() {
     Expression *left = readPrimaryExpression();
 
     while (true) {
-        if (isToken(Token::OpenParenthesis)) {
+        if (isToken(Token::OpenParenthesis) || isToken(Token::OpenBrace)) {
             left = readCall(left);
         } else if (isToken(Token::OpenBracket)) {
             left = readIndex(left);
         } else if (isToken(Token::Dot)) {
             Selector *selector = readSelector(left);
-            if (isToken(Token::OpenParenthesis)) {
+            if (isToken(Token::OpenParenthesis) || isToken(Token::OpenBrace)) {
                 Call *call = readCall(selector->name);
                 Argument *arg = new Argument(selector->operand->token);
                 arg->value = selector->operand;
@@ -649,7 +668,23 @@ TypeDefinition *Parser::readTypeDefinition() {
 
     TypeDefinition *definition = new TypeDefinition(token);
 
-    definition->name = readType();
+    definition->name = readIdentifier();
+
+    if (isToken(Token::OpenBrace)) {
+        readToken(Token::OpenBrace);
+
+        while (!isToken(Token::CloseBrace)) {
+            definition->parameters.push_back(readIdentifier());
+
+            if (isToken(Token::Comma)) {
+                readToken(Token::Comma);
+            } else {
+                break;
+            }
+        }
+
+        readToken(Token::CloseBrace);
+    }
 
     if (isToken(Token::AsKeyword)) {
         readToken(Token::AsKeyword);

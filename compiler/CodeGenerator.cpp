@@ -581,7 +581,7 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
 }
 
 void CodeGenerator::visit(AST::TypeDefinition *definition) {
-    std::string name = definition->name->name->name;
+    std::string name = definition->name->name;
 
     if (definition->alias) {
         // ignore
