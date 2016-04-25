@@ -210,7 +210,7 @@ AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, st
     for (unsigned long i = 0; i < inputParameters.size(); i++) {
         auto parameter = dynamic_cast<Parameter *>(inputParameters[i]);
         if (parameter == nullptr) {
-            throw Errors::InvalidTypeParameters(node);
+            throw Errors::InvalidTypeParameters(node, 0, 0);
         }
 
         int mapping = -1;
@@ -223,7 +223,7 @@ AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, st
         }
 
         if (mapping == -1) {
-            throw Errors::InvalidTypeParameters(node);
+            throw Errors::InvalidTypeParameters(node, 0, 0);
         }
 
         m_parameterMapping[i] = mapping;
@@ -242,7 +242,7 @@ std::string AliasConstructor::name() const {
 
 Type *AliasConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
     if (parameters.size() != m_parameterMapping.size()) {
-        throw Errors::InvalidTypeParameters(node);
+        throw Errors::InvalidTypeParameters(node, parameters.size(), m_parameterMapping.size());
     }
 
     std::vector<Type *> actualParameters;
@@ -712,7 +712,7 @@ Union::Union(Type *type1, Type *type2) {
 
 Union::Union(AST::Node *node, std::set<Type *> types) : m_types(types) {
     if (m_types.size() <= 1) {
-        throw Errors::InvalidTypeParameters(node);
+        throw Errors::InvalidTypeParameters(node, m_types.size(), 2);
     }
 }
 

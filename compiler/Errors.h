@@ -86,7 +86,7 @@ namespace Errors {
 
     class InvalidTypeParameters : public CompilerError {
     public:
-        explicit InvalidTypeParameters(AST::Node *node);
+        explicit InvalidTypeParameters(AST::Node *node, unsigned long given_no, unsigned long expected_no);
     };
 
     class TypeMismatchError : public CompilerError {

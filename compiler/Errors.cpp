@@ -132,10 +132,13 @@ InvalidTypeConstructor::InvalidTypeConstructor(AST::Node *node) :
     m_message = "This is not a type constructor.";
 }
 
-InvalidTypeParameters::InvalidTypeParameters(AST::Node *node) :
+InvalidTypeParameters::InvalidTypeParameters(AST::Node *node, unsigned long given_no, unsigned long expected_no) :
         CompilerError(node) {
     m_prefix = "Invalid type parameters";
-    m_message = "Invalid type parmeters for this type.";
+
+    std::stringstream ss;
+    ss << "Got " << given_no << " parameters, but expected " << expected_no << ".";
+    m_message = ss.str();
 }
 
 TypeMismatchError::TypeMismatchError(AST::Node *node1, AST::Node *node2) :
