@@ -255,6 +255,12 @@ void Builder::visit(AST::FunctionDefinition *definition) {
     Namespace *oldNamespace = m_current;
     m_current = symbol->nameSpace;
 
+    for (auto parameter : definition->type_parameters) {
+        Symbol *sym = new Symbol(parameter->name);
+        sym->type = new Types::Parameter(parameter->name);
+        m_current->insert(definition, sym);
+    }
+
     for (auto parameter : definition->parameters) {
         parameter->accept(this);
     }

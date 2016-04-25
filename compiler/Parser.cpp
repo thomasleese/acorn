@@ -269,13 +269,13 @@ Argument *Parser::readArgument() {
 }
 
 Call *Parser::readCall(Expression *operand) {
-    std::vector<Identifier *> type_parameters;
+    std::vector<Type *> type_parameters;
 
     if (isToken(Token::OpenBrace)) {
         readToken(Token::OpenBrace);
 
         while (!isToken(Token::CloseBrace)) {
-            type_parameters.push_back(readIdentifier());
+            type_parameters.push_back(readType());
 
             if (isToken(Token::Comma)) {
                 readToken(Token::Comma);
@@ -637,6 +637,22 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     }
 
     debug("Name: " + definition->name->name);
+
+    if (isToken(Token::OpenBrace)) {
+        readToken(Token::OpenBrace);
+
+        while (!isToken(Token::CloseBrace)) {
+            definition->type_parameters.push_back(readIdentifier());
+
+            if (isToken(Token::Comma)) {
+                readToken(Token::Comma);
+            } else {
+                break;  // no more parameters, apparently
+            }
+        }
+
+        readToken(Token::CloseBrace);
+    }
 
     readToken(Token::OpenParenthesis);
 

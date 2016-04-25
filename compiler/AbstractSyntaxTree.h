@@ -142,7 +142,7 @@ namespace AST {
         Call(std::string name, Token *token);
 
         Expression *operand;
-        std::vector<Identifier *> type_parameters;
+        std::vector<Type *> type_parameters;
         std::vector<Argument *> arguments;
 
         void accept(Visitor *visitor);

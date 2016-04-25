@@ -4,7 +4,25 @@ type Thing{T}
     record as T
 end
 
-type Thing2{T} as Thing{T}
+def get_me{T}(me as T) as T
+    return me
+end
+
+def get_record{T}(me as Thing{T}) as T
+    return me.record
+end
+
+let a as Integer = 3
+let b as Float = 3.141
+
+get_me{Integer}(me: a)
+get_me{Float}(me: b)
 
 let c as Thing{Integer} = Thing{Integer}(record: 3)
-let d as Thing2{Float} = Thing2{Float}(record: 3.141)
+let d as Thing{Float} = Thing{Float}(record: 3.141)
+
+get_me{Thing{Integer}}(me: c)
+get_me{Thing{Float}}(me: d)
+
+get_record{Integer}(me: c)
+get_record{Float}(me: d)
