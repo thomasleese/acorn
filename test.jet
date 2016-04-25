@@ -4,6 +4,13 @@ type Thing{T}
     record as T
 end
 
+type Thing2{T, U}
+    record1 as T
+    record2 as U
+end
+
+type Thing3{T} as Thing2{T, Integer}
+
 def get_me{T}(me as T) as T
     return me
 end

@@ -1,24 +1,25 @@
-- Arrays
+- Generics
 - Tuples
+- Pointers & Memory Management
+- Arrays
 - Sets
 - Dictionaries
 - Characters
 - Strings
 - Unit tests
-- Garbage Collection
 - Mutability
 - Running code outside functions
 - Closures
+- Unions
+- Any
 - Channels
 - Spawns
 - Importing modules
 - math stdlib
 
 
-type Integer as Integer64
-
 def after(n as Integer) as Channel{Void}
-    let channel as Channel{Void} = Channel(buffer: 0)
+    let channel as Channel{Void} = Channel{Void}(buffer: 0)
 
     def callback() as Void
         sleep(duration: n)
@@ -30,8 +31,5 @@ def after(n as Integer) as Channel{Void}
     return channel
 end
 
-def main() as Integer
-    let ch as Channel{Void} = 2.after()
-    <- ch  # wait for the channel
-    return 0
-end
+let channel = 2.after()
+<- channel  # wait for the channel

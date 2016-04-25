@@ -28,6 +28,7 @@
 #include "Typing.h"
 
 #include "Compiler.h"
+#include "Generics.h"
 
 Compiler::Compiler()
 {
@@ -72,6 +73,11 @@ void Compiler::compile(std::string filename) {
     module->accept(printer);
     printer->print();
     delete printer;*/
+
+    debug("Parsing generics...");
+
+    Generics::Duplicator *generics_duplicator = new Generics::Duplicator();
+    module->accept(generics_duplicator);
 
     debug("Building the Symbol Table...");
 
