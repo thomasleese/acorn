@@ -251,6 +251,7 @@ namespace Types {
 
         std::string name() const;
         std::string mangled_name() const;
+        Type *element_type() const;
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;

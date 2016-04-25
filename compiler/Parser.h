@@ -30,6 +30,7 @@ namespace AST {
     struct Call;
     struct CCall;
     struct Selector;
+    struct Index;
     struct While;
     struct For;
     struct If;
@@ -80,6 +81,7 @@ private:
     AST::Call *readCall(AST::Expression *operand);
     AST::CCall *readCCall();
     AST::Selector *readSelector(AST::Expression *operand);
+    AST::Index *readIndex(AST::Expression *operand);
     AST::While *readWhile();
     AST::For *readFor();
     AST::If *readIf();

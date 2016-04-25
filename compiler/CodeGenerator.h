@@ -41,6 +41,7 @@ public:
     void visit(AST::CCall *expression);
     void visit(AST::Assignment *expression);
     void visit(AST::Selector *expression);
+    void visit(AST::Index *expression);
     void visit(AST::Comma *expression);
     void visit(AST::While *expression);
     void visit(AST::For *expression);

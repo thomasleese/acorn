@@ -220,6 +220,23 @@ void Inferrer::visit(AST::Selector *expression) {
     expression->type = fieldType;
 }
 
+void Inferrer::visit(AST::Index *expression) {
+    expression->operand->accept(this);
+    expression->index->accept(this);
+
+    auto arrayType = dynamic_cast<Types::Array *>(expression->operand->type);
+    if (!arrayType) {
+        throw Errors::TypeInferenceError(expression);
+    }
+
+    auto indexType = dynamic_cast<Types::Integer *>(expression->index->type);
+    if (!indexType) {
+        throw Errors::TypeMismatchError(expression->operand, expression->index);
+    }
+
+    expression->type = arrayType->element_type();
+}
+
 void Inferrer::visit(AST::Comma *expression) {
     throw Errors::TypeInferenceError(expression);
 }
@@ -530,6 +547,12 @@ void Checker::visit(AST::Assignment *expression) {
 
 void Checker::visit(AST::Selector *expression) {
     expression->operand->accept(this);
+    check_not_null(expression);
+}
+
+void Checker::visit(AST::Index *expression) {
+    expression->operand->accept(this);
+    expression->index->accept(this);
     check_not_null(expression);
 }
 

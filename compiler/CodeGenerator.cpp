@@ -106,8 +106,51 @@ void CodeGenerator::visit(AST::StringLiteral *expression) {
 
 void CodeGenerator::visit(AST::SequenceLiteral *sequence) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
-    llvm::Value *value = llvm::UndefValue::get(sequence->type->create_llvm_type(context));
-    m_llvmValues.push_back(value);
+
+    std::vector<llvm::Value *> elements;
+
+    for (auto element : sequence->elements) {
+        element->accept(this);
+
+        llvm::Value *value = m_llvmValues.back();
+        m_llvmValues.pop_back();
+        elements.push_back(value);
+    }
+
+    llvm::StructType *type = static_cast<llvm::StructType *>(sequence->type->create_llvm_type(context));
+
+    llvm::Type *length_type = type->elements()[0];
+    llvm::Type *element_type = type->elements()[0];
+
+    // assign length
+    llvm::Value *instance = m_irBuilder->CreateAlloca(type, nullptr, "array");
+
+    llvm::Type *i32 = llvm::IntegerType::getInt32Ty(context);
+
+    std::vector<llvm::Value *> length_index;
+    length_index.push_back(llvm::ConstantInt::get(i32, 0));
+    length_index.push_back(llvm::ConstantInt::get(i32, 0));
+
+    std::vector<llvm::Value *> elements_index;
+    elements_index.push_back(llvm::ConstantInt::get(i32, 0));
+    elements_index.push_back(llvm::ConstantInt::get(i32, 1));
+
+    llvm::Value *length = m_irBuilder->CreateInBoundsGEP(instance, length_index, "length");
+    m_irBuilder->CreateStore(llvm::ConstantInt::get(length_type, elements.size()), length);
+
+    auto elements_value = m_irBuilder->CreateInBoundsGEP(instance, elements_index, "elements");
+    auto elements_instance = m_irBuilder->CreateAlloca(element_type, llvm::ConstantInt::get(i32, elements.size()));
+
+    for (int i = 0; i < elements.size(); i++) {
+        std::vector<llvm::Value *> index;
+        index.push_back(llvm::ConstantInt::get(i32, i));
+        auto place = m_irBuilder->CreateInBoundsGEP(elements_instance, index);
+        m_irBuilder->CreateStore(elements[i], place);
+    }
+
+    m_irBuilder->CreateStore(elements_instance, elements_value);
+
+    m_llvmValues.push_back(m_irBuilder->CreateLoad(instance));
 }
 
 void CodeGenerator::visit(AST::MappingLiteral *mapping) {
@@ -227,18 +270,13 @@ void CodeGenerator::visit(AST::CCall *ccall) {
 }
 
 void CodeGenerator::visit(AST::Assignment *expression) {
-    AST::Identifier *identifier = dynamic_cast<AST::Identifier *>(expression->lhs);
-    if (identifier) {
-        expression->rhs->accept(this);
-        llvm::Value *value = m_llvmValues.back();
-        m_llvmValues.pop_back();
+    expression->rhs->accept(this);
+    llvm::Value *value = m_llvmValues.back();
+    m_llvmValues.pop_back();
 
-        llvm::Value *ptr = m_scope->lookup(identifier)->value;
+    llvm::Value *ptr = m_scope->lookup(expression->lhs)->value;
 
-        m_irBuilder->CreateStore(value, ptr);
-    } else {
-        throw Errors::InternalError(expression, "not an identifier");
-    }
+    m_irBuilder->CreateStore(value, ptr);
 }
 
 void CodeGenerator::visit(AST::Selector *expression) {
@@ -263,6 +301,43 @@ void CodeGenerator::visit(AST::Selector *expression) {
     indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), index));
 
     llvm::Value *value = m_irBuilder->CreateInBoundsGEP(instance, indexes);
+    m_llvmValues.push_back(m_irBuilder->CreateLoad(value));
+}
+
+void CodeGenerator::visit(AST::Index *expression) {
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+
+    expression->operand->accept(this);
+
+    AST::Identifier *identifier = dynamic_cast<AST::Identifier *>(expression->operand);
+    if (!identifier) {
+        throw Errors::InternalError(expression, "N/A");
+    }
+
+    SymbolTable::Symbol *symbol = m_scope->lookup(identifier);
+
+    llvm::Value *instance = symbol->value;
+
+    expression->index->accept(this);
+    llvm::Value *index = m_llvmValues.back();
+    m_llvmValues.pop_back();
+
+    auto i32 = llvm::IntegerType::get(context, 32);
+    auto i64 = llvm::IntegerType::get(context, 64);
+
+    std::vector<llvm::Value *> indexes;
+    indexes.push_back(llvm::ConstantInt::get(i32, 0));
+    indexes.push_back(llvm::ConstantInt::get(i32, 1));
+
+    llvm::Value *elements_value = m_irBuilder->CreateInBoundsGEP(instance, indexes, "elements");
+
+    std::vector<llvm::Value *> element_index;
+    element_index.push_back(llvm::ConstantInt::get(i32, 0));
+    //element_index.push_back(m_irBuilder->CreateIntCast(index, i32, true));
+
+    llvm::Value *value = m_irBuilder->CreateInBoundsGEP(elements_value, element_index, "element");
+
+    //llvm::Value *value = m_irBuilder->CreateAlloca()
     m_llvmValues.push_back(m_irBuilder->CreateLoad(value));
 }
 
@@ -413,8 +488,8 @@ void CodeGenerator::visit(AST::VariableDefinition *definition) {
                                                                   nullptr, definition->name->name);
         variable->setAlignment(4);
         variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
-        variable->setInitializer(llvm::UndefValue::get(type));
-        //variable->setInitializer(definition->type->create_llvm_initialiser(llvm::getGlobalContext()));
+        //variable->setInitializer(llvm::UndefValue::get(type));
+        variable->setInitializer(definition->type->create_llvm_initialiser(llvm::getGlobalContext()));
 
         symbol->value = variable;
 
@@ -545,9 +620,10 @@ void CodeGenerator::visit(AST::TypeDefinition *definition) {
 
     llvm::Function::arg_iterator args = function->arg_begin();
 
-    auto index0 = llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), 0);
+    auto i32 = llvm::IntegerType::get(context, 32);
+    auto index0 = llvm::ConstantInt::get(i32, 0);
     for (int i = 0; i < definition->fields.size(); i++) {
-        auto index = llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), i);
+        auto index = llvm::ConstantInt::get(i32, i);
 
         std::vector<llvm::Value *> indexes;
         indexes.push_back(index0);

@@ -191,6 +191,10 @@ void Builder::visit(AST::Selector *expression) {
 
 }
 
+void Builder::visit(AST::Index *expression) {
+
+}
+
 void Builder::visit(AST::Comma *expression) {
 
 }

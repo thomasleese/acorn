@@ -176,6 +176,15 @@ namespace AST {
         void accept(Visitor *visitor);
     };
 
+    struct Index : Expression {
+        using Expression::Expression;
+
+        Expression *operand;
+        Expression *index;
+
+        void accept(Visitor *visitor);
+    };
+
     struct Comma : Expression {
         Comma(Token *token);
         Comma(Expression *lhs, Expression *rhs, Token *token);
@@ -333,6 +342,7 @@ namespace AST {
         virtual void visit(CCall *expression) = 0;
         virtual void visit(Assignment *expression) = 0;
         virtual void visit(Selector *expression) = 0;
+        virtual void visit(Index *expression) = 0;
         virtual void visit(Comma *expression) = 0;
         virtual void visit(While *expression) = 0;
         virtual void visit(For *expression) = 0;

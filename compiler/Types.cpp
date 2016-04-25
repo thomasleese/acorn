@@ -432,21 +432,32 @@ std::string Array::mangled_name() const {
     return ss.str();
 }
 
+Type *Array::element_type() const {
+    return m_element_type;
+}
+
 llvm::Type *Array::create_llvm_type(llvm::LLVMContext &context) const {
     llvm::Type *elementType = m_element_type->create_llvm_type(context);
 
     std::vector<llvm::Type *> fields;
 
-    // pointer to elements
-    fields.push_back(llvm::PointerType::get(elementType, 0));
     // size
     fields.push_back(llvm::IntegerType::getInt64Ty(context));
+    // pointer to elements
+    fields.push_back(llvm::PointerType::get(elementType, 0));
 
     return llvm::StructType::get(context, fields);
 }
 
 llvm::Constant *Array::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
+    llvm::Type *elementType = m_element_type->create_llvm_type(context);
+
+    std::vector<llvm::Constant *> constants;
+    constants.push_back(llvm::ConstantInt::get(llvm::IntegerType::getInt64Ty(context), 0));
+    constants.push_back(llvm::ConstantPointerNull::get(llvm::PointerType::get(elementType, 0)));
+
+    llvm::StructType *type = static_cast<llvm::StructType *>(create_llvm_type(context));
+    return llvm::ConstantStruct::get(type, constants);
 }
 
 Record::Record(std::vector<std::string> field_names, std::vector<Type *> field_types) :

@@ -338,6 +338,18 @@ Selector *Parser::readSelector(AST::Expression *operand) {
     return selector;
 }
 
+AST::Index *Parser::readIndex(AST::Expression *operand) {
+    Token *token = readToken(Token::OpenBracket);
+
+    Index *index = new Index(token);
+    index->operand = operand;
+    index->index = readExpression();
+
+    readToken(Token::CloseBracket);
+
+    return index;
+}
+
 While *Parser::readWhile() {
     Token *token = readToken(Token::WhileKeyword);
 
@@ -530,6 +542,8 @@ Expression *Parser::readOperandExpression() {
     while (true) {
         if (isToken(Token::OpenParenthesis)) {
             left = readCall(left);
+        } else if (isToken(Token::OpenBracket)) {
+            left = readIndex(left);
         } else if (isToken(Token::Dot)) {
             Selector *selector = readSelector(left);
             if (isToken(Token::OpenParenthesis)) {

@@ -1,3 +1,21 @@
 import 'base'
 
-let a as Array{Integer} = [0, 1, 2, 3]
+def get_me{T}(me as T) as T
+    return T
+end
+
+type Thing{T}
+    record as T
+end
+
+let a as Float = 3.141
+let b as Integer = 3
+
+get_me{Float}(me: a)
+get_me{Integer}(me: b)
+
+let c as Thing{Integer} = Thing{Integer}(record: 3)
+let d as Thing{Float} = Thing{Float}(record: 3.141)
+
+get_me{Thing{Integer}}(me: c)
+get_me{Thing{Float}}(me: d)
