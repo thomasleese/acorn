@@ -1,12 +1,12 @@
-type Colour
-    r as Integer8
-    g as Integer8
-    b as Integer8
-    a as Integer8
+type Colour{T}
+    r as T
+    g as T
+    b as T
+    a as T
 end
 
-type Color as Colour  # to please those Americans :)
+type Color{T} as Colour{T}  # to please those Americans :)
 
-def to_html_string(colour as Colour) as String
+def to_html_string(colour as Colour{Integer8}) as String
     return "#" + hex(n: colour.r) + hex(n: colour.g) + hex(n: colour.b)
 end

@@ -5,14 +5,20 @@
 #ifndef JET_GENERICS_H
 #define JET_GENERICS_H
 
+#include <map>
+
 #include "AbstractSyntaxTree.h"
+
+namespace SymbolTable {
+    class Namespace;
+}
 
 namespace Generics {
 
     class Duplicator : public AST::Visitor {
 
     public:
-        Duplicator();
+        Duplicator(SymbolTable::Namespace *root_namespace);
 
         void visit(AST::CodeBlock *block);
 
@@ -53,10 +59,10 @@ namespace Generics {
     private:
         bool m_collecting;
 
-        std::vector<AST::TypeDefinition *> m_generic_types;
-        std::vector<AST::FunctionDefinition *> m_generic_functions;
+        std::vector<SymbolTable::Namespace *> m_scope;
 
-        std::vector<AST::TypeDefinition
+        std::map<AST::TypeDefinition *, std::vector<std::vector<AST::Identifier *> > > m_types;
+        std::map<AST::FunctionDefinition *, std::vector<std::vector<AST::Identifier *> > > m_functions;
 
     };
 

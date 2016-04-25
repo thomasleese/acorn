@@ -4,12 +4,16 @@
 
 #include <iostream>
 
+#include "SymbolTable.h"
+#include "Types.h"
+
 #include "Generics.h"
 
 using namespace Generics;
 
-Duplicator::Duplicator() : m_collecting(true) {
-
+Duplicator::Duplicator(SymbolTable::Namespace *root_namespace) :
+        m_collecting(true) {
+    m_scope.push_back(root_namespace);
 }
 
 void Duplicator::visit(AST::CodeBlock *block) {
@@ -59,7 +63,18 @@ void Duplicator::visit(AST::Argument *argument) {
 }
 
 void Duplicator::visit(AST::Call *expression) {
+    if (m_collecting) {
+        if (!expression->type_parameters.empty()) {
+            // has parameters
 
+            std::cout << "Identified a use!" << std::endl;
+
+            auto identifier = dynamic_cast<AST::Identifier *>(expression->operand);
+            assert(identifier);
+
+            m_scope.back()->lookup(identifier);
+        }
+    }
 }
 
 void Duplicator::visit(AST::CCall *expression) {
@@ -107,23 +122,40 @@ void Duplicator::visit(AST::Parameter *parameter) {
 }
 
 void Duplicator::visit(AST::VariableDefinition *definition) {
+    if (m_collecting) {
+        if (definition->typeNode) {
+            if (!definition->typeNode->parameters.empty()) {
+                // has parameters
 
+                std::cout << "Identified a use!" << std::endl;
+            }
+        }
+
+        definition->expression->accept(this);
+    }
 }
 
 void Duplicator::visit(AST::FunctionDefinition *definition) {
+    SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition, definition->name->name);
+    Types::Method *method = static_cast<Types::Method *>(definition->type);
+    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
+    m_scope.push_back(symbol->nameSpace);
+
     if (m_collecting) {
         if (!definition->parameters.empty()) {
-            m_generic_functions.push_back(definition);
+            m_functions[definition] = std::vector<std::vector<AST::Identifier *> >();
         }
     } else {
-
+        definition->code->accept(this);
     }
+
+    m_scope.pop_back();
 }
 
 void Duplicator::visit(AST::TypeDefinition *definition) {
     if (m_collecting) {
         if (!definition->parameters.empty()) {
-            m_generic_types.push_back(definition);
+            m_types[definition] = std::vector<std::vector<AST::Identifier *> >();
         }
     } else {
 
@@ -135,7 +167,7 @@ void Duplicator::visit(AST::DefinitionStatement *statement) {
 }
 
 void Duplicator::visit(AST::ExpressionStatement *statement) {
-
+    statement->expression->accept(this);
 }
 
 void Duplicator::visit(AST::ImportStatement *statement) {
@@ -147,8 +179,8 @@ void Duplicator::visit(AST::SourceFile *module) {
 
     m_collecting = false;
 
-    std::cout << "Identified: " << m_generic_types.size() << " generic types." << std::endl;
-    std::cout << "Identified: " << m_generic_functions.size() << " generic functions." << std::endl;
+    std::cout << "Identified: " << m_types.size() << " generic types." << std::endl;
+    std::cout << "Identified: " << m_functions.size() << " generic functions." << std::endl;
 
     module->code->accept(this);
 }

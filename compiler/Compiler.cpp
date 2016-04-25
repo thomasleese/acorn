@@ -74,11 +74,6 @@ void Compiler::compile(std::string filename) {
     printer->print();
     delete printer;*/
 
-    debug("Parsing generics...");
-
-    Generics::Duplicator *generics_duplicator = new Generics::Duplicator();
-    module->accept(generics_duplicator);
-
     debug("Building the Symbol Table...");
 
     SymbolTable::Builder *symbolTableBuilder = new SymbolTable::Builder();
@@ -87,6 +82,11 @@ void Compiler::compile(std::string filename) {
 
     SymbolTable::Namespace *rootNamespace = symbolTableBuilder->rootNamespace();
     delete symbolTableBuilder;
+
+    debug("Parsing generics...");
+
+    Generics::Duplicator *generics_duplicator = new Generics::Duplicator(rootNamespace);
+    module->accept(generics_duplicator);
 
     debug("Inferring types...");
 

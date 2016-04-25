@@ -1,35 +1,12 @@
-import 'base'
-
-type Thing{T}
-    record as T
-end
-
-type Thing2{T, U}
-    record1 as T
-    record2 as U
-end
-
-type Thing3{T} as Thing2{T, Integer}
+type Integer as Integer64
 
 def get_me{T}(me as T) as T
     return me
 end
 
-def get_record{T}(me as Thing{T}) as T
-    return me.record
+def get_me{T}(me as T, b as Integer) as T
+    return me
 end
 
-let a as Integer = 3
-let b as Float = 3.141
-
-get_me{Integer}(me: a)
-get_me{Float}(me: b)
-
-let c as Thing{Integer} = Thing{Integer}(record: 3)
-let d as Thing{Float} = Thing{Float}(record: 3.141)
-
-get_me{Thing{Integer}}(me: c)
-get_me{Thing{Float}}(me: d)
-
-get_record{Integer}(me: c)
-get_record{Float}(me: d)
+let a = 10
+let b = get_me{Integer}(me: a)
