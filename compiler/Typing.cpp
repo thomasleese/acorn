@@ -42,7 +42,7 @@ Types::Parameter *Inferrer::find_type_parameter(AST::Node *node, std::string nam
     }
 }
 
-Types::Type *Inferrer::find_type(AST::Node *node, std::string name, std::vector<AST::Type *> parameters) {
+Types::Type *Inferrer::find_type(AST::Node *node, std::string name, std::vector<AST::Identifier *> parameters) {
     std::vector<Types::Type *> parameterTypes;
 
     for (auto parameter : parameters) {
@@ -64,11 +64,11 @@ Types::Type *Inferrer::find_type(AST::Node *node, std::string name, std::vector<
 }
 
 Types::Type *Inferrer::find_type(AST::Node *node, std::string name) {
-    return find_type(node, name, std::vector<AST::Type *>());
+    return find_type(node, name, std::vector<AST::Identifier *>());
 }
 
-Types::Type *Inferrer::find_type(AST::Type *type) {
-    return find_type(type, type->name->name, type->parameters);
+Types::Type *Inferrer::find_type(AST::Identifier *type) {
+    return find_type(type, type->value, type->parameters);
 }
 
 void Inferrer::visit(AST::CodeBlock *block) {
@@ -84,16 +84,12 @@ void Inferrer::visit(AST::CodeBlock *block) {
 }
 
 void Inferrer::visit(AST::Identifier *expression) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(expression, expression->name);
+    SymbolTable::Symbol *symbol = m_namespace->lookup(expression, expression->value);
     expression->type = symbol->type;
 
     if (!symbol->type) {
-        throw Errors::UndefinedError(expression, expression->name);
+        throw Errors::UndefinedError(expression, expression->value);
     }
-}
-
-void Inferrer::visit(AST::Type *type) {
-    type->type = find_type(type);
 }
 
 void Inferrer::visit(AST::BooleanLiteral *expression) {
@@ -212,7 +208,7 @@ void Inferrer::visit(AST::Selector *expression) {
         throw Errors::TypeInferenceError(expression);
     }
 
-    auto fieldType = recordType->get_field_type(expression->name->name);
+    auto fieldType = recordType->get_field_type(expression->name->value);
     if (!fieldType) {
         throw Errors::TypeInferenceError(expression);
     }
@@ -282,7 +278,7 @@ void Inferrer::visit(AST::Spawn *expression) {
 }
 
 void Inferrer::visit(AST::Parameter *parameter) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(parameter, parameter->name->name);
+    SymbolTable::Symbol *symbol = m_namespace->lookup(parameter, parameter->name->value);
 
     parameter->typeNode->accept(this);
 
@@ -291,7 +287,7 @@ void Inferrer::visit(AST::Parameter *parameter) {
 }
 
 void Inferrer::visit(AST::VariableDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
+    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->value);
 
     Types::Type *type = nullptr;
 
@@ -332,7 +328,7 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
         parameter->accept(this);
 
         parameterTypes.push_back(parameter->type);
-        officialParameterOrder.push_back(parameter->name->name);
+        officialParameterOrder.push_back(parameter->name->value);
     }
 
     definition->returnType->accept(this);
@@ -358,7 +354,7 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
 }
 
 void Inferrer::visit(AST::TypeDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
+    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->value);
 
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -377,8 +373,7 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
             outputParameters.push_back(t->type);
         }
 
-        auto type_constructor = find_type_constructor(definition, definition->alias->name->name);
-        definition->alias->name->type = type_constructor;
+        auto type_constructor = find_type_constructor(definition, definition->alias->value);
         definition->alias->type = type_constructor;
         type = new Types::AliasConstructor(definition, type_constructor,
                                            inputParameters, outputParameters);
@@ -389,7 +384,7 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
         for (auto field : definition->fields) {
             field->accept(this);
 
-            field_names.push_back(field->name->name);
+            field_names.push_back(field->name->value);
             field_types.push_back(field->type);
         }
 
@@ -454,15 +449,12 @@ void Checker::visit(AST::CodeBlock *block) {
     check_not_null(block);
 }
 
-void Checker::visit(AST::Identifier *expression) {
-    check_not_null(expression);
-}
-
-void Checker::visit(AST::Type *type) {
-    for (auto p : type->parameters) {
+void Checker::visit(AST::Identifier *identifier) {
+    for (auto p : identifier->parameters) {
         p->accept(this);
     }
-    check_not_null(type);
+
+    check_not_null(identifier);
 }
 
 void Checker::visit(AST::BooleanLiteral *boolean) {
@@ -617,7 +609,7 @@ void Checker::visit(AST::VariableDefinition *definition) {
 void Checker::visit(AST::FunctionDefinition *definition) {
     check_not_null(definition);
 
-    SymbolTable::Symbol *functionSymbol = m_namespace->lookup(definition, definition->name->name);
+    SymbolTable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
 
     Types::Method *method = static_cast<Types::Method *>(definition->type);
 
@@ -644,7 +636,7 @@ void Checker::visit(AST::TypeDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     //definition->name->accept(this);
 
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->name);
+    SymbolTable::Symbol *symbol = m_namespace->lookup(definition->name);
 
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;

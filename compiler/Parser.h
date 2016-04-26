@@ -67,9 +67,8 @@ private:
 
     // expressions
     AST::Expression *readExpression();
-    AST::Identifier *readIdentifier();
-    AST::Identifier *readOperator();
-    AST::Type *readType();
+    AST::Identifier *readIdentifier(bool accept_parameters);
+    AST::Identifier *readOperator(bool accept_parameters);
     AST::BooleanLiteral *readBooleanLiteral();
     AST::IntegerLiteral *readIntegerLiteral();
     AST::FloatLiteral *readFloatLiteral();
@@ -91,7 +90,7 @@ private:
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
     AST::Expression *readPrimaryExpression();
     AST::Expression *readOperandExpression();
-    AST::Type *readCast();
+    AST::Identifier *readCast();
 
     // misc
     AST::Parameter *readParameter();

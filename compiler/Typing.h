@@ -29,15 +29,14 @@ namespace Typing {
         Types::Constructor *find_type_constructor(AST::Node *node, std::string name);
         Types::Parameter *find_type_parameter(AST::Node *node, std::string name);
 
-        Types::Type *find_type(AST::Node *node, std::string name, std::vector<AST::Type *> parameters);
+        Types::Type *find_type(AST::Node *node, std::string name, std::vector<AST::Identifier *> parameters);
         Types::Type *find_type(AST::Node *node, std::string name);
-        Types::Type *find_type(AST::Type *type);
+        Types::Type *find_type(AST::Identifier *type);
 
     public:
         void visit(AST::CodeBlock *block);
 
-        void visit(AST::Identifier *expression);
-        void visit(AST::Type *type);
+        void visit(AST::Identifier *identifier);
         void visit(AST::BooleanLiteral *boolean);
         void visit(AST::IntegerLiteral *expression);
         void visit(AST::FloatLiteral *expression);
@@ -90,7 +89,6 @@ namespace Typing {
         void visit(AST::CodeBlock *block);
 
         void visit(AST::Identifier *expression);
-        void visit(AST::Type *type);
         void visit(AST::BooleanLiteral *boolean);
         void visit(AST::IntegerLiteral *expression);
         void visit(AST::FloatLiteral *expression);

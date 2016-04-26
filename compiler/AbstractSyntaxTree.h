@@ -52,20 +52,13 @@ namespace AST {
 
     // expressions
     struct Identifier : Expression {
-        explicit Identifier(Token *token);
+        Identifier(Token *token);
         Identifier(Token *token, std::string name);
 
-        std::string name;
+        bool has_parameters() const;
 
-        void accept(Visitor *visitor);
-    };
-
-    struct Type : Expression {
-        Type(Token *token);
-        Type(std::string name, Token *token);
-
-        Identifier *name;
-        std::vector<Type *> parameters;
+        std::string value;
+        std::vector<Identifier *> parameters;
 
         void accept(Visitor *visitor);
     };
@@ -142,7 +135,6 @@ namespace AST {
         Call(std::string name, Token *token);
 
         Expression *operand;
-        std::vector<Type *> type_parameters;
         std::vector<Argument *> arguments;
 
         void accept(Visitor *visitor);
@@ -152,8 +144,8 @@ namespace AST {
         CCall(Token *token);
 
         Identifier *name;
-        std::vector<Type *> parameters;
-        Type *returnType;
+        std::vector<Identifier *> parameters;
+        Identifier *returnType;
         std::vector<Expression *> arguments;
 
         void accept(Visitor *visitor);
@@ -246,7 +238,7 @@ namespace AST {
         explicit Parameter(Token *token);
 
         Identifier *name;
-        Type *typeNode;
+        Identifier *typeNode;
         Expression *defaultExpression;
 
         void accept(Visitor *visitor);
@@ -258,7 +250,7 @@ namespace AST {
         VariableDefinition(std::string name, Token *token);
 
         Identifier *name;
-        Type *typeNode;
+        Identifier *typeNode;
         Expression *expression;
 
         void accept(Visitor *visitor);
@@ -268,10 +260,9 @@ namespace AST {
         using Definition::Definition;
 
         Identifier *name;
-        std::vector<Identifier *> type_parameters;
         std::vector<Parameter *> parameters;
         CodeBlock *code;
-        Type *returnType;
+        Identifier *returnType;
 
         void accept(Visitor *visitor);
     };
@@ -282,7 +273,7 @@ namespace AST {
         Identifier *name;
         std::vector<Identifier *> parameters;
 
-        Type *alias;
+        Identifier *alias;
         std::vector<Parameter *> fields;
 
         void accept(Visitor *visitor);
@@ -333,7 +324,7 @@ namespace AST {
         virtual void visit(CodeBlock *block) = 0;
 
         // expressions
-        virtual void visit(Identifier *expression) = 0;
+        virtual void visit(Identifier *identifier) = 0;
         virtual void visit(BooleanLiteral *boolean) = 0;
         virtual void visit(IntegerLiteral *expression) = 0;
         virtual void visit(FloatLiteral *expression) = 0;
@@ -353,7 +344,6 @@ namespace AST {
         virtual void visit(If *expression) = 0;
         virtual void visit(Return *expression) = 0;
         virtual void visit(Spawn *expression) = 0;
-        virtual void visit(Type *type) = 0;
 
         // misc
         virtual void visit(Parameter *parameter) = 0;

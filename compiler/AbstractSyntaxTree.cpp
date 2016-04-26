@@ -30,7 +30,11 @@ Identifier::Identifier(Token *token) : Expression(token) {
 }
 
 Identifier::Identifier(Token *token, std::string name) : Expression(token) {
-    this->name = name;
+    this->value = name;
+}
+
+bool Identifier::has_parameters() const {
+    return !parameters.empty();
 }
 
 void Identifier::accept(Visitor *visitor) {
@@ -150,18 +154,6 @@ Spawn::Spawn(Token *token, Call *call) : Expression(token) {
 }
 
 void Spawn::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-Type::Type(Token *token) : Expression(token) {
-
-}
-
-Type::Type(std::string name, Token *token) : Expression(token) {
-    this->name = new Identifier(token, name);
-}
-
-void Type::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

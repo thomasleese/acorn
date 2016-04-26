@@ -615,7 +615,7 @@ bool Method::could_be_called_with(std::vector<AST::Argument *> arguments) {
 
         unsigned long index = i;
         if (arguments[i]->name) {
-            std::string name = arguments[i]->name->name;
+            std::string name = arguments[i]->name->value;
             auto pos = get_parameter_position(name);
             if (pos < 0) {
                 return false;

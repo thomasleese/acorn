@@ -22,11 +22,7 @@ void Duplicator::visit(AST::CodeBlock *block) {
     }
 }
 
-void Duplicator::visit(AST::Identifier *expression) {
-
-}
-
-void Duplicator::visit(AST::Type *type) {
+void Duplicator::visit(AST::Identifier *identifier) {
 
 }
 
@@ -64,15 +60,16 @@ void Duplicator::visit(AST::Argument *argument) {
 
 void Duplicator::visit(AST::Call *expression) {
     if (m_collecting) {
-        if (!expression->type_parameters.empty()) {
-            // has parameters
+        auto identifier = dynamic_cast<AST::Identifier *>(expression->operand);
+        assert(identifier);
 
+        if (identifier->has_parameters()) {
             std::cout << "Identified a use!" << std::endl;
 
-            auto identifier = dynamic_cast<AST::Identifier *>(expression->operand);
-            assert(identifier);
+            SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
+            assert(dynamic_cast<Types::Function *>(symbol->type));
 
-            m_scope.back()->lookup(identifier);
+            // for each method, we have to create a
         }
     }
 }
@@ -136,9 +133,8 @@ void Duplicator::visit(AST::VariableDefinition *definition) {
 }
 
 void Duplicator::visit(AST::FunctionDefinition *definition) {
-    SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition, definition->name->name);
-    Types::Method *method = static_cast<Types::Method *>(definition->type);
-    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
+    SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition, definition->name->value);
+    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
     m_scope.push_back(symbol->nameSpace);
 
     if (m_collecting) {

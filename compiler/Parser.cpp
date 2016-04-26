@@ -126,26 +126,16 @@ Expression *Parser::readExpression() {
     }
 }
 
-Identifier *Parser::readIdentifier() {
+Identifier *Parser::readIdentifier(bool accept_parameters) {
     Token *token = readToken(Token::Identifier);
-    return new Identifier(token, token->lexeme);
-}
 
-Identifier *Parser::readOperator() {
-    Token *token = readToken(Token::Operator);
-    return new Identifier(token, token->lexeme);
-}
+    auto identifier = new Identifier(token, token->lexeme);
 
-Type *Parser::readType() {
-    Type *type = new Type(m_tokens.front());
-
-    type->name = readIdentifier();
-
-    if (isToken(Token::OpenBrace)) {
+    if (accept_parameters && isToken(Token::OpenBrace)) {
         readToken(Token::OpenBrace);
 
         while (!isToken(Token::CloseBrace)) {
-            type->parameters.push_back(readType());
+            identifier->parameters.push_back(readIdentifier(true));
 
             if (isToken(Token::Comma)) {
                 readToken(Token::Comma);
@@ -157,11 +147,35 @@ Type *Parser::readType() {
         readToken(Token::CloseBrace);
     }
 
-    return type;
+    return identifier;
+}
+
+Identifier *Parser::readOperator(bool accept_parameters) {
+    Token *token = readToken(Token::Operator);
+
+    auto identifier = new Identifier(token, token->lexeme);
+
+    if (accept_parameters && isToken(Token::OpenBrace)) {
+        readToken(Token::OpenBrace);
+
+        while (!isToken(Token::CloseBrace)) {
+            identifier->parameters.push_back(readIdentifier(true));
+
+            if (isToken(Token::Comma)) {
+                readToken(Token::Comma);
+            } else {
+                break;
+            }
+        }
+
+        readToken(Token::CloseBrace);
+    }
+
+    return identifier;
 }
 
 BooleanLiteral *Parser::readBooleanLiteral() {
-    Token *token = readToken(Token::BooleanLiteral);\
+    Token *token = readToken(Token::BooleanLiteral);
 
     BooleanLiteral *literal = new BooleanLiteral(token);
 
@@ -262,35 +276,16 @@ MappingLiteral *Parser::readMappingLiteral() {
 
 Argument *Parser::readArgument() {
     Argument *argument = new Argument(m_tokens.front());
-    argument->name = readIdentifier();
+    argument->name = readIdentifier(false);
     readToken(Token::Colon);
     argument->value = readExpression();
     return argument;
 }
 
 Call *Parser::readCall(Expression *operand) {
-    std::vector<Type *> type_parameters;
-
-    if (isToken(Token::OpenBrace)) {
-        readToken(Token::OpenBrace);
-
-        while (!isToken(Token::CloseBrace)) {
-            type_parameters.push_back(readType());
-
-            if (isToken(Token::Comma)) {
-                readToken(Token::Comma);
-            } else {
-                break;
-            }
-        }
-
-        readToken(Token::CloseBrace);
-    }
-
     Token *token = readToken(Token::OpenParenthesis);
 
     Call *call = new Call(token);
-    call->type_parameters = type_parameters;
     call->operand = operand;
 
     while (!isToken(Token::CloseParenthesis)) {
@@ -312,12 +307,12 @@ CCall *Parser::readCCall() {
     Token *token = readToken(Token::CCallKeyword);
 
     CCall *ccall = new CCall(token);
-    ccall->name = readIdentifier();
+    ccall->name = readIdentifier(false);
 
     readToken(Token::OpenParenthesis);
 
     while (!isToken(Token::CloseParenthesis)) {
-        ccall->parameters.push_back(readType());
+        ccall->parameters.push_back(readIdentifier(true));
 
         if (isToken(Token::Comma)) {
             readToken(Token::Comma);
@@ -329,7 +324,7 @@ CCall *Parser::readCCall() {
     readToken(Token::CloseParenthesis);
 
     readToken(Token::AsKeyword);
-    ccall->returnType = readType();
+    ccall->returnType = readIdentifier(true);
 
     if (isToken(Token::UsingKeyword)) {
         readToken(Token::UsingKeyword);
@@ -353,7 +348,7 @@ Selector *Parser::readSelector(AST::Expression *operand) {
 
     Selector *selector = new Selector(token);
     selector->operand = operand;
-    selector->name = readIdentifier();
+    selector->name = readIdentifier(false);
     return selector;
 }
 
@@ -387,9 +382,9 @@ For *Parser::readFor() {
     Token *token = readToken(Token::ForKeyword);
 
     For *expression = new For(token);
-    expression->name = readIdentifier();
+    expression->name = readIdentifier(false);
 
-    debug("Name: " + expression->name->name);
+    debug("Name: " + expression->name->value);
 
     readToken(Token::InKeyword);
     expression->iterator = readExpression();
@@ -460,7 +455,7 @@ Spawn *Parser::readSpawn() {
 Expression *Parser::readUnaryExpression() {
     if (isToken(Token::Operator)) {
         Call *expr = new Call(m_tokens.front());
-        expr->operand = readOperator();
+        expr->operand = readOperator(true);
 
         Argument *arg = new Argument(m_tokens.front());
         arg->value = readUnaryExpression();
@@ -480,8 +475,8 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
 
         Identifier *op = 0;
         if (isToken(Token::Operator)) {
-            op = readOperator();
-            opName = op->name;
+            op = readOperator(true);
+            opName = op->value;
         } else {
             readToken(Token::Assignment);
         }
@@ -549,7 +544,7 @@ Expression *Parser::readPrimaryExpression() {
     } else if (isToken(Token::CCallKeyword)) {
         return readCCall();
     } else if (isToken(Token::Identifier)) {
-        return readIdentifier();
+        return readIdentifier(true);
     } else {
         throw Errors::SyntaxError(m_tokens.front(), "primary expression");
     }
@@ -582,15 +577,15 @@ Expression *Parser::readOperandExpression() {
     return left;
 }
 
-Type *Parser::readCast() {
+Identifier *Parser::readCast() {
     readToken(Token::AsKeyword);
-    return readType();
+    return readIdentifier(true);
 }
 
 Parameter *Parser::readParameter() {
     Parameter *parameter = new Parameter(m_tokens.front());
 
-    parameter->name = readIdentifier();
+    parameter->name = readIdentifier(false);
     parameter->typeNode = readCast();
 
     if (isToken(Token::Colon)) {
@@ -606,7 +601,7 @@ VariableDefinition *Parser::readVariableDefinition() {
 
     VariableDefinition *definition = new VariableDefinition(token);
 
-    definition->name = readIdentifier();
+    definition->name = readIdentifier(false);
 
     if (isToken(Token::AsKeyword)) {
         definition->typeNode = readCast();
@@ -629,30 +624,14 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     FunctionDefinition *definition = new FunctionDefinition(token);
 
     if (isToken(Token::Identifier)) {
-        definition->name = readIdentifier();
+        definition->name = readIdentifier(true);
     } else if (isToken(Token::Operator)) {
-        definition->name = readOperator();
+        definition->name = readOperator(true);
     } else {
         throw Errors::SyntaxError(m_tokens.front(), "identifier or operator");
     }
 
-    debug("Name: " + definition->name->name);
-
-    if (isToken(Token::OpenBrace)) {
-        readToken(Token::OpenBrace);
-
-        while (!isToken(Token::CloseBrace)) {
-            definition->type_parameters.push_back(readIdentifier());
-
-            if (isToken(Token::Comma)) {
-                readToken(Token::Comma);
-            } else {
-                break;  // no more parameters, apparently
-            }
-        }
-
-        readToken(Token::CloseBrace);
-    }
+    debug("Name: " + definition->name->value);
 
     readToken(Token::OpenParenthesis);
 
@@ -684,27 +663,11 @@ TypeDefinition *Parser::readTypeDefinition() {
 
     TypeDefinition *definition = new TypeDefinition(token);
 
-    definition->name = readIdentifier();
-
-    if (isToken(Token::OpenBrace)) {
-        readToken(Token::OpenBrace);
-
-        while (!isToken(Token::CloseBrace)) {
-            definition->parameters.push_back(readIdentifier());
-
-            if (isToken(Token::Comma)) {
-                readToken(Token::Comma);
-            } else {
-                break;
-            }
-        }
-
-        readToken(Token::CloseBrace);
-    }
+    definition->name = readIdentifier(true);
 
     if (isToken(Token::AsKeyword)) {
         readToken(Token::AsKeyword);
-        definition->alias = readType();
+        definition->alias = readIdentifier(true);
     } else {
         readToken(Token::Newline);
 

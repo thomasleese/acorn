@@ -49,10 +49,26 @@ Symbol *Namespace::lookup(AST::Node *currentNode, std::string name) const {
 }
 
 Symbol *Namespace::lookup(AST::Identifier *identifier) const {
-    return lookup(identifier, identifier->name);
+    return lookup(identifier, identifier->value);
+}
+
+Symbol *Namespace::lookup_by_node(AST::Node *node) const {
+    for (auto entry : m_symbols) {
+        if (entry.second->node == node) {
+            return entry.second;
+        }
+    }
+
+    if (m_parent) {
+        return m_parent->lookup_by_node(node);
+    } else {
+        throw Errors::UndefinedError(node, node->token->lexeme);
+    }
 }
 
 void Namespace::insert(AST::Node *currentNode, Symbol *symbol) {
+    symbol->node = currentNode;
+
     auto it = m_symbols.find(symbol->name);
     if (it != m_symbols.end()) {
         throw Errors::RedefinedError(currentNode, symbol->name);
@@ -135,11 +151,7 @@ void Builder::visit(AST::CodeBlock *block) {
     }
 }
 
-void Builder::visit(AST::Identifier *expression) {
-
-}
-
-void Builder::visit(AST::Type *type) {
+void Builder::visit(AST::Identifier *identifier) {
 
 }
 
@@ -220,24 +232,24 @@ void Builder::visit(AST::Spawn *expression) {
 }
 
 void Builder::visit(AST::Parameter *parameter) {
-    Symbol *symbol = new Symbol(parameter->name->name);
+    Symbol *symbol = new Symbol(parameter->name->value);
     m_current->insert(parameter, symbol);
 }
 
 void Builder::visit(AST::VariableDefinition *definition) {
-    Symbol *symbol = new Symbol(definition->name->name);
+    Symbol *symbol = new Symbol(definition->name->value);
     m_current->insert(definition, symbol);
 }
 
 void Builder::visit(AST::FunctionDefinition *definition) {
     Symbol *functionSymbol;
-    if (m_current->has(definition->name->name, false)) {
+    if (m_current->has(definition->name->value, false)) {
         // we don't want to look in any parent scope when we're
         // defining a new function; it should follow the notion of
         // variables, i.e. we are hiding the previous binding
         functionSymbol = m_current->lookup(definition->name);
     } else {
-        functionSymbol = new Symbol(definition->name->name);
+        functionSymbol = new Symbol(definition->name->value);
         functionSymbol->type = new Types::Function();
         functionSymbol->nameSpace = new Namespace(m_current);
         m_current->insert(definition, functionSymbol);
@@ -255,9 +267,9 @@ void Builder::visit(AST::FunctionDefinition *definition) {
     Namespace *oldNamespace = m_current;
     m_current = symbol->nameSpace;
 
-    for (auto parameter : definition->type_parameters) {
-        Symbol *sym = new Symbol(parameter->name);
-        sym->type = new Types::Parameter(parameter->name);
+    for (auto parameter : definition->name->parameters) {
+        Symbol *sym = new Symbol(parameter->value);
+        sym->type = new Types::Parameter(parameter->value);
         m_current->insert(definition, sym);
     }
 
@@ -271,7 +283,7 @@ void Builder::visit(AST::FunctionDefinition *definition) {
 }
 
 void Builder::visit(AST::TypeDefinition *definition) {
-    Symbol *symbol = new Symbol(definition->name->name);
+    Symbol *symbol = new Symbol(definition->name->value);
     m_current->insert(definition, symbol);
 
     symbol->nameSpace = new Namespace(m_current);
@@ -280,8 +292,8 @@ void Builder::visit(AST::TypeDefinition *definition) {
     m_current = symbol->nameSpace;
 
     for (auto parameter : definition->parameters) {
-        Symbol *sym = new Symbol(parameter->name);
-        sym->type = new Types::Parameter(parameter->name);
+        Symbol *sym = new Symbol(parameter->value);
+        sym->type = new Types::Parameter(parameter->value);
         m_current->insert(definition, sym);
     }
 
@@ -289,7 +301,7 @@ void Builder::visit(AST::TypeDefinition *definition) {
         // do nothing
     } else {
         for (auto field : definition->fields) {
-            Symbol *sym = new Symbol(field->name->name);
+            Symbol *sym = new Symbol(field->name->value);
             m_current->insert(field, sym);
         }
     }

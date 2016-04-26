@@ -30,6 +30,7 @@ namespace SymbolTable {
         bool has(std::string name, bool follow_parents = true) const;
         Symbol *lookup(AST::Node *currentNode, std::string name) const;
         Symbol *lookup(AST::Identifier *identifier) const;
+        Symbol *lookup_by_node(AST::Node *node) const;
         void insert(AST::Node *currentNode, Symbol *symbol);
         void rename(Symbol *symbol, std::string new_name);
         unsigned long size() const;
@@ -49,6 +50,7 @@ namespace SymbolTable {
         Types::Type *type;
         llvm::Value *value;
         Namespace *nameSpace;
+        AST::Node *node;
 
         std::string to_string() const;
     };
@@ -62,8 +64,7 @@ namespace SymbolTable {
 
         void visit(AST::CodeBlock *block);
 
-        void visit(AST::Identifier *expression);
-        void visit(AST::Type *type);
+        void visit(AST::Identifier *identifier);
         void visit(AST::BooleanLiteral *boolean);
         void visit(AST::IntegerLiteral *expression);
         void visit(AST::FloatLiteral *expression);

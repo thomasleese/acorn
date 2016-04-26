@@ -28,7 +28,6 @@ public:
     void visit(AST::CodeBlock *block);
 
     void visit(AST::Identifier *expression);
-    void visit(AST::Type *type);
     void visit(AST::BooleanLiteral *boolean);
     void visit(AST::IntegerLiteral *expression);
     void visit(AST::FloatLiteral *expression);

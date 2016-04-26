@@ -22,22 +22,20 @@ void PrettyPrinter::visit(AST::CodeBlock *codeBlock) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Identifier *expression) {
-    ss << indentation() << "(Identifier " << expression->name << ")\n";
-}
+void PrettyPrinter::visit(AST::Identifier *identifier) {
+    if (identifier->has_parameters()) {
+        ss << indentation() << "(Identifier " << identifier->value << "\n";
+        indent++;
 
-void PrettyPrinter::visit(AST::Type *type) {
-    ss << indentation() << "(Type\n";
-    indent++;
+        for (auto parameter : identifier->parameters) {
+            parameter->accept(this);
+        }
 
-    type->name->accept(this);
-
-    for (auto parameter : type->parameters) {
-        parameter->accept(this);
+        indent--;
+        ss << indentation() << ")\n";
+    } else {
+        ss << indentation() << "(Identifier " << identifier->value << ")\n";
     }
-
-    indent--;
-    ss << indentation() << ")\n";
 }
 
 void PrettyPrinter::visit(AST::BooleanLiteral *boolean) {
