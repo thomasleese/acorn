@@ -254,6 +254,11 @@ void GenericsPass::visit(AST::DefinitionStatement *statement) {
                         if (statement->definition->name->parameters.size() == parameters.size()) {
                             auto new_statement = statement->clone();
 
+                            /*auto builder = new SymbolTable::Builder();
+                            new_statement->accept(builder);
+
+                            auto new_symbol = builder->rootNamespace()->lookup_by_node(new_statement);*/
+
                             auto new_symbol = symbol->clone();
                             new_symbol->name = symbol->name + "_";
                             symbol_scope->insert(new_statement->definition, new_symbol);
@@ -262,7 +267,6 @@ void GenericsPass::visit(AST::DefinitionStatement *statement) {
                             for (int i = 0; i < parameters.size(); i++) {
                                 SymbolTable::Symbol *s = new_symbol->nameSpace->lookup(statement->definition->name->parameters[i]);
                                 m_replacements[s] = parameters[i]->value;
-                                std::cout << s->name << "=" << parameters[i]->value << std::endl;
                             }
 
                             assert(!m_replacements.empty());
@@ -280,12 +284,6 @@ void GenericsPass::visit(AST::DefinitionStatement *statement) {
                                 symbol_scope->rename(new_symbol, new_statement->definition->name->value);
                             }
 
-                            PrettyPrinter *printer = new PrettyPrinter();
-                            statement->accept(printer);
-                            new_statement->accept(printer);
-                            printer->print();
-                            delete printer;
-
                             m_actions.push_back(Action(Action::InsertStatement, new_statement));
                         }
                     }
@@ -295,6 +293,8 @@ void GenericsPass::visit(AST::DefinitionStatement *statement) {
             } else {
                 statement->definition->accept(this);
             }
+        } else {
+            statement->definition->accept(this);
         }
     }
 }
@@ -310,8 +310,6 @@ void GenericsPass::visit(AST::ImportStatement *statement) {
 void GenericsPass::visit(AST::SourceFile *module) {
     m_collecting = true;
     module->code->accept(this);
-
-    std::cout << "Identified " << m_generics.size() << " generic definitions." << std::endl;
 
     m_collecting = false;
     module->code->accept(this);

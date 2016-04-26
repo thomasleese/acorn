@@ -255,7 +255,12 @@ void PrettyPrinter::visit(AST::VariableDefinition *definition) {
     indent++;
 
     definition->name->accept(this);
-    definition->typeNode->accept(this);
+
+    if (definition->typeNode) {
+        definition->typeNode->accept(this);
+    } else {
+        ss << indentation() << "(null)\n";
+    }
     definition->expression->accept(this);
 
     indent--;

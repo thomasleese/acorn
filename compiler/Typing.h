@@ -32,6 +32,8 @@ namespace Typing {
         Types::Type *find_type(AST::Node *node, std::string name);
         Types::Type *find_type(AST::Identifier *type);
 
+        Types::Type *instance_type(AST::Identifier *identifier);
+
     public:
         void visit(AST::CodeBlock *block);
 

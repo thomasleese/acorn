@@ -410,7 +410,7 @@ FunctionDefinition* FunctionDefinition::clone() const {
     new_def->code = this->code->clone();
 
     for (auto p : this->parameters) {
-        new_def->parameters.push_back(p);
+        new_def->parameters.push_back(p->clone());
     }
 
     new_def->returnType = this->returnType->clone();

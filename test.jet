@@ -1,7 +1,9 @@
 type Integer as Integer64
+type Float as Float64
 
-def get_me(me as Integer) as Integer
-    return me
+type Record{T}
+    value as T
 end
 
-let b = get_me(me: 10)
+let a = Record{Integer}(value: 10)
+let b = Record{Float}(value: 10.5)

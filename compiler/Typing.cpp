@@ -56,6 +56,22 @@ Types::Type *Inferrer::find_type(AST::Identifier *type) {
     return find_type(type, type->value, type->parameters);
 }
 
+Types::Type *Inferrer::instance_type(AST::Identifier *identifier) {
+    Types::Constructor *type_constructor = dynamic_cast<Types::Constructor *>(identifier->type);
+    if (type_constructor) {
+        std::vector<Types::Type *> parameterTypes;
+
+        for (auto parameter : identifier->parameters) {
+            instance_type(parameter);
+            parameterTypes.push_back(parameter->type);
+        }
+
+        return type_constructor->create(identifier, parameterTypes);
+    } else {
+        throw Errors::InvalidTypeConstructor(identifier);
+    }
+}
+
 void Inferrer::visit(AST::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
@@ -267,7 +283,7 @@ void Inferrer::visit(AST::Parameter *parameter) {
 
     parameter->typeNode->accept(this);
 
-    parameter->type = parameter->typeNode->type;
+    parameter->type = instance_type(parameter->typeNode);
     symbol->type = parameter->type;
 }
 
@@ -312,6 +328,7 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
     }
 
     definition->returnType->accept(this);
+    definition->returnType->type = instance_type(definition->returnType);
 
     Types::Method *method = new Types::Method(parameterTypes, definition->returnType->type,
                                               officialParameterOrder);
