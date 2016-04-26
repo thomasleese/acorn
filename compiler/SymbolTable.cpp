@@ -83,11 +83,19 @@ void Namespace::rename(Symbol *symbol, std::string new_name) {
 
     m_symbols.erase(it);
     symbol->name = new_name;
-    insert(nullptr, symbol);
+    insert(symbol->node, symbol);
 }
 
 unsigned long Namespace::size() const {
     return m_symbols.size();
+}
+
+std::vector<Symbol *> Namespace::symbols() const {
+    std::vector<Symbol *> symbols;
+    for (auto entry : m_symbols) {
+        symbols.push_back(entry.second);
+    }
+    return symbols;
 }
 
 bool Namespace::is_root() const {
@@ -109,11 +117,23 @@ std::string Namespace::to_string() const {
     return ss.str();
 }
 
+Namespace* Namespace::clone() const {
+    Namespace *new_namespace = new Namespace(m_parent);
+    for (auto entry : m_symbols) {
+        new_namespace->m_symbols[entry.first] = entry.second->clone();
+    }
+    return new_namespace;
+}
+
 Symbol::Symbol(std::string name) {
     this->name = name;
     this->type = nullptr;
     this->value = nullptr;
     this->nameSpace = nullptr;
+}
+
+bool Symbol::is_function() const {
+    return dynamic_cast<Types::Function *>(this->type) != nullptr && this->node == nullptr;
 }
 
 std::string Symbol::to_string() const {
@@ -129,6 +149,14 @@ std::string Symbol::to_string() const {
     }
 
     return ss.str();
+}
+
+Symbol* Symbol::clone() const {
+    auto new_symbol = new Symbol(this->name);
+    if (this->nameSpace) {
+        new_symbol->nameSpace = this->nameSpace->clone();
+    }
+    return new_symbol;
 }
 
 Builder::Builder() {
@@ -253,6 +281,7 @@ void Builder::visit(AST::FunctionDefinition *definition) {
         functionSymbol->type = new Types::Function();
         functionSymbol->nameSpace = new Namespace(m_current);
         m_current->insert(definition, functionSymbol);
+        functionSymbol->node = nullptr;  // explicit no node for function symbols
     }
 
     // this is really hacky...
@@ -269,7 +298,7 @@ void Builder::visit(AST::FunctionDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new Types::Parameter(parameter->value);
+        //sym->type = new Types::Parameter(parameter->value);
         m_current->insert(definition, sym);
     }
 
@@ -291,9 +320,9 @@ void Builder::visit(AST::TypeDefinition *definition) {
     Namespace *oldNamespace = m_current;
     m_current = symbol->nameSpace;
 
-    for (auto parameter : definition->parameters) {
+    for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new Types::Parameter(parameter->value);
+        //sym->type = new Types::Parameter(parameter->value);
         m_current->insert(definition, sym);
     }
 

@@ -1,12 +1,7 @@
 type Integer as Integer64
 
-def get_me{T}(me as T) as T
+def get_me(me as Integer) as Integer
     return me
 end
 
-def get_me{T}(me as T, b as Integer) as T
-    return me
-end
-
-let a = 10
-let b = get_me{Integer}(me: a)
+let b = get_me(me: 10)

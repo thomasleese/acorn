@@ -162,20 +162,6 @@ namespace Types {
     };
 
     // concrete types
-    class Parameter : public Type {
-    public:
-        explicit Parameter(std::string name);
-
-        std::string name() const;
-        std::string mangled_name() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
-
-    private:
-        std::string m_name;
-    };
-
     class Any : public Type {
     public:
         std::string name() const;

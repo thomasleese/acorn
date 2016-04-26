@@ -32,16 +32,6 @@ Types::Constructor *Inferrer::find_type_constructor(AST::Node *node, std::string
     }
 }
 
-Types::Parameter *Inferrer::find_type_parameter(AST::Node *node, std::string name) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(node, name);
-    Types::Parameter *typeParameter = dynamic_cast<Types::Parameter *>(symbol->type);
-    if (typeParameter) {
-        return typeParameter;
-    } else {
-        return nullptr;
-    }
-}
-
 Types::Type *Inferrer::find_type(AST::Node *node, std::string name, std::vector<AST::Identifier *> parameters) {
     std::vector<Types::Type *> parameterTypes;
 
@@ -54,12 +44,7 @@ Types::Type *Inferrer::find_type(AST::Node *node, std::string name, std::vector<
     if (typeConstructor != nullptr) {
         return typeConstructor->create(node, parameterTypes);
     } else {
-        Types::Parameter *typeParameter = find_type_parameter(node, name);
-        if (typeParameter != nullptr) {
-            return typeParameter;
-        } else {
-            throw Errors::InvalidTypeConstructor(node);
-        }
+        throw Errors::InvalidTypeConstructor(node);
     }
 }
 
@@ -312,12 +297,7 @@ void Inferrer::visit(AST::FunctionDefinition *definition) {
     SymbolTable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
     Types::Function *function = static_cast<Types::Function *>(functionSymbol->type);
 
-    // from the symbol table builder
-    auto pointer_location = reinterpret_cast<std::uintptr_t>(definition);
-    std::stringstream ss;
-    ss << pointer_location;
-
-    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, ss.str());
+    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
 
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -362,7 +342,7 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
     Types::Type *type;
     if (definition->alias) {
         std::vector<Types::Type *> inputParameters;
-        for (auto t : definition->parameters) {
+        for (auto t : definition->name->parameters) {
             t->accept(this);
             inputParameters.push_back(t->type);
         }

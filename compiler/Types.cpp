@@ -207,7 +207,7 @@ Type *UnionConstructor::create(AST::Node *node, std::vector<Type *> parameters) 
 
 AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Type *> inputParameters, std::vector<Type *> outputParameters) :
         m_constructor(constructor) {
-    for (unsigned long i = 0; i < inputParameters.size(); i++) {
+    /*for (unsigned long i = 0; i < inputParameters.size(); i++) {
         auto parameter = dynamic_cast<Parameter *>(inputParameters[i]);
         if (parameter == nullptr) {
             throw Errors::InvalidTypeParameters(node, 0, 0);
@@ -233,7 +233,7 @@ AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, st
         if (dynamic_cast<Parameter *>(t) == nullptr) {
             m_knownTypes.push_back(t);
         }
-    }
+    }*/
 }
 
 std::string AliasConstructor::name() const {
@@ -241,7 +241,7 @@ std::string AliasConstructor::name() const {
 }
 
 Type *AliasConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
-    if (parameters.size() != m_parameterMapping.size()) {
+    /*if (parameters.size() != m_parameterMapping.size()) {
         throw Errors::InvalidTypeParameters(node, parameters.size(), m_parameterMapping.size());
     }
 
@@ -262,29 +262,9 @@ Type *AliasConstructor::create(AST::Node *node, std::vector<Type *> parameters) 
             actualParameters[i] = m_knownTypes[j];
             j++;
         }
-    }
+    }*/
 
-    return m_constructor->create(node, actualParameters);
-}
-
-Parameter::Parameter(std::string name) : m_name(name) {
-
-}
-
-std::string Parameter::name() const {
-    return m_name;
-}
-
-std::string Parameter::mangled_name() const {
-    return "p";
-}
-
-llvm::Type *Parameter::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented (parameter)");
-}
-
-llvm::Constant *Parameter::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented (parameter)");
+    return m_constructor->create(node, parameters);
 }
 
 std::string Any::name() const {

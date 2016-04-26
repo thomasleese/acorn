@@ -155,6 +155,17 @@ void PrettyPrinter::visit(AST::Selector *expression) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(AST::Index *expression) {
+    ss << indentation() << "(Index\n";
+    indent++;
+
+    expression->operand->accept(this);
+    expression->index->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(AST::Comma *expression) {
     ss << indentation() << "(Comma\n";
     indent++;
@@ -209,6 +220,16 @@ void PrettyPrinter::visit(AST::Return *expression) {
     indent++;
 
     expression->expression->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::Spawn *expression) {
+    ss << indentation() << "(Spawn\n";
+    indent++;
+
+    expression->call->accept(this);
 
     indent--;
     ss << indentation() << ")\n";

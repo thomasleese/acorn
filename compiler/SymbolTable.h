@@ -34,9 +34,11 @@ namespace SymbolTable {
         void insert(AST::Node *currentNode, Symbol *symbol);
         void rename(Symbol *symbol, std::string new_name);
         unsigned long size() const;
+        std::vector<Symbol *> symbols() const;
 
         bool is_root() const;
         std::string to_string() const;
+        Namespace *clone() const;
 
     private:
         Namespace *m_parent;
@@ -52,7 +54,10 @@ namespace SymbolTable {
         Namespace *nameSpace;
         AST::Node *node;
 
+        bool is_function() const;
+
         std::string to_string() const;
+        Symbol *clone() const;
     };
 
     class Builder : public AST::Visitor {

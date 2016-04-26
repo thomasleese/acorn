@@ -27,7 +27,6 @@ namespace Typing {
 
     private:
         Types::Constructor *find_type_constructor(AST::Node *node, std::string name);
-        Types::Parameter *find_type_parameter(AST::Node *node, std::string name);
 
         Types::Type *find_type(AST::Node *node, std::string name, std::vector<AST::Identifier *> parameters);
         Types::Type *find_type(AST::Node *node, std::string name);

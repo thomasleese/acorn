@@ -31,11 +31,13 @@ public:
     void visit(AST::CCall *ccall);
     void visit(AST::Assignment *expression);
     void visit(AST::Selector *expression);
+    void visit(AST::Index *expression);
     void visit(AST::Comma *expression);
     void visit(AST::While *expression);
     void visit(AST::For *expression);
     void visit(AST::If *expression);
     void visit(AST::Return *expression);
+    void visit(AST::Spawn *expression);
 
     void visit(AST::Parameter *parameter);
 

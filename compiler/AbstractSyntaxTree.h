@@ -23,6 +23,7 @@ namespace AST {
         virtual ~Node();
 
         virtual void accept(Visitor *visitor) = 0;
+        virtual Node *clone() const = 0;
 
         Token *token;
         Types::Type *type;
@@ -31,14 +32,14 @@ namespace AST {
     // basic categories
     struct Expression : Node {
         using Node::Node;
+
+        virtual Expression *clone() const = 0;
     };
 
     struct Statement : Node {
         using Node::Node;
-    };
 
-    struct Definition : Node {
-        using Node::Node;
+        virtual Statement *clone() const = 0;
     };
 
     // misc
@@ -48,6 +49,7 @@ namespace AST {
         std::vector<Statement *> statements;
 
         void accept(Visitor *visitor);
+        CodeBlock *clone() const;
     };
 
     // expressions
@@ -56,11 +58,22 @@ namespace AST {
         Identifier(Token *token, std::string name);
 
         bool has_parameters() const;
+        std::string collapsed_value() const;
+        void collapse_parameters();
 
         std::string value;
         std::vector<Identifier *> parameters;
 
         void accept(Visitor *visitor);
+        Identifier *clone() const;
+    };
+
+    struct Definition : Node {
+        using Node::Node;
+
+        Identifier *name;
+
+        virtual Definition *clone() const = 0;
     };
 
     struct BooleanLiteral : Expression {
@@ -69,6 +82,7 @@ namespace AST {
         std::string value;
 
         void accept(Visitor *visitor);
+        BooleanLiteral *clone() const;
     };
 
     struct IntegerLiteral : Expression {
@@ -77,6 +91,7 @@ namespace AST {
         std::string value;
 
         void accept(Visitor *visitor);
+        IntegerLiteral *clone() const;
     };
 
     struct FloatLiteral : Expression {
@@ -85,6 +100,7 @@ namespace AST {
         std::string value;
 
         void accept(Visitor *visitor);
+        FloatLiteral *clone() const;
     };
 
     struct ImaginaryLiteral : Expression {
@@ -93,6 +109,7 @@ namespace AST {
         std::string value;
 
         void accept(Visitor *visitor);
+        ImaginaryLiteral *clone() const;
     };
 
     struct StringLiteral : Expression {
@@ -101,6 +118,7 @@ namespace AST {
         std::string value;
 
         void accept(Visitor *visitor);
+        StringLiteral *clone() const;
     };
 
     struct SequenceLiteral : Expression {
@@ -109,6 +127,7 @@ namespace AST {
         std::vector<Expression *> elements;
 
         void accept(Visitor *visitor);
+        SequenceLiteral *clone() const;
     };
 
     struct MappingLiteral : Expression {
@@ -118,6 +137,7 @@ namespace AST {
         std::vector<Expression *> values;
 
         void accept(Visitor *visitor);
+        MappingLiteral *clone() const;
     };
 
     struct Argument : Node {
@@ -128,6 +148,7 @@ namespace AST {
         Expression *value;
 
         void accept(Visitor *visitor);
+        Argument *clone() const;
     };
 
     struct Call : Expression {
@@ -138,6 +159,7 @@ namespace AST {
         std::vector<Argument *> arguments;
 
         void accept(Visitor *visitor);
+        Call *clone() const;
     };
 
     struct CCall : Expression {
@@ -149,6 +171,7 @@ namespace AST {
         std::vector<Expression *> arguments;
 
         void accept(Visitor *visitor);
+        CCall *clone() const;
     };
 
     struct Assignment : Expression {
@@ -158,6 +181,7 @@ namespace AST {
         Expression *rhs;
 
         void accept(Visitor *visitor);
+        Assignment *clone() const;
     };
 
     struct Selector : Expression {
@@ -167,6 +191,7 @@ namespace AST {
         Identifier *name;
 
         void accept(Visitor *visitor);
+        Selector *clone() const;
     };
 
     struct Index : Expression {
@@ -176,6 +201,7 @@ namespace AST {
         Expression *index;
 
         void accept(Visitor *visitor);
+        Index *clone() const;
     };
 
     struct Comma : Expression {
@@ -186,6 +212,7 @@ namespace AST {
         Expression *rhs;
 
         void accept(Visitor *visitor);
+        Comma *clone() const;
     };
 
     struct While : Expression {
@@ -195,6 +222,7 @@ namespace AST {
         CodeBlock *code;
 
         void accept(Visitor *visitor);
+        While *clone() const;
     };
 
     struct For : Expression {
@@ -205,6 +233,7 @@ namespace AST {
         CodeBlock *code;
 
         void accept(Visitor *visitor);
+        For *clone() const;
     };
 
     struct If : Expression {
@@ -215,6 +244,7 @@ namespace AST {
         CodeBlock *falseCode;
 
         void accept(Visitor *visitor);
+        If *clone() const;
     };
 
     struct Return : Expression {
@@ -223,6 +253,7 @@ namespace AST {
         Expression *expression;
 
         void accept(Visitor *visitor);
+        Return *clone() const;
     };
 
     struct Spawn : Expression {
@@ -231,6 +262,7 @@ namespace AST {
         Call *call;
 
         void accept(Visitor *visitor);
+        Spawn *clone() const;
     };
 
     // misc
@@ -242,6 +274,7 @@ namespace AST {
         Expression *defaultExpression;
 
         void accept(Visitor *visitor);
+        Parameter *clone() const;
     };
 
     // definitions
@@ -249,34 +282,32 @@ namespace AST {
         VariableDefinition(Token *token);
         VariableDefinition(std::string name, Token *token);
 
-        Identifier *name;
         Identifier *typeNode;
         Expression *expression;
 
         void accept(Visitor *visitor);
+        VariableDefinition *clone() const;
     };
 
     struct FunctionDefinition : Definition {
         using Definition::Definition;
 
-        Identifier *name;
         std::vector<Parameter *> parameters;
         CodeBlock *code;
         Identifier *returnType;
 
         void accept(Visitor *visitor);
+        FunctionDefinition *clone() const;
     };
 
     struct TypeDefinition : Definition {
         TypeDefinition(Token *token);
 
-        Identifier *name;
-        std::vector<Identifier *> parameters;
-
         Identifier *alias;
         std::vector<Parameter *> fields;
 
         void accept(Visitor *visitor);
+        TypeDefinition *clone() const;
     };
 
     // statements
@@ -286,6 +317,7 @@ namespace AST {
         Definition *definition;
 
         void accept(Visitor *visitor);
+        DefinitionStatement *clone() const;
     };
 
     struct ExpressionStatement : Statement {
@@ -294,6 +326,7 @@ namespace AST {
         Expression *expression;
 
         void accept(Visitor *visitor);
+        ExpressionStatement *clone() const;
     };
 
     struct ImportStatement : Statement {
@@ -302,6 +335,7 @@ namespace AST {
         StringLiteral *path;
 
         void accept(Visitor *visitor);
+        ImportStatement *clone() const;
     };
 
     // source file
@@ -313,6 +347,7 @@ namespace AST {
         std::vector<ImportStatement *> imports;
 
         void accept(Visitor *visitor);
+        SourceFile *clone() const;
     };
 
     // visitor

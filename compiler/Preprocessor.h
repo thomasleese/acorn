@@ -17,6 +17,20 @@ namespace jet {
 
 namespace preprocessor {
 
+    struct Action {
+
+        enum Kind {
+            DropStatement,
+            InsertStatement
+        };
+
+        Action(Kind kind, AST::Statement *statement = nullptr);
+
+        Kind kind;
+        AST::Statement *statement;
+
+    };
+
     class GenericsPass : public AST::Visitor {
 
     public:
@@ -61,9 +75,12 @@ namespace preprocessor {
         bool m_collecting;
 
         std::vector<SymbolTable::Namespace *> m_scope;
+        std::vector<Action> m_actions;
 
-        std::map<AST::TypeDefinition *, std::vector<std::vector<AST::Identifier *> > > m_types;
-        std::map<AST::FunctionDefinition *, std::vector<std::vector<AST::Identifier *> > > m_functions;
+        std::map<AST::Definition *, std::vector<std::vector<AST::Identifier *> > > m_generics;
+        std::map<SymbolTable::Symbol *, std::string> m_replacements;
+
+        AST::Identifier *m_skip_identifier;
 
     };
 
