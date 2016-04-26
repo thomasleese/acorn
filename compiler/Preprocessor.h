@@ -13,12 +13,14 @@ namespace SymbolTable {
     class Namespace;
 }
 
-namespace Generics {
+namespace jet {
 
-    class Duplicator : public AST::Visitor {
+namespace preprocessor {
+
+    class GenericsPass : public AST::Visitor {
 
     public:
-        Duplicator(SymbolTable::Namespace *root_namespace);
+        GenericsPass(SymbolTable::Namespace *root_namespace);
 
         void visit(AST::CodeBlock *block);
 
@@ -64,6 +66,8 @@ namespace Generics {
         std::map<AST::FunctionDefinition *, std::vector<std::vector<AST::Identifier *> > > m_functions;
 
     };
+
+}
 
 }
 

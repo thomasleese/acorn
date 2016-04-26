@@ -7,58 +7,58 @@
 #include "SymbolTable.h"
 #include "Types.h"
 
-#include "Generics.h"
+#include "Preprocessor.h"
 
-using namespace Generics;
+using namespace jet::preprocessor;
 
-Duplicator::Duplicator(SymbolTable::Namespace *root_namespace) :
+GenericsPass::GenericsPass(SymbolTable::Namespace *root_namespace) :
         m_collecting(true) {
     m_scope.push_back(root_namespace);
 }
 
-void Duplicator::visit(AST::CodeBlock *block) {
+void GenericsPass::visit(AST::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
     }
 }
 
-void Duplicator::visit(AST::Identifier *identifier) {
+void GenericsPass::visit(AST::Identifier *identifier) {
 
 }
 
-void Duplicator::visit(AST::BooleanLiteral *boolean) {
+void GenericsPass::visit(AST::BooleanLiteral *boolean) {
 
 }
 
-void Duplicator::visit(AST::IntegerLiteral *expression) {
+void GenericsPass::visit(AST::IntegerLiteral *expression) {
 
 }
 
-void Duplicator::visit(AST::FloatLiteral *expression) {
+void GenericsPass::visit(AST::FloatLiteral *expression) {
 
 }
 
-void Duplicator::visit(AST::ImaginaryLiteral *imaginary) {
+void GenericsPass::visit(AST::ImaginaryLiteral *imaginary) {
 
 }
 
-void Duplicator::visit(AST::StringLiteral *expression) {
+void GenericsPass::visit(AST::StringLiteral *expression) {
 
 }
 
-void Duplicator::visit(AST::SequenceLiteral *sequence) {
+void GenericsPass::visit(AST::SequenceLiteral *sequence) {
 
 }
 
-void Duplicator::visit(AST::MappingLiteral *mapping) {
+void GenericsPass::visit(AST::MappingLiteral *mapping) {
 
 }
 
-void Duplicator::visit(AST::Argument *argument) {
+void GenericsPass::visit(AST::Argument *argument) {
 
 }
 
-void Duplicator::visit(AST::Call *expression) {
+void GenericsPass::visit(AST::Call *expression) {
     if (m_collecting) {
         auto identifier = dynamic_cast<AST::Identifier *>(expression->operand);
         assert(identifier);
@@ -74,51 +74,51 @@ void Duplicator::visit(AST::Call *expression) {
     }
 }
 
-void Duplicator::visit(AST::CCall *expression) {
+void GenericsPass::visit(AST::CCall *expression) {
 
 }
 
-void Duplicator::visit(AST::Assignment *expression) {
+void GenericsPass::visit(AST::Assignment *expression) {
 
 }
 
-void Duplicator::visit(AST::Selector *expression) {
+void GenericsPass::visit(AST::Selector *expression) {
 
 }
 
-void Duplicator::visit(AST::Index *expression) {
+void GenericsPass::visit(AST::Index *expression) {
 
 }
 
-void Duplicator::visit(AST::Comma *expression) {
+void GenericsPass::visit(AST::Comma *expression) {
 
 }
 
-void Duplicator::visit(AST::While *expression) {
+void GenericsPass::visit(AST::While *expression) {
 
 }
 
-void Duplicator::visit(AST::For *expression) {
+void GenericsPass::visit(AST::For *expression) {
 
 }
 
-void Duplicator::visit(AST::If *expression) {
+void GenericsPass::visit(AST::If *expression) {
 
 }
 
-void Duplicator::visit(AST::Return *expression) {
+void GenericsPass::visit(AST::Return *expression) {
 
 }
 
-void Duplicator::visit(AST::Spawn *expression) {
+void GenericsPass::visit(AST::Spawn *expression) {
 
 }
 
-void Duplicator::visit(AST::Parameter *parameter) {
+void GenericsPass::visit(AST::Parameter *parameter) {
 
 }
 
-void Duplicator::visit(AST::VariableDefinition *definition) {
+void GenericsPass::visit(AST::VariableDefinition *definition) {
     if (m_collecting) {
         if (definition->typeNode) {
             if (!definition->typeNode->parameters.empty()) {
@@ -132,7 +132,7 @@ void Duplicator::visit(AST::VariableDefinition *definition) {
     }
 }
 
-void Duplicator::visit(AST::FunctionDefinition *definition) {
+void GenericsPass::visit(AST::FunctionDefinition *definition) {
     SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition, definition->name->value);
     SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
     m_scope.push_back(symbol->nameSpace);
@@ -148,7 +148,7 @@ void Duplicator::visit(AST::FunctionDefinition *definition) {
     m_scope.pop_back();
 }
 
-void Duplicator::visit(AST::TypeDefinition *definition) {
+void GenericsPass::visit(AST::TypeDefinition *definition) {
     if (m_collecting) {
         if (!definition->parameters.empty()) {
             m_types[definition] = std::vector<std::vector<AST::Identifier *> >();
@@ -158,19 +158,19 @@ void Duplicator::visit(AST::TypeDefinition *definition) {
     }
 }
 
-void Duplicator::visit(AST::DefinitionStatement *statement) {
+void GenericsPass::visit(AST::DefinitionStatement *statement) {
     statement->definition->accept(this);
 }
 
-void Duplicator::visit(AST::ExpressionStatement *statement) {
+void GenericsPass::visit(AST::ExpressionStatement *statement) {
     statement->expression->accept(this);
 }
 
-void Duplicator::visit(AST::ImportStatement *statement) {
+void GenericsPass::visit(AST::ImportStatement *statement) {
 
 }
 
-void Duplicator::visit(AST::SourceFile *module) {
+void GenericsPass::visit(AST::SourceFile *module) {
     module->code->accept(this);
 
     m_collecting = false;

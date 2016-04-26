@@ -25,10 +25,12 @@
 #include "SymbolTable.h"
 #include "CodeGenerator.h"
 #include "Errors.h"
+#include "Preprocessor.h"
 #include "Typing.h"
 
 #include "Compiler.h"
-#include "Generics.h"
+
+using namespace jet;
 
 Compiler::Compiler()
 {
@@ -85,8 +87,8 @@ void Compiler::compile(std::string filename) {
 
     debug("Parsing generics...");
 
-    Generics::Duplicator *generics_duplicator = new Generics::Duplicator(rootNamespace);
-    module->accept(generics_duplicator);
+    auto generics_pass = new preprocessor::GenericsPass(rootNamespace);
+    module->accept(generics_pass);
 
     debug("Inferring types...");
 
