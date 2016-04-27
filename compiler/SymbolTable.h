@@ -104,7 +104,7 @@ namespace SymbolTable {
 
     private:
         Namespace *m_root;
-        Namespace *m_current;
+        std::vector<Namespace *> m_scope;
     };
 
 };

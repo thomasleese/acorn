@@ -190,7 +190,7 @@ void GenericsPass::visit(AST::VariableDefinition *definition) {
 }
 
 void GenericsPass::visit(AST::FunctionDefinition *definition) {
-    SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition, definition->name->value);
+    SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition->name);
     SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
     m_scope.push_back(symbol->nameSpace);
 
@@ -208,6 +208,9 @@ void GenericsPass::visit(AST::FunctionDefinition *definition) {
 }
 
 void GenericsPass::visit(AST::TypeDefinition *definition) {
+    SymbolTable::Symbol *symbol = m_scope.back()->lookup_by_node(definition);
+    m_scope.push_back(symbol->nameSpace);
+
     definition->name->accept(this);
 
     if (definition->alias) {
@@ -217,6 +220,8 @@ void GenericsPass::visit(AST::TypeDefinition *definition) {
             field->accept(this);
         }
     }
+
+    m_scope.pop_back();
 }
 
 void GenericsPass::visit(AST::DefinitionStatement *statement) {

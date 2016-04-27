@@ -589,8 +589,6 @@ void CodeGenerator::visit(AST::TypeDefinition *definition) {
 
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
-    // FIXME deal with generics
-
     // create initialiser function
     llvm::Type *return_type = static_cast<Types::Constructor *>(definition->type)->create(definition)->create_llvm_type(context);
 
