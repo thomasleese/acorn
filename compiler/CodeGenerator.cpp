@@ -252,8 +252,16 @@ void CodeGenerator::visit(AST::CCall *ccall) {
         parameters.push_back(parameter->type->create_llvm_type(context));
     }
 
+    std::string name = ccall->name->value;
+
     llvm::FunctionType *functionType = llvm::FunctionType::get(returnType, parameters, false);
-    llvm::Function *function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, ccall->name->value, m_module);
+
+    llvm::Function *function = m_module->getFunction(name);
+    if (!function) {
+        function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, name, m_module);
+    }
+
+    // TODO check duplication signature matches
 
     std::vector<llvm::Value *> arguments;
     for (auto argument : ccall->arguments) {
