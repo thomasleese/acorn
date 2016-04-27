@@ -12,41 +12,43 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/Support/Casting.h>
 
-#include "Builtins.h"
-#include "Errors.h"
-#include "Mangler.h"
-#include "SymbolTable.h"
-#include "Types.h"
+#include "../Builtins.h"
+#include "../Errors.h"
+#include "../Mangler.h"
+#include "../SymbolTable.h"
+#include "../Types.h"
 
-#include "CodeGenerator.h"
+#include "module.h"
 
-CodeGenerator::CodeGenerator(SymbolTable::Namespace *rootNamespace) {
+using namespace jet::codegen;
+
+ModuleGenerator::ModuleGenerator(SymbolTable::Namespace *rootNamespace) {
     m_scope = rootNamespace;
 
     m_irBuilder = new llvm::IRBuilder<>(llvm::getGlobalContext());
     m_mdBuilder = new llvm::MDBuilder(llvm::getGlobalContext());
 }
 
-CodeGenerator::~CodeGenerator() {
+ModuleGenerator::~ModuleGenerator() {
     delete m_irBuilder;
     delete m_mdBuilder;
 }
 
-void CodeGenerator::debug(std::string line) {
+void ModuleGenerator::debug(std::string line) {
     // std::cerr << line << std::endl;
 }
 
-llvm::Module *CodeGenerator::module() const {
+llvm::Module *ModuleGenerator::module() const {
     return m_module;
 }
 
-void CodeGenerator::visit(AST::CodeBlock *block) {
+void ModuleGenerator::visit(AST::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
     }
 }
 
-void CodeGenerator::visit(AST::Identifier *identifier) {
+void ModuleGenerator::visit(AST::Identifier *identifier) {
     debug("Finding named value: " + identifier->value);
 
     SymbolTable::Symbol *symbol = m_scope->lookup(identifier);
@@ -63,11 +65,11 @@ void CodeGenerator::visit(AST::Identifier *identifier) {
     m_llvmValues.push_back(value);
 }
 
-void CodeGenerator::visit(AST::BooleanLiteral *boolean) {
+void ModuleGenerator::visit(AST::BooleanLiteral *boolean) {
     throw Errors::InternalError(boolean, "N/A");
 }
 
-void CodeGenerator::visit(AST::IntegerLiteral *expression) {
+void ModuleGenerator::visit(AST::IntegerLiteral *expression) {
     debug("Making integer literal: " + expression->value);
 
     llvm::Type *type = expression->type->create_llvm_type(llvm::getGlobalContext());
@@ -81,7 +83,7 @@ void CodeGenerator::visit(AST::IntegerLiteral *expression) {
     m_llvmValues.push_back(value);
 }
 
-void CodeGenerator::visit(AST::FloatLiteral *expression) {
+void ModuleGenerator::visit(AST::FloatLiteral *expression) {
     debug("Making float literal: " + expression->value);
 
     llvm::Type *type = expression->type->create_llvm_type(llvm::getGlobalContext());
@@ -95,15 +97,15 @@ void CodeGenerator::visit(AST::FloatLiteral *expression) {
     m_llvmValues.push_back(value);
 }
 
-void CodeGenerator::visit(AST::ImaginaryLiteral *imaginary) {
+void ModuleGenerator::visit(AST::ImaginaryLiteral *imaginary) {
     throw Errors::InternalError(imaginary, "N/A");
 }
 
-void CodeGenerator::visit(AST::StringLiteral *expression) {
+void ModuleGenerator::visit(AST::StringLiteral *expression) {
     throw Errors::InternalError(expression, "N/A");
 }
 
-void CodeGenerator::visit(AST::SequenceLiteral *sequence) {
+void ModuleGenerator::visit(AST::SequenceLiteral *sequence) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     std::vector<llvm::Value *> elements;
@@ -152,15 +154,15 @@ void CodeGenerator::visit(AST::SequenceLiteral *sequence) {
     m_llvmValues.push_back(m_irBuilder->CreateLoad(instance));
 }
 
-void CodeGenerator::visit(AST::MappingLiteral *mapping) {
+void ModuleGenerator::visit(AST::MappingLiteral *mapping) {
     throw Errors::InternalError(mapping, "N/A");
 }
 
-void CodeGenerator::visit(AST::Argument *argument) {
+void ModuleGenerator::visit(AST::Argument *argument) {
     argument->value->accept(this);
 }
 
-void CodeGenerator::visit(AST::Call *expression) {
+void ModuleGenerator::visit(AST::Call *expression) {
     AST::Identifier *identifier = dynamic_cast<AST::Identifier *>(expression->operand);
     if (identifier) {
         debug("Generating a call to: " + identifier->value);
@@ -242,7 +244,7 @@ void CodeGenerator::visit(AST::Call *expression) {
     }
 }
 
-void CodeGenerator::visit(AST::CCall *ccall) {
+void ModuleGenerator::visit(AST::CCall *ccall) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     std::vector<llvm::Type *> parameters;
@@ -276,7 +278,7 @@ void CodeGenerator::visit(AST::CCall *ccall) {
     m_llvmValues.push_back(value);
 }
 
-void CodeGenerator::visit(AST::Cast *cast) {
+void ModuleGenerator::visit(AST::Cast *cast) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     cast->operand->accept(this);
@@ -289,7 +291,7 @@ void CodeGenerator::visit(AST::Cast *cast) {
     m_llvmValues.push_back(new_value);
 }
 
-void CodeGenerator::visit(AST::Assignment *expression) {
+void ModuleGenerator::visit(AST::Assignment *expression) {
     expression->rhs->accept(this);
     llvm::Value *value = m_llvmValues.back();
     m_llvmValues.pop_back();
@@ -299,7 +301,7 @@ void CodeGenerator::visit(AST::Assignment *expression) {
     m_irBuilder->CreateStore(value, ptr);
 }
 
-void CodeGenerator::visit(AST::Selector *expression) {
+void ModuleGenerator::visit(AST::Selector *expression) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     expression->operand->accept(this);
@@ -324,7 +326,7 @@ void CodeGenerator::visit(AST::Selector *expression) {
     m_llvmValues.push_back(m_irBuilder->CreateLoad(value));
 }
 
-void CodeGenerator::visit(AST::Index *expression) {
+void ModuleGenerator::visit(AST::Index *expression) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     expression->operand->accept(this);
@@ -361,11 +363,11 @@ void CodeGenerator::visit(AST::Index *expression) {
     m_llvmValues.push_back(m_irBuilder->CreateLoad(value));
 }
 
-void CodeGenerator::visit(AST::Comma *expression) {
+void ModuleGenerator::visit(AST::Comma *expression) {
     throw Errors::InternalError(expression, "N/A");
 }
 
-void CodeGenerator::visit(AST::While *expression) {
+void ModuleGenerator::visit(AST::While *expression) {
     debug("Creating while statement...");
 
     llvm::LLVMContext &context = llvm::getGlobalContext();
@@ -411,11 +413,11 @@ void CodeGenerator::visit(AST::While *expression) {
     debug("Ended if statement.");
 }
 
-void CodeGenerator::visit(AST::For *expression) {
+void ModuleGenerator::visit(AST::For *expression) {
     throw Errors::InternalError(expression, "Should not be in the lowered AST.");
 }
 
-void CodeGenerator::visit(AST::If *expression) {
+void ModuleGenerator::visit(AST::If *expression) {
     debug("Creating if statement...");
 
     expression->condition->accept(this);
@@ -475,7 +477,7 @@ void CodeGenerator::visit(AST::If *expression) {
     debug("Ended if statement.");
 }
 
-void CodeGenerator::visit(AST::Return *expression) {
+void ModuleGenerator::visit(AST::Return *expression) {
     debug("Generating return statement.");
 
     expression->expression->accept(this);
@@ -487,15 +489,15 @@ void CodeGenerator::visit(AST::Return *expression) {
     m_llvmValues.push_back(returnValue);
 }
 
-void CodeGenerator::visit(AST::Spawn *expression) {
+void ModuleGenerator::visit(AST::Spawn *expression) {
     debug("Generating spawn statement.");
 }
 
-void CodeGenerator::visit(AST::Parameter *parameter) {
+void ModuleGenerator::visit(AST::Parameter *parameter) {
     throw Errors::InternalError(parameter, "N/A");
 }
 
-void CodeGenerator::visit(AST::VariableDefinition *definition) {
+void ModuleGenerator::visit(AST::VariableDefinition *definition) {
     SymbolTable::Symbol *symbol = m_scope->lookup(definition->name);
 
     debug("Defining a new variable: " + symbol->name);
@@ -541,7 +543,7 @@ void CodeGenerator::visit(AST::VariableDefinition *definition) {
     }
 }
 
-void CodeGenerator::visit(AST::FunctionDefinition *definition) {
+void ModuleGenerator::visit(AST::FunctionDefinition *definition) {
     SymbolTable::Symbol *functionSymbol = m_scope->lookup(definition->name);
 
     Types::Method *method = static_cast<Types::Method *>(definition->type);
@@ -600,7 +602,7 @@ void CodeGenerator::visit(AST::FunctionDefinition *definition) {
     m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
 }
 
-void CodeGenerator::visit(AST::TypeDefinition *definition) {
+void ModuleGenerator::visit(AST::TypeDefinition *definition) {
     std::string name = definition->name->value;
 
     if (definition->alias) {
@@ -659,21 +661,21 @@ void CodeGenerator::visit(AST::TypeDefinition *definition) {
     m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
 }
 
-void CodeGenerator::visit(AST::DefinitionStatement *statement) {
+void ModuleGenerator::visit(AST::DefinitionStatement *statement) {
     debug("Generating definition statement.");
     statement->definition->accept(this);
 }
 
-void CodeGenerator::visit(AST::ExpressionStatement *statement) {
+void ModuleGenerator::visit(AST::ExpressionStatement *statement) {
     debug("Generating expression statement.");
     statement->expression->accept(this);
 }
 
-void CodeGenerator::visit(AST::ImportStatement *statement) {
+void ModuleGenerator::visit(AST::ImportStatement *statement) {
     throw Errors::InternalError(statement, "N/A");
 }
 
-void CodeGenerator::visit(AST::SourceFile *module) {
+void ModuleGenerator::visit(AST::SourceFile *module) {
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
 
     Builtins::fill_llvm_module(m_scope, m_module, m_irBuilder);

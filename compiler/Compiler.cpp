@@ -18,12 +18,12 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
 
+#include "codegen/module.h"
 #include "Lexer.h"
 #include "Parser.h"
 #include "AbstractSyntaxTree.h"
 #include "PrettyPrinter.h"
 #include "SymbolTable.h"
-#include "CodeGenerator.h"
 #include "Errors.h"
 #include "Preprocessor.h"
 #include "Typing.h"
@@ -104,7 +104,7 @@ void Compiler::compile(std::string filename) {
 
     debug("Generating code...");
 
-    CodeGenerator *generator = new CodeGenerator(rootNamespace);
+    auto generator = new codegen::ModuleGenerator(rootNamespace);
     module->accept(generator);
     llvm::Module *llvmModule = generator->module();
     delete generator;
