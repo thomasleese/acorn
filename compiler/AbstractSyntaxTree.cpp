@@ -435,7 +435,7 @@ TypeDefinition* TypeDefinition::clone() const {
         new_def->alias = this->alias->clone();
     } else {
         for (auto field : this->fields) {
-            new_def->fields.push_back(field);
+            new_def->fields.push_back(field->clone());
         }
     }
 
