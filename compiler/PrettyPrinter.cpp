@@ -290,8 +290,12 @@ void PrettyPrinter::visit(AST::TypeDefinition *definition) {
 
     definition->name->accept(this);
 
-    for (auto field : definition->fields) {
-        field->accept(this);
+    if (definition->alias) {
+        definition->alias->accept(this);
+    } else {
+        for (auto field : definition->fields) {
+            field->accept(this);
+        }
     }
 
     indent--;

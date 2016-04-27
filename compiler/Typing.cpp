@@ -182,6 +182,7 @@ void Inferrer::visit(AST::Call *expression) {
 void Inferrer::visit(AST::CCall *ccall) {
     for (auto param : ccall->parameters) {
         param->accept(this);
+        param->type = instance_type(param);
     }
 
     for (auto arg : ccall->arguments) {
@@ -191,6 +192,7 @@ void Inferrer::visit(AST::CCall *ccall) {
     // TODO check arg and param types match
 
     ccall->returnType->accept(this);
+    ccall->returnType->type = instance_type(ccall->returnType);
 
     ccall->type = ccall->returnType->type;
 }
@@ -372,8 +374,9 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
 
         auto type_constructor = find_type_constructor(definition, definition->alias->value);
         definition->alias->type = type_constructor;
-        type = new Types::AliasConstructor(definition, type_constructor,
-                                           inputParameters, outputParameters);
+        /*type = new Types::AliasConstructor(definition, type_constructor,
+                                           inputParameters, outputParameters);*/
+        type = type_constructor;
     } else {
         std::vector<std::string> field_names;
         std::vector<Types::Type *> field_types;

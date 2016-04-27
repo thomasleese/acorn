@@ -1,9 +1,1 @@
-type Integer as Integer64
-type Float as Float64
-
-type Record{T}
-    value as T
-end
-
-let a = Record{Integer}(value: 10)
-let b = Record{Float}(value: 10.5)
+import 'base'
