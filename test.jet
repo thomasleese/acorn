@@ -1,13 +1,17 @@
 import 'base'
 
 def malloc{T}(size as Integer) as UnsafePointer{T}
-    let pointer = ccall malloc(Integer) as UnsafePointer{Void} using size
+    let pointer = ccall malloc(Integer) as UnsafePointer{Integer8} using size
     return pointer as UnsafePointer{T}
 end
 
 def free{T}(pointer as UnsafePointer{T}) as Void
-    let void_pointer = pointer as UnsafePointer{Void}
-    ccall free(UnsafePointer{Void}) as Void using void_pointer
+    let void_pointer = pointer as UnsafePointer{Integer8}
+    ccall free(UnsafePointer{Integer8}) as Void using void_pointer
 end
 
 let a = malloc{Integer}(size: 10)
+free{Integer}(pointer: a)
+
+let b = malloc{Float}(size: 10)
+free{Float}(pointer: b)

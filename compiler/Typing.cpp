@@ -201,6 +201,13 @@ void Inferrer::visit(AST::CCall *ccall) {
     ccall->type = ccall->returnType->type;
 }
 
+void Inferrer::visit(AST::Cast *cast) {
+    cast->operand->accept(this);
+    cast->new_type->accept(this);
+
+    cast->type = instance_type(cast->new_type);
+}
+
 void Inferrer::visit(AST::Assignment *expression) {
     expression->lhs->accept(this);
     expression->rhs->accept(this);
@@ -530,6 +537,15 @@ void Checker::visit(AST::CCall *ccall) {
     for (auto arg : ccall->arguments) {
         arg->accept(this);
     }
+
+    check_not_null(ccall);
+}
+
+void Checker::visit(AST::Cast *cast) {
+    cast->operand->accept(this);
+    cast->new_type->accept(this);
+
+    check_not_null(cast);
 }
 
 void Checker::visit(AST::Assignment *expression) {

@@ -147,6 +147,11 @@ void GenericsPass::visit(AST::CCall *expression) {
     expression->returnType->accept(this);
 }
 
+void GenericsPass::visit(AST::Cast *expression) {
+    expression->operand->accept(this);
+    expression->new_type->accept(this);
+}
+
 void GenericsPass::visit(AST::Assignment *expression) {
 
 }

@@ -48,6 +48,7 @@ namespace Typing {
         void visit(AST::Argument *argument);
         void visit(AST::Call *expression);
         void visit(AST::CCall *ccall);
+        void visit(AST::Cast *expression);
         void visit(AST::Assignment *expression);
         void visit(AST::Selector *expression);
         void visit(AST::Index *expression);
@@ -100,6 +101,7 @@ namespace Typing {
         void visit(AST::Argument *argument);
         void visit(AST::Call *expression);
         void visit(AST::CCall *ccall);
+        void visit(AST::Cast *expression);
         void visit(AST::Assignment *expression);
         void visit(AST::Selector *expression);
         void visit(AST::Index *expression);

@@ -268,6 +268,19 @@ void CodeGenerator::visit(AST::CCall *ccall) {
     m_llvmValues.push_back(value);
 }
 
+void CodeGenerator::visit(AST::Cast *cast) {
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+
+    cast->operand->accept(this);
+
+    llvm::Value *value = m_llvmValues.back();
+    m_llvmValues.pop_back();
+
+    llvm::Type *destination_type = cast->type->create_llvm_type(context);
+    llvm::Value *new_value = m_irBuilder->CreateBitCast(value, destination_type);
+    m_llvmValues.push_back(new_value);
+}
+
 void CodeGenerator::visit(AST::Assignment *expression) {
     expression->rhs->accept(this);
     llvm::Value *value = m_llvmValues.back();

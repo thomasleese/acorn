@@ -380,6 +380,7 @@ namespace AST {
         virtual void visit(Argument *expression) = 0;
         virtual void visit(Call *expression) = 0;
         virtual void visit(CCall *expression) = 0;
+        virtual void visit(Cast *expression) = 0;
         virtual void visit(Assignment *expression) = 0;
         virtual void visit(Selector *expression) = 0;
         virtual void visit(Index *expression) = 0;

@@ -234,7 +234,20 @@ CCall *CCall::clone() const {
 }
 
 Cast::Cast(Token *token) : Expression(token) {
+    this->operand = nullptr;
+    this->new_type = nullptr;
+}
 
+void Cast::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+Cast *Cast::clone() const {
+    Cast *new_cast = new Cast(this->token);
+    new_cast->operand = this->operand->clone();
+    new_cast->new_type = this->new_type->clone();
+    new_cast->type = this->type;
+    return new_cast;
 }
 
 Assignment::Assignment(Token *token, Identifier *lhs, Expression *rhs) : Expression(token) {

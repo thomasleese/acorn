@@ -343,6 +343,15 @@ CCall *Parser::readCCall() {
     return ccall;
 }
 
+AST::Cast *Parser::readCast(Expression *operand) {
+    Token *token = readToken(Token::AsKeyword);
+
+    Cast *cast = new Cast(token);
+    cast->operand = operand;
+    cast->new_type = readIdentifier(true);
+    return cast;
+}
+
 Selector *Parser::readSelector(AST::Expression *operand) {
     Token *token = readToken(Token::Dot);
 
@@ -579,16 +588,13 @@ Expression *Parser::readOperandExpression() {
     return left;
 }
 
-Identifier *Parser::readCast() {
-    readToken(Token::AsKeyword);
-    return readIdentifier(true);
-}
-
 Parameter *Parser::readParameter() {
     Parameter *parameter = new Parameter(m_tokens.front());
 
     parameter->name = readIdentifier(false);
-    parameter->typeNode = readCast();
+
+    readToken(Token::AsKeyword);
+    parameter->typeNode = readIdentifier(true);
 
     if (isToken(Token::Colon)) {
         readToken(Token::Colon);
@@ -606,7 +612,8 @@ VariableDefinition *Parser::readVariableDefinition() {
     definition->name = readIdentifier(false);
 
     if (isToken(Token::AsKeyword)) {
-        definition->typeNode = readCast();
+        readToken(Token::AsKeyword);
+        definition->typeNode = readIdentifier(true);
     } else {
         definition->typeNode = nullptr;
     }
@@ -649,7 +656,8 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 
     readToken(Token::CloseParenthesis);
 
-    definition->returnType = readCast();
+    readToken(Token::AsKeyword);
+    definition->returnType = readIdentifier(true);
 
     readToken(Token::Newline);
 

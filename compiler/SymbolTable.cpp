@@ -225,6 +225,10 @@ void Builder::visit(AST::CCall *expression) {
 
 }
 
+void Builder::visit(AST::Cast *expression) {
+
+}
+
 void Builder::visit(AST::Assignment *expression) {
 
 }

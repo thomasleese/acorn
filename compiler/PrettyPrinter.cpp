@@ -133,6 +133,17 @@ void PrettyPrinter::visit(AST::CCall *ccall) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(AST::Cast *cast) {
+    ss << indentation() << "(Cast\n";
+    indent++;
+
+    cast->operand->accept(this);
+    cast->new_type->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(AST::Assignment *expression) {
     ss << indentation() << "(Assignment\n";
     indent++;

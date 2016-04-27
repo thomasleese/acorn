@@ -29,6 +29,7 @@ namespace AST {
     struct Argument;
     struct Call;
     struct CCall;
+    struct Cast;
     struct Selector;
     struct Index;
     struct While;
