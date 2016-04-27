@@ -20,6 +20,8 @@ namespace AST {
 
 namespace Types {
 
+    class Visitor;
+
     class Type {
 
     public:
@@ -32,7 +34,7 @@ namespace Types {
         virtual llvm::Type *create_llvm_type(llvm::LLVMContext &context) const = 0;
         virtual llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const = 0;
 
-        bool operator==(const Type &other) const;
+        virtual void accept(Visitor *visitor) = 0;
     };
 
     // type constructors
@@ -45,6 +47,8 @@ namespace Types {
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+
+        void accept(Visitor *visitor);
     };
 
     class AnyConstructor : public Constructor {
@@ -52,6 +56,8 @@ namespace Types {
         std::string name() const;
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+        void accept(Visitor *visitor);
     };
 
     class VoidConstructor : public Constructor {
@@ -59,6 +65,8 @@ namespace Types {
         std::string name() const;
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+        void accept(Visitor *visitor);
     };
 
     class BooleanConstructor : public Constructor {
@@ -66,6 +74,8 @@ namespace Types {
         std::string name() const;
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+        void accept(Visitor *visitor);
     };
 
     class IntegerConstructor : public Constructor {
@@ -75,6 +85,8 @@ namespace Types {
         std::string name() const;
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+        void accept(Visitor *visitor);
 
     private:
         unsigned int m_size;
@@ -88,6 +100,8 @@ namespace Types {
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
 
+        void accept(Visitor *visitor);
+
     private:
         unsigned int m_size;
     };
@@ -100,6 +114,8 @@ namespace Types {
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
 
+        void accept(Visitor *visitor);
+
     private:
         int m_size;
     };
@@ -111,6 +127,8 @@ namespace Types {
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
 
+        void accept(Visitor *visitor);
+
     };
 
     class FunctionConstructor : public Constructor {
@@ -118,6 +136,8 @@ namespace Types {
         std::string name() const;
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+        void accept(Visitor *visitor);
     };
 
     class RecordConstructor : public Constructor {
@@ -129,6 +149,8 @@ namespace Types {
         std::string name() const;
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+        void accept(Visitor *visitor);
 
     private:
         std::vector<std::string> m_field_names;
@@ -143,6 +165,8 @@ namespace Types {
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
 
+        void accept(Visitor *visitor);
+
     };
 
     class AliasConstructor : public Constructor {
@@ -153,6 +177,8 @@ namespace Types {
         std::string name() const;
 
         Type *create(AST::Node *node, std::vector<Type *> parameters);
+
+        void accept(Visitor *visitor);
 
     private:
         Constructor *m_constructor;
@@ -169,6 +195,8 @@ namespace Types {
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+
+        void accept(Visitor *visitor);
     };
 
     class Void : public Type {
@@ -178,6 +206,8 @@ namespace Types {
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+
+        void accept(Visitor *visitor);
     };
 
     class Boolean : public Type {
@@ -187,6 +217,8 @@ namespace Types {
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+
+        void accept(Visitor *visitor);
     };
 
     class Integer : public Type {
@@ -198,6 +230,8 @@ namespace Types {
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+
+        void accept(Visitor *visitor);
 
     private:
         unsigned int m_size;
@@ -213,6 +247,8 @@ namespace Types {
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
+        void accept(Visitor *visitor);
+
     private:
         unsigned int m_size;
     };
@@ -226,6 +262,8 @@ namespace Types {
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+
+        void accept(Visitor *visitor);
 
     private:
         int m_size;
@@ -241,6 +279,8 @@ namespace Types {
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+
+        void accept(Visitor *visitor);
 
     private:
         Type *m_element_type;
@@ -260,6 +300,8 @@ namespace Types {
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
+        void accept(Visitor *visitor);
+
     protected:
         std::vector<std::string> m_field_names;
         std::vector<Type *> m_field_types;
@@ -268,6 +310,8 @@ namespace Types {
     class Tuple : public Record {
     public:
         Tuple(std::vector<Type *> field_types);
+
+        void accept(Visitor *visitor);
     };
 
     class Method : public Type {
@@ -290,6 +334,8 @@ namespace Types {
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
+        void accept(Visitor *visitor);
+
     private:
         std::vector<Type *> m_parameter_types;
         Type *m_return_type;
@@ -308,6 +354,8 @@ namespace Types {
 
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+
+        void accept(Visitor *visitor);
 
     private:
         std::vector<Method *> m_methods;
@@ -328,8 +376,40 @@ namespace Types {
         llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
         llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
+        void accept(Visitor *visitor);
+
     private:
         std::set<Type *> m_types;
+    };
+
+    class Visitor {
+    public:
+        virtual ~Visitor();
+
+        virtual void visit(Constructor *type) = 0;
+        virtual void visit(AnyConstructor *type) = 0;
+        virtual void visit(VoidConstructor *type) = 0;
+        virtual void visit(BooleanConstructor *type) = 0;
+        virtual void visit(IntegerConstructor *type) = 0;
+        virtual void visit(UnsignedIntegerConstructor *type) = 0;
+        virtual void visit(FloatConstructor *type) = 0;
+        virtual void visit(UnsafePointerConstructor *type) = 0;
+        virtual void visit(FunctionConstructor *type) = 0;
+        virtual void visit(RecordConstructor *type) = 0;
+        virtual void visit(UnionConstructor *type) = 0;
+        virtual void visit(AliasConstructor *type) = 0;
+        virtual void visit(Any *type) = 0;
+        virtual void visit(Void *type) = 0;
+        virtual void visit(Boolean *type) = 0;
+        virtual void visit(Integer *type) = 0;
+        virtual void visit(UnsignedInteger *type) = 0;
+        virtual void visit(Float *type) = 0;
+        virtual void visit(UnsafePointer *type) = 0;
+        virtual void visit(Record *type) = 0;
+        virtual void visit(Tuple *type) = 0;
+        virtual void visit(Method *type) = 0;
+        virtual void visit(Function *type) = 0;
+        virtual void visit(Union *type) = 0;
     };
 
 };

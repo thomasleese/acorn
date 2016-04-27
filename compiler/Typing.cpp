@@ -126,7 +126,7 @@ void Inferrer::visit(AST::SequenceLiteral *sequence) {
     for (auto element : sequence->elements) {
         bool inList = false;
         for (auto type : types) {
-            if (*type == *(element->type)) {
+            if (type->isCompatible(element->type)) {
                 inList = true;
                 break;
             }

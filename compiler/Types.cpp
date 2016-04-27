@@ -24,10 +24,6 @@ bool Type::isCompatible(const Type *other) const {
     return name() == other->name();
 }
 
-bool Type::operator==(const Type &other) const {
-    return name() == other.name();
-}
-
 Type *Constructor::create(AST::Node *node) {
     return create(node, std::vector<Type *>());
 }
@@ -44,6 +40,10 @@ llvm::Constant *Constructor::create_llvm_initialiser(llvm::LLVMContext &context)
     throw std::runtime_error("cannot create llvm initialiser of constructor");
 }
 
+void Constructor::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 std::string AnyConstructor::name() const {
     return "AnyConstructor";
 }
@@ -54,6 +54,10 @@ Type *AnyConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
     } else {
         throw Errors::InvalidTypeConstructor(node);
     }
+}
+
+void AnyConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 std::string VoidConstructor::name() const {
@@ -68,6 +72,10 @@ Type *VoidConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
     }
 }
 
+void VoidConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 std::string BooleanConstructor::name() const {
     return "BooleanConstructor";
 }
@@ -78,6 +86,10 @@ Type *BooleanConstructor::create(AST::Node *node, std::vector<Type *> parameters
     } else {
         throw Errors::InvalidTypeConstructor(node);
     }
+}
+
+void BooleanConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 IntegerConstructor::IntegerConstructor(unsigned int size) : m_size(size) {
@@ -98,6 +110,10 @@ Type *IntegerConstructor::create(AST::Node *node, std::vector<Type *> parameters
     }
 }
 
+void IntegerConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 UnsignedIntegerConstructor::UnsignedIntegerConstructor(unsigned int size) : m_size(size) {
 
 }
@@ -114,6 +130,10 @@ Type *UnsignedIntegerConstructor::create(AST::Node *node, std::vector<Type *> pa
     } else {
         throw Errors::InvalidTypeConstructor(node);
     }
+}
+
+void UnsignedIntegerConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 FloatConstructor::FloatConstructor(int size) : m_size(size) {
@@ -134,6 +154,10 @@ Type *FloatConstructor::create(AST::Node *node, std::vector<Type *> parameters) 
     }
 }
 
+void FloatConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 std::string UnsafePointerConstructor::name() const {
     return "UnsafePointerConstructor";
 }
@@ -144,6 +168,10 @@ Type *UnsafePointerConstructor::create(AST::Node *node, std::vector<Type *> para
     } else {
         throw Errors::InvalidTypeParameters(node, parameters.size(), 1);
     }
+}
+
+void UnsafePointerConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 std::string FunctionConstructor::name() const {
@@ -163,6 +191,10 @@ Type *FunctionConstructor::create(AST::Node *node, std::vector<Type *> parameter
     }
 
     return function;
+}
+
+void FunctionConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 RecordConstructor::RecordConstructor() {
@@ -192,6 +224,10 @@ Type *RecordConstructor::create(AST::Node *node, std::vector<Type *> parameters)
     }
 }
 
+void RecordConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 std::string UnionConstructor::name() const {
     return "UnionConstructor";
 }
@@ -203,6 +239,10 @@ Type *UnionConstructor::create(AST::Node *node, std::vector<Type *> parameters) 
     }
 
     return new Union(node, types);
+}
+
+void UnionConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Type *> inputParameters, std::vector<Type *> outputParameters) :
@@ -267,6 +307,10 @@ Type *AliasConstructor::create(AST::Node *node, std::vector<Type *> parameters) 
     return m_constructor->create(node, parameters);
 }
 
+void AliasConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 std::string Any::name() const {
     return "Any";
 }
@@ -281,6 +325,10 @@ llvm::Type *Any::create_llvm_type(llvm::LLVMContext &context) const {
 
 llvm::Constant *Any::create_llvm_initialiser(llvm::LLVMContext &context) const {
     throw std::runtime_error("not implemented (any)");
+}
+
+void Any::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 std::string Void::name() const {
@@ -299,6 +347,10 @@ llvm::Constant *Void::create_llvm_initialiser(llvm::LLVMContext &context) const 
     return llvm::UndefValue::get(create_llvm_type(context));
 }
 
+void Void::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 std::string Boolean::name() const {
     return "Boolean";
 }
@@ -313,6 +365,10 @@ llvm::Type *Boolean::create_llvm_type(llvm::LLVMContext &context) const {
 
 llvm::Constant *Boolean::create_llvm_initialiser(llvm::LLVMContext &context) const {
     return llvm::ConstantInt::get(create_llvm_type(context), 0);
+}
+
+void Boolean::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 Integer::Integer(unsigned int size) : m_size(size) {
@@ -339,6 +395,10 @@ llvm::Constant *Integer::create_llvm_initialiser(llvm::LLVMContext &context) con
     return llvm::ConstantInt::get(create_llvm_type(context), 0);
 }
 
+void Integer::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 UnsignedInteger::UnsignedInteger(unsigned int size) : m_size(size) {
 
 }
@@ -361,6 +421,10 @@ llvm::Type *UnsignedInteger::create_llvm_type(llvm::LLVMContext &context) const 
 
 llvm::Constant *UnsignedInteger::create_llvm_initialiser(llvm::LLVMContext &context) const {
     return llvm::ConstantInt::get(create_llvm_type(context), 0);
+}
+
+void UnsignedInteger::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 Float::Float(int size) : m_size(size) {
@@ -396,6 +460,10 @@ llvm::Constant *Float::create_llvm_initialiser(llvm::LLVMContext &context) const
     return llvm::ConstantFP::get(create_llvm_type(context), 0);
 }
 
+void Float::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 UnsafePointer::UnsafePointer(Type *element_type) {
     m_element_type = element_type;
 }
@@ -425,6 +493,10 @@ llvm::Constant *UnsafePointer::create_llvm_initialiser(llvm::LLVMContext &contex
     auto type = create_llvm_type(context);
     auto pointer_type = static_cast<llvm::PointerType *>(type);
     return llvm::ConstantPointerNull::get(pointer_type);
+}
+
+void UnsafePointer::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 Record::Record(std::vector<std::string> field_names, std::vector<Type *> field_types) :
@@ -497,12 +569,20 @@ llvm::Constant *Record::create_llvm_initialiser(llvm::LLVMContext &context) cons
     return llvm::ConstantStruct::get(type, constants);
 }
 
+void Record::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Tuple::Tuple(std::vector<Type *> field_types) : Record(std::vector<std::string>(), field_types) {
     for (int i = 0; i < field_types.size(); i++) {
         std::stringstream ss;
         ss << i;
         m_field_names.push_back(ss.str());
     }
+}
+
+void Tuple::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 Method::Method(std::vector<Type *> parameter_types, Type *return_type, std::vector<std::string> official_parameter_order) :
@@ -618,6 +698,10 @@ llvm::Constant *Method::create_llvm_initialiser(llvm::LLVMContext &context) cons
     throw std::runtime_error("not implemented");
 }
 
+void Method::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 std::string Function::name() const {
     std::stringstream ss;
     ss << "Function{";
@@ -670,6 +754,10 @@ llvm::Type *Function::create_llvm_type(llvm::LLVMContext &context) const {
 
 llvm::Constant *Function::create_llvm_initialiser(llvm::LLVMContext &context) const {
     throw std::runtime_error("functions to not map to LLVM");
+}
+
+void Function::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
 Union::Union(Type *type1, Type *type2) {
@@ -727,4 +815,12 @@ llvm::Type *Union::create_llvm_type(llvm::LLVMContext &context) const {
 
 llvm::Constant *Union::create_llvm_initialiser(llvm::LLVMContext &context) const {
     throw std::runtime_error("not implemented");
+}
+
+void Union::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+Visitor::~Visitor() {
+
 }
