@@ -53,6 +53,7 @@ namespace SymbolTable {
         llvm::Value *value;
         Namespace *nameSpace;
         AST::Node *node;
+        bool is_builtin;
 
         bool is_function() const;
 

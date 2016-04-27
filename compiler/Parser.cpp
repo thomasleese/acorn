@@ -554,10 +554,12 @@ Expression *Parser::readOperandExpression() {
     Expression *left = readPrimaryExpression();
 
     while (true) {
-        if (isToken(Token::OpenParenthesis) || isToken(Token::OpenBrace)) {
+        if (isToken(Token::OpenParenthesis)) {
             left = readCall(left);
         } else if (isToken(Token::OpenBracket)) {
             left = readIndex(left);
+        } else if (isToken(Token::AsKeyword)) {
+            left = readCast(left);
         } else if (isToken(Token::Dot)) {
             Selector *selector = readSelector(left);
             if (isToken(Token::OpenParenthesis) || isToken(Token::OpenBrace)) {

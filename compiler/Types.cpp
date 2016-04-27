@@ -134,13 +134,13 @@ Type *FloatConstructor::create(AST::Node *node, std::vector<Type *> parameters) 
     }
 }
 
-std::string ArrayConstructor::name() const {
-    return "ArrayConstructor";
+std::string UnsafePointerConstructor::name() const {
+    return "UnsafePointerConstructor";
 }
 
-Type *ArrayConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *UnsafePointerConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
     if (parameters.size() == 1) {
-        return new Array(parameters[0]);
+        return new UnsafePointer(parameters[0]);
     } else {
         throw Errors::InvalidTypeParameters(node, parameters.size(), 1);
     }
@@ -396,48 +396,35 @@ llvm::Constant *Float::create_llvm_initialiser(llvm::LLVMContext &context) const
     return llvm::ConstantFP::get(create_llvm_type(context), 0);
 }
 
-Array::Array(Type *element_type) {
+UnsafePointer::UnsafePointer(Type *element_type) {
     m_element_type = element_type;
 }
 
-std::string Array::name() const {
+std::string UnsafePointer::name() const {
     std::stringstream ss;
-    ss << "Array{" << m_element_type->name() << "}";
+    ss << "UnsafePointer{" << m_element_type->name() << "}";
     return ss.str();
 }
 
-std::string Array::mangled_name() const {
+std::string UnsafePointer::mangled_name() const {
     std::stringstream ss;
-    ss << "a" << m_element_type->mangled_name();
+    ss << "p" << m_element_type->mangled_name();
     return ss.str();
 }
 
-Type *Array::element_type() const {
+Type *UnsafePointer::element_type() const {
     return m_element_type;
 }
 
-llvm::Type *Array::create_llvm_type(llvm::LLVMContext &context) const {
+llvm::Type *UnsafePointer::create_llvm_type(llvm::LLVMContext &context) const {
     llvm::Type *elementType = m_element_type->create_llvm_type(context);
-
-    std::vector<llvm::Type *> fields;
-
-    // size
-    fields.push_back(llvm::IntegerType::getInt64Ty(context));
-    // pointer to elements
-    fields.push_back(llvm::PointerType::get(elementType, 0));
-
-    return llvm::StructType::get(context, fields);
+    return llvm::PointerType::get(elementType, 0);
 }
 
-llvm::Constant *Array::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    llvm::Type *elementType = m_element_type->create_llvm_type(context);
-
-    std::vector<llvm::Constant *> constants;
-    constants.push_back(llvm::ConstantInt::get(llvm::IntegerType::getInt64Ty(context), 0));
-    constants.push_back(llvm::ConstantPointerNull::get(llvm::PointerType::get(elementType, 0)));
-
-    llvm::StructType *type = static_cast<llvm::StructType *>(create_llvm_type(context));
-    return llvm::ConstantStruct::get(type, constants);
+llvm::Constant *UnsafePointer::create_llvm_initialiser(llvm::LLVMContext &context) const {
+    auto type = create_llvm_type(context);
+    auto pointer_type = static_cast<llvm::PointerType *>(type);
+    return llvm::ConstantPointerNull::get(pointer_type);
 }
 
 Record::Record(std::vector<std::string> field_names, std::vector<Type *> field_types) :

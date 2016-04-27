@@ -233,6 +233,10 @@ CCall *CCall::clone() const {
     return new_call;
 }
 
+Cast::Cast(Token *token) : Expression(token) {
+
+}
+
 Assignment::Assignment(Token *token, Identifier *lhs, Expression *rhs) : Expression(token) {
     this->lhs = lhs;
     this->rhs = rhs;

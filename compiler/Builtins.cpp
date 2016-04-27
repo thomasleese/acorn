@@ -14,6 +14,7 @@
 SymbolTable::Symbol *add_symbol(SymbolTable::Namespace *table, std::string name, Types::Type *type) {
     SymbolTable::Symbol *symbol = new SymbolTable::Symbol(name);
     symbol->type = type;
+    symbol->is_builtin = true;
     table->insert(nullptr, symbol);
     return symbol;
 }
@@ -55,7 +56,7 @@ void add_base_type_constructors(SymbolTable::Namespace *table) {
     add_symbol(table, "Float32", new Types::FloatConstructor(32));
     add_symbol(table, "Float64", new Types::FloatConstructor(64));
     add_symbol(table, "Float128", new Types::FloatConstructor(128));
-    add_symbol(table, "Array", new Types::ArrayConstructor());
+    add_symbol(table, "UnsafePointer", new Types::UnsafePointerConstructor());
     add_symbol(table, "Function", new Types::FunctionConstructor());
     add_symbol(table, "Union", new Types::UnionConstructor());
 }

@@ -69,9 +69,11 @@ void GenericsPass::visit(AST::Identifier *identifier) {
                     m_generics[def].push_back(identifier->parameters);
                 }
             } else {
-                auto def = dynamic_cast<AST::Definition *>(symbol->node);
-                assert(def);
-                m_generics[def].push_back(identifier->parameters);
+                if (!symbol->is_builtin) {
+                    auto def = dynamic_cast<AST::Definition *>(symbol->node);
+                    assert(def);
+                    m_generics[def].push_back(identifier->parameters);
+                }
             }
         }
     } else {
@@ -82,6 +84,7 @@ void GenericsPass::visit(AST::Identifier *identifier) {
         SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
         auto it = m_replacements.find(symbol);
         if (it != m_replacements.end()) {
+            std::cout << "replacing " << identifier->value << " with " << it->second << std::endl;
             identifier->value = it->second;
         }
 
@@ -89,7 +92,8 @@ void GenericsPass::visit(AST::Identifier *identifier) {
             if (symbol->is_function()) {
                 identifier->parameters.clear();
             } else {
-                identifier->collapse_parameters();
+                //identifier->collapse_parameters();
+                std::cout << identifier->value << std::endl;
             }
         }
     }
@@ -132,7 +136,15 @@ void GenericsPass::visit(AST::Call *expression) {
 }
 
 void GenericsPass::visit(AST::CCall *expression) {
+    for (auto p : expression->parameters) {
+        p->accept(this);
+    }
 
+    for (auto a : expression->arguments) {
+        a->accept(this);
+    }
+
+    expression->returnType->accept(this);
 }
 
 void GenericsPass::visit(AST::Assignment *expression) {
@@ -164,7 +176,7 @@ void GenericsPass::visit(AST::If *expression) {
 }
 
 void GenericsPass::visit(AST::Return *expression) {
-
+    expression->expression->accept(this);
 }
 
 void GenericsPass::visit(AST::Spawn *expression) {
@@ -272,6 +284,7 @@ void GenericsPass::visit(AST::DefinitionStatement *statement) {
                             for (int i = 0; i < parameters.size(); i++) {
                                 SymbolTable::Symbol *s = new_symbol->nameSpace->lookup(statement->definition->name->parameters[i]);
                                 m_replacements[s] = parameters[i]->value;
+                                std::cout << s->name << "=" << parameters[i]->value << std::endl;
                             }
 
                             assert(!m_replacements.empty());

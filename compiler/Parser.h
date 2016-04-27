@@ -79,6 +79,7 @@ private:
     AST::Argument *readArgument();
     AST::Call *readCall(AST::Expression *operand);
     AST::CCall *readCCall();
+    AST::Cast *readCast(AST::Expression *operand);
     AST::Selector *readSelector(AST::Expression *operand);
     AST::Index *readIndex(AST::Expression *operand);
     AST::While *readWhile();
@@ -90,7 +91,6 @@ private:
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
     AST::Expression *readPrimaryExpression();
     AST::Expression *readOperandExpression();
-    AST::Identifier *readCast();
 
     // misc
     AST::Parameter *readParameter();

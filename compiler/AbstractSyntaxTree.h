@@ -174,6 +174,16 @@ namespace AST {
         CCall *clone() const;
     };
 
+    struct Cast : Expression {
+        Cast(Token *token);
+
+        Expression *operand;
+        Identifier *new_type;
+
+        void accept(Visitor *visitor);
+        Cast *clone() const;
+    };
+
     struct Assignment : Expression {
         explicit Assignment(Token *token, Identifier *lhs, Expression *rhs);
 

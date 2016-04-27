@@ -104,7 +104,7 @@ namespace Types {
         int m_size;
     };
 
-    class ArrayConstructor : public Constructor {
+    class UnsafePointerConstructor : public Constructor {
 
     public:
         std::string name() const;
@@ -231,9 +231,9 @@ namespace Types {
         int m_size;
     };
 
-    class Array : public Type {
+    class UnsafePointer : public Type {
     public:
-        explicit Array(Type *element_type);
+        explicit UnsafePointer(Type *element_type);
 
         std::string name() const;
         std::string mangled_name() const;

@@ -130,6 +130,7 @@ Symbol::Symbol(std::string name) {
     this->type = nullptr;
     this->value = nullptr;
     this->nameSpace = nullptr;
+    this->is_builtin = false;
 }
 
 bool Symbol::is_function() const {

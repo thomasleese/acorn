@@ -62,7 +62,7 @@ Types::Type *Inferrer::instance_type(AST::Identifier *identifier) {
         std::vector<Types::Type *> parameterTypes;
 
         for (auto parameter : identifier->parameters) {
-            instance_type(parameter);
+            parameter->type = instance_type(parameter);
             parameterTypes.push_back(parameter->type);
         }
 
@@ -85,6 +85,10 @@ void Inferrer::visit(AST::CodeBlock *block) {
 }
 
 void Inferrer::visit(AST::Identifier *expression) {
+    for (auto p : expression->parameters) {
+        p->accept(this);
+    }
+
     SymbolTable::Symbol *symbol = m_namespace->lookup(expression, expression->value);
     expression->type = symbol->type;
 
@@ -142,7 +146,7 @@ void Inferrer::visit(AST::SequenceLiteral *sequence) {
         elementType = *(types.begin());
     }
 
-    sequence->type = new Types::Array(elementType);
+    //sequence->type = fin
 }
 
 void Inferrer::visit(AST::MappingLiteral *mapping) {
@@ -220,7 +224,7 @@ void Inferrer::visit(AST::Selector *expression) {
 }
 
 void Inferrer::visit(AST::Index *expression) {
-    expression->operand->accept(this);
+    /*expression->operand->accept(this);
     expression->index->accept(this);
 
     auto arrayType = dynamic_cast<Types::Array *>(expression->operand->type);
@@ -233,7 +237,7 @@ void Inferrer::visit(AST::Index *expression) {
         throw Errors::TypeMismatchError(expression->operand, expression->index);
     }
 
-    expression->type = arrayType->element_type();
+    expression->type = arrayType->element_type();*/
 }
 
 void Inferrer::visit(AST::Comma *expression) {
