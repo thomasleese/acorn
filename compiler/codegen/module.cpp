@@ -18,11 +18,15 @@
 #include "../SymbolTable.h"
 #include "../Types.h"
 
+#include "types.h"
+
 #include "module.h"
 
 using namespace jet::codegen;
 
-ModuleGenerator::ModuleGenerator(SymbolTable::Namespace *rootNamespace) {
+ModuleGenerator::ModuleGenerator(SymbolTable::Namespace *rootNamespace) :
+        m_type_generator(new TypeGenerator()),
+        m_type_initialiser_generator(new TypeInitialiserGenerator()) {
     m_scope = rootNamespace;
 
     m_irBuilder = new llvm::IRBuilder<>(llvm::getGlobalContext());
@@ -40,6 +44,24 @@ void ModuleGenerator::debug(std::string line) {
 
 llvm::Module *ModuleGenerator::module() const {
     return m_module;
+}
+
+llvm::Type *ModuleGenerator::generate_type(AST::Node *node, Types::Type *type) {
+    type->accept(m_type_generator);
+    return m_type_generator->take_result(node);
+}
+
+llvm::Type *ModuleGenerator::generate_type(AST::Node *node) {
+    return generate_type(node, node->type);
+}
+
+llvm::Constant *ModuleGenerator::generate_initialiser(AST::Node *node, Types::Type *type) {
+    type->accept(m_type_initialiser_generator);
+    return m_type_initialiser_generator->take_result(node);
+}
+
+llvm::Constant *ModuleGenerator::generate_initialiser(AST::Node *node) {
+    return generate_initialiser(node, node->type);
 }
 
 void ModuleGenerator::visit(AST::CodeBlock *block) {
@@ -72,7 +94,7 @@ void ModuleGenerator::visit(AST::BooleanLiteral *boolean) {
 void ModuleGenerator::visit(AST::IntegerLiteral *expression) {
     debug("Making integer literal: " + expression->value);
 
-    llvm::Type *type = expression->type->create_llvm_type(llvm::getGlobalContext());
+    llvm::Type *type = generate_type(expression);
 
     uint64_t integer;
     std::stringstream ss;
@@ -86,7 +108,7 @@ void ModuleGenerator::visit(AST::IntegerLiteral *expression) {
 void ModuleGenerator::visit(AST::FloatLiteral *expression) {
     debug("Making float literal: " + expression->value);
 
-    llvm::Type *type = expression->type->create_llvm_type(llvm::getGlobalContext());
+    llvm::Type *type = generate_type(expression);
 
     double floatValue;
     std::stringstream ss;
@@ -118,7 +140,7 @@ void ModuleGenerator::visit(AST::SequenceLiteral *sequence) {
         elements.push_back(value);
     }
 
-    llvm::StructType *type = static_cast<llvm::StructType *>(sequence->type->create_llvm_type(context));
+    llvm::StructType *type = static_cast<llvm::StructType *>(generate_type(sequence));
 
     llvm::Type *length_type = type->elements()[0];
     llvm::Type *element_type = type->elements()[0];
@@ -245,13 +267,11 @@ void ModuleGenerator::visit(AST::Call *expression) {
 }
 
 void ModuleGenerator::visit(AST::CCall *ccall) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     std::vector<llvm::Type *> parameters;
-    llvm::Type *returnType = ccall->returnType->type->create_llvm_type(context);
+    llvm::Type *returnType = generate_type(ccall->returnType);
 
     for (auto parameter : ccall->parameters) {
-        parameters.push_back(parameter->type->create_llvm_type(context));
+        parameters.push_back(generate_type(parameter));
     }
 
     std::string name = ccall->name->value;
@@ -279,14 +299,12 @@ void ModuleGenerator::visit(AST::CCall *ccall) {
 }
 
 void ModuleGenerator::visit(AST::Cast *cast) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     cast->operand->accept(this);
 
     llvm::Value *value = m_llvmValues.back();
     m_llvmValues.pop_back();
 
-    llvm::Type *destination_type = cast->type->create_llvm_type(context);
+    llvm::Type *destination_type = generate_type(cast);
     llvm::Value *new_value = m_irBuilder->CreateBitCast(value, destination_type);
     m_llvmValues.push_back(new_value);
 }
@@ -467,7 +485,7 @@ void ModuleGenerator::visit(AST::If *expression) {
     function->getBasicBlockList().push_back(merge_bb);
     m_irBuilder->SetInsertPoint(merge_bb);
 
-    llvm::Type *type = expression->type->create_llvm_type(context);
+    llvm::Type *type = generate_type(expression);
     llvm::PHINode *phi = m_irBuilder->CreatePHI(type, 2, "iftmp");
     phi->addIncoming(then_value, then_bb);
     phi->addIncoming(else_value, else_bb);
@@ -503,7 +521,7 @@ void ModuleGenerator::visit(AST::VariableDefinition *definition) {
     debug("Defining a new variable: " + symbol->name);
 
     if (m_scope->is_root()) {
-        llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
+        llvm::Type *type = generate_type(definition);
 
         llvm::GlobalVariable *variable = new llvm::GlobalVariable(*m_module, type, false,
                                                                   llvm::GlobalValue::CommonLinkage,
@@ -511,7 +529,7 @@ void ModuleGenerator::visit(AST::VariableDefinition *definition) {
         variable->setAlignment(4);
         variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
         //variable->setInitializer(llvm::UndefValue::get(type));
-        variable->setInitializer(definition->type->create_llvm_initialiser(llvm::getGlobalContext()));
+        variable->setInitializer(generate_initialiser(definition));
 
         symbol->value = variable;
 
@@ -534,7 +552,7 @@ void ModuleGenerator::visit(AST::VariableDefinition *definition) {
         llvm::Value *initialiser = m_llvmValues.back();
         m_llvmValues.pop_back();
 
-        llvm::Type *type = definition->type->create_llvm_type(llvm::getGlobalContext());
+        llvm::Type *type = generate_type(definition);
 
         llvm::IRBuilder<> tmp_ir(&function->getEntryBlock(), function->getEntryBlock().begin());
         llvm::AllocaInst *variable = tmp_ir.CreateAlloca(type, 0, definition->name->value);
@@ -555,7 +573,7 @@ void ModuleGenerator::visit(AST::FunctionDefinition *definition) {
     SymbolTable::Namespace *oldNamespace = m_scope;
     m_scope = symbol->nameSpace;
 
-    llvm::Type *llvmType = method->create_llvm_type(llvm::getGlobalContext());
+    llvm::Type *llvmType = generate_type(definition, method);
 
     llvm::FunctionType *type = static_cast<llvm::FunctionType *>(llvmType);
     llvm::Function *function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
@@ -613,11 +631,11 @@ void ModuleGenerator::visit(AST::TypeDefinition *definition) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     // create initialiser function
-    llvm::Type *return_type = static_cast<Types::Constructor *>(definition->type)->create(definition)->create_llvm_type(context);
+    llvm::Type *return_type = generate_type(definition, static_cast<Types::Constructor *>(definition->type)->create(definition));
 
     std::vector<llvm::Type *> element_types;
     for (auto field : definition->fields) {
-        element_types.push_back(field->type->create_llvm_type(context));
+        element_types.push_back(generate_type(field));
     }
 
     llvm::FunctionType *function_type = llvm::FunctionType::get(return_type, element_types, false);

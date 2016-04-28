@@ -19,6 +19,9 @@ namespace jet {
 
     namespace codegen {
 
+        class TypeGenerator;
+        class TypeInitialiserGenerator;
+
         class ModuleGenerator : public AST::Visitor {
 
         public:
@@ -28,6 +31,12 @@ namespace jet {
             void debug(std::string line);
 
             llvm::Module *module() const;
+
+            llvm::Type *generate_type(AST::Node *node, Types::Type *type);
+            llvm::Type *generate_type(AST::Node *node);
+
+            llvm::Constant *generate_initialiser(AST::Node *node, Types::Type *type);
+            llvm::Constant *generate_initialiser(AST::Node *node);
 
             void visit(AST::CodeBlock *block);
 
@@ -72,6 +81,9 @@ namespace jet {
             llvm::MDBuilder *m_mdBuilder;
 
             std::vector<llvm::Value *> m_llvmValues;
+
+            TypeGenerator *m_type_generator;
+            TypeInitialiserGenerator *m_type_initialiser_generator;
         };
 
     }
