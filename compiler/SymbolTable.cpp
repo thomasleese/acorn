@@ -137,6 +137,14 @@ bool Symbol::is_function() const {
     return dynamic_cast<Types::Function *>(this->type) != nullptr && this->node == nullptr;
 }
 
+bool Symbol::is_type() const {
+    return dynamic_cast<Types::Constructor *>(this->type) != nullptr;
+}
+
+bool Symbol::is_variable() const {
+    return dynamic_cast<Types::Constructor *>(this->type) == nullptr && this->node != nullptr;
+}
+
 std::string Symbol::to_string() const {
     std::stringstream ss;
     ss << this->name;

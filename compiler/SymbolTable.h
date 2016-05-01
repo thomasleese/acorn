@@ -56,6 +56,8 @@ namespace SymbolTable {
         bool is_builtin;
 
         bool is_function() const;
+        bool is_variable() const;
+        bool is_type() const;
 
         std::string to_string() const;
         Symbol *clone() const;
