@@ -24,7 +24,7 @@ GenericsPass::GenericsPass(SymbolTable::Namespace *root_namespace) :
 }
 
 void GenericsPass::visit(AST::CodeBlock *block) {
-    int size = block->statements.size();
+    size_t size = block->statements.size();
 
     for (int i = 0; i < size; i++) {
         auto statement = block->statements[i];
