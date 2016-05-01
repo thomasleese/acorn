@@ -35,9 +35,6 @@ namespace jet {
             llvm::Type *generate_type(AST::Node *node, Types::Type *type);
             llvm::Type *generate_type(AST::Node *node);
 
-            llvm::Constant *generate_initialiser(AST::Node *node, Types::Type *type);
-            llvm::Constant *generate_initialiser(AST::Node *node);
-
             void visit(AST::CodeBlock *block);
 
             void visit(AST::Identifier *expression);
@@ -83,7 +80,6 @@ namespace jet {
             std::vector<llvm::Value *> m_llvmValues;
 
             TypeGenerator *m_type_generator;
-            TypeInitialiserGenerator *m_type_initialiser_generator;
         };
 
     }

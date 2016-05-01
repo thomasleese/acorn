@@ -31,8 +31,6 @@ namespace Types {
         virtual bool isCompatible(const Type *other) const;
 
         virtual std::string mangled_name() const = 0;
-        virtual llvm::Type *create_llvm_type(llvm::LLVMContext &context) const = 0;
-        virtual llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const = 0;
 
         virtual void accept(Visitor *visitor) = 0;
     };
@@ -44,11 +42,6 @@ namespace Types {
         virtual Type *create(AST::Node *node, std::vector<Type *> parameters) = 0;
 
         std::string mangled_name() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
-
-        void accept(Visitor *visitor);
     };
 
     class AnyConstructor : public Constructor {
@@ -193,9 +186,6 @@ namespace Types {
         std::string name() const;
         std::string mangled_name() const;
 
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
-
         void accept(Visitor *visitor);
     };
 
@@ -204,9 +194,6 @@ namespace Types {
         std::string name() const;
         std::string mangled_name() const;
 
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
-
         void accept(Visitor *visitor);
     };
 
@@ -214,9 +201,6 @@ namespace Types {
     public:
         std::string name() const;
         std::string mangled_name() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
         void accept(Visitor *visitor);
     };
@@ -227,9 +211,7 @@ namespace Types {
 
         std::string name() const;
         std::string mangled_name() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+        unsigned int size() const;
 
         void accept(Visitor *visitor);
 
@@ -243,9 +225,7 @@ namespace Types {
 
         std::string name() const;
         std::string mangled_name() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+        unsigned int size() const;
 
         void accept(Visitor *visitor);
 
@@ -255,18 +235,16 @@ namespace Types {
 
     class Float : public Type {
     public:
-        explicit Float(int size);
+        explicit Float(unsigned int size);
 
         std::string name() const;
         std::string mangled_name() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
+        unsigned int size() const;
 
         void accept(Visitor *visitor);
 
     private:
-        int m_size;
+        unsigned int m_size;
     };
 
     class UnsafePointer : public Type {
@@ -276,9 +254,6 @@ namespace Types {
         std::string name() const;
         std::string mangled_name() const;
         Type *element_type() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
         void accept(Visitor *visitor);
 
@@ -293,12 +268,10 @@ namespace Types {
         bool has_field(std::string name);
         long get_field_index(std::string name);
         Type *get_field_type(std::string name);
+        std::vector<Type *> field_types() const;
 
         std::string name() const;
         std::string mangled_name() const;
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
         void accept(Visitor *visitor);
 
@@ -324,15 +297,13 @@ namespace Types {
         std::string name() const;
         std::string mangled_name() const;
 
+        std::vector<Type *> parameter_types() const;
         Type *return_type() const;
 
         long get_parameter_position(std::string name) const;
         std::string get_parameter_name(long position) const;
 
         bool could_be_called_with(std::vector<AST::Argument *> arguments);
-
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
 
         void accept(Visitor *visitor);
 
@@ -352,9 +323,6 @@ namespace Types {
         Method *get_method(int index) const;
         int no_methods() const;
 
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
-
         void accept(Visitor *visitor);
 
     private:
@@ -373,9 +341,6 @@ namespace Types {
 
         bool isCompatible(const Type *other) const;
 
-        llvm::Type *create_llvm_type(llvm::LLVMContext &context) const;
-        llvm::Constant *create_llvm_initialiser(llvm::LLVMContext &context) const;
-
         void accept(Visitor *visitor);
 
     private:
@@ -386,7 +351,6 @@ namespace Types {
     public:
         virtual ~Visitor();
 
-        virtual void visit(Constructor *type) = 0;
         virtual void visit(AnyConstructor *type) = 0;
         virtual void visit(VoidConstructor *type) = 0;
         virtual void visit(BooleanConstructor *type) = 0;

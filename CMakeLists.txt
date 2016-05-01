@@ -14,8 +14,8 @@ execute_process(COMMAND llvm-config-3.8 --ldflags OUTPUT_VARIABLE LLVM_LD_FLAGS 
 execute_process(COMMAND llvm-config-3.8 --libs OUTPUT_VARIABLE LLVM_LIBS OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 # Source
-include_directories(${Boost_INCLUDE_DIRS} /usr/local/Cellar/icu4c/56.1/include)
-link_directories(/usr/local/Cellar/icu4c/56.1/lib/)
+include_directories(${Boost_INCLUDE_DIRS} /usr/local/Cellar/icu4c/57.1/include)
+link_directories(/usr/local/Cellar/icu4c/57.1/lib/)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS} -std=c++11 -Wall -pedantic -fexceptions")
 set(CMAKE_EXE_LINKER_FLAGS "${LLVM_LD_FLAGS} -fexceptions -lz")

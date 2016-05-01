@@ -25,8 +25,7 @@
 using namespace jet::codegen;
 
 ModuleGenerator::ModuleGenerator(SymbolTable::Namespace *rootNamespace) :
-        m_type_generator(new TypeGenerator()),
-        m_type_initialiser_generator(new TypeInitialiserGenerator()) {
+        m_type_generator(new TypeGenerator()) {
     m_scope = rootNamespace;
 
     m_irBuilder = new llvm::IRBuilder<>(llvm::getGlobalContext());
@@ -48,20 +47,11 @@ llvm::Module *ModuleGenerator::module() const {
 
 llvm::Type *ModuleGenerator::generate_type(AST::Node *node, Types::Type *type) {
     type->accept(m_type_generator);
-    return m_type_generator->take_result(node);
+    return m_type_generator->take_type(node);
 }
 
 llvm::Type *ModuleGenerator::generate_type(AST::Node *node) {
     return generate_type(node, node->type);
-}
-
-llvm::Constant *ModuleGenerator::generate_initialiser(AST::Node *node, Types::Type *type) {
-    type->accept(m_type_initialiser_generator);
-    return m_type_initialiser_generator->take_result(node);
-}
-
-llvm::Constant *ModuleGenerator::generate_initialiser(AST::Node *node) {
-    return generate_initialiser(node, node->type);
 }
 
 void ModuleGenerator::visit(AST::CodeBlock *block) {
@@ -522,6 +512,7 @@ void ModuleGenerator::visit(AST::VariableDefinition *definition) {
 
     if (m_scope->is_root()) {
         llvm::Type *type = generate_type(definition);
+        llvm::Constant *initialiser = m_type_generator->take_initialiser(definition);
 
         llvm::GlobalVariable *variable = new llvm::GlobalVariable(*m_module, type, false,
                                                                   llvm::GlobalValue::CommonLinkage,
@@ -529,7 +520,7 @@ void ModuleGenerator::visit(AST::VariableDefinition *definition) {
         variable->setAlignment(4);
         variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
         //variable->setInitializer(llvm::UndefValue::get(type));
-        variable->setInitializer(generate_initialiser(definition));
+        variable->setInitializer(initialiser);
 
         symbol->value = variable;
 

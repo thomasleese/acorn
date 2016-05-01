@@ -32,18 +32,6 @@ std::string Constructor::mangled_name() const {
     throw std::runtime_error("cannot create mangled name");
 }
 
-llvm::Type *Constructor::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("cannot create llvm type of constructor");
-}
-
-llvm::Constant *Constructor::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("cannot create llvm initialiser of constructor");
-}
-
-void Constructor::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 std::string AnyConstructor::name() const {
     return "AnyConstructor";
 }
@@ -319,14 +307,6 @@ std::string Any::mangled_name() const {
     return "a";
 }
 
-llvm::Type *Any::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented (any)");
-}
-
-llvm::Constant *Any::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented (any)");
-}
-
 void Any::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -339,14 +319,6 @@ std::string Void::mangled_name() const {
     return "v";
 }
 
-llvm::Type *Void::create_llvm_type(llvm::LLVMContext &context) const {
-    return llvm::Type::getVoidTy(context);
-}
-
-llvm::Constant *Void::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    return llvm::UndefValue::get(create_llvm_type(context));
-}
-
 void Void::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -357,14 +329,6 @@ std::string Boolean::name() const {
 
 std::string Boolean::mangled_name() const {
     return "b";
-}
-
-llvm::Type *Boolean::create_llvm_type(llvm::LLVMContext &context) const {
-    return llvm::Type::getInt1Ty(context);
-}
-
-llvm::Constant *Boolean::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    return llvm::ConstantInt::get(create_llvm_type(context), 0);
 }
 
 void Boolean::accept(Visitor *visitor) {
@@ -387,12 +351,8 @@ std::string Integer::mangled_name() const {
     return ss.str();
 }
 
-llvm::Type *Integer::create_llvm_type(llvm::LLVMContext &context) const {
-    return llvm::Type::getIntNTy(context, m_size);
-}
-
-llvm::Constant *Integer::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    return llvm::ConstantInt::get(create_llvm_type(context), 0);
+unsigned int Integer::size() const {
+    return m_size;
 }
 
 void Integer::accept(Visitor *visitor) {
@@ -415,19 +375,15 @@ std::string UnsignedInteger::mangled_name() const {
     return ss.str();
 }
 
-llvm::Type *UnsignedInteger::create_llvm_type(llvm::LLVMContext &context) const {
-    return llvm::Type::getIntNTy(context, m_size);
-}
-
-llvm::Constant *UnsignedInteger::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    return llvm::ConstantInt::get(create_llvm_type(context), 0);
+unsigned int UnsignedInteger::size() const {
+    return m_size;
 }
 
 void UnsignedInteger::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Float::Float(int size) : m_size(size) {
+Float::Float(unsigned int size) : m_size(size) {
 
 }
 
@@ -443,21 +399,8 @@ std::string Float::mangled_name() const {
     return ss.str();
 }
 
-llvm::Type *Float::create_llvm_type(llvm::LLVMContext &context) const {
-    switch (m_size) {
-        case 64:
-            return llvm::Type::getDoubleTy(context);
-        case 32:
-            return llvm::Type::getFloatTy(context);
-        case 16:
-            return llvm::Type::getHalfTy(context);
-        default:
-            throw Errors::InternalError(static_cast<Token *>(nullptr), "Invalid float type.");
-    }
-}
-
-llvm::Constant *Float::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    return llvm::ConstantFP::get(create_llvm_type(context), 0);
+unsigned int Float::size() const {
+    return m_size;
 }
 
 void Float::accept(Visitor *visitor) {
@@ -482,17 +425,6 @@ std::string UnsafePointer::mangled_name() const {
 
 Type *UnsafePointer::element_type() const {
     return m_element_type;
-}
-
-llvm::Type *UnsafePointer::create_llvm_type(llvm::LLVMContext &context) const {
-    llvm::Type *elementType = m_element_type->create_llvm_type(context);
-    return llvm::PointerType::get(elementType, 0);
-}
-
-llvm::Constant *UnsafePointer::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    auto type = create_llvm_type(context);
-    auto pointer_type = static_cast<llvm::PointerType *>(type);
-    return llvm::ConstantPointerNull::get(pointer_type);
 }
 
 void UnsafePointer::accept(Visitor *visitor) {
@@ -533,6 +465,10 @@ Type *Record::get_field_type(std::string name) {
     return m_field_types[index];
 }
 
+std::vector<Type *> Record::field_types() const {
+    return m_field_types;
+}
+
 std::string Record::name() const {
     std::stringstream ss;
     ss << "Record{";
@@ -549,24 +485,6 @@ std::string Record::mangled_name() const {
         ss << type->mangled_name();
     }
     return ss.str();
-}
-
-llvm::Type *Record::create_llvm_type(llvm::LLVMContext &context) const {
-    std::vector<llvm::Type *> llvm_types;
-    for (auto type : m_field_types) {
-        llvm_types.push_back(type->create_llvm_type(context));
-    }
-    return llvm::StructType::get(context, llvm_types);
-}
-
-llvm::Constant *Record::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    std::vector<llvm::Constant *> constants;
-    for (auto type : m_field_types) {
-        constants.push_back(type->create_llvm_initialiser(context));
-    }
-
-    llvm::StructType *type = static_cast<llvm::StructType *>(create_llvm_type(context));
-    return llvm::ConstantStruct::get(type, constants);
 }
 
 void Record::accept(Visitor *visitor) {
@@ -634,6 +552,10 @@ std::string Method::mangled_name() const {
     return ss.str();
 }
 
+std::vector<Type *> Method::parameter_types() const {
+    return m_parameter_types;
+}
+
 Type *Method::return_type() const {
     return m_return_type;
 }
@@ -684,20 +606,6 @@ bool Method::could_be_called_with(std::vector<AST::Argument *> arguments) {
     return matches == m_parameter_types.size();
 }
 
-llvm::Type *Method::create_llvm_type(llvm::LLVMContext &context) const {
-    llvm::Type *returnType = m_return_type->create_llvm_type(context);
-    std::vector<llvm::Type *> paramTypes;
-    for (auto type : m_parameter_types) {
-        paramTypes.push_back(type->create_llvm_type(context));
-    }
-
-    return llvm::FunctionType::get(returnType, paramTypes, false);
-}
-
-llvm::Constant *Method::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
-}
-
 void Method::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -746,14 +654,6 @@ Method *Function::get_method(int index) const {
 
 int Function::no_methods() const {
     return m_methods.size();
-}
-
-llvm::Type *Function::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("functions do not map to LLVM, use methods instead");
-}
-
-llvm::Constant *Function::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("functions to not map to LLVM");
 }
 
 void Function::accept(Visitor *visitor) {
@@ -807,14 +707,6 @@ bool Union::isCompatible(const Type *other) const {
     }
 
     return false;
-}
-
-llvm::Type *Union::create_llvm_type(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
-}
-
-llvm::Constant *Union::create_llvm_initialiser(llvm::LLVMContext &context) const {
-    throw std::runtime_error("not implemented");
 }
 
 void Union::accept(Visitor *visitor) {

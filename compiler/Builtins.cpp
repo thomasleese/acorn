@@ -8,8 +8,11 @@
 #include "Mangler.h"
 #include "SymbolTable.h"
 #include "Types.h"
+#include "codegen/types.h"
 
 #include "Builtins.h"
+
+using namespace jet;
 
 SymbolTable::Symbol *add_symbol(SymbolTable::Namespace *table, std::string name, Types::Type *type) {
     SymbolTable::Symbol *symbol = new SymbolTable::Symbol(name);
@@ -96,11 +99,16 @@ llvm::Function *create_llvm_function(SymbolTable::Namespace *table, llvm::Module
     Types::Function *functionType = static_cast<Types::Function *>(table->lookup(nullptr, name)->type);
     Types::Method *methodType = functionType->get_method(index);
 
-    llvm::LLVMContext &context = module->getContext();
-
     std::string mangled_name = Mangler::mangle_method(name, methodType);
 
-    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(methodType->create_llvm_type(context));
+    auto type_generator = new codegen::TypeGenerator();
+    methodType->accept(type_generator);
+
+    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(type_generator->take_type(nullptr));
+    assert(type);
+
+    delete type_generator;
+
     llvm::Function *f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, mangled_name, module);
     f->addFnAttr(llvm::Attribute::AlwaysInline);
 
