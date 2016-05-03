@@ -84,11 +84,12 @@ void Lexer::loadRules() {
     setRule(Token::Colon, "(:)");
     setRule(Token::Semicolon, "(;)");
 
+    setRule(Token::Assignment, "(=[^=])");
+    setRule(Token::Operator, "(<-|->|\\+=|!=|==|[\\^\\+\\*\\-[:Sm:]])");
+
     std::string nameInitialRegex = "[:L*:][:Nl:][:Sc:][:So:]√_";
     std::string nameAfterRegex = nameInitialRegex + "![:N*:][:M*:][:Sk:][:Pc:]";
-    setRule(Token::Assignment, "(=[^=])");
     setRule(Token::Identifier, "([" + nameInitialRegex + "][" + nameAfterRegex + "]*)");
-    setRule(Token::Operator, "(<-|->|\\+=|!=|==|[\\^\\+\\*\\-[:Sm:]])");
 }
 
 std::vector<Token *> Lexer::tokenise(std::string filename) const {

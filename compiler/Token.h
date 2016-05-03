@@ -69,8 +69,8 @@ struct Token {
 
         // identifiers
         Assignment,
-        Identifier,
         Operator,
+        Identifier,
     };
 
     static std::string rule_string(Rule rule);

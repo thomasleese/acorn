@@ -10,8 +10,14 @@ def free{T}(pointer as UnsafePointer{T}) as Void
     ccall free(UnsafePointer{Integer8}) as Void using void_pointer
 end
 
-let a = malloc{Integer}(size: 10)
-free{Integer}(pointer: a)
+type Array{T}
+    elements as UnsafePointer{T}
+    size as UnsignedInteger
+    capacity as UnsignedInteger
+end
 
-let b = malloc{Float}(size: 10)
-free{Float}(pointer: b)
+def create_array{T}(n as Integer) as Array{T}
+    let block_size = 100 * strideof Integer
+end
+
+let a = create_array{Integer}(n: 10)

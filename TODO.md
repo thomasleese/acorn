@@ -17,6 +17,8 @@
 - Importing modules
 - math stdlib
 
+- Data Structures library
+  - Ropes
 
 def after(n as Integer) as Channel{Void}
     let channel as Channel{Void} = Channel{Void}(buffer: 0)
