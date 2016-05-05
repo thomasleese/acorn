@@ -24,6 +24,18 @@ bool Type::isCompatible(const Type *other) const {
     return name() == other->name();
 }
 
+std::string Parameter::name() const {
+    return "Parameter";
+}
+
+std::string Parameter::mangled_name() const {
+    return "p";
+}
+
+void Parameter::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Type *Constructor::create(AST::Node *node) {
     return create(node, std::vector<Type *>());
 }
@@ -189,8 +201,8 @@ RecordConstructor::RecordConstructor() {
 
 }
 
-RecordConstructor::RecordConstructor(std::vector<std::string> field_names, std::vector<Type *> field_types) :
-        m_field_names(field_names), m_field_types(field_types) {
+RecordConstructor::RecordConstructor(std::vector<Parameter *> input_parameters, std::vector<std::string> field_names, std::vector<Constructor *> field_types, std::vector<std::vector<Type *> > field_parameters) :
+        m_input_parameters(input_parameters), m_field_names(field_names), m_field_types(field_types), m_field_parameters(field_parameters) {
 
 }
 
@@ -205,10 +217,31 @@ std::string RecordConstructor::name() const {
 }
 
 Type *RecordConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
-    if (parameters.empty()) {
-        return new Record(m_field_names, m_field_types);
+    if (parameters.size() == m_input_parameters.size()) {
+        std::map<Parameter *, Type *> parameter_mapping;
+        for (int i = 0; i < m_input_parameters.size(); i++) {
+            parameter_mapping[m_input_parameters[i]] = parameters[i];
+        }
+
+        std::vector<Type *> field_types;
+
+        for (int i = 0; i < m_field_types.size(); i++) {
+            std::vector<Type *> field_parameters;
+            for (auto t : m_field_parameters[i]) {
+                auto type = t;
+                if (auto p = dynamic_cast<Parameter *>(t)) {
+                    type = parameter_mapping[p];
+                }
+
+                field_parameters.push_back(type);
+            }
+
+            field_types.push_back(m_field_types[i]->create(node, field_parameters));
+        }
+
+        return new Record(m_field_names, field_types);
     } else {
-        throw Errors::InvalidTypeParameters(node, parameters.size(), 0);
+        throw Errors::InvalidTypeParameters(node, parameters.size(), m_input_parameters.size());
     }
 }
 
@@ -233,18 +266,15 @@ void UnionConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Type *> inputParameters, std::vector<Type *> outputParameters) :
+AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Parameter *> input_parameters, std::vector<Type *> outputParameters) :
         m_constructor(constructor) {
-    /*for (unsigned long i = 0; i < inputParameters.size(); i++) {
-        auto parameter = dynamic_cast<Parameter *>(inputParameters[i]);
-        if (parameter == nullptr) {
-            throw Errors::InvalidTypeParameters(node, 0, 0);
-        }
+    for (unsigned long i = 0; i < input_parameters.size(); i++) {
+        auto parameter = input_parameters[i];
 
         int mapping = -1;
 
         for (unsigned long j = 0; j < outputParameters.size(); j++) {
-            if (*parameter == *(outputParameters[j])) {
+            if (parameter->isCompatible(outputParameters[j])) {
                 mapping = j;
                 break;
             }
@@ -261,7 +291,7 @@ AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, st
         if (dynamic_cast<Parameter *>(t) == nullptr) {
             m_knownTypes.push_back(t);
         }
-    }*/
+    }
 }
 
 std::string AliasConstructor::name() const {
@@ -269,7 +299,7 @@ std::string AliasConstructor::name() const {
 }
 
 Type *AliasConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
-    /*if (parameters.size() != m_parameterMapping.size()) {
+    if (parameters.size() != m_parameterMapping.size()) {
         throw Errors::InvalidTypeParameters(node, parameters.size(), m_parameterMapping.size());
     }
 
@@ -290,7 +320,7 @@ Type *AliasConstructor::create(AST::Node *node, std::vector<Type *> parameters) 
             actualParameters[i] = m_knownTypes[j];
             j++;
         }
-    }*/
+    }
 
     return m_constructor->create(node, parameters);
 }

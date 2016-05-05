@@ -20,6 +20,7 @@ namespace jet {
             llvm::Type *take_type(AST::Node *node);
             llvm::Constant *take_initialiser(AST::Node *node);
 
+            void visit(Types::Parameter *type);
             void visit(Types::AnyConstructor *type);
             void visit(Types::VoidConstructor *type);
             void visit(Types::BooleanConstructor *type);

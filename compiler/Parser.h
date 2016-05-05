@@ -26,6 +26,7 @@ namespace AST {
     struct StringLiteral;
     struct SequenceLiteral;
     struct MappingLiteral;
+    struct RecordLiteral;
     struct Argument;
     struct Call;
     struct CCall;
@@ -37,7 +38,8 @@ namespace AST {
     struct If;
     struct Return;
     struct Spawn;
-    struct Type;
+    struct Sizeof;
+    struct Strideof;
     struct Parameter;
     struct VariableDefinition;
     struct FunctionDefinition;
@@ -77,6 +79,7 @@ private:
     AST::StringLiteral *readStringLiteral();
     AST::SequenceLiteral *readSequenceLiteral();
     AST::MappingLiteral *readMappingLiteral();
+    AST::RecordLiteral *readRecordLiteral();
     AST::Argument *readArgument();
     AST::Call *readCall(AST::Expression *operand);
     AST::CCall *readCCall();
@@ -88,6 +91,8 @@ private:
     AST::If *readIf();
     AST::Return *readReturn();
     AST::Spawn *readSpawn();
+    AST::Sizeof *readSizeof();
+    AST::Strideof *readStrideof();
     AST::Expression *readUnaryExpression();
     AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
     AST::Expression *readPrimaryExpression();

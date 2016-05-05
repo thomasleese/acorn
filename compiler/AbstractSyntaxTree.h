@@ -140,6 +140,17 @@ namespace AST {
         MappingLiteral *clone() const;
     };
 
+    struct RecordLiteral : Expression {
+        using Expression::Expression;
+
+        Identifier *name;
+        std::vector<Identifier *> field_names;
+        std::vector<Expression *> field_values;
+
+        void accept(Visitor *visitor);
+        RecordLiteral *clone() const;
+    };
+
     struct Argument : Node {
         explicit Argument(Token *token);
         Argument(Token *token, std::string name);
@@ -275,6 +286,24 @@ namespace AST {
         Spawn *clone() const;
     };
 
+    struct Sizeof : Expression {
+        Sizeof(Token *token, Identifier *identifier);
+
+        Identifier *identifier;
+
+        void accept(Visitor *visitor);
+        Sizeof *clone() const;
+    };
+
+    struct Strideof : Expression {
+        Strideof(Token *token, Identifier *identifier);
+
+        Identifier *identifier;
+
+        void accept(Visitor *visitor);
+        Strideof *clone() const;
+    };
+
     // misc
     struct Parameter : Node {
         explicit Parameter(Token *token);
@@ -314,7 +343,9 @@ namespace AST {
         TypeDefinition(Token *token);
 
         Identifier *alias;
-        std::vector<Parameter *> fields;
+
+        std::vector<Identifier *> field_names;
+        std::vector<Identifier *> field_types;
 
         void accept(Visitor *visitor);
         TypeDefinition *clone() const;
@@ -377,6 +408,7 @@ namespace AST {
         virtual void visit(StringLiteral *expression) = 0;
         virtual void visit(SequenceLiteral *expression) = 0;
         virtual void visit(MappingLiteral *expression) = 0;
+        virtual void visit(RecordLiteral *expression) = 0;
         virtual void visit(Argument *expression) = 0;
         virtual void visit(Call *expression) = 0;
         virtual void visit(CCall *expression) = 0;
@@ -390,6 +422,8 @@ namespace AST {
         virtual void visit(If *expression) = 0;
         virtual void visit(Return *expression) = 0;
         virtual void visit(Spawn *expression) = 0;
+        virtual void visit(Sizeof *expression) = 0;
+        virtual void visit(Strideof *expression) = 0;
 
         // misc
         virtual void visit(Parameter *parameter) = 0;

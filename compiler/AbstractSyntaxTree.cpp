@@ -167,6 +167,27 @@ MappingLiteral *MappingLiteral::clone() const {
     return literal;
 }
 
+void RecordLiteral::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+RecordLiteral *RecordLiteral::clone() const {
+    auto literal = new RecordLiteral(this->token);
+    literal->type = this->type;
+
+    literal->name = this->name->clone();
+
+    for (auto element : this->field_names) {
+        literal->field_names.push_back(element->clone());
+    }
+
+    for (auto element : this->field_values) {
+        literal->field_values.push_back(element->clone());
+    }
+
+    return literal;
+}
+
 Argument::Argument(Token *token) : Node(token) {
     this->name = nullptr;
 }
@@ -181,7 +202,15 @@ void Argument::accept(Visitor *visitor) {
 
 Argument *Argument::clone() const {
     auto new_argument = new Argument(this->token);
-    new_argument->name = this->name->clone();
+
+    if (this->name) {
+        new_argument->name = this->name->clone();
+    } else {
+        new_argument->name = nullptr;
+    }
+
+    new_argument->value = this->value->clone();
+
     new_argument->type = this->type;
     return new_argument;
 }
@@ -201,6 +230,11 @@ void Call::accept(Visitor *visitor) {
 Call *Call::clone() const {
     auto new_call = new Call(this->token);
     new_call->operand = this->operand->clone();
+
+    for (auto arg : this->arguments) {
+        new_call->arguments.push_back(arg->clone());
+    }
+
     new_call->type = this->type;
     return new_call;
 }
@@ -376,6 +410,34 @@ Spawn* Spawn::clone() const {
     return new_spawn;
 }
 
+Sizeof::Sizeof(Token *token, Identifier *identifier) : Expression(token) {
+    this->identifier = identifier;
+}
+
+void Sizeof::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+Sizeof* Sizeof::clone() const {
+    auto new_sizeof = new Sizeof(this->token, this->identifier->clone());
+    new_sizeof->type = this->type;
+    return new_sizeof;
+}
+
+Strideof::Strideof(Token *token, Identifier *identifier) : Expression(token) {
+    this->identifier = identifier;
+}
+
+void Strideof::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+Strideof* Strideof::clone() const {
+    auto new_strideof = new Strideof(this->token, this->identifier->clone());
+    new_strideof->type = this->type;
+    return new_strideof;
+}
+
 Parameter::Parameter(Token *token) : Node(token) {
     this->defaultExpression = nullptr;
 }
@@ -396,11 +458,12 @@ Parameter* Parameter::clone() const {
 }
 
 VariableDefinition::VariableDefinition(Token *token) : Definition(token) {
-
+    this->typeNode = nullptr;
 }
 
 VariableDefinition::VariableDefinition(std::string name, Token *token) : Definition(token) {
     this->name = new Identifier(token, name);
+    this->typeNode = nullptr;
 }
 
 void VariableDefinition::accept(Visitor *visitor) {
@@ -451,8 +514,12 @@ TypeDefinition* TypeDefinition::clone() const {
     if (this->alias) {
         new_def->alias = this->alias->clone();
     } else {
-        for (auto field : this->fields) {
-            new_def->fields.push_back(field->clone());
+        for (auto field : this->field_names) {
+            new_def->field_names.push_back(field->clone());
+        }
+
+        for (auto field : this->field_types) {
+            new_def->field_types.push_back(field->clone());
         }
     }
 

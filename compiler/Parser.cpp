@@ -274,6 +274,32 @@ MappingLiteral *Parser::readMappingLiteral() {
     return literal;
 }
 
+RecordLiteral *Parser::readRecordLiteral() {
+    Token *token = readToken(Token::NewKeyword);
+
+    auto literal = new RecordLiteral(token);
+
+    literal->name = readIdentifier(true);
+
+    readToken(Token::OpenParenthesis);
+
+    while (!isToken(Token::CloseParenthesis)) {
+        literal->field_names.push_back(readIdentifier(false));
+        readToken(Token::Colon);
+        literal->field_values.push_back(readExpression());
+
+        if (isToken(Token::Comma)) {
+            readToken(Token::Comma);
+        } else {
+            break;
+        }
+    }
+
+    readToken(Token::CloseParenthesis);
+
+    return literal;
+}
+
 Argument *Parser::readArgument() {
     Argument *argument = new Argument(m_tokens.front());
     argument->name = readIdentifier(false);
@@ -461,6 +487,18 @@ Spawn *Parser::readSpawn() {
     }
 }
 
+Sizeof *Parser::readSizeof() {
+    Token *token = readToken(Token::SizeofKeyword);
+    Identifier *identifier = readIdentifier(true);
+    return new Sizeof(token, identifier);
+}
+
+Strideof *Parser::readStrideof() {
+    Token *token = readToken(Token::StrideofKeyword);
+    Identifier *identifier = readIdentifier(true);
+    return new Strideof(token, identifier);
+}
+
 Expression *Parser::readUnaryExpression() {
     if (isToken(Token::Operator)) {
         Call *expr = new Call(m_tokens.front());
@@ -552,6 +590,12 @@ Expression *Parser::readPrimaryExpression() {
         return readSpawn();
     } else if (isToken(Token::CCallKeyword)) {
         return readCCall();
+    } else if (isToken(Token::SizeofKeyword)) {
+        return readSizeof();
+    } else if (isToken(Token::StrideofKeyword)) {
+        return readStrideof();
+    } else if (isToken(Token::NewKeyword)) {
+        return readRecordLiteral();
     } else if (isToken(Token::Identifier)) {
         return readIdentifier(true);
     } else {
@@ -682,7 +726,9 @@ TypeDefinition *Parser::readTypeDefinition() {
         readToken(Token::Newline);
 
         while (!isToken(Token::EndKeyword)) {
-            definition->fields.push_back(readParameter());
+            definition->field_names.push_back(readIdentifier(false));
+            readToken(Token::AsKeyword);
+            definition->field_types.push_back(readIdentifier(true));
             readToken(Token::Newline);
         }
 

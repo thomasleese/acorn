@@ -50,6 +50,11 @@ llvm::Constant *TypeGenerator::take_initialiser(AST::Node *node) {
     }
 }
 
+void TypeGenerator::visit(Types::Parameter *type) {
+    m_type_stack.push_back(nullptr);
+    m_initialiser_stack.push_back(nullptr);
+}
+
 void TypeGenerator::visit(Types::AnyConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
@@ -199,7 +204,8 @@ void TypeGenerator::visit(Types::Record *type) {
 
         llvm::Type *llvm_field_type = take_type(nullptr);
         llvm::Constant *llvm_field_initialiser = take_initialiser(nullptr);
-        if (!llvm_field_type || !llvm_field_initialiser) {
+
+        if (llvm_field_type == nullptr || llvm_field_initialiser == nullptr) {
             m_type_stack.push_back(nullptr);
             m_initialiser_stack.push_back(nullptr);
             return;
@@ -209,10 +215,11 @@ void TypeGenerator::visit(Types::Record *type) {
         llvm_initialisers.push_back(llvm_field_initialiser);
     }
 
-    llvm::StructType *struct_type = llvm::StructType::get(context, llvm_types);
+    auto struct_type = llvm::StructType::get(context, llvm_types);
+    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
 
     m_type_stack.push_back(struct_type);
-    m_initialiser_stack.push_back(llvm::ConstantStruct::get(struct_type));
+    m_initialiser_stack.push_back(struct_initialiser);
 }
 
 void TypeGenerator::visit(Types::Tuple *type) {

@@ -80,6 +80,7 @@ namespace SymbolTable {
         void visit(AST::StringLiteral *expression);
         void visit(AST::SequenceLiteral *sequence);
         void visit(AST::MappingLiteral *mapping);
+        void visit(AST::RecordLiteral *expression);
         void visit(AST::Argument *argument);
         void visit(AST::Call *expression);
         void visit(AST::CCall *expression);
@@ -93,6 +94,8 @@ namespace SymbolTable {
         void visit(AST::If *expression);
         void visit(AST::Return *expression);
         void visit(AST::Spawn *expression);
+        void visit(AST::Sizeof *expression);
+        void visit(AST::Strideof *expression);
 
         void visit(AST::Parameter *parameter);
 

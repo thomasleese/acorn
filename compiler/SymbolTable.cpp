@@ -142,7 +142,7 @@ bool Symbol::is_type() const {
 }
 
 bool Symbol::is_variable() const {
-    return dynamic_cast<Types::Constructor *>(this->type) == nullptr && this->node != nullptr;
+    return dynamic_cast<AST::VariableDefinition *>(this->node) != nullptr;
 }
 
 std::string Symbol::to_string() const {
@@ -221,6 +221,10 @@ void Builder::visit(AST::MappingLiteral *mapping) {
 
 }
 
+void Builder::visit(AST::RecordLiteral *expression) {
+
+}
+
 void Builder::visit(AST::Argument *argument) {
 
 }
@@ -273,6 +277,14 @@ void Builder::visit(AST::Spawn *expression) {
 
 }
 
+void Builder::visit(AST::Sizeof *expression) {
+
+}
+
+void Builder::visit(AST::Strideof *expression) {
+
+}
+
 void Builder::visit(AST::Parameter *parameter) {
     Symbol *symbol = new Symbol(parameter->name->value);
     m_scope.back()->insert(parameter, symbol);
@@ -281,6 +293,18 @@ void Builder::visit(AST::Parameter *parameter) {
 void Builder::visit(AST::VariableDefinition *definition) {
     Symbol *symbol = new Symbol(definition->name->value);
     m_scope.back()->insert(definition, symbol);
+
+    symbol->nameSpace = new Namespace(m_scope.back());
+
+    m_scope.push_back(symbol->nameSpace);
+
+    for (auto parameter : definition->name->parameters) {
+        Symbol *sym = new Symbol(parameter->value);
+        sym->type = new Types::Parameter();
+        m_scope.back()->insert(definition, sym);
+    }
+
+    m_scope.pop_back();
 }
 
 void Builder::visit(AST::FunctionDefinition *definition) {
@@ -311,6 +335,7 @@ void Builder::visit(AST::FunctionDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
+        sym->type = new Types::Parameter();
         m_scope.back()->insert(definition, sym);
     }
 
@@ -333,15 +358,16 @@ void Builder::visit(AST::TypeDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
+        sym->type = new Types::Parameter();
         m_scope.back()->insert(definition, sym);
     }
 
     if (definition->alias) {
         // do nothing
     } else {
-        for (auto field : definition->fields) {
-            Symbol *sym = new Symbol(field->name->value);
-            m_scope.back()->insert(field, sym);
+        for (auto name : definition->field_names) {
+            Symbol *sym = new Symbol(name->value);
+            m_scope.back()->insert(name, sym);
         }
     }
 

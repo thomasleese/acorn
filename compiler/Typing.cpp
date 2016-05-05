@@ -153,6 +153,18 @@ void Inferrer::visit(AST::MappingLiteral *mapping) {
     throw Errors::TypeInferenceError(mapping);
 }
 
+void Inferrer::visit(AST::RecordLiteral *expression) {
+    expression->name->accept(this);
+
+    for (auto value : expression->field_values) {
+        value->accept(this);
+    }
+
+    expression->type = instance_type(expression->name);
+
+    // TODO check matches definition of record
+}
+
 void Inferrer::visit(AST::Argument *argument) {
     argument->value->accept(this);
     if (argument->name) {
@@ -196,9 +208,8 @@ void Inferrer::visit(AST::CCall *ccall) {
     // TODO check arg and param types match
 
     ccall->returnType->accept(this);
-    ccall->returnType->type = instance_type(ccall->returnType);
 
-    ccall->type = ccall->returnType->type;
+    ccall->type = instance_type(ccall->returnType);
 }
 
 void Inferrer::visit(AST::Cast *cast) {
@@ -291,6 +302,16 @@ void Inferrer::visit(AST::Spawn *expression) {
     expression->type = expression->call->type;
 }
 
+void Inferrer::visit(AST::Sizeof *expression) {
+    expression->identifier->accept(this);
+    expression->type = find_type(expression, "Integer64");
+}
+
+void Inferrer::visit(AST::Strideof *expression) {
+    expression->identifier->accept(this);
+    expression->type = find_type(expression, "Integer64");
+}
+
 void Inferrer::visit(AST::Parameter *parameter) {
     SymbolTable::Symbol *symbol = m_namespace->lookup(parameter, parameter->name->value);
 
@@ -369,14 +390,20 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
     SymbolTable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    Types::Type *type;
-    if (definition->alias) {
-        std::vector<Types::Type *> inputParameters;
-        for (auto t : definition->name->parameters) {
-            t->accept(this);
-            inputParameters.push_back(t->type);
+    std::vector<Types::Parameter *> input_parameters;
+    for (auto t : definition->name->parameters) {
+        t->accept(this);
+
+        auto param = dynamic_cast<Types::Parameter *>(t->type);
+        if (param == nullptr) {
+            throw Errors::InvalidTypeParameters(t, 0, 0);
         }
 
+        input_parameters.push_back(param);
+    }
+
+    Types::Type *type;
+    if (definition->alias) {
         std::vector<Types::Type *> outputParameters;
         for (auto t : definition->alias->parameters) {
             t->accept(this);
@@ -385,21 +412,35 @@ void Inferrer::visit(AST::TypeDefinition *definition) {
 
         auto type_constructor = find_type_constructor(definition, definition->alias->value);
         definition->alias->type = type_constructor;
-        /*type = new Types::AliasConstructor(definition, type_constructor,
-                                           inputParameters, outputParameters);*/
-        type = type_constructor;
+        type = new Types::AliasConstructor(definition, type_constructor,
+                                           input_parameters, outputParameters);
     } else {
         std::vector<std::string> field_names;
-        std::vector<Types::Type *> field_types;
+        std::vector<Types::Constructor *> field_types;
+        std::vector<std::vector<Types::Type *> > field_parameters;
 
-        for (auto field : definition->fields) {
-            field->accept(this);
-
-            field_names.push_back(field->name->value);
-            field_types.push_back(field->type);
+        for (auto name : definition->field_names) {
+            field_names.push_back(name->value);
         }
 
-        type = new Types::RecordConstructor(field_names, field_types);
+        for (auto type : definition->field_types) {
+            auto type_constructor = find_type_constructor(type, type->value);
+
+            std::vector<Types::Type *> parameters;
+            for (auto t : type->parameters) {
+                t->accept(this);
+                parameters.push_back(t->type);
+            }
+
+            field_types.push_back(type_constructor);
+            field_parameters.push_back(parameters);
+
+            type->type = type_constructor;
+        }
+
+        type = new Types::RecordConstructor(input_parameters,
+                                            field_names, field_types,
+                                            field_parameters);
     }
 
     symbol->type = type;
@@ -505,6 +546,16 @@ void Checker::visit(AST::MappingLiteral *mapping) {
     check_not_null(mapping);
 }
 
+void Checker::visit(AST::RecordLiteral *expression) {
+    expression->name->accept(this);
+
+    for (auto value : expression->field_values) {
+        value->accept(this);
+    }
+
+    check_not_null(expression);
+}
+
 void Checker::visit(AST::Argument *argument) {
     if (argument->name) {
         argument->name->accept(this);
@@ -603,6 +654,16 @@ void Checker::visit(AST::Spawn *expression) {
     check_not_null(expression);
 }
 
+void Checker::visit(AST::Sizeof *expression) {
+    expression->identifier->accept(this);
+    check_not_null(expression);
+}
+
+void Checker::visit(AST::Strideof *expression) {
+    expression->identifier->accept(this);
+    check_not_null(expression);
+}
+
 void Checker::visit(AST::Parameter *parameter) {
     parameter->typeNode->accept(this);
 
@@ -664,8 +725,12 @@ void Checker::visit(AST::TypeDefinition *definition) {
     if (definition->alias) {
         definition->alias->accept(this);
     } else {
-        for (auto p : definition->fields) {
-            p->accept(this);
+        /*for (auto name : definition->field_names) {
+            name->accept(this);
+        }*/
+
+        for (auto type : definition->field_types) {
+            type->accept(this);
         }
     }
 

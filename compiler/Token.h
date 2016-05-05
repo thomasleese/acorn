@@ -47,6 +47,9 @@ struct Token {
         SpawnKeyword,
         CCallKeyword,
         UsingKeyword,
+        SizeofKeyword,
+        StrideofKeyword,
+        NewKeyword,
 
         // literals
         BooleanLiteral,

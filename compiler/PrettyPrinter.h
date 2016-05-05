@@ -39,6 +39,8 @@ public:
     void visit(AST::If *expression);
     void visit(AST::Return *expression);
     void visit(AST::Spawn *expression);
+    void visit(AST::Sizeof *expression);
+    void visit(AST::Strideof *expression);
 
     void visit(AST::Parameter *parameter);
 

@@ -35,6 +35,16 @@ namespace Types {
         virtual void accept(Visitor *visitor) = 0;
     };
 
+    class Parameter : public Type {
+
+    public:
+        std::string name() const;
+        std::string mangled_name() const;
+
+        void accept(Visitor *visitor);
+
+    };
+
     // type constructors
     class Constructor : public Type {
     public:
@@ -137,7 +147,7 @@ namespace Types {
 
     public:
         RecordConstructor();
-        RecordConstructor(std::vector<std::string> field_names, std::vector<Type *> field_types);
+        RecordConstructor(std::vector<Parameter *> input_parameters, std::vector<std::string> field_names, std::vector<Constructor *> field_types, std::vector<std::vector<Type *> > field_parameters);
 
         std::string name() const;
 
@@ -146,8 +156,10 @@ namespace Types {
         void accept(Visitor *visitor);
 
     private:
+        std::vector<Parameter *> m_input_parameters;
         std::vector<std::string> m_field_names;
-        std::vector<Type *> m_field_types;
+        std::vector<Constructor *> m_field_types;
+        std::vector<std::vector<Type *> > m_field_parameters;
 
     };
 
@@ -165,7 +177,7 @@ namespace Types {
     class AliasConstructor : public Constructor {
 
     public:
-        explicit AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Type *> inputParameters, std::vector<Type *> outputParameters);
+        explicit AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Parameter *> input_arameters, std::vector<Type *> outputParameters);
 
         std::string name() const;
 
@@ -351,6 +363,7 @@ namespace Types {
     public:
         virtual ~Visitor();
 
+        virtual void visit(Parameter *type) = 0;
         virtual void visit(AnyConstructor *type) = 0;
         virtual void visit(VoidConstructor *type) = 0;
         virtual void visit(BooleanConstructor *type) = 0;

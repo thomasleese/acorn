@@ -24,12 +24,13 @@
 
 using namespace jet::codegen;
 
-ModuleGenerator::ModuleGenerator(SymbolTable::Namespace *rootNamespace) :
+ModuleGenerator::ModuleGenerator(SymbolTable::Namespace *scope, llvm::DataLayout *data_layout) :
         m_type_generator(new TypeGenerator()) {
-    m_scope = rootNamespace;
+    m_scope.push_back(scope);
 
     m_irBuilder = new llvm::IRBuilder<>(llvm::getGlobalContext());
     m_mdBuilder = new llvm::MDBuilder(llvm::getGlobalContext());
+    m_data_layout = data_layout;
 }
 
 ModuleGenerator::~ModuleGenerator() {
@@ -63,7 +64,7 @@ void ModuleGenerator::visit(AST::CodeBlock *block) {
 void ModuleGenerator::visit(AST::Identifier *identifier) {
     debug("Finding named value: " + identifier->value);
 
-    SymbolTable::Symbol *symbol = m_scope->lookup(identifier);
+    SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
 
     if (!symbol->value) {
         throw Errors::InternalError(identifier, "should not be nullptr");
@@ -170,6 +171,36 @@ void ModuleGenerator::visit(AST::MappingLiteral *mapping) {
     throw Errors::InternalError(mapping, "N/A");
 }
 
+void ModuleGenerator::visit(AST::RecordLiteral *expression) {
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+
+    auto record = dynamic_cast<Types::Record *>(expression->type);
+
+    llvm::Type *llvm_type = generate_type(expression);
+
+    auto instance = m_irBuilder->CreateAlloca(llvm_type);
+
+    auto i32 = llvm::IntegerType::get(context, 32);
+    auto index0 = llvm::ConstantInt::get(i32, 0);
+    for (int i = 0; i < expression->field_names.size(); i++) {
+        auto index = llvm::ConstantInt::get(i32, i);
+
+        expression->field_values[i]->accept(this);
+
+        auto value = m_llvmValues.back();
+        m_llvmValues.pop_back();
+
+        std::vector<llvm::Value *> indexes;
+        indexes.push_back(index0);
+        indexes.push_back(index);
+
+        auto ptr = m_irBuilder->CreateInBoundsGEP(instance, indexes);
+        m_irBuilder->CreateStore(value, ptr);
+    }
+
+    m_llvmValues.push_back(m_irBuilder->CreateLoad(instance));
+}
+
 void ModuleGenerator::visit(AST::Argument *argument) {
     argument->value->accept(this);
 }
@@ -179,28 +210,17 @@ void ModuleGenerator::visit(AST::Call *expression) {
     if (identifier) {
         debug("Generating a call to: " + identifier->value);
 
-        SymbolTable::Symbol *symbol = m_scope->lookup(identifier);
+        SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
         Types::Function *functionType = dynamic_cast<Types::Function *>(symbol->type);
-        Types::RecordConstructor *recordType = dynamic_cast<Types::RecordConstructor *>(symbol->type);
-
-        assert(functionType || recordType);
 
         llvm::Function *function;
 
-        if (recordType == nullptr) {
-            Types::Method *method = functionType->find_method(expression, expression->arguments);
+        Types::Method *method = functionType->find_method(expression, expression->arguments);
 
-            std::string method_name = Mangler::mangle_method(symbol->name, method);
-            function = m_module->getFunction(method_name);
-            if (!function) {
-                throw Errors::InternalError(expression, "No function defined (" + method_name + ").");
-            }
-        } else {
-            std::string function_name = identifier->value + "_new";
-            function = m_module->getFunction(function_name);
-            if (!function) {
-                throw Errors::InternalError(expression, "No type function defined (" + function_name + ").");
-            }
+        std::string method_name = Mangler::mangle_method(symbol->name, method);
+        function = m_module->getFunction(method_name);
+        if (!function) {
+            throw Errors::InternalError(expression, "No function defined (" + method_name + ").");
         }
 
         std::map<std::string, uint64_t> arg_positions;
@@ -258,7 +278,7 @@ void ModuleGenerator::visit(AST::Call *expression) {
 
 void ModuleGenerator::visit(AST::CCall *ccall) {
     std::vector<llvm::Type *> parameters;
-    llvm::Type *returnType = generate_type(ccall->returnType);
+    llvm::Type *returnType = generate_type(ccall);
 
     for (auto parameter : ccall->parameters) {
         parameters.push_back(generate_type(parameter));
@@ -304,7 +324,7 @@ void ModuleGenerator::visit(AST::Assignment *expression) {
     llvm::Value *value = m_llvmValues.back();
     m_llvmValues.pop_back();
 
-    llvm::Value *ptr = m_scope->lookup(expression->lhs)->value;
+    llvm::Value *ptr = m_scope.back()->lookup(expression->lhs)->value;
 
     m_irBuilder->CreateStore(value, ptr);
 }
@@ -319,7 +339,7 @@ void ModuleGenerator::visit(AST::Selector *expression) {
         throw Errors::InternalError(expression, "N/A");
     }
 
-    SymbolTable::Symbol *symbol = m_scope->lookup(identifier);
+    SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
 
     llvm::Value *instance = symbol->value;
 
@@ -344,7 +364,7 @@ void ModuleGenerator::visit(AST::Index *expression) {
         throw Errors::InternalError(expression, "N/A");
     }
 
-    SymbolTable::Symbol *symbol = m_scope->lookup(identifier);
+    SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
 
     llvm::Value *instance = symbol->value;
 
@@ -501,25 +521,46 @@ void ModuleGenerator::visit(AST::Spawn *expression) {
     debug("Generating spawn statement.");
 }
 
+void ModuleGenerator::visit(AST::Sizeof *expression) {
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+
+    llvm::Type *type = generate_type(expression);
+    uint64_t size = m_data_layout->getTypeStoreSize(type);
+
+    auto i64 = llvm::IntegerType::getInt64Ty(context);
+    m_llvmValues.push_back(llvm::ConstantInt::get(i64, size, true));
+}
+
+void ModuleGenerator::visit(AST::Strideof *expression) {
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+
+    llvm::Type *type = generate_type(expression);
+    uint64_t size = m_data_layout->getTypeAllocSize(type);
+
+    auto i64 = llvm::IntegerType::getInt64Ty(context);
+    m_llvmValues.push_back(llvm::ConstantInt::get(i64, size, true));
+}
+
 void ModuleGenerator::visit(AST::Parameter *parameter) {
     throw Errors::InternalError(parameter, "N/A");
 }
 
 void ModuleGenerator::visit(AST::VariableDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_scope->lookup(definition->name);
+    SymbolTable::Symbol *symbol = m_scope.back()->lookup(definition->name);
 
     debug("Defining a new variable: " + symbol->name);
 
-    if (m_scope->is_root()) {
+    if (m_scope.back()->is_root()) {
         llvm::Type *type = generate_type(definition);
         llvm::Constant *initialiser = m_type_generator->take_initialiser(definition);
 
-        llvm::GlobalVariable *variable = new llvm::GlobalVariable(*m_module, type, false,
-                                                                  llvm::GlobalValue::CommonLinkage,
-                                                                  nullptr, definition->name->value);
+        type->dump();
+
+        auto variable = new llvm::GlobalVariable(*m_module, type, false,
+                                                 llvm::GlobalValue::CommonLinkage,
+                                                 nullptr, definition->name->value);
         variable->setAlignment(4);
         variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
-        //variable->setInitializer(llvm::UndefValue::get(type));
         variable->setInitializer(initialiser);
 
         symbol->value = variable;
@@ -553,7 +594,7 @@ void ModuleGenerator::visit(AST::VariableDefinition *definition) {
 }
 
 void ModuleGenerator::visit(AST::FunctionDefinition *definition) {
-    SymbolTable::Symbol *functionSymbol = m_scope->lookup(definition->name);
+    SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition->name);
 
     Types::Method *method = static_cast<Types::Method *>(definition->type);
 
@@ -561,8 +602,7 @@ void ModuleGenerator::visit(AST::FunctionDefinition *definition) {
 
     std::string llvm_function_name = Mangler::mangle_method(functionSymbol->name, method);
 
-    SymbolTable::Namespace *oldNamespace = m_scope;
-    m_scope = symbol->nameSpace;
+    m_scope.push_back(symbol->nameSpace);
 
     llvm::Type *llvmType = generate_type(definition, method);
 
@@ -580,7 +620,7 @@ void ModuleGenerator::visit(AST::FunctionDefinition *definition) {
         arg.setName(method->get_parameter_name(i));
         llvm::AllocaInst *alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, name2);
         m_irBuilder->CreateStore(&arg, alloca);
-        SymbolTable::Symbol *symbol2 = m_scope->lookup(definition, name2);
+        SymbolTable::Symbol *symbol2 = m_scope.back()->lookup(definition, name2);
         symbol2->value = alloca;
         i++;
     }
@@ -592,7 +632,8 @@ void ModuleGenerator::visit(AST::FunctionDefinition *definition) {
     } else {
         llvm::Value *value = m_llvmValues.back();
         m_llvmValues.pop_back();
-        if (!llvm::isa<llvm::ReturnInst>(value)) {
+
+        if (value == nullptr || !llvm::isa<llvm::ReturnInst>(value)) {
             m_irBuilder->CreateRetVoid();
             // m_irBuilder->CreateRet(value);
         }
@@ -605,69 +646,14 @@ void ModuleGenerator::visit(AST::FunctionDefinition *definition) {
         throw Errors::InternalError(definition, stream.str());
     }
 
-    m_scope = oldNamespace;
+    m_scope.pop_back();
 
     llvm::Function *mainFunction = m_module->getFunction("main");
     m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
 }
 
 void ModuleGenerator::visit(AST::TypeDefinition *definition) {
-    std::string name = definition->name->value;
-
-    if (definition->alias) {
-        // ignore
-        return;
-    }
-
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
-    // create initialiser function
-    llvm::Type *return_type = generate_type(definition, static_cast<Types::Constructor *>(definition->type)->create(definition));
-
-    std::vector<llvm::Type *> element_types;
-    for (auto field : definition->fields) {
-        element_types.push_back(generate_type(field));
-    }
-
-    llvm::FunctionType *function_type = llvm::FunctionType::get(return_type, element_types, false);
-
-    std::string function_name = name + "_new";
-
-    llvm::Function *function = llvm::Function::Create(function_type, llvm::Function::ExternalLinkage, function_name, m_module);
-    function->addFnAttr(llvm::Attribute::AlwaysInline);
-
-    int i = 0;
-    for (auto &arg : function->args()) {
-        arg.setName(definition->fields[i]->name->value);
-        i++;
-    }
-
-    llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", function);
-    m_irBuilder->SetInsertPoint(basicBlock);
-
-    auto instance = m_irBuilder->CreateAlloca(return_type);
-
-    llvm::Function::arg_iterator args = function->arg_begin();
-
-    auto i32 = llvm::IntegerType::get(context, 32);
-    auto index0 = llvm::ConstantInt::get(i32, 0);
-    for (int i = 0; i < definition->fields.size(); i++) {
-        auto index = llvm::ConstantInt::get(i32, i);
-
-        std::vector<llvm::Value *> indexes;
-        indexes.push_back(index0);
-        indexes.push_back(index);
-
-        auto ptr = m_irBuilder->CreateInBoundsGEP(instance, indexes);
-
-        llvm::Argument *arg = &(*(args++));
-        m_irBuilder->CreateStore(arg, ptr);
-    }
-
-    m_irBuilder->CreateRet(m_irBuilder->CreateLoad(instance));
-
-    llvm::Function *mainFunction = m_module->getFunction("main");
-    m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
+    // intentionally do nothing
 }
 
 void ModuleGenerator::visit(AST::DefinitionStatement *statement) {
@@ -687,7 +673,7 @@ void ModuleGenerator::visit(AST::ImportStatement *statement) {
 void ModuleGenerator::visit(AST::SourceFile *module) {
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
 
-    Builtins::fill_llvm_module(m_scope, m_module, m_irBuilder);
+    Builtins::fill_llvm_module(m_scope.back(), m_module, m_irBuilder);
 
     llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);

@@ -1,7 +1,6 @@
-- Generics
-- Tuples
 - Pointers & Memory Management
 - Arrays
+- Tuples
 - Sets
 - Dictionaries
 - Characters

@@ -1,23 +1,46 @@
 import 'base'
 
-def malloc{T}(size as Integer) as UnsafePointer{T}
-    let pointer = ccall malloc(Integer) as UnsafePointer{Integer8} using size
-    return pointer as UnsafePointer{T}
-end
-
-def free{T}(pointer as UnsafePointer{T}) as Void
-    let void_pointer = pointer as UnsafePointer{Integer8}
-    ccall free(UnsafePointer{Integer8}) as Void using void_pointer
-end
+type SafePointer{T} as UnsafePointer{T}
 
 type Array{T}
-    elements as UnsafePointer{T}
+    elements as SafePointer{T}
     size as UnsignedInteger
     capacity as UnsignedInteger
 end
 
 def create_array{T}(n as Integer) as Array{T}
-    let block_size = 100 * strideof Integer
+    let block_size = n * strideof T
+    let elements = malloc{Integer}(size: block_size)
+    let size = 0
+    let capacity = n
+    return new Array{T}(elements: elements, size: size, capacity: capacity)
+end
+
+def grow_if_necessary{T}(array as Array{T}) as Void
+    if array.size == array.capacity
+        let new_capacity = array.capacity + 10
+        free{T}(pointer: array.elements)
+        array.elements = malloc{T}(size: new_capacity * strideof T)
+        array.new_capacity = new_capacity
+    end
+end
+
+def append{T}(array as Array{T}) as Void
+    array.grow_if_necessary()
 end
 
 let a = create_array{Integer}(n: 10)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+a.append(1)
+

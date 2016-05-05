@@ -76,6 +76,12 @@ std::string Token::rule_string(Token::Rule rule) {
             return "ccall";
         case UsingKeyword:
             return "using";
+        case SizeofKeyword:
+            return "sizeof";
+        case StrideofKeyword:
+            return "strideof";
+        case NewKeyword:
+            return "new";
         case BooleanLiteral:
             return "boolean";
         case IntegerLiteral:

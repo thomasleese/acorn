@@ -46,6 +46,7 @@ namespace preprocessor {
         void visit(AST::StringLiteral *expression);
         void visit(AST::SequenceLiteral *sequence);
         void visit(AST::MappingLiteral *mapping);
+        void visit(AST::RecordLiteral *expression);
         void visit(AST::Argument *argument);
         void visit(AST::Call *expression);
         void visit(AST::CCall *expression);
@@ -59,6 +60,8 @@ namespace preprocessor {
         void visit(AST::If *expression);
         void visit(AST::Return *expression);
         void visit(AST::Spawn *expression);
+        void visit(AST::Sizeof *expression);
+        void visit(AST::Strideof *expression);
 
         void visit(AST::Parameter *parameter);
 
@@ -81,7 +84,7 @@ namespace preprocessor {
         std::map<AST::Definition *, std::vector<std::vector<AST::Identifier *> > > m_generics;
         std::map<SymbolTable::Symbol *, std::string> m_replacements;
 
-        AST::Identifier *m_skip_identifier;
+        std::vector<AST::Identifier *> m_skip_identifier;
 
     };
 

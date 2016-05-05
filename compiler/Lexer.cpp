@@ -66,6 +66,9 @@ void Lexer::loadRules() {
     setKeywordRule(Token::SpawnKeyword, "spawn");
     setKeywordRule(Token::CCallKeyword, "ccall");
     setKeywordRule(Token::UsingKeyword, "using");
+    setKeywordRule(Token::SizeofKeyword, "sizeof");
+    setKeywordRule(Token::StrideofKeyword, "strideof");
+    setKeywordRule(Token::NewKeyword, "new");
 
     setRule(Token::BooleanLiteral, "(true|false)");
     setRule(Token::StringLiteral, "((['\"])((?:.(?!(?<![\\\\])\\2))*.?)\\2)");

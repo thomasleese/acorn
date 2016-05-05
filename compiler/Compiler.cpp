@@ -71,6 +71,11 @@ void Compiler::compile(std::string filename) {
     Parser parser(tokens);
     AST::SourceFile *module = parser.parse(filename);
 
+    /*PrettyPrinter *printer = new PrettyPrinter();
+    module->accept(printer);
+    printer->print();
+    delete printer;*/
+
     debug("Building the Symbol Table...");
 
     SymbolTable::Builder *symbolTableBuilder = new SymbolTable::Builder();
@@ -85,10 +90,10 @@ void Compiler::compile(std::string filename) {
     auto generics_pass = new preprocessor::GenericsPass(rootNamespace);
     module->accept(generics_pass);
 
-    PrettyPrinter *printer = new PrettyPrinter();
+    /*printer = new PrettyPrinter();
     module->accept(printer);
     printer->print();
-    delete printer;
+    delete printer;*/
 
     debug("Inferring types...");
 
@@ -103,15 +108,6 @@ void Compiler::compile(std::string filename) {
     delete typeChecker;
 
     debug("Generating code...");
-
-    auto generator = new codegen::ModuleGenerator(rootNamespace);
-    module->accept(generator);
-    llvm::Module *llvmModule = generator->module();
-    delete generator;
-
-    delete module;
-
-    debug("Generating object file...");
 
     llvm::Triple triple(llvm::sys::getDefaultTargetTriple());
 
@@ -150,7 +146,18 @@ void Compiler::compile(std::string filename) {
 
     llvm::TargetMachine *target_machine = target->createTargetMachine(triple.str(), cpu, target_features, target_options, llvm::Reloc::PIC_, llvm::CodeModel::Default, opt_level);
 
-    llvmModule->setDataLayout(target_machine->createDataLayout());
+    auto data_layout = target_machine->createDataLayout();
+
+    auto generator = new codegen::ModuleGenerator(rootNamespace, &data_layout);
+    module->accept(generator);
+    llvm::Module *llvmModule = generator->module();
+    delete generator;
+
+    delete module;
+
+    debug("Generating object file...");
+
+    llvmModule->setDataLayout(data_layout);
     llvmModule->setTargetTriple(triple.str());
 
     llvmModule->dump();

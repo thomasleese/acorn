@@ -246,6 +246,26 @@ void PrettyPrinter::visit(AST::Spawn *expression) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(AST::Sizeof *expression) {
+    ss << indentation() << "(Sizeof\n";
+    indent++;
+
+    expression->identifier->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(AST::Strideof *expression) {
+    ss << indentation() << "(Strideof\n";
+    indent++;
+
+    expression->identifier->accept(this);
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(AST::Parameter *parameter) {
     ss << indentation() << "(Parameter\n";
     indent++;
@@ -304,8 +324,9 @@ void PrettyPrinter::visit(AST::TypeDefinition *definition) {
     if (definition->alias) {
         definition->alias->accept(this);
     } else {
-        for (auto field : definition->fields) {
-            field->accept(this);
+        for (int i = 0; i < definition->field_names.size(); i++) {
+            definition->field_names[i]->accept(this);
+            definition->field_types[i]->accept(this);
         }
     }
 

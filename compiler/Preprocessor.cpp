@@ -54,7 +54,7 @@ void GenericsPass::visit(AST::CodeBlock *block) {
 
 void GenericsPass::visit(AST::Identifier *identifier) {
     if (m_collecting) {
-        if (identifier == m_skip_identifier) {
+        if (m_skip_identifier.size() && identifier == m_skip_identifier.back()) {
             return;
         }
 
@@ -89,7 +89,7 @@ void GenericsPass::visit(AST::Identifier *identifier) {
             if (symbol->is_function()) {
                 identifier->parameters.clear();
             } else if (symbol->is_variable()) {
-                identifier->collapse_parameters();
+                //identifier->collapse_parameters();
             }
         }
     }
@@ -123,12 +123,24 @@ void GenericsPass::visit(AST::MappingLiteral *mapping) {
 
 }
 
-void GenericsPass::visit(AST::Argument *argument) {
+void GenericsPass::visit(AST::RecordLiteral *expression) {
+    expression->name->accept(this);
+}
 
+void GenericsPass::visit(AST::Argument *argument) {
+    if (argument->name) {
+        //argument->name->accept(this);
+    }
+
+    argument->value->accept(this);
 }
 
 void GenericsPass::visit(AST::Call *expression) {
     expression->operand->accept(this);
+
+    for (auto arg : expression->arguments) {
+        arg->accept(this);
+    }
 }
 
 void GenericsPass::visit(AST::CCall *expression) {
@@ -184,6 +196,14 @@ void GenericsPass::visit(AST::Spawn *expression) {
 
 }
 
+void GenericsPass::visit(AST::Sizeof *expression) {
+    expression->identifier->accept(this);
+}
+
+void GenericsPass::visit(AST::Strideof *expression) {
+    expression->identifier->accept(this);
+}
+
 void GenericsPass::visit(AST::Parameter *parameter) {
     parameter->name->accept(this);
     parameter->typeNode->accept(this);
@@ -229,8 +249,12 @@ void GenericsPass::visit(AST::TypeDefinition *definition) {
     if (definition->alias) {
         definition->alias->accept(this);
     } else {
-        for (auto field : definition->fields) {
-            field->accept(this);
+        for (auto name : definition->field_names) {
+            name->accept(this);
+        }
+
+        for (auto type : definition->field_types) {
+            type->accept(this);
         }
     }
 
@@ -238,19 +262,26 @@ void GenericsPass::visit(AST::TypeDefinition *definition) {
 }
 
 void GenericsPass::visit(AST::DefinitionStatement *statement) {
-    if (m_collecting) {
-        if (statement->definition->name->has_parameters()) {
-            m_generics[statement->definition] = std::vector<std::vector<AST::Identifier *> >();
-        }
-
-        // to avoid collecting this as a 'usage'
-        m_skip_identifier = statement->definition->name;
-
+    if (!statement->definition->name->has_parameters()) {
         statement->definition->accept(this);
+        return;
+    }
 
-        m_skip_identifier = nullptr;
+    if (m_collecting) {
+        SymbolTable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
+
+        if (symbol->is_variable() || symbol->is_function()) {
+            m_generics[statement->definition] = std::vector<std::vector<AST::Identifier *> >();
+
+            // to avoid collecting this as a 'usage'
+            m_skip_identifier.push_back(statement->definition->name);
+            statement->definition->accept(this);
+            m_skip_identifier.pop_back();
+        }
     } else {
-        if (statement->definition->name->has_parameters()) {
+        SymbolTable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
+
+        if (symbol->is_variable() || symbol->is_function()) {
             if (m_replacements.empty()) {
                 auto it = m_generics.find(statement->definition);
                 if (it != m_generics.end()) {
@@ -258,7 +289,6 @@ void GenericsPass::visit(AST::DefinitionStatement *statement) {
 
                     m_actions.push_back(Action(Action::DropStatement));
 
-                    SymbolTable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
                     SymbolTable::Namespace *symbol_scope = m_scope.back();
 
                     bool was_function = symbol->is_function();
@@ -283,7 +313,8 @@ void GenericsPass::visit(AST::DefinitionStatement *statement) {
 
                             m_replacements.clear();
                             for (int i = 0; i < parameters.size(); i++) {
-                                SymbolTable::Symbol *s = new_symbol->nameSpace->lookup(statement->definition->name->parameters[i]);
+                                SymbolTable::Symbol *s = new_symbol->nameSpace->lookup(
+                                        statement->definition->name->parameters[i]);
                                 m_replacements[s] = parameters[i]->value;
                             }
 

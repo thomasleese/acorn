@@ -25,7 +25,7 @@ namespace jet {
         class ModuleGenerator : public AST::Visitor {
 
         public:
-            explicit ModuleGenerator(SymbolTable::Namespace *rootNamespace);
+            explicit ModuleGenerator(SymbolTable::Namespace *scope, llvm::DataLayout *data_layout);
             ~ModuleGenerator();
 
             void debug(std::string line);
@@ -45,6 +45,7 @@ namespace jet {
             void visit(AST::StringLiteral *expression);
             void visit(AST::SequenceLiteral *sequence);
             void visit(AST::MappingLiteral *mapping);
+            void visit(AST::RecordLiteral *expression);
             void visit(AST::Argument *argument);
             void visit(AST::Call *expression);
             void visit(AST::CCall *expression);
@@ -58,6 +59,8 @@ namespace jet {
             void visit(AST::If *expression);
             void visit(AST::Return *expression);
             void visit(AST::Spawn *expression);
+            void visit(AST::Sizeof *expression);
+            void visit(AST::Strideof *expression);
 
             void visit(AST::Parameter *parameter);
 
@@ -72,10 +75,11 @@ namespace jet {
             void visit(AST::SourceFile *module);
 
         private:
-            SymbolTable::Namespace *m_scope;
+            std::vector<SymbolTable::Namespace *> m_scope;
             llvm::Module *m_module;
             llvm::IRBuilder<> *m_irBuilder;
             llvm::MDBuilder *m_mdBuilder;
+            llvm::DataLayout *m_data_layout;
 
             std::vector<llvm::Value *> m_llvmValues;
 
