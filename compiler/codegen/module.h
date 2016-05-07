@@ -24,12 +24,15 @@ namespace jet {
 
     namespace types {
         class Type;
+        class Method;
     }
 
     namespace codegen {
 
         class TypeGenerator;
         class TypeInitialiserGenerator;
+
+        std::string mangle_method(std::string name, types::Method *type);
 
         class ModuleGenerator : public compiler::Pass, public ast::Visitor {
 

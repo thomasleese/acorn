@@ -7,9 +7,9 @@
 
 #include <llvm/IR/Module.h>
 
-#include "Mangler.h"
-#include "SymbolTable.h"
-#include "Types.h"
+#include "symboltable.h"
+#include "types.h"
+#include "codegen/module.h"
 #include "codegen/types.h"
 
 #include "builtins.h"
@@ -104,7 +104,7 @@ llvm::Function *create_llvm_function(symboltable::Namespace *table, llvm::Module
     types::Function *functionType = static_cast<types::Function *>(table->lookup(nullptr, nullptr, name)->type);
     types::Method *methodType = functionType->get_method(index);
 
-    std::string mangled_name = mangler::mangle_method(name, methodType);
+    std::string mangled_name = codegen::mangle_method(name, methodType);
 
     auto type_generator = new codegen::TypeGenerator();
     methodType->accept(type_generator);

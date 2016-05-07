@@ -1,5 +1,5 @@
 - Merge symbol table builder with parser
-- Remove mangling, use numbers with metadata instead
+- Use numbers with metadata as mangling instead
 - Implement my own assert macro
 
 - Pointers, Memory Management and Garbage Collection

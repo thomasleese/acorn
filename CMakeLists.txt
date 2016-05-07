@@ -20,7 +20,7 @@ link_directories(/usr/local/Cellar/icu4c/57.1/lib/)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS} -std=c++11 -Wall -pedantic -fexceptions")
 set(CMAKE_EXE_LINKER_FLAGS "${LLVM_LD_FLAGS} -lz -fexceptions")
 
-set(SOURCE_FILES compiler/ast/nodes.cpp compiler/ast/visitor.cpp compiler/builtins.cpp compiler/codegen/types.cpp compiler/codegen/module.cpp compiler/compiler/compiler.cpp compiler/compiler/pass.cpp compiler/errors.cpp compiler/lexer.cpp compiler/main.cpp compiler/mangler.cpp compiler/parser.cpp compiler/preprocessor.cpp compiler/prettyprinter.cpp compiler/symboltable.cpp compiler/token.cpp compiler/types.cpp compiler/typing.cpp)
+set(SOURCE_FILES compiler/ast/nodes.cpp compiler/ast/visitor.cpp compiler/builtins.cpp compiler/codegen/types.cpp compiler/codegen/module.cpp compiler/compiler/compiler.cpp compiler/compiler/pass.cpp compiler/errors.cpp compiler/lexer.cpp compiler/main.cpp compiler/parser.cpp compiler/preprocessor.cpp compiler/prettyprinter.cpp compiler/symboltable.cpp compiler/token.cpp compiler/types.cpp compiler/typing.cpp)
 set(LIBRARIES ${Boost_LIBRARIES} icuuc icudata ncurses ${LLVM_LIBS})
 
 add_executable(jet ${SOURCE_FILES})

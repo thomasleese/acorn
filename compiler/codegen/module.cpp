@@ -14,17 +14,19 @@
 
 #include "../ast/nodes.h"
 #include "../builtins.h"
-#include "../Errors.h"
-#include "../Mangler.h"
-#include "../SymbolTable.h"
-#include "../Types.h"
-
+#include "../errors.h"
+#include "../symbolTable.h"
+#include "../types.h"
 #include "types.h"
 
 #include "module.h"
 
 using namespace jet;
 using namespace jet::codegen;
+
+std::string codegen::mangle_method(std::string name, types::Method *type) {
+    return "_J_" + name + "_" + type->mangled_name();
+}
 
 ModuleGenerator::ModuleGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout) :
         m_type_generator(new TypeGenerator()) {
@@ -238,7 +240,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
             push_error(new errors::UndefinedError(expression, "No method found."));
         }
 
-        std::string method_name = mangler::mangle_method(symbol->name, method);
+        std::string method_name = codegen::mangle_method(symbol->name, method);
         function = m_module->getFunction(method_name);
         if (!function) {
             push_error(new errors::InternalError(expression, "No function defined (" + method_name + ")."));
@@ -631,7 +633,7 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
 
     auto symbol = functionSymbol->nameSpace->lookup(this, definition, method->mangled_name());
 
-    std::string llvm_function_name = mangler::mangle_method(functionSymbol->name, method);
+    std::string llvm_function_name = codegen::mangle_method(functionSymbol->name, method);
 
     m_scope.push_back(symbol->nameSpace);
 
