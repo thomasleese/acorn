@@ -69,11 +69,11 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
     SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
 
     if (!symbol->value) {
-        throw Errors::InternalError(identifier, "should not be nullptr");
+        throw errors::InternalError(identifier, "should not be nullptr");
     }
 
     if (identifier->has_parameters()) {
-        throw Errors::InternalError(identifier, "should not have parameters");
+        throw errors::InternalError(identifier, "should not have parameters");
     }
 
     llvm::Value *value = m_irBuilder->CreateLoad(symbol->value);
@@ -81,7 +81,7 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
 }
 
 void ModuleGenerator::visit(ast::BooleanLiteral *boolean) {
-    throw Errors::InternalError(boolean, "N/A");
+    throw errors::InternalError(boolean, "N/A");
 }
 
 void ModuleGenerator::visit(ast::IntegerLiteral *expression) {
@@ -113,11 +113,11 @@ void ModuleGenerator::visit(ast::FloatLiteral *expression) {
 }
 
 void ModuleGenerator::visit(ast::ImaginaryLiteral *imaginary) {
-    throw Errors::InternalError(imaginary, "N/A");
+    throw errors::InternalError(imaginary, "N/A");
 }
 
 void ModuleGenerator::visit(ast::StringLiteral *expression) {
-    throw Errors::InternalError(expression, "N/A");
+    throw errors::InternalError(expression, "N/A");
 }
 
 void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
@@ -170,7 +170,7 @@ void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
 }
 
 void ModuleGenerator::visit(ast::MappingLiteral *mapping) {
-    throw Errors::InternalError(mapping, "N/A");
+    throw errors::InternalError(mapping, "N/A");
 }
 
 void ModuleGenerator::visit(ast::RecordLiteral *expression) {
@@ -222,7 +222,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
         std::string method_name = Mangler::mangle_method(symbol->name, method);
         function = m_module->getFunction(method_name);
         if (!function) {
-            throw Errors::InternalError(expression, "No function defined (" + method_name + ").");
+            throw errors::InternalError(expression, "No function defined (" + method_name + ").");
         }
 
         std::map<std::string, uint64_t> arg_positions;
@@ -253,7 +253,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
                 debug("Getting parameter position of " + argument->name->value);
                 auto it = arg_positions.find(argument->name->value);
                 if (it == arg_positions.end()) {
-                    throw Errors::InternalError(argument, "no argument");
+                    throw errors::InternalError(argument, "no argument");
                 } else {
                     index = it->second;
                 }
@@ -274,7 +274,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
 
         debug("Ending call to: " + identifier->value);
     } else {
-        throw Errors::InternalError(expression, "Not an identifier.");
+        throw errors::InternalError(expression, "Not an identifier.");
     }
 }
 
@@ -341,7 +341,7 @@ void ModuleGenerator::visit(ast::Selector *expression) {
 
     ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
     if (!identifier) {
-        throw Errors::InternalError(expression, "N/A");
+        throw errors::InternalError(expression, "N/A");
     }
 
     SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
@@ -366,7 +366,7 @@ void ModuleGenerator::visit(ast::Index *expression) {
 
     ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
     if (!identifier) {
-        throw Errors::InternalError(expression, "N/A");
+        throw errors::InternalError(expression, "N/A");
     }
 
     SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
@@ -397,7 +397,7 @@ void ModuleGenerator::visit(ast::Index *expression) {
 }
 
 void ModuleGenerator::visit(ast::Comma *expression) {
-    throw Errors::InternalError(expression, "N/A");
+    throw errors::InternalError(expression, "N/A");
 }
 
 void ModuleGenerator::visit(ast::While *expression) {
@@ -447,7 +447,7 @@ void ModuleGenerator::visit(ast::While *expression) {
 }
 
 void ModuleGenerator::visit(ast::For *expression) {
-    throw Errors::InternalError(expression, "Should not be in the lowered AST.");
+    throw errors::InternalError(expression, "Should not be in the lowered AST.");
 }
 
 void ModuleGenerator::visit(ast::If *expression) {
@@ -490,7 +490,7 @@ void ModuleGenerator::visit(ast::If *expression) {
         else_value = m_llvmValues.back();
         m_llvmValues.pop_back();
     } else {
-        throw Errors::InternalError(expression, "no else");
+        throw errors::InternalError(expression, "no else");
     }
 
     m_irBuilder->CreateBr(merge_bb);
@@ -547,7 +547,7 @@ void ModuleGenerator::visit(ast::Strideof *expression) {
 }
 
 void ModuleGenerator::visit(ast::Parameter *parameter) {
-    throw Errors::InternalError(parameter, "N/A");
+    throw errors::InternalError(parameter, "N/A");
 }
 
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
@@ -648,7 +648,7 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
         function->dump();
-        throw Errors::InternalError(definition, stream.str());
+        throw errors::InternalError(definition, stream.str());
     }
 
     m_scope.pop_back();
@@ -672,7 +672,7 @@ void ModuleGenerator::visit(ast::ExpressionStatement *statement) {
 }
 
 void ModuleGenerator::visit(ast::ImportStatement *statement) {
-    throw Errors::InternalError(statement, "N/A");
+    throw errors::InternalError(statement, "N/A");
 }
 
 void ModuleGenerator::visit(ast::SourceFile *module) {
@@ -703,6 +703,6 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyModule(*m_module, &stream)) {
         m_module->dump();
-        throw Errors::InternalError(module, stream.str());
+        throw errors::InternalError(module, stream.str());
     }
 }

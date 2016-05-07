@@ -345,7 +345,7 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
                         }
                     }
                 } else {
-                    throw Errors::InternalError(statement, "Not identified as generic.");
+                    throw errors::InternalError(statement, "Not identified as generic.");
                 }
             } else {
                 statement->definition->accept(this);

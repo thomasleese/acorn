@@ -9,9 +9,10 @@
 #include "Lexer.h"
 #include "Types.h"
 
-#include "Errors.h"
+#include "errors.h"
 
-using namespace Errors;
+using namespace jet;
+using namespace jet::errors;
 
 CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) {
     m_filename = filename;

@@ -13,6 +13,7 @@
 
 #include "SymbolTable.h"
 
+using namespace jet;
 using namespace SymbolTable;
 
 Namespace::Namespace(Namespace *parent) : m_parent(parent) {
@@ -42,7 +43,7 @@ Symbol *Namespace::lookup(ast::Node *currentNode, std::string name) const {
         if (m_parent) {
             return m_parent->lookup(currentNode, name);
         } else {
-            throw Errors::UndefinedError(currentNode, name);
+            throw errors::UndefinedError(currentNode, name);
         }
     }
 
@@ -63,7 +64,7 @@ Symbol *Namespace::lookup_by_node(ast::Node *node) const {
     if (m_parent) {
         return m_parent->lookup_by_node(node);
     } else {
-        throw Errors::UndefinedError(node, node->token->lexeme);
+        throw errors::UndefinedError(node, node->token->lexeme);
     }
 }
 
@@ -72,7 +73,7 @@ void Namespace::insert(ast::Node *currentNode, Symbol *symbol) {
 
     auto it = m_symbols.find(symbol->name);
     if (it != m_symbols.end()) {
-        throw Errors::RedefinedError(currentNode, symbol->name);
+        throw errors::RedefinedError(currentNode, symbol->name);
     }
 
     m_symbols[symbol->name] = symbol;

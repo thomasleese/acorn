@@ -1,14 +1,14 @@
-#include <iostream>
+#include "compiler.h"
+#include "errors.h"
 
-#include "Compiler.h"
-#include "Errors.h"
+using namespace jet;
 
 int main() {
-    jet::Compiler compiler;
+    Compiler compiler;
 
     try {
         compiler.compile("test2.jet");
-    } catch (Errors::CompilerError e) {
+    } catch (errors::CompilerError e) {
         e.print();
         return 1;
     }

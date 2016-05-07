@@ -13,6 +13,8 @@
 
 #include "Lexer.h"
 
+using namespace jet;
+
 Lexer::Lexer() {
     loadRules();
 }
@@ -168,7 +170,7 @@ std::vector<Token *> Lexer::tokenise(std::string filename) const {
 
         if (!found) {
             std::string token = substr.substr(0, 1);
-            throw Errors::SyntaxError(filename, currentLineNumber, currentColumn, currentLine, token, "code");
+            throw errors::SyntaxError(filename, currentLineNumber, currentColumn, currentLine, token, "code");
         }
     }
 

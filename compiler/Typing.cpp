@@ -46,7 +46,7 @@ Types::Type *Inferrer::find_type(ast::Node *node, std::string name, std::vector<
     if (typeConstructor != nullptr) {
         return typeConstructor->create(node, parameterTypes);
     } else {
-        throw Errors::InvalidTypeConstructor(node);
+        throw errors::InvalidTypeConstructor(node);
     }
 }
 
@@ -70,7 +70,7 @@ Types::Type *Inferrer::instance_type(ast::Identifier *identifier) {
 
         return type_constructor->create(identifier, parameterTypes);
     } else {
-        throw Errors::InvalidTypeConstructor(identifier);
+        throw errors::InvalidTypeConstructor(identifier);
     }
 }
 
@@ -95,7 +95,7 @@ void Inferrer::visit(ast::Identifier *expression) {
     expression->type = symbol->type;
 
     if (!symbol->type) {
-        throw Errors::UndefinedError(expression, expression->value);
+        throw errors::UndefinedError(expression, expression->value);
     }
 }
 
@@ -152,7 +152,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
 }
 
 void Inferrer::visit(ast::MappingLiteral *mapping) {
-    throw Errors::TypeInferenceError(mapping);
+    throw errors::TypeInferenceError(mapping);
 }
 
 void Inferrer::visit(ast::RecordLiteral *expression) {
@@ -186,7 +186,7 @@ void Inferrer::visit(ast::Call *expression) {
     Types::RecordConstructor *record = dynamic_cast<Types::RecordConstructor *>(expression->operand->type);
     if (function == nullptr && record == nullptr) {
         expression->type = new Types::Union(new Types::Function(), new Types::RecordConstructor());
-        throw Errors::TypeMismatchError(expression->operand, expression);
+        throw errors::TypeMismatchError(expression->operand, expression);
     }
 
     if (record == nullptr) {
@@ -232,12 +232,12 @@ void Inferrer::visit(ast::Selector *expression) {
 
     auto recordType = dynamic_cast<Types::Record *>(expression->operand->type);
     if (!recordType) {
-        throw Errors::TypeInferenceError(expression);
+        throw errors::TypeInferenceError(expression);
     }
 
     auto fieldType = recordType->get_field_type(expression->name->value);
     if (!fieldType) {
-        throw Errors::TypeInferenceError(expression);
+        throw errors::TypeInferenceError(expression);
     }
 
     expression->type = fieldType;
@@ -249,19 +249,19 @@ void Inferrer::visit(ast::Index *expression) {
 
     auto arrayType = dynamic_cast<Types::Array *>(expression->operand->type);
     if (!arrayType) {
-        throw Errors::TypeInferenceError(expression);
+        throw errors::TypeInferenceError(expression);
     }
 
     auto indexType = dynamic_cast<Types::Integer *>(expression->index->type);
     if (!indexType) {
-        throw Errors::TypeMismatchError(expression->operand, expression->index);
+        throw errors::TypeMismatchError(expression->operand, expression->index);
     }
 
     expression->type = arrayType->element_type();*/
 }
 
 void Inferrer::visit(ast::Comma *expression) {
-    throw Errors::TypeInferenceError(expression);
+    throw errors::TypeInferenceError(expression);
 }
 
 void Inferrer::visit(ast::While *expression) {
@@ -272,7 +272,7 @@ void Inferrer::visit(ast::While *expression) {
 }
 
 void Inferrer::visit(ast::For *expression) {
-    throw Errors::InternalError(expression, "For should never be in the lowered AST.");
+    throw errors::InternalError(expression, "For should never be in the lowered AST.");
 }
 
 void Inferrer::visit(ast::If *expression) {
@@ -292,10 +292,10 @@ void Inferrer::visit(ast::Return *expression) {
     if (m_functionStack.back()) {
         ast::FunctionDefinition *def = m_functionStack.back();
         if (!def->returnType->type->isCompatible(expression->type)) {
-            throw Errors::TypeMismatchError(expression, def->returnType);
+            throw errors::TypeMismatchError(expression, def->returnType);
         }
     } else {
-        throw Errors::TypeMismatchError(expression, nullptr);
+        throw errors::TypeMismatchError(expression, nullptr);
     }
 }
 
@@ -338,7 +338,7 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
     }
 
     if (!type) {
-        throw Errors::TypeInferenceError(definition);
+        throw errors::TypeInferenceError(definition);
     }
 
     symbol->type = type;
@@ -398,7 +398,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
 
         auto param = dynamic_cast<Types::Parameter *>(t->type);
         if (param == nullptr) {
-            throw Errors::InvalidTypeParameters(t, 0, 0);
+            throw errors::InvalidTypeParameters(t, 0, 0);
         }
 
         input_parameters.push_back(param);
@@ -485,13 +485,13 @@ void Checker::check_types(ast::Node *lhs, ast::Node *rhs) {
 
     bool compatible = lhs->type->isCompatible(rhs->type);
     if (!compatible) {
-        throw Errors::TypeMismatchError(lhs, rhs);
+        throw errors::TypeMismatchError(lhs, rhs);
     }
 }
 
 void Checker::check_not_null(ast::Node *node) {
     if (!node->type) {
-        throw Errors::InternalError(node, "No type given for: " + Token::rule_string(node->token->rule));
+        throw errors::InternalError(node, "No type given for: " + Token::rule_string(node->token->rule));
     }
 }
 
@@ -607,7 +607,7 @@ void Checker::visit(ast::Assignment *expression) {
     check_not_null(expression);
 
     // SymbolTable::Symbol *symbol = m_namespace->lookup(expression->lhs);
-    throw Errors::ConstantAssignmentError(expression->lhs);
+    throw errors::ConstantAssignmentError(expression->lhs);
 }
 
 void Checker::visit(ast::Selector *expression) {
@@ -634,7 +634,7 @@ void Checker::visit(ast::While *expression) {
 }
 
 void Checker::visit(ast::For *expression) {
-    throw Errors::InternalAstError(expression);
+    throw errors::InternalAstError(expression);
 }
 
 void Checker::visit(ast::If *expression) {

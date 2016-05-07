@@ -19,13 +19,13 @@ llvm::Type *TypeGenerator::take_type(ast::Node *node) {
         m_type_stack.pop_back();
 
         if (node && result == nullptr) {
-            throw Errors::InternalError(node, "Invalid LLVM type generated.");
+            throw errors::InternalError(node, "Invalid LLVM type generated.");
         }
 
         return result;
     } else {
         if (node) {
-            throw Errors::InternalError(node, "No LLVM type generated.");
+            throw errors::InternalError(node, "No LLVM type generated.");
         } else {
             return nullptr;
         }
@@ -38,13 +38,13 @@ llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
         m_initialiser_stack.pop_back();
 
         if (node && result == nullptr) {
-            throw Errors::InternalError(node, "Invalid LLVM initialiser generated.");
+            throw errors::InternalError(node, "Invalid LLVM initialiser generated.");
         }
 
         return result;
     } else {
         if (node) {
-            throw Errors::InternalError(node, "No LLVM initialiser generated.");
+            throw errors::InternalError(node, "No LLVM initialiser generated.");
         } else {
             return nullptr;
         }
