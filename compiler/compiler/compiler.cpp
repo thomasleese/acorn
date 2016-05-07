@@ -18,22 +18,22 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
 
-#include "ast/nodes.h"
-#include "codegen/module.h"
-#include "Lexer.h"
-#include "Parser.h"
-#include "PrettyPrinter.h"
-#include "SymbolTable.h"
-#include "Errors.h"
-#include "Preprocessor.h"
-#include "Typing.h"
+#include "../ast/nodes.h"
+#include "../codegen/module.h"
+#include "../lexer.h"
+#include "../parser.h"
+#include "../prettyprinter.h"
+#include "../symboltable.h"
+#include "../errors.h"
+#include "../preprocessor.h"
+#include "../Typing.h"
 
 #include "compiler.h"
 
 using namespace jet;
+using namespace jet::compiler;
 
-Compiler::Compiler()
-{
+Compiler::Compiler() {
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -53,6 +53,20 @@ Compiler::~Compiler() {
 
 }
 
+bool Compiler::check_pass(Pass *pass) const {
+    if (pass->has_errors()) {
+        while (pass->has_errors()) {
+            auto error = pass->next_error();
+            error->print();
+            delete error;
+        }
+
+        return false;
+    } else {
+        return true;
+    }
+}
+
 void Compiler::debug(std::string line) {
     std::cerr << line << std::endl;
 }
@@ -63,19 +77,29 @@ void Compiler::compile(std::string filename) {
 
     debug("Lexing...");
 
-    Lexer lexer;
-    std::vector<Token *> tokens = lexer.tokenise(filename);
+    auto lexer = new Lexer();
+    std::vector<Token *> tokens = lexer->tokenise(filename);
+    if (!check_pass(lexer)) {
+        return;
+    }
 
     debug("Parsing...");
 
-    Parser parser(tokens);
-    ast::SourceFile *module = parser.parse(filename);
+    auto parser = new Parser(tokens);
+    ast::SourceFile *module = parser->parse(filename);
+    if (!check_pass(parser)) {
+        return;
+    }
 
     debug("Building the Symbol Table...");
 
     symboltable::Builder *symbolTableBuilder = new symboltable::Builder();
     module->accept(symbolTableBuilder);
     assert(symbolTableBuilder->isAtRoot());
+
+    if (!check_pass(symbolTableBuilder)) {
+        return;
+    }
 
     symboltable::Namespace *rootNamespace = symbolTableBuilder->rootNamespace();
     delete symbolTableBuilder;
@@ -84,6 +108,10 @@ void Compiler::compile(std::string filename) {
 
     auto generics_pass = new preprocessor::GenericsPass(rootNamespace);
     module->accept(generics_pass);
+
+    if (!check_pass(generics_pass)) {
+        return;
+    }
 
     auto printer = new PrettyPrinter();
     module->accept(printer);
@@ -94,12 +122,22 @@ void Compiler::compile(std::string filename) {
 
     auto typeInferrer = new typing::Inferrer(rootNamespace);
     module->accept(typeInferrer);
+
+    if (!check_pass(typeInferrer)) {
+        return;
+    }
+
     delete typeInferrer;
 
     debug("Checking types...");
 
     auto typeChecker = new typing::Checker(rootNamespace);
     module->accept(typeChecker);
+
+    if (!check_pass(typeChecker)) {
+        return;
+    }
+
     delete typeChecker;
 
     debug("Generating code...");
@@ -145,6 +183,11 @@ void Compiler::compile(std::string filename) {
 
     auto generator = new codegen::ModuleGenerator(rootNamespace, &data_layout);
     module->accept(generator);
+
+    if (!check_pass(generator)) {
+        return;
+    }
+
     llvm::Module *llvmModule = generator->module();
     delete generator;
 

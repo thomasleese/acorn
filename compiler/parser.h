@@ -9,6 +9,7 @@
 #include <map>
 #include <string>
 
+#include "compiler/pass.h"
 #include "token.h"
 
 namespace jet {
@@ -52,7 +53,7 @@ namespace jet {
         struct SourceFile;
     }
 
-    class Parser {
+    class Parser : public compiler::Pass {
 
     public:
         explicit Parser(std::vector<Token *> tokens);

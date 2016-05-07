@@ -10,6 +10,7 @@
 #include <llvm/IR/Module.h>
 
 #include "../ast/visitor.h"
+#include "../compiler/pass.h"
 
 namespace jet {
 
@@ -30,7 +31,7 @@ namespace jet {
         class TypeGenerator;
         class TypeInitialiserGenerator;
 
-        class ModuleGenerator : public ast::Visitor {
+        class ModuleGenerator : public compiler::Pass, public ast::Visitor {
 
         public:
             explicit ModuleGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout);

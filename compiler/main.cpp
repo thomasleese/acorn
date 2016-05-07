@@ -1,10 +1,10 @@
-#include "compiler.h"
+#include "compiler/compiler.h"
 #include "errors.h"
 
 using namespace jet;
 
 int main() {
-    Compiler compiler;
+    compiler::Compiler compiler;
 
     try {
         compiler.compile("test2.jet");

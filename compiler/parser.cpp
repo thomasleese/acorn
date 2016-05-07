@@ -77,7 +77,7 @@ Token *Parser::readToken(Token::Rule rule) {
     m_tokens.pop_front();
 
     if (token->rule != rule) {
-        throw errors::SyntaxError(token, rule);
+        push_error(new errors::SyntaxError(token, rule));
     }
 
     return token;

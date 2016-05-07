@@ -9,11 +9,12 @@
 #include <string>
 #include <vector>
 
+#include "compiler/pass.h"
 #include "token.h"
 
 namespace jet {
 
-    class Lexer {
+    class Lexer : public compiler::Pass {
     public:
         explicit Lexer();
 
@@ -25,7 +26,7 @@ namespace jet {
         void loadRules();
 
     public:
-        std::vector<Token *> tokenise(std::string filename) const;
+        std::vector<Token *> tokenise(std::string filename);
 
     private:
         std::map<Token::Rule, std::string> m_rules;

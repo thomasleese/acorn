@@ -10,6 +10,7 @@
 #include <vector>
 
 #include "ast/visitor.h"
+#include "compiler/pass.h"
 
 namespace llvm {
     class Value;
@@ -72,7 +73,7 @@ namespace jet {
             Symbol *clone() const;
         };
 
-        class Builder : public ast::Visitor {
+        class Builder : public compiler::Pass, public ast::Visitor {
         public:
             explicit Builder();
 

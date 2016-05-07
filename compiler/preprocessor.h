@@ -8,6 +8,7 @@
 #include <map>
 
 #include "ast/visitor.h"
+#include "compiler/pass.h"
 
 namespace jet {
 
@@ -36,7 +37,7 @@ namespace jet {
 
         };
 
-        class GenericsPass : public ast::Visitor {
+        class GenericsPass : public compiler::Pass, public ast::Visitor {
 
         public:
             GenericsPass(symboltable::Namespace *root_namespace);

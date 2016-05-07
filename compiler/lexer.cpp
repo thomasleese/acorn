@@ -97,7 +97,7 @@ void Lexer::loadRules() {
     setRule(Token::Identifier, "([" + nameInitialRegex + "][" + nameAfterRegex + "]*)");
 }
 
-std::vector<Token *> Lexer::tokenise(std::string filename) const {
+std::vector<Token *> Lexer::tokenise(std::string filename) {
     std::stringstream bufferStream;
 
     std::ifstream in(filename.c_str());
@@ -170,7 +170,13 @@ std::vector<Token *> Lexer::tokenise(std::string filename) const {
 
         if (!found) {
             std::string token = substr.substr(0, 1);
-            throw errors::SyntaxError(filename, currentLineNumber, currentColumn, currentLine, token, "code");
+            push_error(new errors::SyntaxError(filename,
+                                               currentLineNumber,
+                                               currentColumn,
+                                               currentLine,
+                                               token,
+                                               "code"));
+            return tokens;  // we can't really continue at this point
         }
     }
 

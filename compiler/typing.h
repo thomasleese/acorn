@@ -8,6 +8,7 @@
 #include <vector>
 
 #include "ast/visitor.h"
+#include "compiler/pass.h"
 
 namespace jet {
 
@@ -27,7 +28,7 @@ namespace jet {
 
     namespace typing {
 
-        class Inferrer : public ast::Visitor {
+        class Inferrer : public compiler::Pass, public ast::Visitor {
 
         public:
             explicit Inferrer(symboltable::Namespace *rootNamespace);
@@ -81,7 +82,7 @@ namespace jet {
 
         };
 
-        class Checker : public ast::Visitor {
+        class Checker : public compiler::Pass, public ast::Visitor {
 
         public:
             explicit Checker(symboltable::Namespace *rootNamespace);

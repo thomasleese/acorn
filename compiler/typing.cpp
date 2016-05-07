@@ -2,6 +2,7 @@
 // Created by Thomas Leese on 21/03/2016.
 //
 
+#include <cassert>
 #include <iostream>
 #include <set>
 #include <sstream>

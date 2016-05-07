@@ -2,13 +2,14 @@
 // Created by Thomas Leese on 25/04/2016.
 //
 
+#include <cassert>
 #include <iostream>
 
 #include "ast/nodes.h"
 #include "errors.h"
-#include "SymbolTable.h"
-#include "Types.h"
-#include "PrettyPrinter.h"
+#include "prettyprinter.h"
+#include "symbolTable.h"
+#include "types.h"
 
 #include "preprocessor.h"
 
