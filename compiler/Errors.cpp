@@ -5,7 +5,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "AbstractSyntaxTree.h"
+#include "ast/nodes.h"
 #include "Lexer.h"
 #include "Types.h"
 
@@ -25,7 +25,7 @@ CompilerError::CompilerError(Token *token) :
 
 }
 
-CompilerError::CompilerError(AST::Node *node) :
+CompilerError::CompilerError(jet::ast::Node *node) :
         CompilerError(node->token) {
 
 }
@@ -50,7 +50,7 @@ FileNotFoundError::FileNotFoundError(Token *token) : CompilerError(token) {
     m_prefix = "File not found";
 }
 
-FileNotFoundError::FileNotFoundError(AST::Node *node) : CompilerError(node) {
+FileNotFoundError::FileNotFoundError(jet::ast::Node *node) : CompilerError(node) {
     m_prefix = "File not found";
 }
 
@@ -60,7 +60,7 @@ InternalError::InternalError(Token *token, std::string message) :
     m_message = message + "\nNote: You have probably encountered a bug in Jet, not your code.";
 }
 
-InternalError::InternalError(AST::Node *node, std::string message) :
+InternalError::InternalError(jet::ast::Node *node, std::string message) :
         CompilerError(node) {
     m_prefix = "Internal error";
     m_message = message + "\nNote: You have probably encountered a bug in Jet, not your code.";
@@ -71,7 +71,7 @@ InternalAstError::InternalAstError(Token *token) :
 
 }
 
-InternalAstError::InternalAstError(AST::Node *node) :
+InternalAstError::InternalAstError(jet::ast::Node *node) :
         InternalError(node, "Should not be in lowered AST.") {
 
 }
@@ -108,31 +108,31 @@ void SyntaxError::makeMessage(std::string got, std::string expectation) {
     m_message = ss.str();
 }
 
-UndefinedError::UndefinedError(AST::Node *node, std::string name) :
+UndefinedError::UndefinedError(jet::ast::Node *node, std::string name) :
         CompilerError(node) {
     m_prefix = "Undefined error";
     m_message = name + " is not defined in this scope.";
 }
 
-TooManyDefinedError::TooManyDefinedError(AST::Node *node, std::string name) :
+TooManyDefinedError::TooManyDefinedError(jet::ast::Node *node, std::string name) :
         CompilerError(node) {
     m_prefix = "Too many defined error";
     m_message = name + " has multiple definitions.";
 }
 
-RedefinedError::RedefinedError(AST::Node *node, std::string name) :
+RedefinedError::RedefinedError(jet::ast::Node *node, std::string name) :
         CompilerError(node) {
     m_prefix = "Redefined error";
     m_message = name + " is already defined in this scope.";
 }
 
-InvalidTypeConstructor::InvalidTypeConstructor(AST::Node *node) :
+InvalidTypeConstructor::InvalidTypeConstructor(jet::ast::Node *node) :
         CompilerError(node) {
     m_prefix = "Invalid type";
     m_message = "This is not a type constructor.";
 }
 
-InvalidTypeParameters::InvalidTypeParameters(AST::Node *node, unsigned long given_no, unsigned long expected_no) :
+InvalidTypeParameters::InvalidTypeParameters(jet::ast::Node *node, unsigned long given_no, unsigned long expected_no) :
         CompilerError(node) {
     m_prefix = "Invalid type parameters";
 
@@ -141,7 +141,7 @@ InvalidTypeParameters::InvalidTypeParameters(AST::Node *node, unsigned long give
     m_message = ss.str();
 }
 
-TypeMismatchError::TypeMismatchError(AST::Node *node1, AST::Node *node2) :
+TypeMismatchError::TypeMismatchError(jet::ast::Node *node1, jet::ast::Node *node2) :
         CompilerError(node1) {
     m_prefix = "Invalid types";
 
@@ -151,13 +151,13 @@ TypeMismatchError::TypeMismatchError(AST::Node *node1, AST::Node *node2) :
     m_message = ss.str();
 }
 
-TypeInferenceError::TypeInferenceError(AST::Node *node) :
+TypeInferenceError::TypeInferenceError(jet::ast::Node *node) :
             CompilerError(node) {
     m_prefix = "Type inference error";
     m_message = "Try specifying the type you want.";
 }
 
-ConstantAssignmentError::ConstantAssignmentError(AST::Node *node) :
+ConstantAssignmentError::ConstantAssignmentError(jet::ast::Node *node) :
         CompilerError(node) {
     m_prefix = "Assignment to constant";
     m_message = "Variable is not mutable.";

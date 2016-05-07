@@ -11,44 +11,48 @@
 
 #include "Token.h"
 
-namespace AST {
-    struct Node;
-    struct Expression;
-    struct Misc;
-    struct Statement;
-    struct Definition;
-    struct CodeBlock;
-    struct Identifier;
-    struct BooleanLiteral;
-    struct IntegerLiteral;
-    struct FloatLiteral;
-    struct ImaginaryLiteral;
-    struct StringLiteral;
-    struct SequenceLiteral;
-    struct MappingLiteral;
-    struct RecordLiteral;
-    struct Argument;
-    struct Call;
-    struct CCall;
-    struct Cast;
-    struct Selector;
-    struct Index;
-    struct While;
-    struct For;
-    struct If;
-    struct Return;
-    struct Spawn;
-    struct Sizeof;
-    struct Strideof;
-    struct Parameter;
-    struct VariableDefinition;
-    struct FunctionDefinition;
-    struct TypeDefinition;
-    struct DefinitionStatement;
-    struct ExpressionStatement;
-    struct ImportStatement;
-    struct SourceFile;
+namespace jet {
+    namespace ast {
+        struct Node;
+        struct Expression;
+        struct Misc;
+        struct Statement;
+        struct Definition;
+        struct CodeBlock;
+        struct Identifier;
+        struct BooleanLiteral;
+        struct IntegerLiteral;
+        struct FloatLiteral;
+        struct ImaginaryLiteral;
+        struct StringLiteral;
+        struct SequenceLiteral;
+        struct MappingLiteral;
+        struct RecordLiteral;
+        struct Argument;
+        struct Call;
+        struct CCall;
+        struct Cast;
+        struct Selector;
+        struct Index;
+        struct While;
+        struct For;
+        struct If;
+        struct Return;
+        struct Spawn;
+        struct Sizeof;
+        struct Strideof;
+        struct Parameter;
+        struct VariableDefinition;
+        struct FunctionDefinition;
+        struct TypeDefinition;
+        struct DefinitionStatement;
+        struct ExpressionStatement;
+        struct ImportStatement;
+        struct SourceFile;
+    }
 }
+
+using namespace jet;
 
 class Parser {
 
@@ -56,7 +60,7 @@ public:
     explicit Parser(std::vector<Token *> tokens);
     ~Parser();
 
-    AST::SourceFile *parse(std::string name);
+    ast::SourceFile *parse(std::string name);
 
 private:
     void debug(std::string line);
@@ -66,49 +70,49 @@ private:
     bool isToken(Token::Rule rule) const;
 
     // misc
-    AST::CodeBlock *readCodeBlock();
+    ast::CodeBlock *readCodeBlock();
 
     // expressions
-    AST::Expression *readExpression();
-    AST::Identifier *readIdentifier(bool accept_parameters);
-    AST::Identifier *readOperator(bool accept_parameters);
-    AST::BooleanLiteral *readBooleanLiteral();
-    AST::IntegerLiteral *readIntegerLiteral();
-    AST::FloatLiteral *readFloatLiteral();
-    AST::ImaginaryLiteral *readImaginaryLiteral();
-    AST::StringLiteral *readStringLiteral();
-    AST::SequenceLiteral *readSequenceLiteral();
-    AST::MappingLiteral *readMappingLiteral();
-    AST::RecordLiteral *readRecordLiteral();
-    AST::Argument *readArgument();
-    AST::Call *readCall(AST::Expression *operand);
-    AST::CCall *readCCall();
-    AST::Cast *readCast(AST::Expression *operand);
-    AST::Selector *readSelector(AST::Expression *operand);
-    AST::Index *readIndex(AST::Expression *operand);
-    AST::While *readWhile();
-    AST::For *readFor();
-    AST::If *readIf();
-    AST::Return *readReturn();
-    AST::Spawn *readSpawn();
-    AST::Sizeof *readSizeof();
-    AST::Strideof *readStrideof();
-    AST::Expression *readUnaryExpression();
-    AST::Expression *readBinaryExpression(AST::Expression *lhs, int minPrecedence);
-    AST::Expression *readPrimaryExpression();
-    AST::Expression *readOperandExpression();
+    ast::Expression *readExpression();
+    ast::Identifier *readIdentifier(bool accept_parameters);
+    ast::Identifier *readOperator(bool accept_parameters);
+    ast::BooleanLiteral *readBooleanLiteral();
+    ast::IntegerLiteral *readIntegerLiteral();
+    ast::FloatLiteral *readFloatLiteral();
+    ast::ImaginaryLiteral *readImaginaryLiteral();
+    ast::StringLiteral *readStringLiteral();
+    ast::SequenceLiteral *readSequenceLiteral();
+    ast::MappingLiteral *readMappingLiteral();
+    ast::RecordLiteral *readRecordLiteral();
+    ast::Argument *readArgument();
+    ast::Call *readCall(ast::Expression *operand);
+    ast::CCall *readCCall();
+    ast::Cast *readCast(ast::Expression *operand);
+    ast::Selector *readSelector(ast::Expression *operand);
+    ast::Index *readIndex(ast::Expression *operand);
+    ast::While *readWhile();
+    ast::For *readFor();
+    ast::If *readIf();
+    ast::Return *readReturn();
+    ast::Spawn *readSpawn();
+    ast::Sizeof *readSizeof();
+    ast::Strideof *readStrideof();
+    ast::Expression *readUnaryExpression();
+    ast::Expression *readBinaryExpression(ast::Expression *lhs, int minPrecedence);
+    ast::Expression *readPrimaryExpression();
+    ast::Expression *readOperandExpression();
 
     // misc
-    AST::Parameter *readParameter();
+    ast::Parameter *readParameter();
 
     // definitions
-    AST::VariableDefinition *readVariableDefinition();
-    AST::FunctionDefinition *readFunctionDefinition();
-    AST::TypeDefinition *readTypeDefinition();
+    ast::VariableDefinition *readVariableDefinition();
+    ast::FunctionDefinition *readFunctionDefinition();
+    ast::TypeDefinition *readTypeDefinition();
 
     // statements
-    AST::Statement *readStatement();
-    AST::ImportStatement *readImportStatement();
+    ast::Statement *readStatement();
+    ast::ImportStatement *readImportStatement();
 
 private:
     std::deque<Token *> m_tokens;

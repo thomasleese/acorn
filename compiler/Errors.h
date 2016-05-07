@@ -11,8 +11,10 @@
 
 #include "Token.h"
 
-namespace AST {
-    struct Node;
+namespace jet {
+    namespace ast {
+        struct Node;
+    }
 }
 
 namespace Errors {
@@ -21,7 +23,7 @@ namespace Errors {
     public:
         explicit CompilerError(std::string filename, int lineNumber, int column, std::string line);
         CompilerError(Token *token);
-        CompilerError(AST::Node *node);
+        CompilerError(jet::ast::Node *node);
 
         void print() const;
 
@@ -39,19 +41,19 @@ namespace Errors {
     class FileNotFoundError : public CompilerError {
     public:
         FileNotFoundError(Token *token);
-        FileNotFoundError(AST::Node *node);
+        FileNotFoundError(jet::ast::Node *node);
     };
 
     class InternalError : public CompilerError {
     public:
         InternalError(Token *token, std::string message);
-        InternalError(AST::Node *node, std::string message);
+        InternalError(jet::ast::Node *node, std::string message);
     };
 
     class InternalAstError : public InternalError {
     public:
         InternalAstError(Token *token);
-        InternalAstError(AST::Node *node);
+        InternalAstError(jet::ast::Node *node);
     };
 
     class SyntaxError : public CompilerError {
@@ -66,42 +68,42 @@ namespace Errors {
 
     class UndefinedError : public CompilerError {
     public:
-        explicit UndefinedError(AST::Node *node, std::string name);
+        explicit UndefinedError(jet::ast::Node *node, std::string name);
     };
 
     class TooManyDefinedError : public CompilerError {
     public:
-        explicit TooManyDefinedError(AST::Node *node, std::string name);
+        explicit TooManyDefinedError(jet::ast::Node *node, std::string name);
     };
 
     class RedefinedError : public CompilerError {
     public:
-        explicit RedefinedError(AST::Node *node, std::string name);
+        explicit RedefinedError(jet::ast::Node *node, std::string name);
     };
 
     class InvalidTypeConstructor : public CompilerError {
     public:
-        explicit InvalidTypeConstructor(AST::Node *node);
+        explicit InvalidTypeConstructor(jet::ast::Node *node);
     };
 
     class InvalidTypeParameters : public CompilerError {
     public:
-        explicit InvalidTypeParameters(AST::Node *node, unsigned long given_no, unsigned long expected_no);
+        explicit InvalidTypeParameters(jet::ast::Node *node, unsigned long given_no, unsigned long expected_no);
     };
 
     class TypeMismatchError : public CompilerError {
     public:
-        explicit TypeMismatchError(AST::Node *node1, AST::Node *node2);
+        explicit TypeMismatchError(jet::ast::Node *node1, jet::ast::Node *node2);
     };
 
     class TypeInferenceError : public CompilerError {
     public:
-        explicit TypeInferenceError(AST::Node *node);
+        explicit TypeInferenceError(jet::ast::Node *node);
     };
 
     class ConstantAssignmentError : public CompilerError {
     public:
-        ConstantAssignmentError(AST::Node *node);
+        ConstantAssignmentError(jet::ast::Node *node);
     };
 
 };

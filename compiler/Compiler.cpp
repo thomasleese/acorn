@@ -18,10 +18,10 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
 
+#include "ast/nodes.h"
 #include "codegen/module.h"
 #include "Lexer.h"
 #include "Parser.h"
-#include "AbstractSyntaxTree.h"
 #include "PrettyPrinter.h"
 #include "SymbolTable.h"
 #include "Errors.h"
@@ -69,7 +69,7 @@ void Compiler::compile(std::string filename) {
     debug("Parsing...");
 
     Parser parser(tokens);
-    AST::SourceFile *module = parser.parse(filename);
+    ast::SourceFile *module = parser.parse(filename);
 
     debug("Building the Symbol Table...");
 

@@ -5,6 +5,7 @@
 #include <iostream>
 #include <sstream>
 
+#include "ast/nodes.h"
 #include "Lexer.h"
 #include "Errors.h"
 #include "Builtins.h"
@@ -35,7 +36,7 @@ bool Namespace::has(std::string name, bool follow_parents) const {
     }
 }
 
-Symbol *Namespace::lookup(AST::Node *currentNode, std::string name) const {
+Symbol *Namespace::lookup(ast::Node *currentNode, std::string name) const {
     auto it = m_symbols.find(name);
     if (it == m_symbols.end()) {
         if (m_parent) {
@@ -48,11 +49,11 @@ Symbol *Namespace::lookup(AST::Node *currentNode, std::string name) const {
     return it->second;
 }
 
-Symbol *Namespace::lookup(AST::Identifier *identifier) const {
+Symbol *Namespace::lookup(ast::Identifier *identifier) const {
     return lookup(identifier, identifier->value);
 }
 
-Symbol *Namespace::lookup_by_node(AST::Node *node) const {
+Symbol *Namespace::lookup_by_node(ast::Node *node) const {
     for (auto entry : m_symbols) {
         if (entry.second->node == node) {
             return entry.second;
@@ -66,7 +67,7 @@ Symbol *Namespace::lookup_by_node(AST::Node *node) const {
     }
 }
 
-void Namespace::insert(AST::Node *currentNode, Symbol *symbol) {
+void Namespace::insert(ast::Node *currentNode, Symbol *symbol) {
     symbol->node = currentNode;
 
     auto it = m_symbols.find(symbol->name);
@@ -142,7 +143,7 @@ bool Symbol::is_type() const {
 }
 
 bool Symbol::is_variable() const {
-    return dynamic_cast<AST::VariableDefinition *>(this->node) != nullptr;
+    return dynamic_cast<ast::VariableDefinition *>(this->node) != nullptr;
 }
 
 std::string Symbol::to_string() const {
@@ -183,89 +184,89 @@ Namespace *Builder::rootNamespace() {
     return m_root;
 }
 
-void Builder::visit(AST::CodeBlock *block) {
+void Builder::visit(ast::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
     }
 }
 
-void Builder::visit(AST::Identifier *identifier) {
+void Builder::visit(ast::Identifier *identifier) {
 
 }
 
-void Builder::visit(AST::BooleanLiteral *boolean) {
+void Builder::visit(ast::BooleanLiteral *boolean) {
 
 }
 
-void Builder::visit(AST::IntegerLiteral *expression) {
+void Builder::visit(ast::IntegerLiteral *expression) {
 
 }
 
-void Builder::visit(AST::FloatLiteral *expression) {
+void Builder::visit(ast::FloatLiteral *expression) {
 
 }
 
-void Builder::visit(AST::ImaginaryLiteral *imaginary) {
+void Builder::visit(ast::ImaginaryLiteral *imaginary) {
 
 }
 
-void Builder::visit(AST::StringLiteral *expression) {
+void Builder::visit(ast::StringLiteral *expression) {
 
 }
 
-void Builder::visit(AST::SequenceLiteral *sequence) {
+void Builder::visit(ast::SequenceLiteral *sequence) {
 
 }
 
-void Builder::visit(AST::MappingLiteral *mapping) {
+void Builder::visit(ast::MappingLiteral *mapping) {
 
 }
 
-void Builder::visit(AST::RecordLiteral *expression) {
+void Builder::visit(ast::RecordLiteral *expression) {
 
 }
 
-void Builder::visit(AST::Argument *argument) {
+void Builder::visit(ast::Argument *argument) {
 
 }
 
-void Builder::visit(AST::Call *expression) {
+void Builder::visit(ast::Call *expression) {
 
 }
 
-void Builder::visit(AST::CCall *expression) {
+void Builder::visit(ast::CCall *expression) {
 
 }
 
-void Builder::visit(AST::Cast *expression) {
+void Builder::visit(ast::Cast *expression) {
 
 }
 
-void Builder::visit(AST::Assignment *expression) {
+void Builder::visit(ast::Assignment *expression) {
 
 }
 
-void Builder::visit(AST::Selector *expression) {
+void Builder::visit(ast::Selector *expression) {
 
 }
 
-void Builder::visit(AST::Index *expression) {
+void Builder::visit(ast::Index *expression) {
 
 }
 
-void Builder::visit(AST::Comma *expression) {
+void Builder::visit(ast::Comma *expression) {
 
 }
 
-void Builder::visit(AST::While *expression) {
+void Builder::visit(ast::While *expression) {
 
 }
 
-void Builder::visit(AST::For *expression) {
+void Builder::visit(ast::For *expression) {
 
 }
 
-void Builder::visit(AST::If *expression) {
+void Builder::visit(ast::If *expression) {
     expression->condition->accept(this);
 
     expression->trueCode->accept(this);
@@ -275,28 +276,28 @@ void Builder::visit(AST::If *expression) {
     }
 }
 
-void Builder::visit(AST::Return *expression) {
+void Builder::visit(ast::Return *expression) {
 
 }
 
-void Builder::visit(AST::Spawn *expression) {
+void Builder::visit(ast::Spawn *expression) {
 
 }
 
-void Builder::visit(AST::Sizeof *expression) {
+void Builder::visit(ast::Sizeof *expression) {
 
 }
 
-void Builder::visit(AST::Strideof *expression) {
+void Builder::visit(ast::Strideof *expression) {
 
 }
 
-void Builder::visit(AST::Parameter *parameter) {
+void Builder::visit(ast::Parameter *parameter) {
     Symbol *symbol = new Symbol(parameter->name->value);
     m_scope.back()->insert(parameter, symbol);
 }
 
-void Builder::visit(AST::VariableDefinition *definition) {
+void Builder::visit(ast::VariableDefinition *definition) {
     Symbol *symbol = new Symbol(definition->name->value);
     m_scope.back()->insert(definition, symbol);
 
@@ -313,7 +314,7 @@ void Builder::visit(AST::VariableDefinition *definition) {
     m_scope.pop_back();
 }
 
-void Builder::visit(AST::FunctionDefinition *definition) {
+void Builder::visit(ast::FunctionDefinition *definition) {
     Symbol *functionSymbol;
     if (m_scope.back()->has(definition->name->value, false)) {
         // we don't want to look in any parent scope when we're
@@ -354,7 +355,7 @@ void Builder::visit(AST::FunctionDefinition *definition) {
     m_scope.pop_back();
 }
 
-void Builder::visit(AST::TypeDefinition *definition) {
+void Builder::visit(ast::TypeDefinition *definition) {
     Symbol *symbol = new Symbol(definition->name->value);
     m_scope.back()->insert(definition, symbol);
 
@@ -380,18 +381,18 @@ void Builder::visit(AST::TypeDefinition *definition) {
     m_scope.pop_back();
 }
 
-void Builder::visit(AST::DefinitionStatement *statement) {
+void Builder::visit(ast::DefinitionStatement *statement) {
     statement->definition->accept(this);
 }
 
-void Builder::visit(AST::ExpressionStatement *statement) {
+void Builder::visit(ast::ExpressionStatement *statement) {
     statement->expression->accept(this);
 }
 
-void Builder::visit(AST::ImportStatement *statement) {
+void Builder::visit(ast::ImportStatement *statement) {
 
 }
 
-void Builder::visit(AST::SourceFile *module) {
+void Builder::visit(ast::SourceFile *module) {
     module->code->accept(this);
 }

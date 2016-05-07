@@ -7,18 +7,18 @@
 
 #include "../Types.h"
 
-namespace AST {
-    struct Node;
-}
-
 namespace jet {
+
+    namespace ast {
+        struct Node;
+    }
 
     namespace codegen {
 
         class TypeGenerator : public Types::Visitor {
         public:
-            llvm::Type *take_type(AST::Node *node);
-            llvm::Constant *take_initialiser(AST::Node *node);
+            llvm::Type *take_type(ast::Node *node);
+            llvm::Constant *take_initialiser(ast::Node *node);
 
             void visit(Types::Parameter *type);
             void visit(Types::AnyConstructor *type);

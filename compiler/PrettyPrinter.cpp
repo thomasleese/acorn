@@ -4,13 +4,17 @@
 
 #include <iostream>
 
+#include "ast/nodes.h"
+
 #include "PrettyPrinter.h"
+
+using namespace jet;
 
 PrettyPrinter::PrettyPrinter() {
     indent = 0;
 }
 
-void PrettyPrinter::visit(AST::CodeBlock *codeBlock) {
+void PrettyPrinter::visit(ast::CodeBlock *codeBlock) {
     ss << indentation() << "(CodeBlock\n";
     indent++;
 
@@ -22,7 +26,7 @@ void PrettyPrinter::visit(AST::CodeBlock *codeBlock) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Identifier *identifier) {
+void PrettyPrinter::visit(ast::Identifier *identifier) {
     if (identifier->has_parameters()) {
         ss << indentation() << "(Identifier " << identifier->value << "\n";
         indent++;
@@ -38,27 +42,27 @@ void PrettyPrinter::visit(AST::Identifier *identifier) {
     }
 }
 
-void PrettyPrinter::visit(AST::BooleanLiteral *boolean) {
+void PrettyPrinter::visit(ast::BooleanLiteral *boolean) {
     ss << indentation() << "(BooleanLiteral " << boolean->value << ")\n";
 }
 
-void PrettyPrinter::visit(AST::IntegerLiteral *expression) {
+void PrettyPrinter::visit(ast::IntegerLiteral *expression) {
     ss << indentation() << "(IntegerLiteral " << expression->value << ")\n";
 }
 
-void PrettyPrinter::visit(AST::FloatLiteral *expression) {
+void PrettyPrinter::visit(ast::FloatLiteral *expression) {
     ss << indentation() << "(FloatLiteral " << expression->value << ")\n";
 }
 
-void PrettyPrinter::visit(AST::ImaginaryLiteral *imaginary) {
+void PrettyPrinter::visit(ast::ImaginaryLiteral *imaginary) {
     ss << indentation() << "(ImaginaryLiteral " << imaginary->value << ")\n";
 }
 
-void PrettyPrinter::visit(AST::StringLiteral *expression) {
+void PrettyPrinter::visit(ast::StringLiteral *expression) {
     ss << indentation() << "(StringLiteral " << expression->value << ")\n";
 }
 
-void PrettyPrinter::visit(AST::SequenceLiteral *sequence) {
+void PrettyPrinter::visit(ast::SequenceLiteral *sequence) {
     ss << indentation() << "(SequenceLiteral\n";
     indent++;
 
@@ -70,7 +74,7 @@ void PrettyPrinter::visit(AST::SequenceLiteral *sequence) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::MappingLiteral *mapping) {
+void PrettyPrinter::visit(ast::MappingLiteral *mapping) {
     ss << indentation() << "(MappingLiteral\n";
     indent++;
 
@@ -83,7 +87,7 @@ void PrettyPrinter::visit(AST::MappingLiteral *mapping) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::RecordLiteral *expression) {
+void PrettyPrinter::visit(ast::RecordLiteral *expression) {
     ss << indentation() << "(RecordLiteral\n";
     indent++;
 
@@ -98,7 +102,7 @@ void PrettyPrinter::visit(AST::RecordLiteral *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Argument *argument) {
+void PrettyPrinter::visit(ast::Argument *argument) {
     ss << indentation() << "(Argument\n";
     indent++;
 
@@ -114,7 +118,7 @@ void PrettyPrinter::visit(AST::Argument *argument) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Call *expression) {
+void PrettyPrinter::visit(ast::Call *expression) {
     ss << indentation() << "(Call\n";
     indent++;
 
@@ -128,7 +132,7 @@ void PrettyPrinter::visit(AST::Call *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::CCall *ccall) {
+void PrettyPrinter::visit(ast::CCall *ccall) {
     ss << indentation() << "(CCall\n";
     indent++;
 
@@ -148,7 +152,7 @@ void PrettyPrinter::visit(AST::CCall *ccall) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Cast *cast) {
+void PrettyPrinter::visit(ast::Cast *cast) {
     ss << indentation() << "(Cast\n";
     indent++;
 
@@ -159,7 +163,7 @@ void PrettyPrinter::visit(AST::Cast *cast) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Assignment *expression) {
+void PrettyPrinter::visit(ast::Assignment *expression) {
     ss << indentation() << "(Assignment\n";
     indent++;
 
@@ -170,7 +174,7 @@ void PrettyPrinter::visit(AST::Assignment *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Selector *expression) {
+void PrettyPrinter::visit(ast::Selector *expression) {
     ss << indentation() << "(Selector\n";
     indent++;
 
@@ -181,7 +185,7 @@ void PrettyPrinter::visit(AST::Selector *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Index *expression) {
+void PrettyPrinter::visit(ast::Index *expression) {
     ss << indentation() << "(Index\n";
     indent++;
 
@@ -192,7 +196,7 @@ void PrettyPrinter::visit(AST::Index *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Comma *expression) {
+void PrettyPrinter::visit(ast::Comma *expression) {
     ss << indentation() << "(Comma\n";
     indent++;
 
@@ -203,7 +207,7 @@ void PrettyPrinter::visit(AST::Comma *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::While *expression) {
+void PrettyPrinter::visit(ast::While *expression) {
     ss << indentation() << "(While\n";
     indent++;
 
@@ -214,7 +218,7 @@ void PrettyPrinter::visit(AST::While *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::For *expression) {
+void PrettyPrinter::visit(ast::For *expression) {
     ss << indentation() << "(For\n";
     indent++;
 
@@ -226,7 +230,7 @@ void PrettyPrinter::visit(AST::For *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::If *expression) {
+void PrettyPrinter::visit(ast::If *expression) {
     ss << indentation() << "(If\n";
     indent++;
 
@@ -241,7 +245,7 @@ void PrettyPrinter::visit(AST::If *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Return *expression) {
+void PrettyPrinter::visit(ast::Return *expression) {
     ss << indentation() << "(Return\n";
     indent++;
 
@@ -251,7 +255,7 @@ void PrettyPrinter::visit(AST::Return *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Spawn *expression) {
+void PrettyPrinter::visit(ast::Spawn *expression) {
     ss << indentation() << "(Spawn\n";
     indent++;
 
@@ -261,7 +265,7 @@ void PrettyPrinter::visit(AST::Spawn *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Sizeof *expression) {
+void PrettyPrinter::visit(ast::Sizeof *expression) {
     ss << indentation() << "(Sizeof\n";
     indent++;
 
@@ -271,7 +275,7 @@ void PrettyPrinter::visit(AST::Sizeof *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Strideof *expression) {
+void PrettyPrinter::visit(ast::Strideof *expression) {
     ss << indentation() << "(Strideof\n";
     indent++;
 
@@ -281,7 +285,7 @@ void PrettyPrinter::visit(AST::Strideof *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::Parameter *parameter) {
+void PrettyPrinter::visit(ast::Parameter *parameter) {
     ss << indentation() << "(Parameter\n";
     indent++;
 
@@ -296,7 +300,7 @@ void PrettyPrinter::visit(AST::Parameter *parameter) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::VariableDefinition *definition) {
+void PrettyPrinter::visit(ast::VariableDefinition *definition) {
     ss << indentation() << "(VariableDefinition\n";
     indent++;
 
@@ -313,7 +317,7 @@ void PrettyPrinter::visit(AST::VariableDefinition *definition) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::FunctionDefinition *definition) {
+void PrettyPrinter::visit(ast::FunctionDefinition *definition) {
     ss << indentation() << "(FunctionDefinition\n";
     indent++;
 
@@ -330,7 +334,7 @@ void PrettyPrinter::visit(AST::FunctionDefinition *definition) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::TypeDefinition *definition) {
+void PrettyPrinter::visit(ast::TypeDefinition *definition) {
     ss << indentation() << "(TypeDefinition\n";
     indent++;
 
@@ -349,7 +353,7 @@ void PrettyPrinter::visit(AST::TypeDefinition *definition) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::DefinitionStatement *statement) {
+void PrettyPrinter::visit(ast::DefinitionStatement *statement) {
     ss << indentation() << "(DefinitionStatement\n";
     indent++;
 
@@ -359,7 +363,7 @@ void PrettyPrinter::visit(AST::DefinitionStatement *statement) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::ExpressionStatement *statement) {
+void PrettyPrinter::visit(ast::ExpressionStatement *statement) {
     ss << indentation() << "(ExpressionStatement\n";
     indent++;
 
@@ -369,7 +373,7 @@ void PrettyPrinter::visit(AST::ExpressionStatement *statement) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::ImportStatement *statement) {
+void PrettyPrinter::visit(ast::ImportStatement *statement) {
     ss << indentation() << "(ImportStatement\n";
     indent++;
 
@@ -379,7 +383,7 @@ void PrettyPrinter::visit(AST::ImportStatement *statement) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(AST::SourceFile *module) {
+void PrettyPrinter::visit(ast::SourceFile *module) {
     ss << indentation() << "(SourceFile " << module->name << "\n";
 
     indent++;

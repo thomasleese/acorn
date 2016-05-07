@@ -7,7 +7,7 @@
 
 #include <map>
 
-#include "AbstractSyntaxTree.h"
+#include "ast/visitor.h"
 
 namespace SymbolTable {
     class Namespace;
@@ -15,80 +15,85 @@ namespace SymbolTable {
 
 namespace jet {
 
-namespace preprocessor {
+    namespace ast {
+        struct Definition;
+        struct Statement;
+    }
 
-    struct Action {
+    namespace preprocessor {
 
-        enum Kind {
-            DropStatement,
-            InsertStatement
+        struct Action {
+
+            enum Kind {
+                DropStatement,
+                InsertStatement
+            };
+
+            Action(Kind kind, ast::Statement *statement = nullptr);
+
+            Kind kind;
+            ast::Statement *statement;
+
         };
 
-        Action(Kind kind, AST::Statement *statement = nullptr);
+        class GenericsPass : public ast::Visitor {
 
-        Kind kind;
-        AST::Statement *statement;
+        public:
+            GenericsPass(SymbolTable::Namespace *root_namespace);
 
-    };
+            void visit(ast::CodeBlock *block);
 
-    class GenericsPass : public AST::Visitor {
+            void visit(ast::Identifier *identifier);
+            void visit(ast::BooleanLiteral *boolean);
+            void visit(ast::IntegerLiteral *expression);
+            void visit(ast::FloatLiteral *expression);
+            void visit(ast::ImaginaryLiteral *imaginary);
+            void visit(ast::StringLiteral *expression);
+            void visit(ast::SequenceLiteral *sequence);
+            void visit(ast::MappingLiteral *mapping);
+            void visit(ast::RecordLiteral *expression);
+            void visit(ast::Argument *argument);
+            void visit(ast::Call *expression);
+            void visit(ast::CCall *expression);
+            void visit(ast::Cast *expression);
+            void visit(ast::Assignment *expression);
+            void visit(ast::Selector *expression);
+            void visit(ast::Index *expression);
+            void visit(ast::Comma *expression);
+            void visit(ast::While *expression);
+            void visit(ast::For *expression);
+            void visit(ast::If *expression);
+            void visit(ast::Return *expression);
+            void visit(ast::Spawn *expression);
+            void visit(ast::Sizeof *expression);
+            void visit(ast::Strideof *expression);
 
-    public:
-        GenericsPass(SymbolTable::Namespace *root_namespace);
+            void visit(ast::Parameter *parameter);
 
-        void visit(AST::CodeBlock *block);
+            void visit(ast::VariableDefinition *definition);
+            void visit(ast::FunctionDefinition *definition);
+            void visit(ast::TypeDefinition *definition);
 
-        void visit(AST::Identifier *identifier);
-        void visit(AST::BooleanLiteral *boolean);
-        void visit(AST::IntegerLiteral *expression);
-        void visit(AST::FloatLiteral *expression);
-        void visit(AST::ImaginaryLiteral *imaginary);
-        void visit(AST::StringLiteral *expression);
-        void visit(AST::SequenceLiteral *sequence);
-        void visit(AST::MappingLiteral *mapping);
-        void visit(AST::RecordLiteral *expression);
-        void visit(AST::Argument *argument);
-        void visit(AST::Call *expression);
-        void visit(AST::CCall *expression);
-        void visit(AST::Cast *expression);
-        void visit(AST::Assignment *expression);
-        void visit(AST::Selector *expression);
-        void visit(AST::Index *expression);
-        void visit(AST::Comma *expression);
-        void visit(AST::While *expression);
-        void visit(AST::For *expression);
-        void visit(AST::If *expression);
-        void visit(AST::Return *expression);
-        void visit(AST::Spawn *expression);
-        void visit(AST::Sizeof *expression);
-        void visit(AST::Strideof *expression);
+            void visit(ast::DefinitionStatement *statement);
+            void visit(ast::ExpressionStatement *statement);
+            void visit(ast::ImportStatement *statement);
 
-        void visit(AST::Parameter *parameter);
+            void visit(ast::SourceFile *module);
 
-        void visit(AST::VariableDefinition *definition);
-        void visit(AST::FunctionDefinition *definition);
-        void visit(AST::TypeDefinition *definition);
+        private:
+            bool m_collecting;
 
-        void visit(AST::DefinitionStatement *statement);
-        void visit(AST::ExpressionStatement *statement);
-        void visit(AST::ImportStatement *statement);
+            std::vector<SymbolTable::Namespace *> m_scope;
+            std::vector<Action> m_actions;
 
-        void visit(AST::SourceFile *module);
+            std::map<ast::Definition *, std::vector<std::vector<ast::Identifier *> > > m_generics;
+            std::map<SymbolTable::Symbol *, std::string> m_replacements;
 
-    private:
-        bool m_collecting;
+            std::vector<ast::Identifier *> m_skip_identifier;
 
-        std::vector<SymbolTable::Namespace *> m_scope;
-        std::vector<Action> m_actions;
+        };
 
-        std::map<AST::Definition *, std::vector<std::vector<AST::Identifier *> > > m_generics;
-        std::map<SymbolTable::Symbol *, std::string> m_replacements;
-
-        std::vector<AST::Identifier *> m_skip_identifier;
-
-    };
-
-}
+    }
 
 }
 

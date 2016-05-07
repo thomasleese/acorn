@@ -13,10 +13,14 @@
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Type.h>
 
-namespace AST {
-    struct Node;
-    struct Argument;
+namespace jet {
+    namespace ast {
+        struct Node;
+        struct Argument;
+    }
 }
+
+using namespace jet;
 
 namespace Types {
 
@@ -48,8 +52,8 @@ namespace Types {
     // type constructors
     class Constructor : public Type {
     public:
-        Type *create(AST::Node *node);
-        virtual Type *create(AST::Node *node, std::vector<Type *> parameters) = 0;
+        Type *create(ast::Node *node);
+        virtual Type *create(ast::Node *node, std::vector<Type *> parameters) = 0;
 
         std::string mangled_name() const;
     };
@@ -58,7 +62,7 @@ namespace Types {
     public:
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
     };
@@ -67,7 +71,7 @@ namespace Types {
     public:
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
     };
@@ -76,7 +80,7 @@ namespace Types {
     public:
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
     };
@@ -87,7 +91,7 @@ namespace Types {
 
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
@@ -101,7 +105,7 @@ namespace Types {
 
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
@@ -115,7 +119,7 @@ namespace Types {
 
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
@@ -128,7 +132,7 @@ namespace Types {
     public:
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
@@ -138,7 +142,7 @@ namespace Types {
     public:
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
     };
@@ -151,7 +155,7 @@ namespace Types {
 
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
@@ -168,7 +172,7 @@ namespace Types {
     public:
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
@@ -177,11 +181,11 @@ namespace Types {
     class AliasConstructor : public Constructor {
 
     public:
-        explicit AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Parameter *> input_arameters, std::vector<Type *> outputParameters);
+        explicit AliasConstructor(ast::Node *node, Constructor *constructor, std::vector<Parameter *> input_arameters, std::vector<Type *> outputParameters);
 
         std::string name() const;
 
-        Type *create(AST::Node *node, std::vector<Type *> parameters);
+        Type *create(ast::Node *node, std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
@@ -315,7 +319,7 @@ namespace Types {
         long get_parameter_position(std::string name) const;
         std::string get_parameter_name(long position) const;
 
-        bool could_be_called_with(std::vector<AST::Argument *> arguments);
+        bool could_be_called_with(std::vector<ast::Argument *> arguments);
 
         void accept(Visitor *visitor);
 
@@ -331,7 +335,7 @@ namespace Types {
         std::string mangled_name() const;
 
         void add_method(Method *method);
-        Method *find_method(AST::Node *node, std::vector<AST::Argument *> arguments) const;
+        Method *find_method(ast::Node *node, std::vector<ast::Argument *> arguments) const;
         Method *get_method(int index) const;
         int no_methods() const;
 
@@ -344,7 +348,7 @@ namespace Types {
     class Union : public Type {
     public:
         Union(Type *type1, Type *type2);
-        Union(AST::Node *node, std::set<Type *> types);
+        Union(ast::Node *node, std::set<Type *> types);
 
         std::string name() const;
         std::string mangled_name() const;

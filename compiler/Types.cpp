@@ -9,10 +9,12 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Constants.h>
 
-#include "AbstractSyntaxTree.h"
+#include "ast/nodes.h"
 #include "Errors.h"
 
 #include "Types.h"
+
+using namespace jet;
 
 using namespace Types;
 
@@ -36,7 +38,7 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Type *Constructor::create(AST::Node *node) {
+Type *Constructor::create(ast::Node *node) {
     return create(node, std::vector<Type *>());
 }
 
@@ -48,7 +50,7 @@ std::string AnyConstructor::name() const {
     return "AnyConstructor";
 }
 
-Type *AnyConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *AnyConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Any();
     } else {
@@ -64,7 +66,7 @@ std::string VoidConstructor::name() const {
     return "VoidConstructor";
 }
 
-Type *VoidConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *VoidConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Void();
     } else {
@@ -80,7 +82,7 @@ std::string BooleanConstructor::name() const {
     return "BooleanConstructor";
 }
 
-Type *BooleanConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *BooleanConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Boolean();
     } else {
@@ -102,7 +104,7 @@ std::string IntegerConstructor::name() const {
     return ss.str();
 }
 
-Type *IntegerConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *IntegerConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Integer(m_size);
     } else {
@@ -124,7 +126,7 @@ std::string UnsignedIntegerConstructor::name() const {
     return ss.str();
 }
 
-Type *UnsignedIntegerConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *UnsignedIntegerConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new UnsignedInteger(m_size);
     } else {
@@ -146,7 +148,7 @@ std::string FloatConstructor::name() const {
     return ss.str();
 }
 
-Type *FloatConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *FloatConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Float(m_size);
     } else {
@@ -162,7 +164,7 @@ std::string UnsafePointerConstructor::name() const {
     return "UnsafePointerConstructor";
 }
 
-Type *UnsafePointerConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *UnsafePointerConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.size() == 1) {
         return new UnsafePointer(parameters[0]);
     } else {
@@ -178,7 +180,7 @@ std::string FunctionConstructor::name() const {
     return "FunctionConstructor";
 }
 
-Type *FunctionConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *FunctionConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     Function *function = new Function();
 
     for (auto parameter : parameters) {
@@ -216,7 +218,7 @@ std::string RecordConstructor::name() const {
     return ss.str();
 }
 
-Type *RecordConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *RecordConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.size() == m_input_parameters.size()) {
         std::map<Parameter *, Type *> parameter_mapping;
         for (int i = 0; i < m_input_parameters.size(); i++) {
@@ -253,7 +255,7 @@ std::string UnionConstructor::name() const {
     return "UnionConstructor";
 }
 
-Type *UnionConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *UnionConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     std::set<Type *> types;
     for (auto parameter : parameters) {
         types.insert(parameter);
@@ -266,7 +268,7 @@ void UnionConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-AliasConstructor::AliasConstructor(AST::Node *node, Constructor *constructor, std::vector<Parameter *> input_parameters, std::vector<Type *> outputParameters) :
+AliasConstructor::AliasConstructor(ast::Node *node, Constructor *constructor, std::vector<Parameter *> input_parameters, std::vector<Type *> outputParameters) :
         m_constructor(constructor) {
     for (unsigned long i = 0; i < input_parameters.size(); i++) {
         auto parameter = input_parameters[i];
@@ -298,7 +300,7 @@ std::string AliasConstructor::name() const {
     return "AliasConstructor";
 }
 
-Type *AliasConstructor::create(AST::Node *node, std::vector<Type *> parameters) {
+Type *AliasConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.size() != m_parameterMapping.size()) {
         throw Errors::InvalidTypeParameters(node, parameters.size(), m_parameterMapping.size());
     }
@@ -603,7 +605,7 @@ std::string Method::get_parameter_name(long position) const {
     return m_official_parameter_order[position];
 }
 
-bool Method::could_be_called_with(std::vector<AST::Argument *> arguments) {
+bool Method::could_be_called_with(std::vector<ast::Argument *> arguments) {
     unsigned long matches = 0;
 
     for (unsigned long i = 0; i < arguments.size(); i++) {
@@ -663,7 +665,7 @@ void Function::add_method(Method *method) {
     m_methods.push_back(method);
 }
 
-Method *Function::find_method(AST::Node *node, std::vector<AST::Argument *> arguments) const {
+Method *Function::find_method(ast::Node *node, std::vector<ast::Argument *> arguments) const {
     for (auto method : m_methods) {
         if (method->could_be_called_with(arguments)) {
             return method;
@@ -695,7 +697,7 @@ Union::Union(Type *type1, Type *type2) {
     m_types.insert(type2);
 }
 
-Union::Union(AST::Node *node, std::set<Type *> types) : m_types(types) {
+Union::Union(ast::Node *node, std::set<Type *> types) : m_types(types) {
     if (m_types.size() <= 1) {
         throw Errors::InvalidTypeParameters(node, m_types.size(), 2);
     }

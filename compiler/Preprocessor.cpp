@@ -4,6 +4,7 @@
 
 #include <iostream>
 
+#include "ast/nodes.h"
 #include "Errors.h"
 #include "SymbolTable.h"
 #include "Types.h"
@@ -11,9 +12,10 @@
 #include "Preprocessor.h"
 #include "PrettyPrinter.h"
 
+using namespace jet;
 using namespace jet::preprocessor;
 
-Action::Action(Action::Kind kind, AST::Statement *statement) :
+Action::Action(Action::Kind kind, ast::Statement *statement) :
         kind(kind), statement(statement) {
 
 }
@@ -23,7 +25,7 @@ GenericsPass::GenericsPass(SymbolTable::Namespace *root_namespace) :
     m_scope.push_back(root_namespace);
 }
 
-void GenericsPass::visit(AST::CodeBlock *block) {
+void GenericsPass::visit(ast::CodeBlock *block) {
     size_t size = block->statements.size();
 
     for (int i = 0; i < size; i++) {
@@ -52,7 +54,7 @@ void GenericsPass::visit(AST::CodeBlock *block) {
     }
 }
 
-void GenericsPass::visit(AST::Identifier *identifier) {
+void GenericsPass::visit(ast::Identifier *identifier) {
     if (m_collecting) {
         if (m_skip_identifier.size() && identifier == m_skip_identifier.back()) {
             return;
@@ -64,12 +66,12 @@ void GenericsPass::visit(AST::Identifier *identifier) {
             if (symbol->is_function()) {
                 std::vector<SymbolTable::Symbol *> methods = symbol->nameSpace->symbols();
                 for (auto sym : methods) {
-                    auto def = dynamic_cast<AST::Definition *>(sym->node);
+                    auto def = dynamic_cast<ast::Definition *>(sym->node);
                     assert(def);
                     m_generics[def].push_back(identifier->parameters);
                 }
             } else if (symbol->is_variable()) {
-                auto def = dynamic_cast<AST::Definition *>(symbol->node);
+                auto def = dynamic_cast<ast::Definition *>(symbol->node);
                 assert(def);
                 m_generics[def].push_back(identifier->parameters);
             }
@@ -95,39 +97,39 @@ void GenericsPass::visit(AST::Identifier *identifier) {
     }
 }
 
-void GenericsPass::visit(AST::BooleanLiteral *boolean) {
+void GenericsPass::visit(ast::BooleanLiteral *boolean) {
 
 }
 
-void GenericsPass::visit(AST::IntegerLiteral *expression) {
+void GenericsPass::visit(ast::IntegerLiteral *expression) {
 
 }
 
-void GenericsPass::visit(AST::FloatLiteral *expression) {
+void GenericsPass::visit(ast::FloatLiteral *expression) {
 
 }
 
-void GenericsPass::visit(AST::ImaginaryLiteral *imaginary) {
+void GenericsPass::visit(ast::ImaginaryLiteral *imaginary) {
 
 }
 
-void GenericsPass::visit(AST::StringLiteral *expression) {
+void GenericsPass::visit(ast::StringLiteral *expression) {
 
 }
 
-void GenericsPass::visit(AST::SequenceLiteral *sequence) {
+void GenericsPass::visit(ast::SequenceLiteral *sequence) {
 
 }
 
-void GenericsPass::visit(AST::MappingLiteral *mapping) {
+void GenericsPass::visit(ast::MappingLiteral *mapping) {
 
 }
 
-void GenericsPass::visit(AST::RecordLiteral *expression) {
+void GenericsPass::visit(ast::RecordLiteral *expression) {
     expression->name->accept(this);
 }
 
-void GenericsPass::visit(AST::Argument *argument) {
+void GenericsPass::visit(ast::Argument *argument) {
     if (argument->name) {
         //argument->name->accept(this);
     }
@@ -135,7 +137,7 @@ void GenericsPass::visit(AST::Argument *argument) {
     argument->value->accept(this);
 }
 
-void GenericsPass::visit(AST::Call *expression) {
+void GenericsPass::visit(ast::Call *expression) {
     expression->operand->accept(this);
 
     for (auto arg : expression->arguments) {
@@ -143,7 +145,7 @@ void GenericsPass::visit(AST::Call *expression) {
     }
 }
 
-void GenericsPass::visit(AST::CCall *expression) {
+void GenericsPass::visit(ast::CCall *expression) {
     for (auto p : expression->parameters) {
         p->accept(this);
     }
@@ -155,36 +157,36 @@ void GenericsPass::visit(AST::CCall *expression) {
     expression->returnType->accept(this);
 }
 
-void GenericsPass::visit(AST::Cast *expression) {
+void GenericsPass::visit(ast::Cast *expression) {
     expression->operand->accept(this);
     expression->new_type->accept(this);
 }
 
-void GenericsPass::visit(AST::Assignment *expression) {
+void GenericsPass::visit(ast::Assignment *expression) {
 
 }
 
-void GenericsPass::visit(AST::Selector *expression) {
+void GenericsPass::visit(ast::Selector *expression) {
 
 }
 
-void GenericsPass::visit(AST::Index *expression) {
+void GenericsPass::visit(ast::Index *expression) {
 
 }
 
-void GenericsPass::visit(AST::Comma *expression) {
+void GenericsPass::visit(ast::Comma *expression) {
 
 }
 
-void GenericsPass::visit(AST::While *expression) {
+void GenericsPass::visit(ast::While *expression) {
 
 }
 
-void GenericsPass::visit(AST::For *expression) {
+void GenericsPass::visit(ast::For *expression) {
 
 }
 
-void GenericsPass::visit(AST::If *expression) {
+void GenericsPass::visit(ast::If *expression) {
     expression->condition->accept(this);
 
     expression->trueCode->accept(this);
@@ -194,23 +196,23 @@ void GenericsPass::visit(AST::If *expression) {
     }
 }
 
-void GenericsPass::visit(AST::Return *expression) {
+void GenericsPass::visit(ast::Return *expression) {
     expression->expression->accept(this);
 }
 
-void GenericsPass::visit(AST::Spawn *expression) {
+void GenericsPass::visit(ast::Spawn *expression) {
 
 }
 
-void GenericsPass::visit(AST::Sizeof *expression) {
+void GenericsPass::visit(ast::Sizeof *expression) {
     expression->identifier->accept(this);
 }
 
-void GenericsPass::visit(AST::Strideof *expression) {
+void GenericsPass::visit(ast::Strideof *expression) {
     expression->identifier->accept(this);
 }
 
-void GenericsPass::visit(AST::Parameter *parameter) {
+void GenericsPass::visit(ast::Parameter *parameter) {
     parameter->name->accept(this);
     parameter->typeNode->accept(this);
     if (parameter->defaultExpression) {
@@ -218,7 +220,7 @@ void GenericsPass::visit(AST::Parameter *parameter) {
     }
 }
 
-void GenericsPass::visit(AST::VariableDefinition *definition) {
+void GenericsPass::visit(ast::VariableDefinition *definition) {
     definition->name->accept(this);
 
     if (definition->typeNode) {
@@ -228,7 +230,7 @@ void GenericsPass::visit(AST::VariableDefinition *definition) {
     definition->expression->accept(this);
 }
 
-void GenericsPass::visit(AST::FunctionDefinition *definition) {
+void GenericsPass::visit(ast::FunctionDefinition *definition) {
     SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition->name);
     SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
     m_scope.push_back(symbol->nameSpace);
@@ -246,7 +248,7 @@ void GenericsPass::visit(AST::FunctionDefinition *definition) {
     m_scope.pop_back();
 }
 
-void GenericsPass::visit(AST::TypeDefinition *definition) {
+void GenericsPass::visit(ast::TypeDefinition *definition) {
     SymbolTable::Symbol *symbol = m_scope.back()->lookup_by_node(definition);
     m_scope.push_back(symbol->nameSpace);
 
@@ -267,7 +269,7 @@ void GenericsPass::visit(AST::TypeDefinition *definition) {
     m_scope.pop_back();
 }
 
-void GenericsPass::visit(AST::DefinitionStatement *statement) {
+void GenericsPass::visit(ast::DefinitionStatement *statement) {
     if (!statement->definition->name->has_parameters()) {
         statement->definition->accept(this);
         return;
@@ -277,7 +279,7 @@ void GenericsPass::visit(AST::DefinitionStatement *statement) {
         SymbolTable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
 
         if (symbol->is_variable() || symbol->is_function()) {
-            m_generics[statement->definition] = std::vector<std::vector<AST::Identifier *> >();
+            m_generics[statement->definition] = std::vector<std::vector<ast::Identifier *> >();
 
             // to avoid collecting this as a 'usage'
             m_skip_identifier.push_back(statement->definition->name);
@@ -354,15 +356,15 @@ void GenericsPass::visit(AST::DefinitionStatement *statement) {
     }
 }
 
-void GenericsPass::visit(AST::ExpressionStatement *statement) {
+void GenericsPass::visit(ast::ExpressionStatement *statement) {
     statement->expression->accept(this);
 }
 
-void GenericsPass::visit(AST::ImportStatement *statement) {
+void GenericsPass::visit(ast::ImportStatement *statement) {
 
 }
 
-void GenericsPass::visit(AST::SourceFile *module) {
+void GenericsPass::visit(ast::SourceFile *module) {
     m_collecting = true;
     module->code->accept(this);
 

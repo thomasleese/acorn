@@ -5,7 +5,9 @@
 #ifndef JET_TYPING_H
 #define JET_TYPING_H
 
-#include "AbstractSyntaxTree.h"
+#include <vector>
+
+#include "ast/visitor.h"
 
 namespace SymbolTable {
     class Namespace;
@@ -17,118 +19,126 @@ namespace Types {
     class Parameter;
 }
 
+namespace jet {
+    namespace ast {
+        struct Node;
+    }
+}
+
+using namespace jet;
+
 namespace Typing {
 
-    class Inferrer : public AST::Visitor {
+    class Inferrer : public ast::Visitor {
 
     public:
         explicit Inferrer(SymbolTable::Namespace *rootNamespace);
         ~Inferrer();
 
     private:
-        Types::Constructor *find_type_constructor(AST::Node *node, std::string name);
+        Types::Constructor *find_type_constructor(ast::Node *node, std::string name);
 
-        Types::Type *find_type(AST::Node *node, std::string name, std::vector<AST::Identifier *> parameters);
-        Types::Type *find_type(AST::Node *node, std::string name);
-        Types::Type *find_type(AST::Identifier *type);
+        Types::Type *find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters);
+        Types::Type *find_type(ast::Node *node, std::string name);
+        Types::Type *find_type(ast::Identifier *type);
 
-        Types::Type *instance_type(AST::Identifier *identifier);
+        Types::Type *instance_type(ast::Identifier *identifier);
 
     public:
-        void visit(AST::CodeBlock *block);
+        void visit(ast::CodeBlock *block);
 
-        void visit(AST::Identifier *identifier);
-        void visit(AST::BooleanLiteral *boolean);
-        void visit(AST::IntegerLiteral *expression);
-        void visit(AST::FloatLiteral *expression);
-        void visit(AST::ImaginaryLiteral *imaginary);
-        void visit(AST::StringLiteral *expression);
-        void visit(AST::SequenceLiteral *sequence);
-        void visit(AST::MappingLiteral *mapping);
-        void visit(AST::RecordLiteral *expression);
-        void visit(AST::Argument *argument);
-        void visit(AST::Call *expression);
-        void visit(AST::CCall *ccall);
-        void visit(AST::Cast *expression);
-        void visit(AST::Assignment *expression);
-        void visit(AST::Selector *expression);
-        void visit(AST::Index *expression);
-        void visit(AST::Comma *expression);
-        void visit(AST::While *expression);
-        void visit(AST::For *expression);
-        void visit(AST::If *expression);
-        void visit(AST::Return *expression);
-        void visit(AST::Spawn *expression);
-        void visit(AST::Sizeof *expression);
-        void visit(AST::Strideof *expression);
+        void visit(ast::Identifier *identifier);
+        void visit(ast::BooleanLiteral *boolean);
+        void visit(ast::IntegerLiteral *expression);
+        void visit(ast::FloatLiteral *expression);
+        void visit(ast::ImaginaryLiteral *imaginary);
+        void visit(ast::StringLiteral *expression);
+        void visit(ast::SequenceLiteral *sequence);
+        void visit(ast::MappingLiteral *mapping);
+        void visit(ast::RecordLiteral *expression);
+        void visit(ast::Argument *argument);
+        void visit(ast::Call *expression);
+        void visit(ast::CCall *ccall);
+        void visit(ast::Cast *expression);
+        void visit(ast::Assignment *expression);
+        void visit(ast::Selector *expression);
+        void visit(ast::Index *expression);
+        void visit(ast::Comma *expression);
+        void visit(ast::While *expression);
+        void visit(ast::For *expression);
+        void visit(ast::If *expression);
+        void visit(ast::Return *expression);
+        void visit(ast::Spawn *expression);
+        void visit(ast::Sizeof *expression);
+        void visit(ast::Strideof *expression);
 
-        void visit(AST::Parameter *parameter);
+        void visit(ast::Parameter *parameter);
 
-        void visit(AST::VariableDefinition *definition);
-        void visit(AST::FunctionDefinition *definition);
-        void visit(AST::TypeDefinition *definition);
+        void visit(ast::VariableDefinition *definition);
+        void visit(ast::FunctionDefinition *definition);
+        void visit(ast::TypeDefinition *definition);
 
-        void visit(AST::DefinitionStatement *statement);
-        void visit(AST::ExpressionStatement *statement);
-        void visit(AST::ImportStatement *statement);
+        void visit(ast::DefinitionStatement *statement);
+        void visit(ast::ExpressionStatement *statement);
+        void visit(ast::ImportStatement *statement);
 
-        void visit(AST::SourceFile *module);
+        void visit(ast::SourceFile *module);
 
     private:
         SymbolTable::Namespace *m_namespace;
-        std::vector<AST::FunctionDefinition *> m_functionStack;
+        std::vector<ast::FunctionDefinition *> m_functionStack;
 
     };
 
-    class Checker : public AST::Visitor {
+    class Checker : public ast::Visitor {
 
     public:
         explicit Checker(SymbolTable::Namespace *rootNamespace);
         ~Checker();
 
     private:
-        void check_types(AST::Node *lhs, AST::Node *rhs);
-        void check_not_null(AST::Node *node);
+        void check_types(ast::Node *lhs, ast::Node *rhs);
+        void check_not_null(ast::Node *node);
 
     public:
-        void visit(AST::CodeBlock *block);
+        void visit(ast::CodeBlock *block);
 
-        void visit(AST::Identifier *expression);
-        void visit(AST::BooleanLiteral *boolean);
-        void visit(AST::IntegerLiteral *expression);
-        void visit(AST::FloatLiteral *expression);
-        void visit(AST::ImaginaryLiteral *imaginary);
-        void visit(AST::StringLiteral *expression);
-        void visit(AST::SequenceLiteral *sequence);
-        void visit(AST::MappingLiteral *mapping);
-        void visit(AST::RecordLiteral *expression);
-        void visit(AST::Argument *argument);
-        void visit(AST::Call *expression);
-        void visit(AST::CCall *ccall);
-        void visit(AST::Cast *expression);
-        void visit(AST::Assignment *expression);
-        void visit(AST::Selector *expression);
-        void visit(AST::Index *expression);
-        void visit(AST::Comma *expression);
-        void visit(AST::While *expression);
-        void visit(AST::For *expression);
-        void visit(AST::If *expression);
-        void visit(AST::Return *expression);
-        void visit(AST::Spawn *expression);
-        void visit(AST::Sizeof *expression);
-        void visit(AST::Strideof *expression);
+        void visit(ast::Identifier *expression);
+        void visit(ast::BooleanLiteral *boolean);
+        void visit(ast::IntegerLiteral *expression);
+        void visit(ast::FloatLiteral *expression);
+        void visit(ast::ImaginaryLiteral *imaginary);
+        void visit(ast::StringLiteral *expression);
+        void visit(ast::SequenceLiteral *sequence);
+        void visit(ast::MappingLiteral *mapping);
+        void visit(ast::RecordLiteral *expression);
+        void visit(ast::Argument *argument);
+        void visit(ast::Call *expression);
+        void visit(ast::CCall *ccall);
+        void visit(ast::Cast *expression);
+        void visit(ast::Assignment *expression);
+        void visit(ast::Selector *expression);
+        void visit(ast::Index *expression);
+        void visit(ast::Comma *expression);
+        void visit(ast::While *expression);
+        void visit(ast::For *expression);
+        void visit(ast::If *expression);
+        void visit(ast::Return *expression);
+        void visit(ast::Spawn *expression);
+        void visit(ast::Sizeof *expression);
+        void visit(ast::Strideof *expression);
 
-        void visit(AST::Parameter *parameter);
+        void visit(ast::Parameter *parameter);
 
-        void visit(AST::VariableDefinition *definition);
-        void visit(AST::FunctionDefinition *definition);
-        void visit(AST::TypeDefinition *definition);
+        void visit(ast::VariableDefinition *definition);
+        void visit(ast::FunctionDefinition *definition);
+        void visit(ast::TypeDefinition *definition);
 
-        void visit(AST::DefinitionStatement *statement);
-        void visit(AST::ExpressionStatement *statement);
-        void visit(AST::ImportStatement *statement);
+        void visit(ast::DefinitionStatement *statement);
+        void visit(ast::ExpressionStatement *statement);
+        void visit(ast::ImportStatement *statement);
 
-        void visit(AST::SourceFile *module);
+        void visit(ast::SourceFile *module);
 
     private:
         SymbolTable::Namespace *m_namespace;

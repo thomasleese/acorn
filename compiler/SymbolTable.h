@@ -7,8 +7,9 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
-#include "AbstractSyntaxTree.h"
+#include "ast/visitor.h"
 
 namespace llvm {
     class Value;
@@ -17,6 +18,14 @@ namespace llvm {
 namespace Types {
     class Type;
 }
+
+namespace jet {
+    namespace ast {
+        struct Node;
+    }
+}
+
+using namespace jet;
 
 namespace SymbolTable {
 
@@ -28,10 +37,10 @@ namespace SymbolTable {
         ~Namespace();
 
         bool has(std::string name, bool follow_parents = true) const;
-        Symbol *lookup(AST::Node *currentNode, std::string name) const;
-        Symbol *lookup(AST::Identifier *identifier) const;
-        Symbol *lookup_by_node(AST::Node *node) const;
-        void insert(AST::Node *currentNode, Symbol *symbol);
+        Symbol *lookup(ast::Node *currentNode, std::string name) const;
+        Symbol *lookup(ast::Identifier *identifier) const;
+        Symbol *lookup_by_node(ast::Node *node) const;
+        void insert(ast::Node *currentNode, Symbol *symbol);
         void rename(Symbol *symbol, std::string new_name);
         unsigned long size() const;
         std::vector<Symbol *> symbols() const;
@@ -52,7 +61,7 @@ namespace SymbolTable {
         Types::Type *type;
         llvm::Value *value;
         Namespace *nameSpace;
-        AST::Node *node;
+        ast::Node *node;
         bool is_builtin;
 
         bool is_function() const;
@@ -63,51 +72,51 @@ namespace SymbolTable {
         Symbol *clone() const;
     };
 
-    class Builder : public AST::Visitor {
+    class Builder : public ast::Visitor {
     public:
         explicit Builder();
 
         bool isAtRoot() const;
         Namespace *rootNamespace();
 
-        void visit(AST::CodeBlock *block);
+        void visit(ast::CodeBlock *block);
 
-        void visit(AST::Identifier *identifier);
-        void visit(AST::BooleanLiteral *boolean);
-        void visit(AST::IntegerLiteral *expression);
-        void visit(AST::FloatLiteral *expression);
-        void visit(AST::ImaginaryLiteral *imaginary);
-        void visit(AST::StringLiteral *expression);
-        void visit(AST::SequenceLiteral *sequence);
-        void visit(AST::MappingLiteral *mapping);
-        void visit(AST::RecordLiteral *expression);
-        void visit(AST::Argument *argument);
-        void visit(AST::Call *expression);
-        void visit(AST::CCall *expression);
-        void visit(AST::Cast *expression);
-        void visit(AST::Assignment *expression);
-        void visit(AST::Selector *expression);
-        void visit(AST::Index *expression);
-        void visit(AST::Comma *expression);
-        void visit(AST::While *expression);
-        void visit(AST::For *expression);
-        void visit(AST::If *expression);
-        void visit(AST::Return *expression);
-        void visit(AST::Spawn *expression);
-        void visit(AST::Sizeof *expression);
-        void visit(AST::Strideof *expression);
+        void visit(ast::Identifier *identifier);
+        void visit(ast::BooleanLiteral *boolean);
+        void visit(ast::IntegerLiteral *expression);
+        void visit(ast::FloatLiteral *expression);
+        void visit(ast::ImaginaryLiteral *imaginary);
+        void visit(ast::StringLiteral *expression);
+        void visit(ast::SequenceLiteral *sequence);
+        void visit(ast::MappingLiteral *mapping);
+        void visit(ast::RecordLiteral *expression);
+        void visit(ast::Argument *argument);
+        void visit(ast::Call *expression);
+        void visit(ast::CCall *expression);
+        void visit(ast::Cast *expression);
+        void visit(ast::Assignment *expression);
+        void visit(ast::Selector *expression);
+        void visit(ast::Index *expression);
+        void visit(ast::Comma *expression);
+        void visit(ast::While *expression);
+        void visit(ast::For *expression);
+        void visit(ast::If *expression);
+        void visit(ast::Return *expression);
+        void visit(ast::Spawn *expression);
+        void visit(ast::Sizeof *expression);
+        void visit(ast::Strideof *expression);
 
-        void visit(AST::Parameter *parameter);
+        void visit(ast::Parameter *parameter);
 
-        void visit(AST::VariableDefinition *definition);
-        void visit(AST::FunctionDefinition *definition);
-        void visit(AST::TypeDefinition *definition);
+        void visit(ast::VariableDefinition *definition);
+        void visit(ast::FunctionDefinition *definition);
+        void visit(ast::TypeDefinition *definition);
 
-        void visit(AST::DefinitionStatement *statement);
-        void visit(AST::ExpressionStatement *statement);
-        void visit(AST::ImportStatement *statement);
+        void visit(ast::DefinitionStatement *statement);
+        void visit(ast::ExpressionStatement *statement);
+        void visit(ast::ImportStatement *statement);
 
-        void visit(AST::SourceFile *module);
+        void visit(ast::SourceFile *module);
 
     private:
         Namespace *m_root;

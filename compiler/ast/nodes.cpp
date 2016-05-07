@@ -1,16 +1,14 @@
 //
-// Created by Thomas Leese on 13/03/2016.
+// Created by Thomas Leese on 07/05/2016.
 //
 
-#include <iostream>
 #include <sstream>
 
-#include "Lexer.h"
-#include "Parser.h"
+#include "visitor.h"
 
-#include "AbstractSyntaxTree.h"
+#include "nodes.h"
 
-using namespace AST;
+using namespace jet::ast;
 
 Node::Node(Token *token) {
     this->token = token;
@@ -583,8 +581,4 @@ SourceFile* SourceFile::clone() const {
     new_source_file->code = this->code->clone();
     new_source_file->type = this->type;
     return new_source_file;
-}
-
-Visitor::~Visitor() {
-
 }

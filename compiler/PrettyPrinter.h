@@ -8,52 +8,52 @@
 #include <sstream>
 #include <string>
 
-#include "AbstractSyntaxTree.h"
+#include "ast/visitor.h"
 
-class PrettyPrinter : public AST::Visitor {
+class PrettyPrinter : public jet::ast::Visitor {
 
 public:
     explicit PrettyPrinter();
 
 public:
-    void visit(AST::CodeBlock *block);
+    void visit(jet::ast::CodeBlock *block);
 
-    void visit(AST::Identifier *identifier);
-    void visit(AST::BooleanLiteral *boolean);
-    void visit(AST::IntegerLiteral *expression);
-    void visit(AST::FloatLiteral *expression);
-    void visit(AST::ImaginaryLiteral *imaginary);
-    void visit(AST::StringLiteral *expression);
-    void visit(AST::SequenceLiteral *sequence);
-    void visit(AST::MappingLiteral *mapping);
-    void visit(AST::RecordLiteral *expression);
-    void visit(AST::Argument *argument);
-    void visit(AST::Call *expression);
-    void visit(AST::CCall *expression);
-    void visit(AST::Cast *expression);
-    void visit(AST::Assignment *expression);
-    void visit(AST::Selector *expression);
-    void visit(AST::Index *expression);
-    void visit(AST::Comma *expression);
-    void visit(AST::While *expression);
-    void visit(AST::For *expression);
-    void visit(AST::If *expression);
-    void visit(AST::Return *expression);
-    void visit(AST::Spawn *expression);
-    void visit(AST::Sizeof *expression);
-    void visit(AST::Strideof *expression);
+    void visit(jet::ast::Identifier *identifier);
+    void visit(jet::ast::BooleanLiteral *boolean);
+    void visit(jet::ast::IntegerLiteral *expression);
+    void visit(jet::ast::FloatLiteral *expression);
+    void visit(jet::ast::ImaginaryLiteral *imaginary);
+    void visit(jet::ast::StringLiteral *expression);
+    void visit(jet::ast::SequenceLiteral *sequence);
+    void visit(jet::ast::MappingLiteral *mapping);
+    void visit(jet::ast::RecordLiteral *expression);
+    void visit(jet::ast::Argument *argument);
+    void visit(jet::ast::Call *expression);
+    void visit(jet::ast::CCall *expression);
+    void visit(jet::ast::Cast *expression);
+    void visit(jet::ast::Assignment *expression);
+    void visit(jet::ast::Selector *expression);
+    void visit(jet::ast::Index *expression);
+    void visit(jet::ast::Comma *expression);
+    void visit(jet::ast::While *expression);
+    void visit(jet::ast::For *expression);
+    void visit(jet::ast::If *expression);
+    void visit(jet::ast::Return *expression);
+    void visit(jet::ast::Spawn *expression);
+    void visit(jet::ast::Sizeof *expression);
+    void visit(jet::ast::Strideof *expression);
 
-    void visit(AST::Parameter *parameter);
+    void visit(jet::ast::Parameter *parameter);
 
-    void visit(AST::VariableDefinition *definition);
-    void visit(AST::FunctionDefinition *definition);
-    void visit(AST::TypeDefinition *definition);
+    void visit(jet::ast::VariableDefinition *definition);
+    void visit(jet::ast::FunctionDefinition *definition);
+    void visit(jet::ast::TypeDefinition *definition);
 
-    void visit(AST::DefinitionStatement *statement);
-    void visit(AST::ExpressionStatement *statement);
-    void visit(AST::ImportStatement *statement);
+    void visit(jet::ast::DefinitionStatement *statement);
+    void visit(jet::ast::ExpressionStatement *statement);
+    void visit(jet::ast::ImportStatement *statement);
 
-    void visit(AST::SourceFile *module);
+    void visit(jet::ast::SourceFile *module);
 
 private:
     std::string indentation();

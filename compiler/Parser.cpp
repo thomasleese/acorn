@@ -4,7 +4,7 @@
 
 #include <sstream>
 
-#include "AbstractSyntaxTree.h"
+#include "ast/nodes.h"
 #include "Errors.h"
 #include "Lexer.h"
 
@@ -13,7 +13,7 @@
 #include <iostream>
 #include <cassert>
 
-using namespace AST;
+using namespace jet::ast;
 
 Parser::Parser(std::vector<Token *> tokens) {
     for (auto token : tokens) {
@@ -52,7 +52,7 @@ SourceFile *Parser::parse(std::string name) {
         }
 
         Parser parser(tokens);
-        AST::SourceFile *module2 = parser.parse(filename);
+        SourceFile *module2 = parser.parse(filename);
 
         for (auto statement : module2->code->statements) {
             module->code->statements.push_back(statement);
@@ -369,7 +369,7 @@ CCall *Parser::readCCall() {
     return ccall;
 }
 
-AST::Cast *Parser::readCast(Expression *operand) {
+Cast *Parser::readCast(Expression *operand) {
     Token *token = readToken(Token::AsKeyword);
 
     Cast *cast = new Cast(token);
@@ -378,7 +378,7 @@ AST::Cast *Parser::readCast(Expression *operand) {
     return cast;
 }
 
-Selector *Parser::readSelector(AST::Expression *operand) {
+Selector *Parser::readSelector(Expression *operand) {
     Token *token = readToken(Token::Dot);
 
     Selector *selector = new Selector(token);
@@ -387,7 +387,7 @@ Selector *Parser::readSelector(AST::Expression *operand) {
     return selector;
 }
 
-AST::Index *Parser::readIndex(AST::Expression *operand) {
+Index *Parser::readIndex(Expression *operand) {
     Token *token = readToken(Token::OpenBracket);
 
     Index *index = new Index(token);

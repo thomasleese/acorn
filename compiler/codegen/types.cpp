@@ -10,9 +10,10 @@
 
 #include "types.h"
 
+using namespace jet;
 using namespace jet::codegen;
 
-llvm::Type *TypeGenerator::take_type(AST::Node *node) {
+llvm::Type *TypeGenerator::take_type(ast::Node *node) {
     if (m_type_stack.size() >= 1) {
         llvm::Type *result = m_type_stack.back();
         m_type_stack.pop_back();
@@ -31,7 +32,7 @@ llvm::Type *TypeGenerator::take_type(AST::Node *node) {
     }
 }
 
-llvm::Constant *TypeGenerator::take_initialiser(AST::Node *node) {
+llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
     if (m_initialiser_stack.size() >= 1) {
         llvm::Constant *result = m_initialiser_stack.back();
         m_initialiser_stack.pop_back();
