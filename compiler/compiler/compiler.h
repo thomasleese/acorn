@@ -23,7 +23,7 @@ namespace jet {
             bool check_pass(Pass *pass) const;
 
             void debug(std::string line);
-            void compile(std::string filename);
+            bool compile(std::string filename);
 
         };
     }

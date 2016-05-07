@@ -48,7 +48,8 @@ SourceFile *Parser::parse(std::string name) {
         std::vector<Token *> tokens = lexer.tokenise(filename);
 
         if (tokens.size() <= 1) {  // end of file token
-            throw errors::FileNotFoundError(import);
+            push_error(new errors::FileNotFoundError(import));
+            continue;
         }
 
         Parser parser(tokens);
@@ -483,7 +484,8 @@ Spawn *Parser::readSpawn() {
     if (call) {
         return new Spawn(token, call);
     } else {
-        throw errors::SyntaxError(expr->token, "function call");
+        push_error(new errors::SyntaxError(expr->token, "function call"));
+        return nullptr;
     }
 }
 
@@ -596,7 +598,8 @@ Expression *Parser::readPrimaryExpression() {
     } else if (isToken(Token::Identifier)) {
         return readIdentifier(true);
     } else {
-        throw errors::SyntaxError(m_tokens.front(), "primary expression");
+        push_error(new errors::SyntaxError(m_tokens.front(), "primary expression"));
+        return nullptr;
     }
 }
 
@@ -678,7 +681,8 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     } else if (isToken(Token::Operator)) {
         definition->name = readOperator(true);
     } else {
-        throw errors::SyntaxError(m_tokens.front(), "identifier or operator");
+        push_error(new errors::SyntaxError(m_tokens.front(), "identifier or operator"));
+        return nullptr;
     }
 
     debug("Name: " + definition->name->value);

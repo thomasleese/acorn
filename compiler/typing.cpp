@@ -26,7 +26,11 @@ Inferrer::~Inferrer() {
 }
 
 types::Constructor *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
-    symboltable::Symbol *symbol = m_namespace->lookup(node, name);
+    auto symbol = m_namespace->lookup(this, node, name);
+    if (symbol == nullptr) {
+        return nullptr;
+    }
+
     types::Constructor *typeConstructor = dynamic_cast<types::Constructor *>(symbol->type);
     if (typeConstructor) {
         return typeConstructor;
@@ -45,9 +49,10 @@ types::Type *Inferrer::find_type(ast::Node *node, std::string name, std::vector<
 
     types::Constructor *typeConstructor = find_type_constructor(node, name);
     if (typeConstructor != nullptr) {
-        return typeConstructor->create(node, parameterTypes);
+        return typeConstructor->create(this, node, parameterTypes);
     } else {
-        throw errors::InvalidTypeConstructor(node);
+        push_error(new errors::InvalidTypeConstructor(node));
+        return nullptr;
     }
 }
 
@@ -69,9 +74,10 @@ types::Type *Inferrer::instance_type(ast::Identifier *identifier) {
             parameterTypes.push_back(parameter->type);
         }
 
-        return type_constructor->create(identifier, parameterTypes);
+        return type_constructor->create(this, identifier, parameterTypes);
     } else {
-        throw errors::InvalidTypeConstructor(identifier);
+        push_error(new errors::InvalidTypeConstructor(identifier));
+        return nullptr;
     }
 }
 
@@ -92,12 +98,12 @@ void Inferrer::visit(ast::Identifier *expression) {
         p->accept(this);
     }
 
-    symboltable::Symbol *symbol = m_namespace->lookup(expression, expression->value);
-    expression->type = symbol->type;
-
-    if (!symbol->type) {
-        throw errors::UndefinedError(expression, expression->value);
+    auto symbol = m_namespace->lookup(this, expression, expression->value);
+    if (symbol == nullptr) {
+        return;
     }
+
+    expression->type = symbol->type;
 }
 
 void Inferrer::visit(ast::BooleanLiteral *expression) {
@@ -144,7 +150,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
     if (types.empty()) {
         elementType = new types::Any();
     } else if (types.size() != 1) {
-        elementType = new types::Union(sequence, types);
+        elementType = new types::Union(this, sequence, types);
     } else {
         elementType = *(types.begin());
     }
@@ -153,7 +159,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
 }
 
 void Inferrer::visit(ast::MappingLiteral *mapping) {
-    throw errors::TypeInferenceError(mapping);
+    push_error(new errors::TypeInferenceError(mapping));
 }
 
 void Inferrer::visit(ast::RecordLiteral *expression) {
@@ -187,14 +193,21 @@ void Inferrer::visit(ast::Call *expression) {
     types::RecordConstructor *record = dynamic_cast<types::RecordConstructor *>(expression->operand->type);
     if (function == nullptr && record == nullptr) {
         expression->type = new types::Union(new types::Function(), new types::RecordConstructor());
-        throw errors::TypeMismatchError(expression->operand, expression);
+        push_error(new errors::TypeMismatchError(expression->operand, expression));
+        delete expression->type;
+        expression->type = nullptr;
+        // FIXME make the construct accept a type directly
     }
 
     if (record == nullptr) {
         types::Method *method = function->find_method(expression, expression->arguments);
-        expression->type = method->return_type();
+        if (method == nullptr) {
+            push_error(new errors::UndefinedError(expression, "Method not found."));
+        } else {
+            expression->type = method->return_type();
+        }
     } else {
-        expression->type = record->create(expression, std::vector<types::Type *>());
+        expression->type = record->create(this, expression, std::vector<types::Type *>());
     }
 }
 
@@ -233,12 +246,14 @@ void Inferrer::visit(ast::Selector *expression) {
 
     auto recordType = dynamic_cast<types::Record *>(expression->operand->type);
     if (!recordType) {
-        throw errors::TypeInferenceError(expression);
+        push_error(new errors::TypeInferenceError(expression));
+        return;
     }
 
     auto fieldType = recordType->get_field_type(expression->name->value);
     if (!fieldType) {
-        throw errors::TypeInferenceError(expression);
+        push_error(new errors::TypeInferenceError(expression));
+        return;
     }
 
     expression->type = fieldType;
@@ -262,7 +277,7 @@ void Inferrer::visit(ast::Index *expression) {
 }
 
 void Inferrer::visit(ast::Comma *expression) {
-    throw errors::TypeInferenceError(expression);
+    push_error(new errors::TypeInferenceError(expression));
 }
 
 void Inferrer::visit(ast::While *expression) {
@@ -273,7 +288,7 @@ void Inferrer::visit(ast::While *expression) {
 }
 
 void Inferrer::visit(ast::For *expression) {
-    throw errors::InternalError(expression, "For should never be in the lowered AST.");
+    push_error(new errors::InternalError(expression, "For should never be in the lowered AST."));
 }
 
 void Inferrer::visit(ast::If *expression) {
@@ -293,10 +308,10 @@ void Inferrer::visit(ast::Return *expression) {
     if (m_functionStack.back()) {
         ast::FunctionDefinition *def = m_functionStack.back();
         if (!def->returnType->type->isCompatible(expression->type)) {
-            throw errors::TypeMismatchError(expression, def->returnType);
+            push_error(new errors::TypeMismatchError(expression, def->returnType));
         }
     } else {
-        throw errors::TypeMismatchError(expression, nullptr);
+        push_error(new errors::TypeMismatchError(expression, nullptr));
     }
 }
 
@@ -316,7 +331,10 @@ void Inferrer::visit(ast::Strideof *expression) {
 }
 
 void Inferrer::visit(ast::Parameter *parameter) {
-    symboltable::Symbol *symbol = m_namespace->lookup(parameter, parameter->name->value);
+    auto symbol = m_namespace->lookup(this, parameter, parameter->name->value);
+    if (symbol == nullptr) {
+        return;
+    }
 
     parameter->typeNode->accept(this);
 
@@ -325,7 +343,10 @@ void Inferrer::visit(ast::Parameter *parameter) {
 }
 
 void Inferrer::visit(ast::VariableDefinition *definition) {
-    symboltable::Symbol *symbol = m_namespace->lookup(definition, definition->name->value);
+    auto symbol = m_namespace->lookup(this, definition, definition->name->value);
+    if (symbol == nullptr) {
+        return;
+    }
 
     types::Type *type = nullptr;
 
@@ -339,7 +360,7 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
     }
 
     if (!type) {
-        throw errors::TypeInferenceError(definition);
+        push_error(new errors::TypeInferenceError(definition));
     }
 
     symbol->type = type;
@@ -347,10 +368,10 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
-    symboltable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
+    auto functionSymbol = m_namespace->lookup(this, definition->name);
     types::Function *function = static_cast<types::Function *>(functionSymbol->type);
 
-    symboltable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
+    auto symbol = functionSymbol->nameSpace->lookup_by_node(this, definition);
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -359,6 +380,11 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     std::vector<std::string> officialParameterOrder;
     for (auto parameter : definition->parameters) {
         parameter->accept(this);
+
+        if (parameter->type == nullptr) {
+            m_namespace = oldNamespace;
+            return;
+        }
 
         parameterTypes.push_back(parameter->type);
         officialParameterOrder.push_back(parameter->name->value);
@@ -372,7 +398,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 
     function->add_method(method);
 
-    functionSymbol->nameSpace->rename(symbol, method->mangled_name());
+    functionSymbol->nameSpace->rename(this, symbol, method->mangled_name());
 
     symbol->type = method;
     definition->type = method;
@@ -388,7 +414,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 }
 
 void Inferrer::visit(ast::TypeDefinition *definition) {
-    symboltable::Symbol *symbol = m_namespace->lookup(definition, definition->name->value);
+    auto symbol = m_namespace->lookup(this, definition, definition->name->value);
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -399,7 +425,8 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
 
         auto param = dynamic_cast<types::Parameter *>(t->type);
         if (param == nullptr) {
-            throw errors::InvalidTypeParameters(t, 0, 0);
+            push_error(new errors::InvalidTypeParameters(t, 0, 0));
+            return;
         }
 
         input_parameters.push_back(param);
@@ -486,13 +513,13 @@ void Checker::check_types(ast::Node *lhs, ast::Node *rhs) {
 
     bool compatible = lhs->type->isCompatible(rhs->type);
     if (!compatible) {
-        throw errors::TypeMismatchError(lhs, rhs);
+        push_error(new errors::TypeMismatchError(lhs, rhs));
     }
 }
 
 void Checker::check_not_null(ast::Node *node) {
     if (!node->type) {
-        throw errors::InternalError(node, "No type given for: " + Token::rule_string(node->token->rule));
+        push_error(new errors::InternalError(node, "No type given for: " + Token::rule_string(node->token->rule)));
     }
 }
 
@@ -608,7 +635,7 @@ void Checker::visit(ast::Assignment *expression) {
     check_not_null(expression);
 
     // symboltable::Symbol *symbol = m_namespace->lookup(expression->lhs);
-    throw errors::ConstantAssignmentError(expression->lhs);
+    push_error(new errors::ConstantAssignmentError(expression->lhs));
 }
 
 void Checker::visit(ast::Selector *expression) {
@@ -635,7 +662,7 @@ void Checker::visit(ast::While *expression) {
 }
 
 void Checker::visit(ast::For *expression) {
-    throw errors::InternalAstError(expression);
+    push_error(new errors::InternalAstError(expression));
 }
 
 void Checker::visit(ast::If *expression) {
@@ -693,11 +720,11 @@ void Checker::visit(ast::VariableDefinition *definition) {
 void Checker::visit(ast::FunctionDefinition *definition) {
     check_not_null(definition);
 
-    symboltable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
+    auto functionSymbol = m_namespace->lookup(this, definition->name);
 
     types::Method *method = static_cast<types::Method *>(definition->type);
 
-    symboltable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
+    auto symbol = functionSymbol->nameSpace->lookup(this, definition, method->mangled_name());
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -720,7 +747,7 @@ void Checker::visit(ast::TypeDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     //definition->name->accept(this);
 
-    symboltable::Symbol *symbol = m_namespace->lookup(definition->name);
+    auto symbol = m_namespace->lookup(this, definition->name);
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;

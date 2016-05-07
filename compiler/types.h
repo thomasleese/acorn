@@ -17,6 +17,10 @@ namespace jet {
         struct Argument;
     }
 
+    namespace compiler {
+        class Pass;
+    }
+
     namespace types {
 
         class Visitor;
@@ -48,9 +52,8 @@ namespace jet {
         // type constructors
         class Constructor : public Type {
         public:
-            Type *create(ast::Node *node);
-
-            virtual Type *create(ast::Node *node, std::vector<Type *> parameters) = 0;
+            Type *create(compiler::Pass *pass, ast::Node *node);
+            virtual Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) = 0;
 
             std::string mangled_name() const;
         };
@@ -59,7 +62,7 @@ namespace jet {
         public:
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -68,7 +71,7 @@ namespace jet {
         public:
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -77,7 +80,7 @@ namespace jet {
         public:
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -88,7 +91,7 @@ namespace jet {
 
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -102,7 +105,7 @@ namespace jet {
 
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -116,7 +119,7 @@ namespace jet {
 
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -129,7 +132,7 @@ namespace jet {
         public:
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -139,7 +142,7 @@ namespace jet {
         public:
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -154,7 +157,7 @@ namespace jet {
 
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -171,7 +174,7 @@ namespace jet {
         public:
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -185,12 +188,14 @@ namespace jet {
 
             std::string name() const;
 
-            Type *create(ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
         private:
             Constructor *m_constructor;
+            std::vector<Parameter *> m_input_parameters;
+            std::vector<Type *> m_output_parameters;
             std::map<int, int> m_parameterMapping;
             std::vector<Type *> m_knownTypes;
 
@@ -352,8 +357,7 @@ namespace jet {
         class Union : public Type {
         public:
             Union(Type *type1, Type *type2);
-
-            Union(ast::Node *node, std::set<Type *> types);
+            Union(compiler::Pass *pass, ast::Node *node, std::set<Type *> types);
 
             std::string name() const;
             std::string mangled_name() const;

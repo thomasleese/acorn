@@ -5,6 +5,7 @@
 #ifndef JET_CODEGEN_TYPES_H
 #define JET_CODEGEN_TYPES_H
 
+#include "../compiler/pass.h"
 #include "../types.h"
 
 namespace jet {
@@ -15,7 +16,7 @@ namespace jet {
 
     namespace codegen {
 
-        class TypeGenerator : public types::Visitor {
+        class TypeGenerator : public compiler::Pass, public types::Visitor {
         public:
             llvm::Type *take_type(ast::Node *node);
             llvm::Constant *take_initialiser(ast::Node *node);

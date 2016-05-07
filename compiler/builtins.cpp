@@ -21,7 +21,7 @@ symboltable::Symbol *add_symbol(symboltable::Namespace *table, std::string name,
     symboltable::Symbol *symbol = new symboltable::Symbol(name);
     symbol->type = type;
     symbol->is_builtin = true;
-    table->insert(nullptr, symbol);
+    table->insert(nullptr, nullptr, symbol);
     return symbol;
 }
 
@@ -30,7 +30,7 @@ symboltable::Symbol *add_base_function(symboltable::Namespace *table, std::strin
     types::Function *type = new types::Function();
     symbol->type = type;
     symbol->nameSpace = new symboltable::Namespace(table);
-    table->insert(nullptr, symbol);
+    table->insert(nullptr, nullptr, symbol);
     return symbol;
 }
 
@@ -38,10 +38,10 @@ void add_base_method(symboltable::Symbol *function, types::Method *method) {
     symboltable::Symbol *symbol = new symboltable::Symbol(method->mangled_name());
     symbol->type = method;
     symbol->nameSpace = new symboltable::Namespace(function->nameSpace);
-    function->nameSpace->insert(nullptr, symbol);
+    function->nameSpace->insert(nullptr, nullptr, symbol);
 
-    types::Function *f = static_cast<types::Function *>(function->type);
-    f->add_method(method);
+    auto function_type = static_cast<types::Function *>(function->type);
+    function_type->add_method(method);
 }
 
 void add_base_type_constructors(symboltable::Namespace *table) {
@@ -101,7 +101,7 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
 }
 
 llvm::Function *create_llvm_function(symboltable::Namespace *table, llvm::Module *module, std::string name, int index) {
-    types::Function *functionType = static_cast<types::Function *>(table->lookup(nullptr, name)->type);
+    types::Function *functionType = static_cast<types::Function *>(table->lookup(nullptr, nullptr, name)->type);
     types::Method *methodType = functionType->get_method(index);
 
     std::string mangled_name = mangler::mangle_method(name, methodType);

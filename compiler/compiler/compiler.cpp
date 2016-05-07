@@ -71,7 +71,7 @@ void Compiler::debug(std::string line) {
     std::cerr << line << std::endl;
 }
 
-void Compiler::compile(std::string filename) {
+bool Compiler::compile(std::string filename) {
     std::string outputName = filename + ".o";
     std::string moduleName = filename.substr(0, filename.find_last_of("."));
 
@@ -80,7 +80,7 @@ void Compiler::compile(std::string filename) {
     auto lexer = new Lexer();
     std::vector<Token *> tokens = lexer->tokenise(filename);
     if (!check_pass(lexer)) {
-        return;
+        return false;
     }
 
     debug("Parsing...");
@@ -88,7 +88,7 @@ void Compiler::compile(std::string filename) {
     auto parser = new Parser(tokens);
     ast::SourceFile *module = parser->parse(filename);
     if (!check_pass(parser)) {
-        return;
+        return false;
     }
 
     debug("Building the Symbol Table...");
@@ -98,7 +98,7 @@ void Compiler::compile(std::string filename) {
     assert(symbolTableBuilder->isAtRoot());
 
     if (!check_pass(symbolTableBuilder)) {
-        return;
+        return false;
     }
 
     symboltable::Namespace *rootNamespace = symbolTableBuilder->rootNamespace();
@@ -110,7 +110,7 @@ void Compiler::compile(std::string filename) {
     module->accept(generics_pass);
 
     if (!check_pass(generics_pass)) {
-        return;
+        return false;
     }
 
     auto printer = new PrettyPrinter();
@@ -124,7 +124,7 @@ void Compiler::compile(std::string filename) {
     module->accept(typeInferrer);
 
     if (!check_pass(typeInferrer)) {
-        return;
+        return false;
     }
 
     delete typeInferrer;
@@ -135,7 +135,7 @@ void Compiler::compile(std::string filename) {
     module->accept(typeChecker);
 
     if (!check_pass(typeChecker)) {
-        return;
+        return false;
     }
 
     delete typeChecker;
@@ -185,7 +185,7 @@ void Compiler::compile(std::string filename) {
     module->accept(generator);
 
     if (!check_pass(generator)) {
-        return;
+        return false;
     }
 
     llvm::Module *llvmModule = generator->module();
@@ -217,4 +217,6 @@ void Compiler::compile(std::string filename) {
     system(cmd.c_str());
 
     remove(outputName.c_str());
+
+    return true;
 }

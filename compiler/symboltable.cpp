@@ -37,24 +37,25 @@ bool Namespace::has(std::string name, bool follow_parents) const {
     }
 }
 
-Symbol *Namespace::lookup(ast::Node *currentNode, std::string name) const {
+Symbol *Namespace::lookup(compiler::Pass *pass, ast::Node *currentNode, std::string name) const {
     auto it = m_symbols.find(name);
     if (it == m_symbols.end()) {
         if (m_parent) {
-            return m_parent->lookup(currentNode, name);
+            return m_parent->lookup(pass, currentNode, name);
         } else {
-            throw errors::UndefinedError(currentNode, name);
+            pass->push_error(new errors::UndefinedError(currentNode, name));
+            return nullptr;
         }
     }
 
     return it->second;
 }
 
-Symbol *Namespace::lookup(ast::Identifier *identifier) const {
-    return lookup(identifier, identifier->value);
+Symbol *Namespace::lookup(compiler::Pass *pass, ast::Identifier *identifier) const {
+    return lookup(pass, identifier, identifier->value);
 }
 
-Symbol *Namespace::lookup_by_node(ast::Node *node) const {
+Symbol *Namespace::lookup_by_node(compiler::Pass *pass, ast::Node *node) const {
     for (auto entry : m_symbols) {
         if (entry.second->node == node) {
             return entry.second;
@@ -62,30 +63,31 @@ Symbol *Namespace::lookup_by_node(ast::Node *node) const {
     }
 
     if (m_parent) {
-        return m_parent->lookup_by_node(node);
+        return m_parent->lookup_by_node(pass, node);
     } else {
-        throw errors::UndefinedError(node, node->token->lexeme);
+        pass->push_error(new errors::UndefinedError(node, node->token->lexeme));
+        return nullptr;
     }
 }
 
-void Namespace::insert(ast::Node *currentNode, Symbol *symbol) {
+void Namespace::insert(compiler::Pass *pass, ast::Node *currentNode, Symbol *symbol) {
     symbol->node = currentNode;
 
     auto it = m_symbols.find(symbol->name);
     if (it != m_symbols.end()) {
-        throw errors::RedefinedError(currentNode, symbol->name);
+        pass->push_error(new errors::RedefinedError(currentNode, symbol->name));
     }
 
     m_symbols[symbol->name] = symbol;
 }
 
-void Namespace::rename(Symbol *symbol, std::string new_name) {
+void Namespace::rename(compiler::Pass *pass, Symbol *symbol, std::string new_name) {
     auto it = m_symbols.find(symbol->name);
     assert(it != m_symbols.end());
 
     m_symbols.erase(it);
     symbol->name = new_name;
-    insert(symbol->node, symbol);
+    insert(pass, symbol->node, symbol);
 }
 
 unsigned long Namespace::size() const {
@@ -295,12 +297,12 @@ void Builder::visit(ast::Strideof *expression) {
 
 void Builder::visit(ast::Parameter *parameter) {
     Symbol *symbol = new Symbol(parameter->name->value);
-    m_scope.back()->insert(parameter, symbol);
+    m_scope.back()->insert(this, parameter, symbol);
 }
 
 void Builder::visit(ast::VariableDefinition *definition) {
     Symbol *symbol = new Symbol(definition->name->value);
-    m_scope.back()->insert(definition, symbol);
+    m_scope.back()->insert(this, definition, symbol);
 
     symbol->nameSpace = new Namespace(m_scope.back());
 
@@ -309,7 +311,7 @@ void Builder::visit(ast::VariableDefinition *definition) {
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
         sym->type = new types::Parameter();
-        m_scope.back()->insert(definition, sym);
+        m_scope.back()->insert(this, definition, sym);
     }
 
     m_scope.pop_back();
@@ -321,12 +323,12 @@ void Builder::visit(ast::FunctionDefinition *definition) {
         // we don't want to look in any parent scope when we're
         // defining a new function; it should follow the notion of
         // variables, i.e. we are hiding the previous binding
-        functionSymbol = m_scope.back()->lookup(definition->name);
+        functionSymbol = m_scope.back()->lookup(this, definition->name);
     } else {
         functionSymbol = new Symbol(definition->name->value);
         functionSymbol->type = new types::Function();
         functionSymbol->nameSpace = new Namespace(m_scope.back());
-        m_scope.back()->insert(definition, functionSymbol);
+        m_scope.back()->insert(this, definition, functionSymbol);
         functionSymbol->node = nullptr;  // explicit no node for function symbols
     }
 
@@ -337,14 +339,14 @@ void Builder::visit(ast::FunctionDefinition *definition) {
 
     Symbol *symbol = new Symbol(ss.str());
     symbol->nameSpace = new Namespace(m_scope.back());
-    functionSymbol->nameSpace->insert(definition, symbol);
+    functionSymbol->nameSpace->insert(this, definition, symbol);
 
     m_scope.push_back(symbol->nameSpace);
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
         sym->type = new types::Parameter();
-        m_scope.back()->insert(definition, sym);
+        m_scope.back()->insert(this, definition, sym);
     }
 
     for (auto parameter : definition->parameters) {
@@ -358,7 +360,7 @@ void Builder::visit(ast::FunctionDefinition *definition) {
 
 void Builder::visit(ast::TypeDefinition *definition) {
     Symbol *symbol = new Symbol(definition->name->value);
-    m_scope.back()->insert(definition, symbol);
+    m_scope.back()->insert(this, definition, symbol);
 
     symbol->nameSpace = new Namespace(m_scope.back());
 
@@ -367,7 +369,7 @@ void Builder::visit(ast::TypeDefinition *definition) {
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
         sym->type = new types::Parameter();
-        m_scope.back()->insert(definition, sym);
+        m_scope.back()->insert(this, definition, sym);
     }
 
     if (definition->alias) {
@@ -375,7 +377,7 @@ void Builder::visit(ast::TypeDefinition *definition) {
     } else {
         for (auto name : definition->field_names) {
             Symbol *sym = new Symbol(name->value);
-            m_scope.back()->insert(name, sym);
+            m_scope.back()->insert(this, name, sym);
         }
     }
 

@@ -50,7 +50,11 @@ llvm::Module *ModuleGenerator::module() const {
 
 llvm::Type *ModuleGenerator::generate_type(ast::Node *node, types::Type *type) {
     type->accept(m_type_generator);
-    return m_type_generator->take_type(node);
+    auto result = m_type_generator->take_type(node);
+    if (result == nullptr) {
+        push_error(m_type_generator->next_error());
+    }
+    return result;
 }
 
 llvm::Type *ModuleGenerator::generate_type(ast::Node *node) {
@@ -66,14 +70,22 @@ void ModuleGenerator::visit(ast::CodeBlock *block) {
 void ModuleGenerator::visit(ast::Identifier *identifier) {
     debug("Finding named value: " + identifier->value);
 
-    symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
+    auto symbol = m_scope.back()->lookup(this, identifier);
+    if (symbol == nullptr) {
+        m_llvmValues.push_back(nullptr);
+        return;
+    }
 
     if (!symbol->value) {
-        throw errors::InternalError(identifier, "should not be nullptr");
+        push_error(new errors::InternalError(identifier, "should not be nullptr"));
+        m_llvmValues.push_back(nullptr);
+        return;
     }
 
     if (identifier->has_parameters()) {
-        throw errors::InternalError(identifier, "should not have parameters");
+        push_error(new errors::InternalError(identifier, "should not have parameters"));
+        m_llvmValues.push_back(nullptr);
+        return;
     }
 
     llvm::Value *value = m_irBuilder->CreateLoad(symbol->value);
@@ -81,7 +93,8 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
 }
 
 void ModuleGenerator::visit(ast::BooleanLiteral *boolean) {
-    throw errors::InternalError(boolean, "N/A");
+    push_error(new errors::InternalError(boolean, "N/A"));
+    m_llvmValues.push_back(nullptr);
 }
 
 void ModuleGenerator::visit(ast::IntegerLiteral *expression) {
@@ -113,11 +126,13 @@ void ModuleGenerator::visit(ast::FloatLiteral *expression) {
 }
 
 void ModuleGenerator::visit(ast::ImaginaryLiteral *imaginary) {
-    throw errors::InternalError(imaginary, "N/A");
+    push_error(new errors::InternalError(imaginary, "N/A"));
+    m_llvmValues.push_back(nullptr);
 }
 
 void ModuleGenerator::visit(ast::StringLiteral *expression) {
-    throw errors::InternalError(expression, "N/A");
+    push_error(new errors::InternalError(expression, "N/A"));
+    m_llvmValues.push_back(nullptr);
 }
 
 void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
@@ -170,7 +185,8 @@ void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
 }
 
 void ModuleGenerator::visit(ast::MappingLiteral *mapping) {
-    throw errors::InternalError(mapping, "N/A");
+    push_error(new errors::InternalError(mapping, "N/A"));
+    m_llvmValues.push_back(nullptr);
 }
 
 void ModuleGenerator::visit(ast::RecordLiteral *expression) {
@@ -212,17 +228,21 @@ void ModuleGenerator::visit(ast::Call *expression) {
     if (identifier) {
         debug("Generating a call to: " + identifier->value);
 
-        symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
+        auto symbol = m_scope.back()->lookup(this, identifier);
         types::Function *functionType = dynamic_cast<types::Function *>(symbol->type);
 
         llvm::Function *function;
 
         types::Method *method = functionType->find_method(expression, expression->arguments);
+        if (method == nullptr) {
+            push_error(new errors::UndefinedError(expression, "No method found."));
+        }
 
         std::string method_name = mangler::mangle_method(symbol->name, method);
         function = m_module->getFunction(method_name);
         if (!function) {
-            throw errors::InternalError(expression, "No function defined (" + method_name + ").");
+            push_error(new errors::InternalError(expression, "No function defined (" + method_name + ")."));
+            return;
         }
 
         std::map<std::string, uint64_t> arg_positions;
@@ -253,7 +273,8 @@ void ModuleGenerator::visit(ast::Call *expression) {
                 debug("Getting parameter position of " + argument->name->value);
                 auto it = arg_positions.find(argument->name->value);
                 if (it == arg_positions.end()) {
-                    throw errors::InternalError(argument, "no argument");
+                    push_error(new errors::InternalError(argument, "no argument"));
+                    return;
                 } else {
                     index = it->second;
                 }
@@ -274,7 +295,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
 
         debug("Ending call to: " + identifier->value);
     } else {
-        throw errors::InternalError(expression, "Not an identifier.");
+        push_error(new errors::InternalError(expression, "Not an identifier."));
     }
 }
 
@@ -329,7 +350,7 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
     auto lhs_identifier = dynamic_cast<ast::Identifier *>(expression->lhs);
     assert(lhs_identifier);
 
-    llvm::Value *ptr = m_scope.back()->lookup(lhs_identifier)->value;
+    auto ptr = m_scope.back()->lookup(this, lhs_identifier)->value;
 
     m_irBuilder->CreateStore(value, ptr);
 }
@@ -341,10 +362,10 @@ void ModuleGenerator::visit(ast::Selector *expression) {
 
     ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
     if (!identifier) {
-        throw errors::InternalError(expression, "N/A");
+        push_error(new errors::InternalError(expression, "N/A"));
     }
 
-    symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
+    auto symbol = m_scope.back()->lookup(this, identifier);
 
     llvm::Value *instance = symbol->value;
 
@@ -366,12 +387,13 @@ void ModuleGenerator::visit(ast::Index *expression) {
 
     ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
     if (!identifier) {
-        throw errors::InternalError(expression, "N/A");
+        push_error(new errors::InternalError(expression, "N/A"));
+        return;
     }
 
-    symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
+    auto symbol = m_scope.back()->lookup(this, identifier);
 
-    llvm::Value *instance = symbol->value;
+    auto instance = symbol->value;
 
     expression->index->accept(this);
     llvm::Value *index = m_llvmValues.back();
@@ -397,7 +419,7 @@ void ModuleGenerator::visit(ast::Index *expression) {
 }
 
 void ModuleGenerator::visit(ast::Comma *expression) {
-    throw errors::InternalError(expression, "N/A");
+    push_error(new errors::InternalError(expression, "N/A"));
 }
 
 void ModuleGenerator::visit(ast::While *expression) {
@@ -447,7 +469,7 @@ void ModuleGenerator::visit(ast::While *expression) {
 }
 
 void ModuleGenerator::visit(ast::For *expression) {
-    throw errors::InternalError(expression, "Should not be in the lowered AST.");
+    push_error(new errors::InternalError(expression, "Should not be in the lowered AST."));
 }
 
 void ModuleGenerator::visit(ast::If *expression) {
@@ -490,7 +512,8 @@ void ModuleGenerator::visit(ast::If *expression) {
         else_value = m_llvmValues.back();
         m_llvmValues.pop_back();
     } else {
-        throw errors::InternalError(expression, "no else");
+        push_error(new errors::InternalError(expression, "no else"));
+        return;
     }
 
     m_irBuilder->CreateBr(merge_bb);
@@ -547,17 +570,20 @@ void ModuleGenerator::visit(ast::Strideof *expression) {
 }
 
 void ModuleGenerator::visit(ast::Parameter *parameter) {
-    throw errors::InternalError(parameter, "N/A");
+    push_error(new errors::InternalError(parameter, "N/A"));
 }
 
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
-    symboltable::Symbol *symbol = m_scope.back()->lookup(definition->name);
+    auto symbol = m_scope.back()->lookup(this, definition->name);
 
     debug("Defining a new variable: " + symbol->name);
 
     if (m_scope.back()->is_root()) {
         llvm::Type *type = generate_type(definition);
         llvm::Constant *initialiser = m_type_generator->take_initialiser(definition);
+        if (initialiser == nullptr) {
+            push_error(m_type_generator->next_error());
+        }
 
         type->dump();
 
@@ -599,11 +625,11 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
-    symboltable::Symbol *functionSymbol = m_scope.back()->lookup(definition->name);
+    auto functionSymbol = m_scope.back()->lookup(this, definition->name);
 
     types::Method *method = static_cast<types::Method *>(definition->type);
 
-    symboltable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
+    auto symbol = functionSymbol->nameSpace->lookup(this, definition, method->mangled_name());
 
     std::string llvm_function_name = mangler::mangle_method(functionSymbol->name, method);
 
@@ -625,7 +651,7 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
         arg.setName(method->get_parameter_name(i));
         llvm::AllocaInst *alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, name2);
         m_irBuilder->CreateStore(&arg, alloca);
-        symboltable::Symbol *symbol2 = m_scope.back()->lookup(definition, name2);
+        auto symbol2 = m_scope.back()->lookup(this, definition, name2);
         symbol2->value = alloca;
         i++;
     }
@@ -648,7 +674,7 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
         function->dump();
-        throw errors::InternalError(definition, stream.str());
+        push_error(new errors::InternalError(definition, stream.str()));
     }
 
     m_scope.pop_back();
@@ -672,7 +698,7 @@ void ModuleGenerator::visit(ast::ExpressionStatement *statement) {
 }
 
 void ModuleGenerator::visit(ast::ImportStatement *statement) {
-    throw errors::InternalError(statement, "N/A");
+    push_error(new errors::InternalError(statement, "N/A"));
 }
 
 void ModuleGenerator::visit(ast::SourceFile *module) {
@@ -703,6 +729,6 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyModule(*m_module, &stream)) {
         m_module->dump();
-        throw errors::InternalError(module, stream.str());
+        push_error(new errors::InternalError(module, stream.str()));
     }
 }

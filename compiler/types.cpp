@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "ast/nodes.h"
+#include "compiler/pass.h"
 #include "errors.h"
 
 #include "types.h"
@@ -34,23 +35,24 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Type *Constructor::create(ast::Node *node) {
-    return create(node, std::vector<Type *>());
+Type *Constructor::create(compiler::Pass *pass, ast::Node *node) {
+    return create(pass, node, std::vector<Type *>());
 }
 
 std::string Constructor::mangled_name() const {
-    throw std::runtime_error("cannot create mangled name");
+    return "c";
 }
 
 std::string AnyConstructor::name() const {
     return "AnyConstructor";
 }
 
-Type *AnyConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *AnyConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Any();
     } else {
-        throw errors::InvalidTypeConstructor(node);
+        pass->push_error(new errors::InvalidTypeConstructor(node));
+        return nullptr;
     }
 }
 
@@ -62,11 +64,12 @@ std::string VoidConstructor::name() const {
     return "VoidConstructor";
 }
 
-Type *VoidConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *VoidConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Void();
     } else {
-        throw errors::InvalidTypeConstructor(node);
+        pass->push_error(new errors::InvalidTypeConstructor(node));
+        return nullptr;
     }
 }
 
@@ -78,11 +81,12 @@ std::string BooleanConstructor::name() const {
     return "BooleanConstructor";
 }
 
-Type *BooleanConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *BooleanConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Boolean();
     } else {
-        throw errors::InvalidTypeConstructor(node);
+        pass->push_error(new errors::InvalidTypeConstructor(node));
+        return nullptr;
     }
 }
 
@@ -100,11 +104,12 @@ std::string IntegerConstructor::name() const {
     return ss.str();
 }
 
-Type *IntegerConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *IntegerConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Integer(m_size);
     } else {
-        throw errors::InvalidTypeConstructor(node);
+        pass->push_error(new errors::InvalidTypeConstructor(node));
+        return nullptr;
     }
 }
 
@@ -122,11 +127,12 @@ std::string UnsignedIntegerConstructor::name() const {
     return ss.str();
 }
 
-Type *UnsignedIntegerConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *UnsignedIntegerConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new UnsignedInteger(m_size);
     } else {
-        throw errors::InvalidTypeConstructor(node);
+        pass->push_error(new errors::InvalidTypeConstructor(node));
+        return nullptr;
     }
 }
 
@@ -144,11 +150,12 @@ std::string FloatConstructor::name() const {
     return ss.str();
 }
 
-Type *FloatConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *FloatConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.empty()) {
         return new Float(m_size);
     } else {
-        throw errors::InvalidTypeConstructor(node);
+        pass->push_error(new errors::InvalidTypeConstructor(node));
+        return nullptr;
     }
 }
 
@@ -160,11 +167,12 @@ std::string UnsafePointerConstructor::name() const {
     return "UnsafePointerConstructor";
 }
 
-Type *UnsafePointerConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
-    if (parameters.size() == 1) {
+Type *UnsafePointerConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
+    if (parameters.size() == 1 && parameters[0] != nullptr) {
         return new UnsafePointer(parameters[0]);
     } else {
-        throw errors::InvalidTypeParameters(node, parameters.size(), 1);
+        pass->push_error(new errors::InvalidTypeParameters(node, parameters.size(), 1));
+        return nullptr;
     }
 }
 
@@ -176,13 +184,14 @@ std::string FunctionConstructor::name() const {
     return "FunctionConstructor";
 }
 
-Type *FunctionConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *FunctionConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     Function *function = new Function();
 
     for (auto parameter : parameters) {
         Method *method = dynamic_cast<Method *>(parameter);
         if (method == nullptr) {
-            throw errors::InvalidTypeParameters(node, 0, 0);
+            pass->push_error(new errors::InvalidTypeParameters(node, 0, 0));
+            continue;
         }
 
         function->add_method(method);
@@ -214,7 +223,7 @@ std::string RecordConstructor::name() const {
     return ss.str();
 }
 
-Type *RecordConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *RecordConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.size() == m_input_parameters.size()) {
         std::map<Parameter *, Type *> parameter_mapping;
         for (int i = 0; i < m_input_parameters.size(); i++) {
@@ -234,12 +243,17 @@ Type *RecordConstructor::create(ast::Node *node, std::vector<Type *> parameters)
                 field_parameters.push_back(type);
             }
 
-            field_types.push_back(m_field_types[i]->create(node, field_parameters));
+            auto result = m_field_types[i]->create(pass, node, field_parameters);
+            if (result == nullptr) {
+                return nullptr;
+            }
+            field_types.push_back(result);
         }
 
         return new Record(m_field_names, field_types);
     } else {
-        throw errors::InvalidTypeParameters(node, parameters.size(), m_input_parameters.size());
+        pass->push_error(new errors::InvalidTypeParameters(node, parameters.size(), m_input_parameters.size()));
+        return nullptr;
     }
 }
 
@@ -251,13 +265,13 @@ std::string UnionConstructor::name() const {
     return "UnionConstructor";
 }
 
-Type *UnionConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *UnionConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     std::set<Type *> types;
     for (auto parameter : parameters) {
         types.insert(parameter);
     }
 
-    return new Union(node, types);
+    return new Union(pass, node, types);
 }
 
 void UnionConstructor::accept(Visitor *visitor) {
@@ -265,40 +279,44 @@ void UnionConstructor::accept(Visitor *visitor) {
 }
 
 AliasConstructor::AliasConstructor(ast::Node *node, Constructor *constructor, std::vector<Parameter *> input_parameters, std::vector<Type *> outputParameters) :
-        m_constructor(constructor) {
-    for (unsigned long i = 0; i < input_parameters.size(); i++) {
-        auto parameter = input_parameters[i];
+        m_constructor(constructor), m_input_parameters(input_parameters), m_output_parameters(outputParameters) {
 
-        int mapping = -1;
-
-        for (unsigned long j = 0; j < outputParameters.size(); j++) {
-            if (parameter->isCompatible(outputParameters[j])) {
-                mapping = j;
-                break;
-            }
-        }
-
-        if (mapping == -1) {
-            throw errors::InvalidTypeParameters(node, 0, 0);
-        }
-
-        m_parameterMapping[i] = mapping;
-    }
-
-    for (auto t : outputParameters) {
-        if (dynamic_cast<Parameter *>(t) == nullptr) {
-            m_knownTypes.push_back(t);
-        }
-    }
 }
 
 std::string AliasConstructor::name() const {
     return "AliasConstructor";
 }
 
-Type *AliasConstructor::create(ast::Node *node, std::vector<Type *> parameters) {
+Type *AliasConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
+    for (unsigned long i = 0; i < m_input_parameters.size(); i++) {
+        auto parameter = m_input_parameters[i];
+
+        int mapping = -1;
+
+        for (unsigned long j = 0; j < m_output_parameters.size(); j++) {
+            if (parameter->isCompatible(m_output_parameters[j])) {
+                mapping = j;
+                break;
+            }
+        }
+
+        if (mapping == -1) {
+            pass->push_error(new errors::InvalidTypeParameters(node, 0, 0));
+            return nullptr;
+        }
+
+        m_parameterMapping[i] = mapping;
+    }
+
+    for (auto t : m_output_parameters) {
+        if (dynamic_cast<Parameter *>(t) == nullptr) {
+            m_knownTypes.push_back(t);
+        }
+    }
+
     if (parameters.size() != m_parameterMapping.size()) {
-        throw errors::InvalidTypeParameters(node, parameters.size(), m_parameterMapping.size());
+        pass->push_error(new errors::InvalidTypeParameters(node, parameters.size(), m_parameterMapping.size()));
+        return nullptr;
     }
 
     std::vector<Type *> actualParameters;
@@ -320,7 +338,7 @@ Type *AliasConstructor::create(ast::Node *node, std::vector<Type *> parameters) 
         }
     }
 
-    return m_constructor->create(node, parameters);
+    return m_constructor->create(pass, node, parameters);
 }
 
 void AliasConstructor::accept(Visitor *visitor) {
@@ -673,7 +691,7 @@ Method *Function::find_method(ast::Node *node, std::vector<ast::Argument *> argu
         ss << arg->type->name() << ", ";
     }
 
-    throw errors::UndefinedError(node, "Method with arguments " + ss.str());
+    return nullptr;
 }
 
 Method *Function::get_method(int index) const {
@@ -693,9 +711,9 @@ Union::Union(Type *type1, Type *type2) {
     m_types.insert(type2);
 }
 
-Union::Union(ast::Node *node, std::set<Type *> types) : m_types(types) {
+Union::Union(compiler::Pass *pass, ast::Node *node, std::set<Type *> types) : m_types(types) {
     if (m_types.size() <= 1) {
-        throw errors::InvalidTypeParameters(node, m_types.size(), 2);
+        pass->push_error(new errors::InvalidTypeParameters(node, m_types.size(), 2));
     }
 }
 

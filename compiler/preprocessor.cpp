@@ -62,7 +62,7 @@ void GenericsPass::visit(ast::Identifier *identifier) {
         }
 
         if (identifier->has_parameters()) {
-            symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
+            auto symbol = m_scope.back()->lookup(this, identifier);
 
             if (symbol->is_function()) {
                 std::vector<symboltable::Symbol *> methods = symbol->nameSpace->symbols();
@@ -82,7 +82,8 @@ void GenericsPass::visit(ast::Identifier *identifier) {
             p->accept(this);
         }
 
-        symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
+        auto symbol = m_scope.back()->lookup(this, identifier);
+
         auto it = m_replacements.find(symbol);
         if (it != m_replacements.end()) {
             identifier->value = it->second;
@@ -232,8 +233,8 @@ void GenericsPass::visit(ast::VariableDefinition *definition) {
 }
 
 void GenericsPass::visit(ast::FunctionDefinition *definition) {
-    symboltable::Symbol *functionSymbol = m_scope.back()->lookup(definition->name);
-    symboltable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
+    auto functionSymbol = m_scope.back()->lookup(this, definition->name);
+    auto symbol = functionSymbol->nameSpace->lookup_by_node(this, definition);
     m_scope.push_back(symbol->nameSpace);
 
     definition->name->accept(this);
@@ -250,7 +251,11 @@ void GenericsPass::visit(ast::FunctionDefinition *definition) {
 }
 
 void GenericsPass::visit(ast::TypeDefinition *definition) {
-    symboltable::Symbol *symbol = m_scope.back()->lookup_by_node(definition);
+    auto symbol = m_scope.back()->lookup_by_node(this, definition);
+    if (symbol == nullptr) {
+        return;
+    }
+
     m_scope.push_back(symbol->nameSpace);
 
     definition->name->accept(this);
@@ -276,9 +281,12 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
         return;
     }
 
-    if (m_collecting) {
-        symboltable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
+    auto symbol = m_scope.back()->lookup(this, statement->definition->name);
+    if (symbol == nullptr) {
+        return;
+    }
 
+    if (m_collecting) {
         if (symbol->is_variable() || symbol->is_function()) {
             m_generics[statement->definition] = std::vector<std::vector<ast::Identifier *> >();
 
@@ -288,8 +296,6 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
             m_skip_identifier.pop_back();
         }
     } else {
-        symboltable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
-
         if (symbol->is_variable() || symbol->is_function()) {
             if (m_replacements.empty()) {
                 auto it = m_generics.find(statement->definition);
@@ -304,7 +310,7 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
 
                     if (symbol->is_function()) {
                         symbol_scope = symbol->nameSpace;
-                        symbol = symbol_scope->lookup_by_node(statement->definition);
+                        symbol = symbol_scope->lookup_by_node(this, statement->definition);
                     }
 
                     for (auto parameters : p) {
@@ -318,12 +324,11 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
 
                             auto new_symbol = symbol->clone();
                             new_symbol->name = symbol->name + "_";
-                            symbol_scope->insert(new_statement->definition, new_symbol);
+                            symbol_scope->insert(this, new_statement->definition, new_symbol);
 
                             m_replacements.clear();
                             for (int i = 0; i < parameters.size(); i++) {
-                                symboltable::Symbol *s = new_symbol->nameSpace->lookup(
-                                        statement->definition->name->parameters[i]);
+                                auto s = new_symbol->nameSpace->lookup(this, statement->definition->name->parameters[i]);
                                 m_replacements[s] = parameters[i]->value;
                             }
 
@@ -337,16 +342,16 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
                                 std::stringstream ss;
                                 ss << pointer_location;
 
-                                symbol_scope->rename(new_symbol, ss.str());
+                                symbol_scope->rename(this, new_symbol, ss.str());
                             } else {
-                                symbol_scope->rename(new_symbol, new_statement->definition->name->value);
+                                symbol_scope->rename(this, new_symbol, new_statement->definition->name->value);
                             }
 
                             m_actions.push_back(Action(Action::InsertStatement, new_statement));
                         }
                     }
                 } else {
-                    throw errors::InternalError(statement, "Not identified as generic.");
+                    push_error(new errors::InternalError(statement, "Not identified as generic."));
                 }
             } else {
                 statement->definition->accept(this);

@@ -19,16 +19,14 @@ llvm::Type *TypeGenerator::take_type(ast::Node *node) {
         m_type_stack.pop_back();
 
         if (node && result == nullptr) {
-            throw errors::InternalError(node, "Invalid LLVM type generated.");
+            push_error(new errors::InternalError(node, "Invalid LLVM type generated."));
+            return nullptr;
         }
 
         return result;
     } else {
-        if (node) {
-            throw errors::InternalError(node, "No LLVM type generated.");
-        } else {
-            return nullptr;
-        }
+        push_error(new errors::InternalError(node, "No LLVM type generated."));
+        return nullptr;
     }
 }
 
@@ -38,16 +36,14 @@ llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
         m_initialiser_stack.pop_back();
 
         if (node && result == nullptr) {
-            throw errors::InternalError(node, "Invalid LLVM initialiser generated.");
+            push_error(new errors::InternalError(node, "Invalid LLVM initialiser generated."));
+            return nullptr;
         }
 
         return result;
     } else {
-        if (node) {
-            throw errors::InternalError(node, "No LLVM initialiser generated.");
-        } else {
-            return nullptr;
-        }
+        push_error(new errors::InternalError(node, "No LLVM initialiser generated."));
+        return nullptr;
     }
 }
 
@@ -179,8 +175,6 @@ void TypeGenerator::visit(types::Float *type) {
 }
 
 void TypeGenerator::visit(types::UnsafePointer *type) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     type->element_type()->accept(this);
     llvm::Type *element_type = take_type(nullptr);
 

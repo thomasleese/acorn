@@ -5,13 +5,9 @@ using namespace jet;
 
 int main() {
     compiler::Compiler compiler;
-
-    try {
-        compiler.compile("test2.jet");
-    } catch (errors::CompilerError e) {
-        e.print();
+    if (compiler.compile("test2.jet")) {
+        return 0;
+    } else {
         return 1;
     }
-
-    return 0;
 }

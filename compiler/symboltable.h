@@ -26,6 +26,10 @@ namespace jet {
         class Type;
     }
 
+    namespace compiler {
+        class Pass;
+    }
+
     namespace symboltable {
 
         struct Symbol;
@@ -36,11 +40,11 @@ namespace jet {
             ~Namespace();
 
             bool has(std::string name, bool follow_parents = true) const;
-            Symbol *lookup(ast::Node *currentNode, std::string name) const;
-            Symbol *lookup(ast::Identifier *identifier) const;
-            Symbol *lookup_by_node(ast::Node *node) const;
-            void insert(ast::Node *currentNode, Symbol *symbol);
-            void rename(Symbol *symbol, std::string new_name);
+            Symbol *lookup(compiler::Pass *pass, ast::Node *currentNode, std::string name) const;
+            Symbol *lookup(compiler::Pass *pass, ast::Identifier *identifier) const;
+            Symbol *lookup_by_node(compiler::Pass *pass, ast::Node *node) const;
+            void insert(compiler::Pass *pass, ast::Node *currentNode, Symbol *symbol);
+            void rename(compiler::Pass *pass, Symbol *symbol, std::string new_name);
             unsigned long size() const;
             std::vector<Symbol *> symbols() const;
             bool is_root() const;
