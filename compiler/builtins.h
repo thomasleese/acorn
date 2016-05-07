@@ -16,11 +16,14 @@ namespace SymbolTable {
     class Namespace;
 }
 
-namespace Builtins {
+namespace jet {
 
-    void fill_symbol_table(SymbolTable::Namespace *table);
-    void fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder);
+    namespace builtins {
 
-};
+        void fill_symbol_table(SymbolTable::Namespace *table);
+        void fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder);
+
+    };
+}
 
 #endif //JET_BUILTINS_H

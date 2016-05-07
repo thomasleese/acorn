@@ -8,7 +8,7 @@
 #include "ast/nodes.h"
 #include "Lexer.h"
 #include "Errors.h"
-#include "Builtins.h"
+#include "builtins.h"
 #include "Types.h"
 
 #include "SymbolTable.h"
@@ -171,7 +171,7 @@ Symbol* Symbol::clone() const {
 
 Builder::Builder() {
     m_root = new Namespace(nullptr);
-    Builtins::fill_symbol_table(m_root);
+    builtins::fill_symbol_table(m_root);
 
     m_scope.push_back(m_root);
 }

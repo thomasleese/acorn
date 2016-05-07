@@ -13,7 +13,7 @@
 #include <llvm/Support/Casting.h>
 
 #include "../ast/nodes.h"
-#include "../Builtins.h"
+#include "../builtins.h"
 #include "../Errors.h"
 #include "../Mangler.h"
 #include "../SymbolTable.h"
@@ -678,7 +678,7 @@ void ModuleGenerator::visit(ast::ImportStatement *statement) {
 void ModuleGenerator::visit(ast::SourceFile *module) {
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
 
-    Builtins::fill_llvm_module(m_scope.back(), m_module, m_irBuilder);
+    builtins::fill_llvm_module(m_scope.back(), m_module, m_irBuilder);
 
     llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);

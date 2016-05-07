@@ -10,9 +10,10 @@
 #include "Types.h"
 #include "codegen/types.h"
 
-#include "Builtins.h"
+#include "builtins.h"
 
 using namespace jet;
+using namespace jet::builtins;
 
 SymbolTable::Symbol *add_symbol(SymbolTable::Namespace *table, std::string name, Types::Type *type) {
     SymbolTable::Symbol *symbol = new SymbolTable::Symbol(name);
@@ -64,7 +65,7 @@ void add_base_type_constructors(SymbolTable::Namespace *table) {
     add_symbol(table, "Union", new Types::UnionConstructor());
 }
 
-void Builtins::fill_symbol_table(SymbolTable::Namespace *table) {
+void builtins::fill_symbol_table(SymbolTable::Namespace *table) {
     add_base_type_constructors(table);
 
     add_symbol(table, "Nothing", new Types::Void());
@@ -141,7 +142,7 @@ void initialise_unary_function(llvm::Function *function, llvm::IRBuilder<> *irBu
     initialise_function_block(function, irBuilder);
 }
 
-void Builtins::fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder) {
+void builtins::fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder) {
     // multiplication
     llvm::Function *f = create_llvm_function(table, module, "*", 0);
     initialise_binary_function(f, irBuilder);
