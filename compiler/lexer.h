@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "Token.h"
+#include "token.h"
 
 namespace jet {
 
@@ -21,9 +21,7 @@ namespace jet {
 
     private:
         void setRule(Token::Rule rule, std::string regex);
-
         void setKeywordRule(Token::Rule rule, std::string keyword);
-
         void loadRules();
 
     public:

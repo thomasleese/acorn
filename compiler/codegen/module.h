@@ -11,18 +11,18 @@
 
 #include "../ast/visitor.h"
 
-namespace SymbolTable {
-    class Namespace;
-}
-
-namespace Types {
-    class Type;
-}
-
 namespace jet {
 
     namespace ast {
         struct Node;
+    }
+
+    namespace symboltable {
+        class Namespace;
+    }
+
+    namespace types {
+        class Type;
     }
 
     namespace codegen {
@@ -33,14 +33,14 @@ namespace jet {
         class ModuleGenerator : public ast::Visitor {
 
         public:
-            explicit ModuleGenerator(SymbolTable::Namespace *scope, llvm::DataLayout *data_layout);
+            explicit ModuleGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout);
             ~ModuleGenerator();
 
             void debug(std::string line);
 
             llvm::Module *module() const;
 
-            llvm::Type *generate_type(ast::Node *node, Types::Type *type);
+            llvm::Type *generate_type(ast::Node *node, types::Type *type);
             llvm::Type *generate_type(ast::Node *node);
 
             void visit(ast::CodeBlock *block);
@@ -83,7 +83,7 @@ namespace jet {
             void visit(ast::SourceFile *module);
 
         private:
-            std::vector<SymbolTable::Namespace *> m_scope;
+            std::vector<symboltable::Namespace *> m_scope;
             llvm::Module *m_module;
             llvm::IRBuilder<> *m_irBuilder;
             llvm::MDBuilder *m_mdBuilder;

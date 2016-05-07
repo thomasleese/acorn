@@ -7,16 +7,16 @@
 #include <sstream>
 
 #include "ast/nodes.h"
-#include "Typing.h"
-#include "Errors.h"
-#include "Types.h"
+#include "errors.h"
+#include "symboltable.h"
+#include "types.h"
 
-#include "SymbolTable.h"
+#include "typing.h"
 
 using namespace jet;
-using namespace Typing;
+using namespace jet::typing;
 
-Inferrer::Inferrer(SymbolTable::Namespace *rootNamespace) {
+Inferrer::Inferrer(symboltable::Namespace *rootNamespace) {
     m_namespace = rootNamespace;
 }
 
@@ -24,9 +24,9 @@ Inferrer::~Inferrer() {
 
 }
 
-Types::Constructor *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(node, name);
-    Types::Constructor *typeConstructor = dynamic_cast<Types::Constructor *>(symbol->type);
+types::Constructor *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
+    symboltable::Symbol *symbol = m_namespace->lookup(node, name);
+    types::Constructor *typeConstructor = dynamic_cast<types::Constructor *>(symbol->type);
     if (typeConstructor) {
         return typeConstructor;
     } else {
@@ -34,15 +34,15 @@ Types::Constructor *Inferrer::find_type_constructor(ast::Node *node, std::string
     }
 }
 
-Types::Type *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters) {
-    std::vector<Types::Type *> parameterTypes;
+types::Type *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters) {
+    std::vector<types::Type *> parameterTypes;
 
     for (auto parameter : parameters) {
         parameter->accept(this);
         parameterTypes.push_back(parameter->type);
     }
 
-    Types::Constructor *typeConstructor = find_type_constructor(node, name);
+    types::Constructor *typeConstructor = find_type_constructor(node, name);
     if (typeConstructor != nullptr) {
         return typeConstructor->create(node, parameterTypes);
     } else {
@@ -50,18 +50,18 @@ Types::Type *Inferrer::find_type(ast::Node *node, std::string name, std::vector<
     }
 }
 
-Types::Type *Inferrer::find_type(ast::Node *node, std::string name) {
+types::Type *Inferrer::find_type(ast::Node *node, std::string name) {
     return find_type(node, name, std::vector<ast::Identifier *>());
 }
 
-Types::Type *Inferrer::find_type(ast::Identifier *type) {
+types::Type *Inferrer::find_type(ast::Identifier *type) {
     return find_type(type, type->value, type->parameters);
 }
 
-Types::Type *Inferrer::instance_type(ast::Identifier *identifier) {
-    Types::Constructor *type_constructor = dynamic_cast<Types::Constructor *>(identifier->type);
+types::Type *Inferrer::instance_type(ast::Identifier *identifier) {
+    types::Constructor *type_constructor = dynamic_cast<types::Constructor *>(identifier->type);
     if (type_constructor) {
-        std::vector<Types::Type *> parameterTypes;
+        std::vector<types::Type *> parameterTypes;
 
         for (auto parameter : identifier->parameters) {
             parameter->type = instance_type(parameter);
@@ -80,7 +80,7 @@ void Inferrer::visit(ast::CodeBlock *block) {
     }
 
     if (block->statements.empty()) {
-        block->type = new Types::Void();
+        block->type = new types::Void();
     } else {
         block->type = block->statements.back()->type;
     }
@@ -91,7 +91,7 @@ void Inferrer::visit(ast::Identifier *expression) {
         p->accept(this);
     }
 
-    SymbolTable::Symbol *symbol = m_namespace->lookup(expression, expression->value);
+    symboltable::Symbol *symbol = m_namespace->lookup(expression, expression->value);
     expression->type = symbol->type;
 
     if (!symbol->type) {
@@ -124,7 +124,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
         element->accept(this);
     }
 
-    std::set<Types::Type *> types;
+    std::set<types::Type *> types;
     for (auto element : sequence->elements) {
         bool inList = false;
         for (auto type : types) {
@@ -139,11 +139,11 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
         }
     }
 
-    Types::Type *elementType;
+    types::Type *elementType;
     if (types.empty()) {
-        elementType = new Types::Any();
+        elementType = new types::Any();
     } else if (types.size() != 1) {
-        elementType = new Types::Union(sequence, types);
+        elementType = new types::Union(sequence, types);
     } else {
         elementType = *(types.begin());
     }
@@ -182,18 +182,18 @@ void Inferrer::visit(ast::Call *expression) {
         arg->accept(this);
     }
 
-    Types::Function *function = dynamic_cast<Types::Function *>(expression->operand->type);
-    Types::RecordConstructor *record = dynamic_cast<Types::RecordConstructor *>(expression->operand->type);
+    types::Function *function = dynamic_cast<types::Function *>(expression->operand->type);
+    types::RecordConstructor *record = dynamic_cast<types::RecordConstructor *>(expression->operand->type);
     if (function == nullptr && record == nullptr) {
-        expression->type = new Types::Union(new Types::Function(), new Types::RecordConstructor());
+        expression->type = new types::Union(new types::Function(), new types::RecordConstructor());
         throw errors::TypeMismatchError(expression->operand, expression);
     }
 
     if (record == nullptr) {
-        Types::Method *method = function->find_method(expression, expression->arguments);
+        types::Method *method = function->find_method(expression, expression->arguments);
         expression->type = method->return_type();
     } else {
-        expression->type = record->create(expression, std::vector<Types::Type *>());
+        expression->type = record->create(expression, std::vector<types::Type *>());
     }
 }
 
@@ -230,7 +230,7 @@ void Inferrer::visit(ast::Assignment *expression) {
 void Inferrer::visit(ast::Selector *expression) {
     expression->operand->accept(this);
 
-    auto recordType = dynamic_cast<Types::Record *>(expression->operand->type);
+    auto recordType = dynamic_cast<types::Record *>(expression->operand->type);
     if (!recordType) {
         throw errors::TypeInferenceError(expression);
     }
@@ -247,12 +247,12 @@ void Inferrer::visit(ast::Index *expression) {
     /*expression->operand->accept(this);
     expression->index->accept(this);
 
-    auto arrayType = dynamic_cast<Types::Array *>(expression->operand->type);
+    auto arrayType = dynamic_cast<types::Array *>(expression->operand->type);
     if (!arrayType) {
         throw errors::TypeInferenceError(expression);
     }
 
-    auto indexType = dynamic_cast<Types::Integer *>(expression->index->type);
+    auto indexType = dynamic_cast<types::Integer *>(expression->index->type);
     if (!indexType) {
         throw errors::TypeMismatchError(expression->operand, expression->index);
     }
@@ -315,7 +315,7 @@ void Inferrer::visit(ast::Strideof *expression) {
 }
 
 void Inferrer::visit(ast::Parameter *parameter) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(parameter, parameter->name->value);
+    symboltable::Symbol *symbol = m_namespace->lookup(parameter, parameter->name->value);
 
     parameter->typeNode->accept(this);
 
@@ -324,9 +324,9 @@ void Inferrer::visit(ast::Parameter *parameter) {
 }
 
 void Inferrer::visit(ast::VariableDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->value);
+    symboltable::Symbol *symbol = m_namespace->lookup(definition, definition->name->value);
 
-    Types::Type *type = nullptr;
+    types::Type *type = nullptr;
 
     definition->expression->accept(this);
 
@@ -346,15 +346,15 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
-    SymbolTable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
-    Types::Function *function = static_cast<Types::Function *>(functionSymbol->type);
+    symboltable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
+    types::Function *function = static_cast<types::Function *>(functionSymbol->type);
 
-    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
+    symboltable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
 
-    SymbolTable::Namespace *oldNamespace = m_namespace;
+    symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    std::vector<Types::Type *> parameterTypes;
+    std::vector<types::Type *> parameterTypes;
     std::vector<std::string> officialParameterOrder;
     for (auto parameter : definition->parameters) {
         parameter->accept(this);
@@ -366,7 +366,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     definition->returnType->accept(this);
     definition->returnType->type = instance_type(definition->returnType);
 
-    Types::Method *method = new Types::Method(parameterTypes, definition->returnType->type,
+    types::Method *method = new types::Method(parameterTypes, definition->returnType->type,
                                               officialParameterOrder);
 
     function->add_method(method);
@@ -387,16 +387,16 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 }
 
 void Inferrer::visit(ast::TypeDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition, definition->name->value);
+    symboltable::Symbol *symbol = m_namespace->lookup(definition, definition->name->value);
 
-    SymbolTable::Namespace *oldNamespace = m_namespace;
+    symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    std::vector<Types::Parameter *> input_parameters;
+    std::vector<types::Parameter *> input_parameters;
     for (auto t : definition->name->parameters) {
         t->accept(this);
 
-        auto param = dynamic_cast<Types::Parameter *>(t->type);
+        auto param = dynamic_cast<types::Parameter *>(t->type);
         if (param == nullptr) {
             throw errors::InvalidTypeParameters(t, 0, 0);
         }
@@ -404,9 +404,9 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
         input_parameters.push_back(param);
     }
 
-    Types::Type *type;
+    types::Type *type;
     if (definition->alias) {
-        std::vector<Types::Type *> outputParameters;
+        std::vector<types::Type *> outputParameters;
         for (auto t : definition->alias->parameters) {
             t->accept(this);
             outputParameters.push_back(t->type);
@@ -414,12 +414,12 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
 
         auto type_constructor = find_type_constructor(definition, definition->alias->value);
         definition->alias->type = type_constructor;
-        type = new Types::AliasConstructor(definition, type_constructor,
+        type = new types::AliasConstructor(definition, type_constructor,
                                            input_parameters, outputParameters);
     } else {
         std::vector<std::string> field_names;
-        std::vector<Types::Constructor *> field_types;
-        std::vector<std::vector<Types::Type *> > field_parameters;
+        std::vector<types::Constructor *> field_types;
+        std::vector<std::vector<types::Type *> > field_parameters;
 
         for (auto name : definition->field_names) {
             field_names.push_back(name->value);
@@ -428,7 +428,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
         for (auto type : definition->field_types) {
             auto type_constructor = find_type_constructor(type, type->value);
 
-            std::vector<Types::Type *> parameters;
+            std::vector<types::Type *> parameters;
             for (auto t : type->parameters) {
                 t->accept(this);
                 parameters.push_back(t->type);
@@ -440,7 +440,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
             type->type = type_constructor;
         }
 
-        type = new Types::RecordConstructor(input_parameters,
+        type = new types::RecordConstructor(input_parameters,
                                             field_names, field_types,
                                             field_parameters);
     }
@@ -463,7 +463,7 @@ void Inferrer::visit(ast::ExpressionStatement *statement) {
 
 void Inferrer::visit(ast::ImportStatement *statement) {
     statement->path->accept(this);
-    statement->type = new Types::Void();
+    statement->type = new types::Void();
 }
 
 void Inferrer::visit(ast::SourceFile *module) {
@@ -471,7 +471,7 @@ void Inferrer::visit(ast::SourceFile *module) {
     module->type = module->code->type;
 }
 
-Checker::Checker(SymbolTable::Namespace *rootNamespace) {
+Checker::Checker(symboltable::Namespace *rootNamespace) {
     m_namespace = rootNamespace;
 }
 
@@ -606,7 +606,7 @@ void Checker::visit(ast::Assignment *expression) {
     expression->rhs->accept(this);
     check_not_null(expression);
 
-    // SymbolTable::Symbol *symbol = m_namespace->lookup(expression->lhs);
+    // symboltable::Symbol *symbol = m_namespace->lookup(expression->lhs);
     throw errors::ConstantAssignmentError(expression->lhs);
 }
 
@@ -692,13 +692,13 @@ void Checker::visit(ast::VariableDefinition *definition) {
 void Checker::visit(ast::FunctionDefinition *definition) {
     check_not_null(definition);
 
-    SymbolTable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
+    symboltable::Symbol *functionSymbol = m_namespace->lookup(definition->name);
 
-    Types::Method *method = static_cast<Types::Method *>(definition->type);
+    types::Method *method = static_cast<types::Method *>(definition->type);
 
-    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
+    symboltable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
 
-    SymbolTable::Namespace *oldNamespace = m_namespace;
+    symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
     // it's valid for the name not to have a type, since it's doesn't exist
@@ -719,9 +719,9 @@ void Checker::visit(ast::TypeDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     //definition->name->accept(this);
 
-    SymbolTable::Symbol *symbol = m_namespace->lookup(definition->name);
+    symboltable::Symbol *symbol = m_namespace->lookup(definition->name);
 
-    SymbolTable::Namespace *oldNamespace = m_namespace;
+    symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
     if (definition->alias) {

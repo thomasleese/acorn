@@ -6,7 +6,7 @@
 
 #include "ast/nodes.h"
 
-#include "PrettyPrinter.h"
+#include "prettyprinter.h"
 
 using namespace jet;
 

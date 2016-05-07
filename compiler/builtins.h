@@ -5,23 +5,22 @@
 #ifndef JET_BUILTINS_H
 #define JET_BUILTINS_H
 
-#include <llvm/IR/Module.h>
 #include <llvm/IR/IRBuilder.h>
 
 namespace llvm {
     class Module;
 }
 
-namespace SymbolTable {
-    class Namespace;
-}
-
 namespace jet {
+
+    namespace symboltable {
+        class Namespace;
+    }
 
     namespace builtins {
 
-        void fill_symbol_table(SymbolTable::Namespace *table);
-        void fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder);
+        void fill_symbol_table(symboltable::Namespace *table);
+        void fill_llvm_module(symboltable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder);
 
     };
 }

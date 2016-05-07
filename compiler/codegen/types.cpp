@@ -51,72 +51,72 @@ llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
     }
 }
 
-void TypeGenerator::visit(Types::Parameter *type) {
+void TypeGenerator::visit(types::Parameter *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::AnyConstructor *type) {
+void TypeGenerator::visit(types::AnyConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::VoidConstructor *type) {
+void TypeGenerator::visit(types::VoidConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::BooleanConstructor *type) {
+void TypeGenerator::visit(types::BooleanConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::IntegerConstructor *type) {
+void TypeGenerator::visit(types::IntegerConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::UnsignedIntegerConstructor *type) {
+void TypeGenerator::visit(types::UnsignedIntegerConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::FloatConstructor *type) {
+void TypeGenerator::visit(types::FloatConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::UnsafePointerConstructor *type) {
+void TypeGenerator::visit(types::UnsafePointerConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::FunctionConstructor *type) {
+void TypeGenerator::visit(types::FunctionConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::RecordConstructor *type) {
+void TypeGenerator::visit(types::RecordConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::UnionConstructor *type) {
+void TypeGenerator::visit(types::UnionConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::AliasConstructor *type) {
+void TypeGenerator::visit(types::AliasConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::Any *type) {
+void TypeGenerator::visit(types::Any *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::Void *type) {
+void TypeGenerator::visit(types::Void *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     llvm::Type *llvm_type = llvm::Type::getVoidTy(context);
@@ -125,7 +125,7 @@ void TypeGenerator::visit(Types::Void *type) {
     m_initialiser_stack.push_back(llvm::UndefValue::get(llvm_type));
 }
 
-void TypeGenerator::visit(Types::Boolean *type) {
+void TypeGenerator::visit(types::Boolean *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
@@ -134,7 +134,7 @@ void TypeGenerator::visit(Types::Boolean *type) {
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(Types::Integer *type) {
+void TypeGenerator::visit(types::Integer *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     const unsigned int size = type->size();
@@ -144,7 +144,7 @@ void TypeGenerator::visit(Types::Integer *type) {
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(Types::UnsignedInteger *type) {
+void TypeGenerator::visit(types::UnsignedInteger *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     const unsigned int size = type->size();
@@ -154,7 +154,7 @@ void TypeGenerator::visit(Types::UnsignedInteger *type) {
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(Types::Float *type) {
+void TypeGenerator::visit(types::Float *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     const unsigned int size = type->size();
@@ -178,7 +178,7 @@ void TypeGenerator::visit(Types::Float *type) {
     m_initialiser_stack.push_back(llvm::ConstantFP::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(Types::UnsafePointer *type) {
+void TypeGenerator::visit(types::UnsafePointer *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     type->element_type()->accept(this);
@@ -194,7 +194,7 @@ void TypeGenerator::visit(Types::UnsafePointer *type) {
     }
 }
 
-void TypeGenerator::visit(Types::Record *type) {
+void TypeGenerator::visit(types::Record *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     std::vector<llvm::Type *> llvm_types;
@@ -223,12 +223,12 @@ void TypeGenerator::visit(Types::Record *type) {
     m_initialiser_stack.push_back(struct_initialiser);
 }
 
-void TypeGenerator::visit(Types::Tuple *type) {
+void TypeGenerator::visit(types::Tuple *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::Method *type) {
+void TypeGenerator::visit(types::Method *type) {
     type->return_type()->accept(this);
     llvm::Type *llvm_return_type = take_type(nullptr);
 
@@ -259,12 +259,12 @@ void TypeGenerator::visit(Types::Method *type) {
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::Function *type) {
+void TypeGenerator::visit(types::Function *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(Types::Union *type) {
+void TypeGenerator::visit(types::Union *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }

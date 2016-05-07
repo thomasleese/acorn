@@ -6,17 +6,13 @@
 #include <sstream>
 #include <iostream>
 
-#include <llvm/IR/DerivedTypes.h>
-#include <llvm/IR/Constants.h>
-
 #include "ast/nodes.h"
-#include "Errors.h"
+#include "errors.h"
 
-#include "Types.h"
+#include "types.h"
 
 using namespace jet;
-
-using namespace Types;
+using namespace jet::types;
 
 Type::~Type() {
 

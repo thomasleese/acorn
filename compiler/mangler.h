@@ -7,15 +7,15 @@
 
 #include <string>
 
-namespace Types {
-    class Method;
-}
-
 namespace jet {
+
+    namespace types {
+        class Method;
+    }
 
     namespace mangler {
 
-        std::string mangle_method(std::string name, Types::Method *method);
+        std::string mangle_method(std::string name, types::Method *method);
 
     }
 

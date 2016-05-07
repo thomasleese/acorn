@@ -14,7 +14,7 @@
 #include "SymbolTable.h"
 
 using namespace jet;
-using namespace SymbolTable;
+using namespace jet::symboltable;
 
 Namespace::Namespace(Namespace *parent) : m_parent(parent) {
 
@@ -136,11 +136,11 @@ Symbol::Symbol(std::string name) {
 }
 
 bool Symbol::is_function() const {
-    return dynamic_cast<Types::Function *>(this->type) != nullptr && this->node == nullptr;
+    return dynamic_cast<types::Function *>(this->type) != nullptr && this->node == nullptr;
 }
 
 bool Symbol::is_type() const {
-    return dynamic_cast<Types::Constructor *>(this->type) != nullptr;
+    return dynamic_cast<types::Constructor *>(this->type) != nullptr;
 }
 
 bool Symbol::is_variable() const {
@@ -308,7 +308,7 @@ void Builder::visit(ast::VariableDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new Types::Parameter();
+        sym->type = new types::Parameter();
         m_scope.back()->insert(definition, sym);
     }
 
@@ -324,7 +324,7 @@ void Builder::visit(ast::FunctionDefinition *definition) {
         functionSymbol = m_scope.back()->lookup(definition->name);
     } else {
         functionSymbol = new Symbol(definition->name->value);
-        functionSymbol->type = new Types::Function();
+        functionSymbol->type = new types::Function();
         functionSymbol->nameSpace = new Namespace(m_scope.back());
         m_scope.back()->insert(definition, functionSymbol);
         functionSymbol->node = nullptr;  // explicit no node for function symbols
@@ -343,7 +343,7 @@ void Builder::visit(ast::FunctionDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new Types::Parameter();
+        sym->type = new types::Parameter();
         m_scope.back()->insert(definition, sym);
     }
 
@@ -366,7 +366,7 @@ void Builder::visit(ast::TypeDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new Types::Parameter();
+        sym->type = new types::Parameter();
         m_scope.back()->insert(definition, sym);
     }
 

@@ -2,17 +2,17 @@
 // Created by Thomas Leese on 13/03/2016.
 //
 
+#include <cassert>
+#include <iostream>
 #include <sstream>
 
 #include "ast/nodes.h"
 #include "Errors.h"
 #include "Lexer.h"
 
-#include "Parser.h"
+#include "parser.h"
 
-#include <iostream>
-#include <cassert>
-
+using namespace jet;
 using namespace jet::ast;
 
 Parser::Parser(std::vector<Token *> tokens) {

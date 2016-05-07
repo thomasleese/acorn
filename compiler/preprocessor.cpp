@@ -5,12 +5,12 @@
 #include <iostream>
 
 #include "ast/nodes.h"
-#include "Errors.h"
+#include "errors.h"
 #include "SymbolTable.h"
 #include "Types.h"
-
-#include "Preprocessor.h"
 #include "PrettyPrinter.h"
+
+#include "preprocessor.h"
 
 using namespace jet;
 using namespace jet::preprocessor;
@@ -20,7 +20,7 @@ Action::Action(Action::Kind kind, ast::Statement *statement) :
 
 }
 
-GenericsPass::GenericsPass(SymbolTable::Namespace *root_namespace) :
+GenericsPass::GenericsPass(symboltable::Namespace *root_namespace) :
         m_collecting(true) {
     m_scope.push_back(root_namespace);
 }
@@ -61,10 +61,10 @@ void GenericsPass::visit(ast::Identifier *identifier) {
         }
 
         if (identifier->has_parameters()) {
-            SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
+            symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
 
             if (symbol->is_function()) {
-                std::vector<SymbolTable::Symbol *> methods = symbol->nameSpace->symbols();
+                std::vector<symboltable::Symbol *> methods = symbol->nameSpace->symbols();
                 for (auto sym : methods) {
                     auto def = dynamic_cast<ast::Definition *>(sym->node);
                     assert(def);
@@ -81,7 +81,7 @@ void GenericsPass::visit(ast::Identifier *identifier) {
             p->accept(this);
         }
 
-        SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
+        symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
         auto it = m_replacements.find(symbol);
         if (it != m_replacements.end()) {
             identifier->value = it->second;
@@ -231,8 +231,8 @@ void GenericsPass::visit(ast::VariableDefinition *definition) {
 }
 
 void GenericsPass::visit(ast::FunctionDefinition *definition) {
-    SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition->name);
-    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
+    symboltable::Symbol *functionSymbol = m_scope.back()->lookup(definition->name);
+    symboltable::Symbol *symbol = functionSymbol->nameSpace->lookup_by_node(definition);
     m_scope.push_back(symbol->nameSpace);
 
     definition->name->accept(this);
@@ -249,7 +249,7 @@ void GenericsPass::visit(ast::FunctionDefinition *definition) {
 }
 
 void GenericsPass::visit(ast::TypeDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_scope.back()->lookup_by_node(definition);
+    symboltable::Symbol *symbol = m_scope.back()->lookup_by_node(definition);
     m_scope.push_back(symbol->nameSpace);
 
     definition->name->accept(this);
@@ -276,7 +276,7 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
     }
 
     if (m_collecting) {
-        SymbolTable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
+        symboltable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
 
         if (symbol->is_variable() || symbol->is_function()) {
             m_generics[statement->definition] = std::vector<std::vector<ast::Identifier *> >();
@@ -287,7 +287,7 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
             m_skip_identifier.pop_back();
         }
     } else {
-        SymbolTable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
+        symboltable::Symbol *symbol = m_scope.back()->lookup(statement->definition->name);
 
         if (symbol->is_variable() || symbol->is_function()) {
             if (m_replacements.empty()) {
@@ -297,7 +297,7 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
 
                     m_actions.push_back(Action(Action::DropStatement));
 
-                    SymbolTable::Namespace *symbol_scope = m_scope.back();
+                    symboltable::Namespace *symbol_scope = m_scope.back();
 
                     bool was_function = symbol->is_function();
 
@@ -310,7 +310,7 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
                         if (statement->definition->name->parameters.size() == parameters.size()) {
                             auto new_statement = statement->clone();
 
-                            /*auto builder = new SymbolTable::Builder();
+                            /*auto builder = new symboltable::Builder();
                             new_statement->accept(builder);
 
                             auto new_symbol = builder->rootNamespace()->lookup_by_node(new_statement);*/
@@ -321,7 +321,7 @@ void GenericsPass::visit(ast::DefinitionStatement *statement) {
 
                             m_replacements.clear();
                             for (int i = 0; i < parameters.size(); i++) {
-                                SymbolTable::Symbol *s = new_symbol->nameSpace->lookup(
+                                symboltable::Symbol *s = new_symbol->nameSpace->lookup(
                                         statement->definition->name->parameters[i]);
                                 m_replacements[s] = parameters[i]->value;
                             }

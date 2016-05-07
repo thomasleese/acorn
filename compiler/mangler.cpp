@@ -9,6 +9,6 @@
 using namespace jet;
 using namespace jet::mangler;
 
-std::string mangler::mangle_method(std::string name, Types::Method *method) {
+std::string mangler::mangle_method(std::string name, types::Method *method) {
     return "_J_" + name + "_" + method->mangled_name();
 }

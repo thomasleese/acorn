@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <llvm/IR/Module.h>
+
 #include "Mangler.h"
 #include "SymbolTable.h"
 #include "Types.h"
@@ -15,92 +17,92 @@
 using namespace jet;
 using namespace jet::builtins;
 
-SymbolTable::Symbol *add_symbol(SymbolTable::Namespace *table, std::string name, Types::Type *type) {
-    SymbolTable::Symbol *symbol = new SymbolTable::Symbol(name);
+symboltable::Symbol *add_symbol(symboltable::Namespace *table, std::string name, types::Type *type) {
+    symboltable::Symbol *symbol = new symboltable::Symbol(name);
     symbol->type = type;
     symbol->is_builtin = true;
     table->insert(nullptr, symbol);
     return symbol;
 }
 
-SymbolTable::Symbol *add_base_function(SymbolTable::Namespace *table, std::string name) {
-    SymbolTable::Symbol *symbol = new SymbolTable::Symbol(name);
-    Types::Function *type = new Types::Function();
+symboltable::Symbol *add_base_function(symboltable::Namespace *table, std::string name) {
+    symboltable::Symbol *symbol = new symboltable::Symbol(name);
+    types::Function *type = new types::Function();
     symbol->type = type;
-    symbol->nameSpace = new SymbolTable::Namespace(table);
+    symbol->nameSpace = new symboltable::Namespace(table);
     table->insert(nullptr, symbol);
     return symbol;
 }
 
-void add_base_method(SymbolTable::Symbol *function, Types::Method *method) {
-    SymbolTable::Symbol *symbol = new SymbolTable::Symbol(method->mangled_name());
+void add_base_method(symboltable::Symbol *function, types::Method *method) {
+    symboltable::Symbol *symbol = new symboltable::Symbol(method->mangled_name());
     symbol->type = method;
-    symbol->nameSpace = new SymbolTable::Namespace(function->nameSpace);
+    symbol->nameSpace = new symboltable::Namespace(function->nameSpace);
     function->nameSpace->insert(nullptr, symbol);
 
-    Types::Function *f = static_cast<Types::Function *>(function->type);
+    types::Function *f = static_cast<types::Function *>(function->type);
     f->add_method(method);
 }
 
-void add_base_type_constructors(SymbolTable::Namespace *table) {
-    add_symbol(table, "Any", new Types::AnyConstructor());
-    add_symbol(table, "Void", new Types::VoidConstructor());
-    add_symbol(table, "Boolean", new Types::BooleanConstructor());
-    add_symbol(table, "Integer8", new Types::IntegerConstructor(8));
-    add_symbol(table, "Integer16", new Types::IntegerConstructor(16));
-    add_symbol(table, "Integer32", new Types::IntegerConstructor(32));
-    add_symbol(table, "Integer64", new Types::IntegerConstructor(64));
-    add_symbol(table, "Integer128", new Types::IntegerConstructor(128));
-    add_symbol(table, "UnsignedInteger8", new Types::UnsignedIntegerConstructor(8));
-    add_symbol(table, "UnsignedInteger16", new Types::UnsignedIntegerConstructor(16));
-    add_symbol(table, "UnsignedInteger32", new Types::UnsignedIntegerConstructor(32));
-    add_symbol(table, "UnsignedInteger64", new Types::UnsignedIntegerConstructor(64));
-    add_symbol(table, "UnsignedInteger128", new Types::UnsignedIntegerConstructor(128));
-    add_symbol(table, "Float16", new Types::FloatConstructor(16));
-    add_symbol(table, "Float32", new Types::FloatConstructor(32));
-    add_symbol(table, "Float64", new Types::FloatConstructor(64));
-    add_symbol(table, "Float128", new Types::FloatConstructor(128));
-    add_symbol(table, "UnsafePointer", new Types::UnsafePointerConstructor());
-    add_symbol(table, "Function", new Types::FunctionConstructor());
-    add_symbol(table, "Union", new Types::UnionConstructor());
+void add_base_type_constructors(symboltable::Namespace *table) {
+    add_symbol(table, "Any", new types::AnyConstructor());
+    add_symbol(table, "Void", new types::VoidConstructor());
+    add_symbol(table, "Boolean", new types::BooleanConstructor());
+    add_symbol(table, "Integer8", new types::IntegerConstructor(8));
+    add_symbol(table, "Integer16", new types::IntegerConstructor(16));
+    add_symbol(table, "Integer32", new types::IntegerConstructor(32));
+    add_symbol(table, "Integer64", new types::IntegerConstructor(64));
+    add_symbol(table, "Integer128", new types::IntegerConstructor(128));
+    add_symbol(table, "UnsignedInteger8", new types::UnsignedIntegerConstructor(8));
+    add_symbol(table, "UnsignedInteger16", new types::UnsignedIntegerConstructor(16));
+    add_symbol(table, "UnsignedInteger32", new types::UnsignedIntegerConstructor(32));
+    add_symbol(table, "UnsignedInteger64", new types::UnsignedIntegerConstructor(64));
+    add_symbol(table, "UnsignedInteger128", new types::UnsignedIntegerConstructor(128));
+    add_symbol(table, "Float16", new types::FloatConstructor(16));
+    add_symbol(table, "Float32", new types::FloatConstructor(32));
+    add_symbol(table, "Float64", new types::FloatConstructor(64));
+    add_symbol(table, "Float128", new types::FloatConstructor(128));
+    add_symbol(table, "UnsafePointer", new types::UnsafePointerConstructor());
+    add_symbol(table, "Function", new types::FunctionConstructor());
+    add_symbol(table, "Union", new types::UnionConstructor());
 }
 
-void builtins::fill_symbol_table(SymbolTable::Namespace *table) {
+void builtins::fill_symbol_table(symboltable::Namespace *table) {
     add_base_type_constructors(table);
 
-    add_symbol(table, "Nothing", new Types::Void());
+    add_symbol(table, "Nothing", new types::Void());
 
-    SymbolTable::Symbol *multiplication = add_base_function(table, "*");
-    add_base_method(multiplication, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Integer(64)));
+    symboltable::Symbol *multiplication = add_base_function(table, "*");
+    add_base_method(multiplication, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Integer(64)));
 
-    SymbolTable::Symbol *addition = add_base_function(table, "+");
-    add_base_method(addition, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Integer(64)));
-    add_base_method(addition, new Types::Method("a", new Types::UnsignedInteger(64), "b", new Types::UnsignedInteger(64), new Types::UnsignedInteger(64)));
-    add_base_method(addition, new Types::Method("a", new Types::Float(64), "b", new Types::Float(64), new Types::Float(64)));
+    symboltable::Symbol *addition = add_base_function(table, "+");
+    add_base_method(addition, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Integer(64)));
+    add_base_method(addition, new types::Method("a", new types::UnsignedInteger(64), "b", new types::UnsignedInteger(64), new types::UnsignedInteger(64)));
+    add_base_method(addition, new types::Method("a", new types::Float(64), "b", new types::Float(64), new types::Float(64)));
 
-    SymbolTable::Symbol *subtraction = add_base_function(table, "-");
-    add_base_method(subtraction, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Integer(64)));
+    symboltable::Symbol *subtraction = add_base_function(table, "-");
+    add_base_method(subtraction, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Integer(64)));
 
-    SymbolTable::Symbol *equality = add_base_function(table, "==");
-    add_base_method(equality, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Boolean()));
-    add_base_method(equality, new Types::Method("a", new Types::UnsignedInteger(64), "b", new Types::UnsignedInteger(64), new Types::Boolean()));
+    symboltable::Symbol *equality = add_base_function(table, "==");
+    add_base_method(equality, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Boolean()));
+    add_base_method(equality, new types::Method("a", new types::UnsignedInteger(64), "b", new types::UnsignedInteger(64), new types::Boolean()));
 
-    SymbolTable::Symbol *not_equality = add_base_function(table, "!=");
-    add_base_method(not_equality, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Boolean()));
+    symboltable::Symbol *not_equality = add_base_function(table, "!=");
+    add_base_method(not_equality, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Boolean()));
 
-    SymbolTable::Symbol *less_than = add_base_function(table, "<");
-    add_base_method(less_than, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Boolean()));
+    symboltable::Symbol *less_than = add_base_function(table, "<");
+    add_base_method(less_than, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Boolean()));
 
-    SymbolTable::Symbol *to_integer = add_base_function(table, "to_integer");
-    add_base_method(to_integer, new Types::Method("self", new Types::Float(64), new Types::Integer(64)));
+    symboltable::Symbol *to_integer = add_base_function(table, "to_integer");
+    add_base_method(to_integer, new types::Method("self", new types::Float(64), new types::Integer(64)));
 
-    SymbolTable::Symbol *to_float = add_base_function(table, "to_float");
-    add_base_method(to_float, new Types::Method("self", new Types::Integer(64), new Types::Float(64)));
+    symboltable::Symbol *to_float = add_base_function(table, "to_float");
+    add_base_method(to_float, new types::Method("self", new types::Integer(64), new types::Float(64)));
 }
 
-llvm::Function *create_llvm_function(SymbolTable::Namespace *table, llvm::Module *module, std::string name, int index) {
-    Types::Function *functionType = static_cast<Types::Function *>(table->lookup(nullptr, name)->type);
-    Types::Method *methodType = functionType->get_method(index);
+llvm::Function *create_llvm_function(symboltable::Namespace *table, llvm::Module *module, std::string name, int index) {
+    types::Function *functionType = static_cast<types::Function *>(table->lookup(nullptr, name)->type);
+    types::Method *methodType = functionType->get_method(index);
 
     std::string mangled_name = mangler::mangle_method(name, methodType);
 
@@ -142,7 +144,7 @@ void initialise_unary_function(llvm::Function *function, llvm::IRBuilder<> *irBu
     initialise_function_block(function, irBuilder);
 }
 
-void builtins::fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder) {
+void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder) {
     // multiplication
     llvm::Function *f = create_llvm_function(table, module, "*", 0);
     initialise_binary_function(f, irBuilder);

@@ -8,13 +8,13 @@
 #include <string>
 #include <vector>
 
-struct Token;
-
-namespace Types {
-    class Type;
-}
-
 namespace jet {
+
+    struct Token;
+
+    namespace types {
+        class Type;
+    }
 
     namespace ast {
 
@@ -28,7 +28,7 @@ namespace jet {
             virtual Node *clone() const = 0;
 
             Token *token;
-            Types::Type *type;
+            types::Type *type;
         };
 
         // basic categories

@@ -9,15 +9,15 @@
 
 #include "ast/visitor.h"
 
-namespace SymbolTable {
-    class Namespace;
-}
-
 namespace jet {
 
     namespace ast {
         struct Definition;
         struct Statement;
+    }
+
+    namespace symboltable {
+        class Namespace;
     }
 
     namespace preprocessor {
@@ -39,7 +39,7 @@ namespace jet {
         class GenericsPass : public ast::Visitor {
 
         public:
-            GenericsPass(SymbolTable::Namespace *root_namespace);
+            GenericsPass(symboltable::Namespace *root_namespace);
 
             void visit(ast::CodeBlock *block);
 
@@ -83,11 +83,11 @@ namespace jet {
         private:
             bool m_collecting;
 
-            std::vector<SymbolTable::Namespace *> m_scope;
+            std::vector<symboltable::Namespace *> m_scope;
             std::vector<Action> m_actions;
 
             std::map<ast::Definition *, std::vector<std::vector<ast::Identifier *> > > m_generics;
-            std::map<SymbolTable::Symbol *, std::string> m_replacements;
+            std::map<symboltable::Symbol *, std::string> m_replacements;
 
             std::vector<ast::Identifier *> m_skip_identifier;
 

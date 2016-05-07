@@ -2,7 +2,9 @@
 // Created by Thomas Leese on 17/03/2016.
 //
 
-#include "Token.h"
+#include "token.h"
+
+using namespace jet;
 
 std::string Token::rule_string(Token::Rule rule) {
     switch (rule) {

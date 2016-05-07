@@ -26,7 +26,7 @@
 using namespace jet;
 using namespace jet::codegen;
 
-ModuleGenerator::ModuleGenerator(SymbolTable::Namespace *scope, llvm::DataLayout *data_layout) :
+ModuleGenerator::ModuleGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout) :
         m_type_generator(new TypeGenerator()) {
     m_scope.push_back(scope);
 
@@ -48,7 +48,7 @@ llvm::Module *ModuleGenerator::module() const {
     return m_module;
 }
 
-llvm::Type *ModuleGenerator::generate_type(ast::Node *node, Types::Type *type) {
+llvm::Type *ModuleGenerator::generate_type(ast::Node *node, types::Type *type) {
     type->accept(m_type_generator);
     return m_type_generator->take_type(node);
 }
@@ -66,7 +66,7 @@ void ModuleGenerator::visit(ast::CodeBlock *block) {
 void ModuleGenerator::visit(ast::Identifier *identifier) {
     debug("Finding named value: " + identifier->value);
 
-    SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
+    symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
 
     if (!symbol->value) {
         throw errors::InternalError(identifier, "should not be nullptr");
@@ -176,7 +176,7 @@ void ModuleGenerator::visit(ast::MappingLiteral *mapping) {
 void ModuleGenerator::visit(ast::RecordLiteral *expression) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
-    auto record = dynamic_cast<Types::Record *>(expression->type);
+    auto record = dynamic_cast<types::Record *>(expression->type);
 
     llvm::Type *llvm_type = generate_type(expression);
 
@@ -212,12 +212,12 @@ void ModuleGenerator::visit(ast::Call *expression) {
     if (identifier) {
         debug("Generating a call to: " + identifier->value);
 
-        SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
-        Types::Function *functionType = dynamic_cast<Types::Function *>(symbol->type);
+        symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
+        types::Function *functionType = dynamic_cast<types::Function *>(symbol->type);
 
         llvm::Function *function;
 
-        Types::Method *method = functionType->find_method(expression, expression->arguments);
+        types::Method *method = functionType->find_method(expression, expression->arguments);
 
         std::string method_name = mangler::mangle_method(symbol->name, method);
         function = m_module->getFunction(method_name);
@@ -344,11 +344,11 @@ void ModuleGenerator::visit(ast::Selector *expression) {
         throw errors::InternalError(expression, "N/A");
     }
 
-    SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
+    symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
 
     llvm::Value *instance = symbol->value;
 
-    auto recordType = static_cast<Types::Record *>(expression->operand->type);
+    auto recordType = static_cast<types::Record *>(expression->operand->type);
     uint64_t index = recordType->get_field_index(expression->name->value);
 
     std::vector<llvm::Value *> indexes;
@@ -369,7 +369,7 @@ void ModuleGenerator::visit(ast::Index *expression) {
         throw errors::InternalError(expression, "N/A");
     }
 
-    SymbolTable::Symbol *symbol = m_scope.back()->lookup(identifier);
+    symboltable::Symbol *symbol = m_scope.back()->lookup(identifier);
 
     llvm::Value *instance = symbol->value;
 
@@ -551,7 +551,7 @@ void ModuleGenerator::visit(ast::Parameter *parameter) {
 }
 
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
-    SymbolTable::Symbol *symbol = m_scope.back()->lookup(definition->name);
+    symboltable::Symbol *symbol = m_scope.back()->lookup(definition->name);
 
     debug("Defining a new variable: " + symbol->name);
 
@@ -599,11 +599,11 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
-    SymbolTable::Symbol *functionSymbol = m_scope.back()->lookup(definition->name);
+    symboltable::Symbol *functionSymbol = m_scope.back()->lookup(definition->name);
 
-    Types::Method *method = static_cast<Types::Method *>(definition->type);
+    types::Method *method = static_cast<types::Method *>(definition->type);
 
-    SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
+    symboltable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
 
     std::string llvm_function_name = mangler::mangle_method(functionSymbol->name, method);
 
@@ -625,7 +625,7 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
         arg.setName(method->get_parameter_name(i));
         llvm::AllocaInst *alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, name2);
         m_irBuilder->CreateStore(&arg, alloca);
-        SymbolTable::Symbol *symbol2 = m_scope.back()->lookup(definition, name2);
+        symboltable::Symbol *symbol2 = m_scope.back()->lookup(definition, name2);
         symbol2->value = alloca;
         i++;
     }

@@ -39,7 +39,7 @@ Compiler::Compiler()
     llvm::InitializeAllAsmPrinters();
     llvm::InitializeAllAsmParsers();
 
-    llvm::PassRegistry *registry = llvm::PassRegistry::getPassRegistry();
+    auto registry = llvm::PassRegistry::getPassRegistry();
     llvm::initializeCore(*registry);
     llvm::initializeCodeGen(*registry);
     llvm::initializeLoopStrengthReducePass(*registry);
@@ -73,11 +73,11 @@ void Compiler::compile(std::string filename) {
 
     debug("Building the Symbol Table...");
 
-    SymbolTable::Builder *symbolTableBuilder = new SymbolTable::Builder();
+    symboltable::Builder *symbolTableBuilder = new symboltable::Builder();
     module->accept(symbolTableBuilder);
     assert(symbolTableBuilder->isAtRoot());
 
-    SymbolTable::Namespace *rootNamespace = symbolTableBuilder->rootNamespace();
+    symboltable::Namespace *rootNamespace = symbolTableBuilder->rootNamespace();
     delete symbolTableBuilder;
 
     debug("Parsing generics...");
@@ -92,13 +92,13 @@ void Compiler::compile(std::string filename) {
 
     debug("Inferring types...");
 
-    Typing::Inferrer *typeInferrer = new Typing::Inferrer(rootNamespace);
+    auto typeInferrer = new typing::Inferrer(rootNamespace);
     module->accept(typeInferrer);
     delete typeInferrer;
 
     debug("Checking types...");
 
-    Typing::Checker *typeChecker = new Typing::Checker(rootNamespace);
+    auto typeChecker = new typing::Checker(rootNamespace);
     module->accept(typeChecker);
     delete typeChecker;
 
