@@ -185,7 +185,13 @@ void GenericsPass::visit(AST::For *expression) {
 }
 
 void GenericsPass::visit(AST::If *expression) {
+    expression->condition->accept(this);
 
+    expression->trueCode->accept(this);
+
+    if (expression->falseCode) {
+        expression->falseCode->accept(this);
+    }
 }
 
 void GenericsPass::visit(AST::Return *expression) {

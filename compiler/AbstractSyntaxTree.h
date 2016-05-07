@@ -196,9 +196,9 @@ namespace AST {
     };
 
     struct Assignment : Expression {
-        explicit Assignment(Token *token, Identifier *lhs, Expression *rhs);
+        explicit Assignment(Token *token, Expression *lhs, Expression *rhs);
 
-        Identifier *lhs;
+        Expression *lhs;
         Expression *rhs;
 
         void accept(Visitor *visitor);

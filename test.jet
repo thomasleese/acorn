@@ -18,29 +18,28 @@ end
 
 def grow_if_necessary{T}(array as Array{T}) as Void
     if array.size == array.capacity
-        let new_capacity = array.capacity + 10
+        let new_capacity = array.capacity + 10 as UnsignedInteger
         free{T}(pointer: array.elements)
         array.elements = malloc{T}(size: new_capacity * strideof T)
         array.new_capacity = new_capacity
     end
 end
 
-def append{T}(array as Array{T}) as Void
-    array.grow_if_necessary()
+def append{T}(array as Array{T}, item as T) as Void
+    array.grow_if_necessary{Integer}()
 end
 
 let a = create_array{Integer}(n: 10)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-a.append(1)
-
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)
+a.append{Integer}(item: 1)

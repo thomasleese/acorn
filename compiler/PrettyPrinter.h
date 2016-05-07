@@ -26,6 +26,7 @@ public:
     void visit(AST::StringLiteral *expression);
     void visit(AST::SequenceLiteral *sequence);
     void visit(AST::MappingLiteral *mapping);
+    void visit(AST::RecordLiteral *expression);
     void visit(AST::Argument *argument);
     void visit(AST::Call *expression);
     void visit(AST::CCall *expression);

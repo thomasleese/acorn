@@ -383,7 +383,7 @@ Selector *Parser::readSelector(AST::Expression *operand) {
 
     Selector *selector = new Selector(token);
     selector->operand = operand;
-    selector->name = readIdentifier(false);
+    selector->name = readIdentifier(true);
     return selector;
 }
 
@@ -548,10 +548,7 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
 
             lhs = call;
         } else {
-            Identifier *lhs_identifier = dynamic_cast<Identifier *>(lhs);
-            assert(lhs_identifier);
-            Assignment *assignment = new Assignment(token, lhs_identifier, rhs);
-            lhs = assignment;
+            lhs = new Assignment(token, lhs, rhs);
         }
     }
 

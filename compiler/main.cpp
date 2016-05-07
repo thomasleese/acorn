@@ -7,7 +7,7 @@ int main() {
     Compiler compiler;
 
     try {
-        compiler.compile("test.jet");
+        compiler.compile("test2.jet");
     } catch (Errors::CompilerError e) {
         e.print();
         return 1;

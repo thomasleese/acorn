@@ -74,6 +74,7 @@ void Builtins::fill_symbol_table(SymbolTable::Namespace *table) {
 
     SymbolTable::Symbol *addition = add_base_function(table, "+");
     add_base_method(addition, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Integer(64)));
+    add_base_method(addition, new Types::Method("a", new Types::UnsignedInteger(64), "b", new Types::UnsignedInteger(64), new Types::UnsignedInteger(64)));
     add_base_method(addition, new Types::Method("a", new Types::Float(64), "b", new Types::Float(64), new Types::Float(64)));
 
     SymbolTable::Symbol *subtraction = add_base_function(table, "-");
@@ -81,6 +82,7 @@ void Builtins::fill_symbol_table(SymbolTable::Namespace *table) {
 
     SymbolTable::Symbol *equality = add_base_function(table, "==");
     add_base_method(equality, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Boolean()));
+    add_base_method(equality, new Types::Method("a", new Types::UnsignedInteger(64), "b", new Types::UnsignedInteger(64), new Types::Boolean()));
 
     SymbolTable::Symbol *not_equality = add_base_function(table, "!=");
     add_base_method(not_equality, new Types::Method("a", new Types::Integer(64), "b", new Types::Integer(64), new Types::Boolean()));
@@ -152,6 +154,10 @@ void Builtins::fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *mod
 
     f = create_llvm_function(table, module, "+", 1);
     initialise_binary_function(f, irBuilder);
+    irBuilder->CreateRet(irBuilder->CreateAdd(lhs, rhs));
+
+    f = create_llvm_function(table, module, "+", 2);
+    initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateFAdd(lhs, rhs));
 
     // subtraction
@@ -161,6 +167,10 @@ void Builtins::fill_llvm_module(SymbolTable::Namespace *table, llvm::Module *mod
 
     // equality
     f = create_llvm_function(table, module, "==", 0);
+    initialise_binary_function(f, irBuilder);
+    irBuilder->CreateRet(irBuilder->CreateICmpEQ(lhs, rhs));
+
+    f = create_llvm_function(table, module, "==", 1);
     initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateICmpEQ(lhs, rhs));
 

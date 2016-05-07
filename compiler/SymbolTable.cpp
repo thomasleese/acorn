@@ -266,7 +266,13 @@ void Builder::visit(AST::For *expression) {
 }
 
 void Builder::visit(AST::If *expression) {
+    expression->condition->accept(this);
 
+    expression->trueCode->accept(this);
+
+    if (expression->falseCode) {
+        expression->falseCode->accept(this);
+    }
 }
 
 void Builder::visit(AST::Return *expression) {
@@ -379,7 +385,7 @@ void Builder::visit(AST::DefinitionStatement *statement) {
 }
 
 void Builder::visit(AST::ExpressionStatement *statement) {
-
+    statement->expression->accept(this);
 }
 
 void Builder::visit(AST::ImportStatement *statement) {

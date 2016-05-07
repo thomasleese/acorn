@@ -71,11 +71,6 @@ void Compiler::compile(std::string filename) {
     Parser parser(tokens);
     AST::SourceFile *module = parser.parse(filename);
 
-    /*PrettyPrinter *printer = new PrettyPrinter();
-    module->accept(printer);
-    printer->print();
-    delete printer;*/
-
     debug("Building the Symbol Table...");
 
     SymbolTable::Builder *symbolTableBuilder = new SymbolTable::Builder();
@@ -90,10 +85,10 @@ void Compiler::compile(std::string filename) {
     auto generics_pass = new preprocessor::GenericsPass(rootNamespace);
     module->accept(generics_pass);
 
-    /*printer = new PrettyPrinter();
+    auto printer = new PrettyPrinter();
     module->accept(printer);
     printer->print();
-    delete printer;*/
+    delete printer;
 
     debug("Inferring types...");
 

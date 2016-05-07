@@ -83,6 +83,21 @@ void PrettyPrinter::visit(AST::MappingLiteral *mapping) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(AST::RecordLiteral *expression) {
+    ss << indentation() << "(RecordLiteral\n";
+    indent++;
+
+    expression->name->accept(this);
+
+    for (unsigned long i = 0; i < expression->field_names.size(); i++) {
+        expression->field_names[i]->accept(this);
+        expression->field_values[i]->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(AST::Argument *argument) {
     ss << indentation() << "(Argument\n";
     indent++;

@@ -324,7 +324,10 @@ void ModuleGenerator::visit(AST::Assignment *expression) {
     llvm::Value *value = m_llvmValues.back();
     m_llvmValues.pop_back();
 
-    llvm::Value *ptr = m_scope.back()->lookup(expression->lhs)->value;
+    auto lhs_identifier = dynamic_cast<AST::Identifier *>(expression->lhs);
+    assert(lhs_identifier);
+
+    llvm::Value *ptr = m_scope.back()->lookup(lhs_identifier)->value;
 
     m_irBuilder->CreateStore(value, ptr);
 }
