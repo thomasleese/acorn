@@ -11,10 +11,14 @@ namespace Types {
     class Method;
 }
 
-namespace Mangler {
+namespace jet {
 
-    std::string mangle_method(std::string name, Types::Method *method);
+    namespace mangler {
 
-};
+        std::string mangle_method(std::string name, Types::Method *method);
+
+    }
+
+}
 
 #endif //JET_MANGLER_H

@@ -102,7 +102,7 @@ llvm::Function *create_llvm_function(SymbolTable::Namespace *table, llvm::Module
     Types::Function *functionType = static_cast<Types::Function *>(table->lookup(nullptr, name)->type);
     Types::Method *methodType = functionType->get_method(index);
 
-    std::string mangled_name = Mangler::mangle_method(name, methodType);
+    std::string mangled_name = mangler::mangle_method(name, methodType);
 
     auto type_generator = new codegen::TypeGenerator();
     methodType->accept(type_generator);

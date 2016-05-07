@@ -219,7 +219,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
 
         Types::Method *method = functionType->find_method(expression, expression->arguments);
 
-        std::string method_name = Mangler::mangle_method(symbol->name, method);
+        std::string method_name = mangler::mangle_method(symbol->name, method);
         function = m_module->getFunction(method_name);
         if (!function) {
             throw errors::InternalError(expression, "No function defined (" + method_name + ").");
@@ -605,7 +605,7 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
 
     SymbolTable::Symbol *symbol = functionSymbol->nameSpace->lookup(definition, method->mangled_name());
 
-    std::string llvm_function_name = Mangler::mangle_method(functionSymbol->name, method);
+    std::string llvm_function_name = mangler::mangle_method(functionSymbol->name, method);
 
     m_scope.push_back(symbol->nameSpace);
 

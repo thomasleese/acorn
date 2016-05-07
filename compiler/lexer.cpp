@@ -11,7 +11,7 @@
 
 #include "Errors.h"
 
-#include "Lexer.h"
+#include "lexer.h"
 
 using namespace jet;
 
