@@ -28,7 +28,7 @@
 #include "Preprocessor.h"
 #include "Typing.h"
 
-#include "Compiler.h"
+#include "compiler.h"
 
 using namespace jet;
 

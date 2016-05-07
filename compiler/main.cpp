@@ -4,7 +4,7 @@
 #include "Errors.h"
 
 int main() {
-    Compiler compiler;
+    jet::Compiler compiler;
 
     try {
         compiler.compile("test2.jet");
