@@ -186,33 +186,6 @@ RecordLiteral *RecordLiteral::clone() const {
     return literal;
 }
 
-Argument::Argument(Token *token) : Node(token) {
-    this->name = nullptr;
-}
-
-Argument::Argument(Token *token, std::string name) : Node(token) {
-    this->name = new Identifier(token, name);
-}
-
-void Argument::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-Argument *Argument::clone() const {
-    auto new_argument = new Argument(this->token);
-
-    if (this->name) {
-        new_argument->name = this->name->clone();
-    } else {
-        new_argument->name = nullptr;
-    }
-
-    new_argument->value = this->value->clone();
-
-    new_argument->type = this->type;
-    return new_argument;
-}
-
 Call::Call(Token *token) : Expression(token) {
 
 }
@@ -437,7 +410,7 @@ Strideof* Strideof::clone() const {
 }
 
 Parameter::Parameter(Token *token) : Node(token) {
-    this->defaultExpression = nullptr;
+
 }
 
 void Parameter::accept(Visitor *visitor) {
@@ -448,9 +421,6 @@ Parameter* Parameter::clone() const {
     auto new_parameter = new Parameter(this->token);
     new_parameter->name = this->name->clone();
     new_parameter->typeNode = this->typeNode->clone();
-    if (this->defaultExpression) {
-        new_parameter->defaultExpression = this->defaultExpression->clone();
-    }
     new_parameter->type = this->type;
     return new_parameter;
 }

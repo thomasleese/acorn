@@ -221,10 +221,6 @@ void ModuleGenerator::visit(ast::RecordLiteral *expression) {
     m_llvmValues.push_back(m_irBuilder->CreateLoad(instance));
 }
 
-void ModuleGenerator::visit(ast::Argument *argument) {
-    argument->value->accept(this);
-}
-
 void ModuleGenerator::visit(ast::Call *expression) {
     ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
     if (identifier) {
@@ -233,66 +229,27 @@ void ModuleGenerator::visit(ast::Call *expression) {
         auto symbol = m_scope.back()->lookup(this, identifier);
         types::Function *functionType = dynamic_cast<types::Function *>(symbol->type);
 
-        llvm::Function *function;
-
-        types::Method *method = functionType->find_method(expression, expression->arguments);
-        if (method == nullptr) {
-            push_error(new errors::UndefinedError(expression, "No method found."));
+        std::vector<types::Type *> argument_types;
+        for (auto arg : expression->arguments) {
+            argument_types.push_back(arg->type);
         }
+
+        auto method = functionType->find_method(expression, argument_types);
+        assert(method);
 
         std::string method_name = codegen::mangle_method(symbol->name, method);
-        function = m_module->getFunction(method_name);
-        if (!function) {
-            push_error(new errors::InternalError(expression, "No function defined (" + method_name + ")."));
-            return;
-        }
-
-        std::map<std::string, uint64_t> arg_positions;
-        uint64_t i = 0;
-        for (auto &arg : function->args()) {
-            arg_positions[arg.getName()] = i;
-            i++;
-        }
-
-        const unsigned long noArguments = expression->arguments.size();
+        auto function = m_module->getFunction(method_name);
+        assert(function);
 
         std::vector<llvm::Value *> arguments;
-        for (unsigned long i = 0; i < noArguments; i++) {
-            arguments.push_back(nullptr);
-        }
-
-        for (unsigned long i = 0; i < expression->arguments.size(); i++) {
-            ast::Argument *argument = expression->arguments[i];
-
-            std::stringstream ss;
-            ss << "Argument " << i;
-            debug(ss.str());
-
+        for (auto argument : expression->arguments) {
             argument->accept(this);
 
-            uint64_t index = i;
-            if (argument->name) {
-                debug("Getting parameter position of " + argument->name->value);
-                auto it = arg_positions.find(argument->name->value);
-                if (it == arg_positions.end()) {
-                    push_error(new errors::InternalError(argument, "no argument"));
-                    return;
-                } else {
-                    index = it->second;
-                }
-            }
-
-            ss = std::stringstream();
-            ss << "Assigned to index " << index;
-            debug(ss.str());
-
-            arguments[index] = m_llvmValues.back();
+            arguments.push_back(m_llvmValues.back());
             m_llvmValues.pop_back();
         }
 
-        debug("Creating call instruction");
-
-        llvm::Value *value = m_irBuilder->CreateCall(function, arguments);
+        auto value = m_irBuilder->CreateCall(function, arguments);
         m_llvmValues.push_back(value);
 
         debug("Ending call to: " + identifier->value);
@@ -649,11 +606,11 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
 
     int i = 0;
     for (auto &arg : function->args()) {
-        std::string name2 = method->get_parameter_name(i);
-        arg.setName(method->get_parameter_name(i));
-        llvm::AllocaInst *alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, name2);
+        std::string arg_name = definition->parameters[i]->name->value;
+        arg.setName(arg_name);
+        llvm::AllocaInst *alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, arg_name);
         m_irBuilder->CreateStore(&arg, alloca);
-        auto symbol2 = m_scope.back()->lookup(this, definition, name2);
+        auto symbol2 = m_scope.back()->lookup(this, definition, arg_name);
         symbol2->value = alloca;
         i++;
     }

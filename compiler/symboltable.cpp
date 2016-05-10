@@ -229,10 +229,6 @@ void Builder::visit(ast::RecordLiteral *expression) {
 
 }
 
-void Builder::visit(ast::Argument *argument) {
-
-}
-
 void Builder::visit(ast::Call *expression) {
 
 }

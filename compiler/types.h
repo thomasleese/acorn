@@ -314,28 +314,23 @@ namespace jet {
 
         class Method : public Type {
         public:
-            Method(std::vector<Type *> parameter_types, Type *return_type,
-                   std::vector<std::string> official_parameter_order);
+            Method(std::vector<Type *> parameter_types, Type *return_type);
             Method(Type *return_type);
-            Method(std::string parameter1_name, Type *parameter1_type, Type *return_type);
-            Method(std::string parameter1_name, Type *parameter1_type, std::string parameter2_name,
-                   Type *parameter2_type, Type *return_type);
+            Method(Type *parameter1_type, Type *return_type);
+            Method(Type *parameter1_type, Type *parameter2_type, Type *return_type);
 
             std::string name() const;
             std::string mangled_name() const;
 
             std::vector<Type *> parameter_types() const;
             Type *return_type() const;
-            long get_parameter_position(std::string name) const;
-            std::string get_parameter_name(long position) const;
-            bool could_be_called_with(std::vector<ast::Argument *> arguments);
+            bool could_be_called_with(std::vector<Type *> arguments);
 
             void accept(Visitor *visitor);
 
         private:
             std::vector<Type *> m_parameter_types;
             Type *m_return_type;
-            std::vector<std::string> m_official_parameter_order;
         };
 
         class Function : public Type {
@@ -344,7 +339,7 @@ namespace jet {
             std::string mangled_name() const;
 
             void add_method(Method *method);
-            Method *find_method(ast::Node *node, std::vector<ast::Argument *> arguments) const;
+            Method *find_method(ast::Node *node, std::vector<Type *> arguments) const;
             Method *get_method(int index) const;
             int no_methods() const;
 

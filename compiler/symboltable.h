@@ -94,7 +94,6 @@ namespace jet {
             void visit(ast::SequenceLiteral *sequence);
             void visit(ast::MappingLiteral *mapping);
             void visit(ast::RecordLiteral *expression);
-            void visit(ast::Argument *argument);
             void visit(ast::Call *expression);
             void visit(ast::CCall *expression);
             void visit(ast::Cast *expression);

@@ -131,14 +131,6 @@ void GenericsPass::visit(ast::RecordLiteral *expression) {
     expression->name->accept(this);
 }
 
-void GenericsPass::visit(ast::Argument *argument) {
-    if (argument->name) {
-        //argument->name->accept(this);
-    }
-
-    argument->value->accept(this);
-}
-
 void GenericsPass::visit(ast::Call *expression) {
     expression->operand->accept(this);
 
@@ -217,9 +209,6 @@ void GenericsPass::visit(ast::Strideof *expression) {
 void GenericsPass::visit(ast::Parameter *parameter) {
     parameter->name->accept(this);
     parameter->typeNode->accept(this);
-    if (parameter->defaultExpression) {
-        parameter->defaultExpression->accept(this);
-    }
 }
 
 void GenericsPass::visit(ast::VariableDefinition *definition) {

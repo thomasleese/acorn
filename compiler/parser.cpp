@@ -301,14 +301,6 @@ RecordLiteral *Parser::readRecordLiteral() {
     return literal;
 }
 
-Argument *Parser::readArgument() {
-    Argument *argument = new Argument(m_tokens.front());
-    argument->name = readIdentifier(false);
-    readToken(Token::Colon);
-    argument->value = readExpression();
-    return argument;
-}
-
 Call *Parser::readCall(Expression *operand) {
     Token *token = readToken(Token::OpenParenthesis);
 
@@ -316,7 +308,7 @@ Call *Parser::readCall(Expression *operand) {
     call->operand = operand;
 
     while (!isToken(Token::CloseParenthesis)) {
-        call->arguments.push_back(readArgument());
+        call->arguments.push_back(readExpression());
 
         if (isToken(Token::Comma)) {
             readToken(Token::Comma);
@@ -505,10 +497,7 @@ Expression *Parser::readUnaryExpression() {
     if (isToken(Token::Operator)) {
         Call *expr = new Call(m_tokens.front());
         expr->operand = readOperator(true);
-
-        Argument *arg = new Argument(m_tokens.front());
-        arg->value = readUnaryExpression();
-        expr->arguments.push_back(arg);
+        expr->arguments.push_back(readUnaryExpression());
 
         return expr;
     } else {
@@ -537,16 +526,10 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
         }
 
         if (op) {
-            Call *call = new Call(token);
+            auto call = new Call(token);
             call->operand = op;
-
-            Argument *lhsArg = new Argument(token);
-            lhsArg->value = lhs;
-            call->arguments.push_back(lhsArg);
-
-            Argument *rhsArg = new Argument(token);
-            rhsArg->value = rhs;
-            call->arguments.push_back(rhsArg);
+            call->arguments.push_back(lhs);
+            call->arguments.push_back(rhs);
 
             lhs = call;
         } else {
@@ -597,8 +580,10 @@ Expression *Parser::readPrimaryExpression() {
         return readRecordLiteral();
     } else if (isToken(Token::Identifier)) {
         return readIdentifier(true);
-    } else {
+    } else if (!m_tokens.empty()) {  // FIXME refactor into function
         push_error(new errors::SyntaxError(m_tokens.front(), "primary expression"));
+        return nullptr;
+    } else {
         return nullptr;
     }
 }
@@ -615,11 +600,9 @@ Expression *Parser::readOperandExpression() {
             left = readCast(left);
         } else if (isToken(Token::Dot)) {
             Selector *selector = readSelector(left);
-            if (isToken(Token::OpenParenthesis) || isToken(Token::OpenBrace)) {
-                Call *call = readCall(selector->name);
-                Argument *arg = new Argument(selector->operand->token);
-                arg->value = selector->operand;
-                call->arguments.insert(call->arguments.begin(), arg);
+            if (isToken(Token::OpenParenthesis)) {
+                auto call = readCall(selector->name);
+                call->arguments.insert(call->arguments.begin(), selector->operand);
                 left = call;
             } else {
                 left = selector;
@@ -639,11 +622,6 @@ Parameter *Parser::readParameter() {
 
     readToken(Token::AsKeyword);
     parameter->typeNode = readIdentifier(true);
-
-    if (isToken(Token::Colon)) {
-        readToken(Token::Colon);
-        parameter->defaultExpression = readExpression();
-    }
 
     return parameter;
 }
@@ -751,7 +729,12 @@ Statement *Parser::readStatement() {
     } else if (isToken(Token::TypeKeyword)) {
         statement = new DefinitionStatement(readTypeDefinition());
     } else {
-        statement = new ExpressionStatement(readExpression());
+        auto expression = readExpression();
+        if (expression == nullptr) {
+            return nullptr;
+        }
+
+        statement = new ExpressionStatement(expression);
     }
 
     readToken(Token::Newline);

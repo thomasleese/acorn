@@ -549,10 +549,9 @@ void Tuple::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Method::Method(std::vector<Type *> parameter_types, Type *return_type, std::vector<std::string> official_parameter_order) :
+Method::Method(std::vector<Type *> parameter_types, Type *return_type) :
         m_parameter_types(parameter_types),
-        m_return_type(return_type),
-        m_official_parameter_order(official_parameter_order) {
+        m_return_type(return_type) {
 
 }
 
@@ -560,17 +559,14 @@ Method::Method(Type *return_type) : m_return_type(return_type) {
 
 }
 
-Method::Method(std::string parameter1_name, Type *parameter1_type, Type *return_type) {
+Method::Method(Type *parameter1_type, Type *return_type) {
     m_parameter_types.push_back(parameter1_type);
-    m_official_parameter_order.push_back(parameter1_name);
     m_return_type = return_type;
 }
 
-Method::Method(std::string parameter1_name, Type *parameter1_type, std::string parameter2_name, Type *parameter2_type, Type *return_type) {
+Method::Method(Type *parameter1_type, Type *parameter2_type, Type *return_type) {
     m_parameter_types.push_back(parameter1_type);
     m_parameter_types.push_back(parameter2_type);
-    m_official_parameter_order.push_back(parameter1_name);
-    m_official_parameter_order.push_back(parameter2_name);
     m_return_type = return_type;
 }
 
@@ -580,11 +576,8 @@ std::string Method::name() const {
     for (auto type : m_parameter_types) {
         ss << type->name() << ", ";
     }
-    for (auto name : m_official_parameter_order) {
-        ss << name << ", ";
-    }
     ss << m_return_type->name();
-    ss << "}" << ", ";
+    ss << "}";
     return ss.str();
 }
 
@@ -606,50 +599,18 @@ Type *Method::return_type() const {
     return m_return_type;
 }
 
-long Method::get_parameter_position(std::string name) const {
-    auto it = std::find(m_official_parameter_order.begin(), m_official_parameter_order.end(), name);
-    if (it == m_official_parameter_order.end()) {
-        return -1;
+bool Method::could_be_called_with(std::vector<Type *> arguments) {
+    if (arguments.size() != m_parameter_types.size()) {
+        return false;
     }
-
-    return std::distance(m_official_parameter_order.begin(), it);
-}
-
-std::string Method::get_parameter_name(long position) const {
-    return m_official_parameter_order[position];
-}
-
-bool Method::could_be_called_with(std::vector<ast::Argument *> arguments) {
-    unsigned long matches = 0;
 
     for (unsigned long i = 0; i < arguments.size(); i++) {
-        Type *type = arguments[i]->type;
-        if (!type) {
+        if (!m_parameter_types[i]->isCompatible(arguments[i])) {
             return false;
-        }
-
-        unsigned long index = i;
-        if (arguments[i]->name) {
-            std::string name = arguments[i]->name->value;
-            auto pos = get_parameter_position(name);
-            if (pos < 0) {
-                return false;
-            }
-
-            index = pos;
-        }
-
-        if (index >= m_parameter_types.size()) {
-            return false;
-        }
-
-        if (m_parameter_types[index]->isCompatible(type)) {
-            matches++;
         }
     }
 
-    // FIXME deal with default values
-    return matches == m_parameter_types.size();
+    return true;
 }
 
 void Method::accept(Visitor *visitor) {
@@ -660,7 +621,10 @@ std::string Function::name() const {
     std::stringstream ss;
     ss << "Function{";
     for (auto method : m_methods) {
-        ss << method->name() << ", ";
+        ss << method->name();
+        if (method != m_methods.back()) {
+            ss << ", ";
+        }
     }
     ss << "}";
     return ss.str();
@@ -679,16 +643,11 @@ void Function::add_method(Method *method) {
     m_methods.push_back(method);
 }
 
-Method *Function::find_method(ast::Node *node, std::vector<ast::Argument *> arguments) const {
+Method *Function::find_method(ast::Node *node, std::vector<Type *> arguments) const {
     for (auto method : m_methods) {
         if (method->could_be_called_with(arguments)) {
             return method;
         }
-    }
-
-    std::stringstream ss;
-    for (auto arg : arguments) {
-        ss << arg->type->name() << ", ";
     }
 
     return nullptr;

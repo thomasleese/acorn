@@ -153,23 +153,12 @@ namespace jet {
             RecordLiteral *clone() const;
         };
 
-        struct Argument : Node {
-            explicit Argument(Token *token);
-            Argument(Token *token, std::string name);
-
-            Identifier *name;
-            Expression *value;
-
-            void accept(Visitor *visitor);
-            Argument *clone() const;
-        };
-
         struct Call : Expression {
             Call(Token *token);
             Call(std::string name, Token *token);
 
             Expression *operand;
-            std::vector<Argument *> arguments;
+            std::vector<Expression *> arguments;
 
             void accept(Visitor *visitor);
             Call *clone() const;
@@ -312,7 +301,6 @@ namespace jet {
 
             Identifier *name;
             Identifier *typeNode;
-            Expression *defaultExpression;
 
             void accept(Visitor *visitor);
             Parameter *clone() const;

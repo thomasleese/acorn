@@ -73,31 +73,31 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
     add_symbol(table, "Nothing", new types::Void());
 
     symboltable::Symbol *multiplication = add_base_function(table, "*");
-    add_base_method(multiplication, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Integer(64)));
+    add_base_method(multiplication, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
 
     symboltable::Symbol *addition = add_base_function(table, "+");
-    add_base_method(addition, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Integer(64)));
-    add_base_method(addition, new types::Method("a", new types::UnsignedInteger(64), "b", new types::UnsignedInteger(64), new types::UnsignedInteger(64)));
-    add_base_method(addition, new types::Method("a", new types::Float(64), "b", new types::Float(64), new types::Float(64)));
+    add_base_method(addition, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
+    add_base_method(addition, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::UnsignedInteger(64)));
+    add_base_method(addition, new types::Method(new types::Float(64), new types::Float(64), new types::Float(64)));
 
     symboltable::Symbol *subtraction = add_base_function(table, "-");
-    add_base_method(subtraction, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Integer(64)));
+    add_base_method(subtraction, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
 
     symboltable::Symbol *equality = add_base_function(table, "==");
-    add_base_method(equality, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Boolean()));
-    add_base_method(equality, new types::Method("a", new types::UnsignedInteger(64), "b", new types::UnsignedInteger(64), new types::Boolean()));
+    add_base_method(equality, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
+    add_base_method(equality, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::Boolean()));
 
     symboltable::Symbol *not_equality = add_base_function(table, "!=");
-    add_base_method(not_equality, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Boolean()));
+    add_base_method(not_equality, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
 
     symboltable::Symbol *less_than = add_base_function(table, "<");
-    add_base_method(less_than, new types::Method("a", new types::Integer(64), "b", new types::Integer(64), new types::Boolean()));
+    add_base_method(less_than, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
 
     symboltable::Symbol *to_integer = add_base_function(table, "to_integer");
-    add_base_method(to_integer, new types::Method("self", new types::Float(64), new types::Integer(64)));
+    add_base_method(to_integer, new types::Method(new types::Float(64), new types::Integer(64)));
 
     symboltable::Symbol *to_float = add_base_function(table, "to_float");
-    add_base_method(to_float, new types::Method("self", new types::Integer(64), new types::Float(64)));
+    add_base_method(to_float, new types::Method(new types::Integer(64), new types::Float(64)));
 }
 
 llvm::Function *create_llvm_function(symboltable::Namespace *table, llvm::Module *module, std::string name, int index) {

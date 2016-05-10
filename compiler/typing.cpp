@@ -174,40 +174,29 @@ void Inferrer::visit(ast::RecordLiteral *expression) {
     // TODO check matches definition of record
 }
 
-void Inferrer::visit(ast::Argument *argument) {
-    argument->value->accept(this);
-    if (argument->name) {
-        argument->name->type = argument->value->type;
-    }
-    argument->type = argument->value->type;
-}
-
 void Inferrer::visit(ast::Call *expression) {
     expression->operand->accept(this);
 
+    std::vector<types::Type *> argument_types;
     for (auto arg : expression->arguments) {
         arg->accept(this);
+        argument_types.push_back(arg->type);
     }
 
     types::Function *function = dynamic_cast<types::Function *>(expression->operand->type);
-    types::RecordConstructor *record = dynamic_cast<types::RecordConstructor *>(expression->operand->type);
-    if (function == nullptr && record == nullptr) {
-        expression->type = new types::Union(new types::Function(), new types::RecordConstructor());
+    if (function == nullptr) {
+        expression->type = new types::Function();
         push_error(new errors::TypeMismatchError(expression->operand, expression));
         delete expression->type;
         expression->type = nullptr;
         // FIXME make the construct accept a type directly
     }
 
-    if (record == nullptr) {
-        types::Method *method = function->find_method(expression, expression->arguments);
-        if (method == nullptr) {
-            push_error(new errors::UndefinedError(expression, "Method not found."));
-        } else {
-            expression->type = method->return_type();
-        }
+    auto method = function->find_method(expression, argument_types);
+    if (method == nullptr) {
+        push_error(new errors::UndefinedError(expression, "Method not found."));
     } else {
-        expression->type = record->create(this, expression, std::vector<types::Type *>());
+        expression->type = method->return_type();
     }
 }
 
@@ -393,8 +382,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     definition->returnType->accept(this);
     definition->returnType->type = instance_type(definition->returnType);
 
-    types::Method *method = new types::Method(parameterTypes, definition->returnType->type,
-                                              officialParameterOrder);
+    auto method = new types::Method(parameterTypes, definition->returnType->type);
 
     function->add_method(method);
 
@@ -586,16 +574,6 @@ void Checker::visit(ast::RecordLiteral *expression) {
     check_not_null(expression);
 }
 
-void Checker::visit(ast::Argument *argument) {
-    if (argument->name) {
-        argument->name->accept(this);
-    }
-
-    argument->value->accept(this);
-
-    check_not_null(argument);
-}
-
 void Checker::visit(ast::Call *expression) {
     expression->operand->accept(this);
 
@@ -696,10 +674,6 @@ void Checker::visit(ast::Strideof *expression) {
 
 void Checker::visit(ast::Parameter *parameter) {
     parameter->typeNode->accept(this);
-
-    if (parameter->defaultExpression) {
-        parameter->defaultExpression->accept(this);
-    }
 
     check_not_null(parameter);
 }

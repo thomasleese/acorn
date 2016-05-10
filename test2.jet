@@ -1,18 +1,11 @@
 type Integer as Integer64
 
-def malloc{T}(size as Integer) as UnsafePointer{T}
-    let pointer = ccall malloc(Integer) as UnsafePointer{Integer8} using size
-    return pointer as UnsafePointer{T}
+def hello() as Integer
+    return 10
 end
 
-def free{T}(pointer as UnsafePointer{T}) as Void
-    let void_pointer = pointer as UnsafePointer{Integer8}
-    ccall free(UnsafePointer{Integer8}) as Void using void_pointer
+def hello(x as Integer) as Integer
+    return x
 end
 
-def free_me{T}(pointer as UnsafePointer{T}) as Void
-    free{T}(pointer: pointer)
-end
-
-let a = malloc{Integer}(size: 10)
-free_me{Integer}(pointer: a)
+let a = hello()

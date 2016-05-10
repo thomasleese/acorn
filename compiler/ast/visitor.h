@@ -19,7 +19,6 @@ namespace jet {
         struct SequenceLiteral;
         struct MappingLiteral;
         struct RecordLiteral;
-        struct Argument;
         struct Call;
         struct CCall;
         struct Cast;
@@ -60,7 +59,6 @@ namespace jet {
             virtual void visit(SequenceLiteral *expression) = 0;
             virtual void visit(MappingLiteral *expression) = 0;
             virtual void visit(RecordLiteral *expression) = 0;
-            virtual void visit(Argument *expression) = 0;
             virtual void visit(Call *expression) = 0;
             virtual void visit(CCall *expression) = 0;
             virtual void visit(Cast *expression) = 0;

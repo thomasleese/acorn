@@ -102,22 +102,6 @@ void PrettyPrinter::visit(ast::RecordLiteral *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Argument *argument) {
-    ss << indentation() << "(Argument\n";
-    indent++;
-
-    if (argument->name) {
-        argument->name->accept(this);
-    } else {
-        ss << indentation() << "[Unnammed]\n";
-    }
-
-    argument->value->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
 void PrettyPrinter::visit(ast::Call *expression) {
     ss << indentation() << "(Call\n";
     indent++;
@@ -291,10 +275,6 @@ void PrettyPrinter::visit(ast::Parameter *parameter) {
 
     parameter->name->accept(this);
     parameter->typeNode->accept(this);
-
-    if (parameter->defaultExpression) {
-        parameter->defaultExpression->accept(this);
-    }
 
     indent--;
     ss << indentation() << ")\n";
