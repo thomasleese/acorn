@@ -14,11 +14,9 @@
 using namespace jet;
 using namespace jet::errors;
 
-CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) {
-    m_filename = filename;
-    m_lineNumber = lineNumber;
-    m_column = column;
-    m_line = line;
+CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) :
+        m_filename(filename), m_lineNumber(lineNumber), m_column(column), m_line(line) {
+
 }
 
 CompilerError::CompilerError(Token *token) :

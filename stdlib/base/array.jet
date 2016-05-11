@@ -1,9 +1,0 @@
-type Array{T}
-    elements as ManagedUnsafePointer{T}
-    length as Integer
-    capacity as Integer
-end
-
-def init() as Array{T}
-
-end

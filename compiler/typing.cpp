@@ -155,7 +155,9 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
         elementType = *(types.begin());
     }
 
-    //sequence->type = fin
+    std::vector<types::Type *> args;
+    args.push_back(elementType);
+    sequence->type = find_type_constructor(sequence, "Array")->create(this, sequence, args);
 }
 
 void Inferrer::visit(ast::MappingLiteral *mapping) {

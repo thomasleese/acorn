@@ -1,11 +1,18 @@
-type Integer as Integer64
+import 'base'
 
-def hello() as Integer
-    return 10
+def malloc(size as Integer) as UnsafePointer{Integer8}
+    let pointer = ccall malloc(Integer) as UnsafePointer{Integer8} using size
+    return pointer
 end
 
-def hello(x as Integer) as Integer
-    return x
+def free(pointer as UnsafePointer{Integer8}) as Void
+    ccall free(UnsafePointer{Integer8}) as Void using pointer
 end
 
-let a = hello()
+def create_integer_array(capacity as Integer) as Array{Integer}
+    let block_size = capacity * strideof Integer
+    let elements = malloc(block_size) as UnsafePointer{Integer}
+    return new Array{Integer}(elements: elements, size: 0, capacity: capacity)
+end
+
+let array = create_integer_array(10)

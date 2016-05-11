@@ -1,2 +1,2 @@
-let pi as Float = 3.14159265359
-let π as Float = pi
+let pi = 3.14159265359
+let π = pi

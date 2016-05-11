@@ -10,9 +10,8 @@
 
 using namespace jet::ast;
 
-Node::Node(Token *token) {
-    this->token = token;
-    this->type = nullptr;
+Node::Node(Token *token) : token(token), type(nullptr) {
+
 }
 
 Node::~Node() {
@@ -186,7 +185,7 @@ RecordLiteral *RecordLiteral::clone() const {
     return literal;
 }
 
-Call::Call(Token *token) : Expression(token) {
+Call::Call(Token *token) : Expression(token), operand(nullptr) {
 
 }
 
@@ -409,7 +408,7 @@ Strideof* Strideof::clone() const {
     return new_strideof;
 }
 
-Parameter::Parameter(Token *token) : Node(token) {
+Parameter::Parameter(Token *token) : Node(token), name(nullptr), typeNode(nullptr) {
 
 }
 
@@ -425,11 +424,11 @@ Parameter* Parameter::clone() const {
     return new_parameter;
 }
 
-VariableDefinition::VariableDefinition(Token *token) : Definition(token) {
+VariableDefinition::VariableDefinition(Token *token) : Definition(token), expression(nullptr) {
     this->typeNode = nullptr;
 }
 
-VariableDefinition::VariableDefinition(std::string name, Token *token) : Definition(token) {
+VariableDefinition::VariableDefinition(std::string name, Token *token) : Definition(token), expression(nullptr) {
     this->name = new Identifier(token, name);
     this->typeNode = nullptr;
 }

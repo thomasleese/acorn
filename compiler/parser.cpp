@@ -58,6 +58,8 @@ SourceFile *Parser::parse(std::string name) {
         for (auto statement : module2->code->statements) {
             module->code->statements.push_back(statement);
         }
+
+        delete module2;
     }
 
     // read the remaining statements of the file
