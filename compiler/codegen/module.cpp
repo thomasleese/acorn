@@ -11,6 +11,10 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/Instructions.h>
 #include <llvm/Support/Casting.h>
+#include <llvm/IR/LegacyPassManager.h>
+#include <llvm/Support/TargetSelect.h>
+#include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/IPO.h>
 
 #include "../ast/nodes.h"
 #include "../builtins.h"
@@ -621,6 +625,7 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
     std::string str;
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
+        m_function_pass_manager->run(*function);
         function->dump();
         push_error(new errors::InternalError(definition, stream.str()));
     }
@@ -651,6 +656,16 @@ void ModuleGenerator::visit(ast::ImportStatement *statement) {
 
 void ModuleGenerator::visit(ast::SourceFile *module) {
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
+
+    m_function_pass_manager = new llvm::legacy::FunctionPassManager(m_module);
+    m_function_pass_manager->add(llvm::createFunctionInliningPass());
+    //m_function_pass_manager->add(llvm::createBasicAliasAnalysisPass());
+    //m_function_pass_manager->add(llvm::createInstructionCombiningPass());
+    //m_function_pass_manager->add(llvm::createReassociatePass());
+    //m_function_pass_manager->add(llvm::createGVNPass());
+    //m_function_pass_manager->add(llvm::createCFGSimplificationPass());
+    //m_function_pass_manager->add(llvm::createInstructionCombiningPass());
+    m_function_pass_manager->doFinalization();
 
     builtins::fill_llvm_module(m_scope.back(), m_module, m_irBuilder);
 

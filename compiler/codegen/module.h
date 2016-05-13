@@ -8,6 +8,7 @@
 #include <llvm/IR/MDBuilder.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
+#include <llvm/IR/LegacyPassManager.h>
 
 #include "../ast/visitor.h"
 #include "../compiler/pass.h"
@@ -90,6 +91,7 @@ namespace acorn {
             llvm::IRBuilder<> *m_irBuilder;
             llvm::MDBuilder *m_mdBuilder;
             llvm::DataLayout *m_data_layout;
+            llvm::legacy::FunctionPassManager *m_function_pass_manager;
 
             std::vector<llvm::Value *> m_llvmValues;
 
