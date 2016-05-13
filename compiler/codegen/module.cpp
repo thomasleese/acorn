@@ -25,7 +25,7 @@ using namespace jet;
 using namespace jet::codegen;
 
 std::string codegen::mangle_method(std::string name, types::Method *type) {
-    return "_J_" + name + "_" + type->mangled_name();
+    return "_A_" + name + "_" + type->mangled_name();
 }
 
 ModuleGenerator::ModuleGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout) :

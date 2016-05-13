@@ -1,3 +1,0 @@
-type MyPointer{T} as UnsafePointer{T}
-
-let
