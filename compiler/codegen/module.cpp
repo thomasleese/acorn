@@ -319,12 +319,13 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
     llvm::Value *value = m_llvmValues.back();
     m_llvmValues.pop_back();
 
-    auto lhs_identifier = dynamic_cast<ast::Identifier *>(expression->lhs);
-    assert(lhs_identifier);
+    expression->lhs->accept(this);
+    auto load = dynamic_cast<llvm::LoadInst *>(m_llvmValues.back());
+    m_llvmValues.pop_back();
 
-    auto ptr = m_scope.back()->lookup(this, lhs_identifier)->value;
+    assert(load);
 
-    m_irBuilder->CreateStore(value, ptr);
+    m_irBuilder->CreateStore(value, load->getPointerOperand());
 }
 
 void ModuleGenerator::visit(ast::Selector *expression) {
@@ -341,7 +342,14 @@ void ModuleGenerator::visit(ast::Selector *expression) {
 
     llvm::Value *instance = symbol->value;
 
-    auto recordType = static_cast<types::Record *>(expression->operand->type);
+    types::Record *recordType;
+    auto inOutType = dynamic_cast<types::InOut *>(expression->operand->type);
+    if (inOutType) {
+        recordType = static_cast<types::Record *>(inOutType->underlying_type());
+    } else {
+        recordType = static_cast<types::Record *>(expression->operand->type);
+    }
+
     uint64_t index = recordType->get_field_index(expression->name->value);
 
     std::vector<llvm::Value *> indexes;

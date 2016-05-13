@@ -17,6 +17,9 @@
 using namespace acorn;
 using namespace acorn::typing;
 
+#define return_if_null(thing) if (thing == nullptr) return;
+#define return_if_null_type(node) return_if_null(node->type)
+
 Inferrer::Inferrer(symboltable::Namespace *rootNamespace) {
     m_namespace = rootNamespace;
 }
@@ -201,7 +204,15 @@ void Inferrer::visit(ast::Call *expression) {
 
     auto method = function->find_method(expression, argument_types);
     if (method == nullptr) {
-        push_error(new errors::UndefinedError(expression, "Method with these types"));
+        std::stringstream ss;
+        for (auto type : argument_types) {
+            ss << type->name();
+            if (type != argument_types.back()) {
+                ss << ", ";
+            }
+        }
+
+        push_error(new errors::UndefinedError(expression, "Method with " + ss.str() + " types"));
     } else {
         expression->type = method->return_type();
     }
@@ -235,6 +246,9 @@ void Inferrer::visit(ast::Assignment *expression) {
     expression->lhs->accept(this);
     expression->rhs->accept(this);
 
+    return_if_null_type(expression->lhs)
+    return_if_null_type(expression->rhs)
+
     if (!expression->lhs->type->isCompatible(expression->rhs->type)) {
         push_error(new errors::TypeMismatchError(expression->rhs, expression->lhs));
     } else {
@@ -245,13 +259,20 @@ void Inferrer::visit(ast::Assignment *expression) {
 void Inferrer::visit(ast::Selector *expression) {
     expression->operand->accept(this);
 
-    auto recordType = dynamic_cast<types::Record *>(expression->operand->type);
-    if (recordType == nullptr) {
+    auto record_type = dynamic_cast<types::Record *>(expression->operand->type);
+    if (record_type == nullptr) {
+        auto inout_type = dynamic_cast<types::InOut *>(expression->operand->type);
+        record_type = dynamic_cast<types::Record *>(inout_type->underlying_type());
+    }
+
+    if (record_type == nullptr) {
+        push_error(new errors::TypeMismatchError(expression, expression->operand));
         return;
     }
 
-    auto fieldType = recordType->get_field_type(expression->name->value);
+    auto fieldType = record_type->get_field_type(expression->name->value);
     if (fieldType == nullptr) {
+        push_error(new errors::UndefinedError(expression->name, expression->name->value));
         return;
     }
 

@@ -498,7 +498,7 @@ Type *InOut::underlying_type() const {
 }
 
 bool InOut::isCompatible(const Type *other) const {
-    return m_underlying_type->isCompatible(other);
+    return Type::isCompatible(other) || m_underlying_type->isCompatible(other);
 }
 
 void InOut::accept(Visitor *visitor) {

@@ -1,13 +1,36 @@
 import 'base'
 
-def size!(inout v as Integer) as Void
-    v = 10
+def malloc(size as Integer) as UnsafePointer{Integer8}
+    let pointer = ccall malloc(Integer) as UnsafePointer{Integer8} using size
+    return pointer
 end
 
-def do_something() as Integer
-    let a = 1
-    size!(a)
-    return a
+def free(pointer as UnsafePointer{Integer8}) as Void
+    ccall free(UnsafePointer{Integer8}) as Void using pointer
 end
 
-exit(do_something())
+def create_integer_array(capacity as Integer) as Array{Integer}
+    let elements = malloc(strideof Integer * capacity) as UnsafePointer{Integer}
+    return new Array{Integer}(elements: elements, size: 0, capacity: capacity)
+end
+
+def free!(inout array as Array{Integer}) as Void
+    free(array.elements as UnsafePointer{Integer8})
+end
+
+def setindex!(inout pointer as UnsafePointer{Integer}, key as Integer, value as Integer) as Void
+
+end
+
+def setindex!(inout array as Array{Integer}, key as Integer, value as Integer) as Void
+    array.elements[key] = value
+end
+
+def append!(inout array as Array{Integer}, value as Integer) as Void
+    array.length = array.length + 1
+    array[array.length - 1] = value
+end
+
+let array = create_integer_array(10)
+array.append!(10)
+array.free!()
