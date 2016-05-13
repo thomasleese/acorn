@@ -2,15 +2,15 @@
 // Created by Thomas Leese on 25/04/2016.
 //
 
-#ifndef JET_GENERICS_H
-#define JET_GENERICS_H
+#ifndef ACORN_GENERICS_H
+#define ACORN_GENERICS_H
 
 #include <map>
 
 #include "ast/visitor.h"
 #include "compiler/pass.h"
 
-namespace jet {
+namespace acorn {
 
     namespace ast {
         struct Definition;
@@ -97,4 +97,4 @@ namespace jet {
 
 }
 
-#endif //JET_GENERICS_H
+#endif //ACORN_GENERICS_H

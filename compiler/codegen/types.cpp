@@ -10,8 +10,8 @@
 
 #include "types.h"
 
-using namespace jet;
-using namespace jet::codegen;
+using namespace acorn;
+using namespace acorn::codegen;
 
 llvm::Type *TypeGenerator::take_type(ast::Node *node) {
     if (m_type_stack.size() >= 1) {

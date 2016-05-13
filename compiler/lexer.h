@@ -2,8 +2,8 @@
 // Created by Thomas Leese on 13/03/2016.
 //
 
-#ifndef JET_LEXER_H
-#define JET_LEXER_H
+#ifndef ACORN_LEXER_H
+#define ACORN_LEXER_H
 
 #include <map>
 #include <string>
@@ -12,7 +12,7 @@
 #include "compiler/pass.h"
 #include "token.h"
 
-namespace jet {
+namespace acorn {
 
     class Lexer : public compiler::Pass {
     public:
@@ -34,4 +34,4 @@ namespace jet {
 
 }
 
-#endif // JET_LEXER_H
+#endif // ACORN_LEXER_H

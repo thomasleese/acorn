@@ -30,8 +30,8 @@
 
 #include "compiler.h"
 
-using namespace jet;
-using namespace jet::compiler;
+using namespace acorn;
+using namespace acorn::compiler;
 
 Compiler::Compiler() {
     llvm::InitializeAllTargets();

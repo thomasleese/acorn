@@ -12,8 +12,8 @@
 
 #include "types.h"
 
-using namespace jet;
-using namespace jet::types;
+using namespace acorn;
+using namespace acorn::types;
 
 Type::~Type() {
 

@@ -21,8 +21,8 @@
 
 #include "module.h"
 
-using namespace jet;
-using namespace jet::codegen;
+using namespace acorn;
+using namespace acorn::codegen;
 
 std::string codegen::mangle_method(std::string name, types::Method *type) {
     return "_A_" + name + "_" + type->mangled_name();

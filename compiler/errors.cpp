@@ -11,8 +11,8 @@
 
 #include "errors.h"
 
-using namespace jet;
-using namespace jet::errors;
+using namespace acorn;
+using namespace acorn::errors;
 
 CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) :
         m_filename(filename), m_lineNumber(lineNumber), m_column(column), m_line(line) {
@@ -56,13 +56,13 @@ FileNotFoundError::FileNotFoundError(ast::Node *node) : CompilerError(node) {
 InternalError::InternalError(Token *token, std::string message) :
         CompilerError(token) {
     m_prefix = "Internal error";
-    m_message = message + "\nNote: You have probably encountered a bug in Jet, not your code.";
+    m_message = message + "\nNote: You have probably encountered a bug in Acorn, not your code.";
 }
 
 InternalError::InternalError(ast::Node *node, std::string message) :
         CompilerError(node) {
     m_prefix = "Internal error";
-    m_message = message + "\nNote: You have probably encountered a bug in Jet, not your code.";
+    m_message = message + "\nNote: You have probably encountered a bug in Acorn, not your code.";
 }
 
 InternalAstError::InternalAstError(Token *token) :

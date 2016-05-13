@@ -2,13 +2,13 @@
 // Created by Thomas Leese on 07/05/2016.
 //
 
-#ifndef JET_AST_NODES_H
-#define JET_AST_NODES_H
+#ifndef ACORN_AST_NODES_H
+#define ACORN_AST_NODES_H
 
 #include <string>
 #include <vector>
 
-namespace jet {
+namespace acorn {
 
     struct Token;
 
@@ -376,4 +376,4 @@ namespace jet {
 
 }
 
-#endif //JET_AST_NODES_H
+#endif //ACORN_AST_NODES_H

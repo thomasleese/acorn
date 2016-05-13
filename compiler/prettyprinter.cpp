@@ -8,7 +8,7 @@
 
 #include "prettyprinter.h"
 
-using namespace jet;
+using namespace acorn;
 
 PrettyPrinter::PrettyPrinter() {
     indent = 0;

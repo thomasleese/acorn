@@ -14,8 +14,8 @@
 
 #include "typing.h"
 
-using namespace jet;
-using namespace jet::typing;
+using namespace acorn;
+using namespace acorn::typing;
 
 Inferrer::Inferrer(symboltable::Namespace *rootNamespace) {
     m_namespace = rootNamespace;

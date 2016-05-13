@@ -1,7 +1,7 @@
 type Character as Sequence{Integer8}
 type String as Sequence{Character}
 
-"Take a look at the different types available in Jet."
+"Take a look at the different types available in Acorn."
 
 type Float as Float32
 type Integer as Integer64

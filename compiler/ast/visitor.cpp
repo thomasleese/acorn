@@ -4,7 +4,7 @@
 
 #include "visitor.h"
 
-using namespace jet::ast;
+using namespace acorn::ast;
 
 Visitor::~Visitor() {
 

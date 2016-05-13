@@ -13,8 +13,8 @@
 
 #include "SymbolTable.h"
 
-using namespace jet;
-using namespace jet::symboltable;
+using namespace acorn;
+using namespace acorn::symboltable;
 
 Namespace::Namespace(Namespace *parent) : m_parent(parent) {
 

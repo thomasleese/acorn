@@ -2,15 +2,15 @@
 // Created by Thomas Leese on 14/03/2016.
 //
 
-#ifndef JET_PRETTYPRINTER_H
-#define JET_PRETTYPRINTER_H
+#ifndef ACORN_PRETTYPRINTER_H
+#define ACORN_PRETTYPRINTER_H
 
 #include <sstream>
 #include <string>
 
 #include "ast/visitor.h"
 
-namespace jet {
+namespace acorn {
 
     class PrettyPrinter : public ast::Visitor {
 
@@ -65,4 +65,4 @@ namespace jet {
 
 }
 
-#endif // JET_PRETTYPRINTER_H
+#endif // ACORN_PRETTYPRINTER_H

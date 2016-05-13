@@ -6,8 +6,8 @@
 
 #include "pass.h"
 
-using namespace jet;
-using namespace jet::compiler;
+using namespace acorn;
+using namespace acorn::compiler;
 
 bool Pass::has_errors() const {
     return !m_errors.empty();

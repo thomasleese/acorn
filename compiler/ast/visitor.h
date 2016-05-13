@@ -2,10 +2,10 @@
 // Created by Thomas Leese on 07/05/2016.
 //
 
-#ifndef JET_AST_VISITOR_H
-#define JET_AST_VISITOR_H
+#ifndef ACORN_AST_VISITOR_H
+#define ACORN_AST_VISITOR_H
 
-namespace jet {
+namespace acorn {
 
     namespace ast {
 
@@ -93,4 +93,4 @@ namespace jet {
 
 }
 
-#endif // JET_AST_VISITOR_H
+#endif // ACORN_AST_VISITOR_H

@@ -1,6 +1,6 @@
 # Generics
 
-Generics are a form of metaprogramming available in Jet. They work by saying that a type of a method or another type
+Generics are a form of metaprogramming available in Acorn. They work by saying that a type of a method or another type
 can be many things. A concrete version of that method or type is built at compile-time depending on usage.
 
 When you try to identify a type or a function with type parameters, i.e. `Array{Integer}` or `max{Integer}` you are

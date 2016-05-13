@@ -4,7 +4,7 @@
 
 #include "token.h"
 
-using namespace jet;
+using namespace acorn;
 
 std::string Token::rule_string(Token::Rule rule) {
     switch (rule) {

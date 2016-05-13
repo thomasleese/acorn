@@ -2,8 +2,8 @@
 // Created by Thomas Leese on 18/03/2016.
 //
 
-#ifndef JET_BUILTINS_H
-#define JET_BUILTINS_H
+#ifndef ACORN_BUILTINS_H
+#define ACORN_BUILTINS_H
 
 #include <llvm/IR/IRBuilder.h>
 
@@ -11,7 +11,7 @@ namespace llvm {
     class Module;
 }
 
-namespace jet {
+namespace acorn {
 
     namespace symboltable {
         class Namespace;
@@ -25,4 +25,4 @@ namespace jet {
     };
 }
 
-#endif //JET_BUILTINS_H
+#endif //ACORN_BUILTINS_H

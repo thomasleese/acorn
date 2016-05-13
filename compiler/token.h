@@ -2,12 +2,12 @@
 // Created by Thomas Leese on 17/03/2016.
 //
 
-#ifndef JET_TOKEN_H
-#define JET_TOKEN_H
+#ifndef ACORN_TOKEN_H
+#define ACORN_TOKEN_H
 
 #include <string>
 
-namespace jet {
+namespace acorn {
 
     struct Token {
 
@@ -93,4 +93,4 @@ namespace jet {
 
 }
 
-#endif // JET_TOKEN_H
+#endif // ACORN_TOKEN_H

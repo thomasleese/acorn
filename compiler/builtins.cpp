@@ -14,8 +14,8 @@
 
 #include "builtins.h"
 
-using namespace jet;
-using namespace jet::builtins;
+using namespace acorn;
+using namespace acorn::builtins;
 
 symboltable::Symbol *add_symbol(symboltable::Namespace *table, std::string name, types::Type *type) {
     symboltable::Symbol *symbol = new symboltable::Symbol(name);

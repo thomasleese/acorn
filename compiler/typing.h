@@ -2,15 +2,15 @@
 // Created by Thomas Leese on 21/03/2016.
 //
 
-#ifndef JET_TYPING_H
-#define JET_TYPING_H
+#ifndef ACORN_TYPING_H
+#define ACORN_TYPING_H
 
 #include <vector>
 
 #include "ast/visitor.h"
 #include "compiler/pass.h"
 
-namespace jet {
+namespace acorn {
 
     namespace ast {
         struct Node;
@@ -132,4 +132,4 @@ namespace jet {
 
 }
 
-#endif //JET_TYPING_H
+#endif //ACORN_TYPING_H

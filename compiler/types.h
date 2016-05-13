@@ -2,15 +2,15 @@
 // Created by Thomas Leese on 18/03/2016.
 //
 
-#ifndef JET_TYPES_H
-#define JET_TYPES_H
+#ifndef ACORN_TYPES_H
+#define ACORN_TYPES_H
 
 #include <set>
 #include <string>
 #include <vector>
 #include <map>
 
-namespace jet {
+namespace acorn {
 
     namespace ast {
         struct Node;
@@ -418,4 +418,4 @@ namespace jet {
 
 }
 
-#endif // JET_TYPES_H
+#endif // ACORN_TYPES_H

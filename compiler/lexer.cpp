@@ -13,7 +13,7 @@
 
 #include "lexer.h"
 
-using namespace jet;
+using namespace acorn;
 
 Lexer::Lexer() {
     loadRules();

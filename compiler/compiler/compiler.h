@@ -2,13 +2,13 @@
 // Created by Thomas Leese on 14/03/2016.
 //
 
-#ifndef JET_COMPILER_COMPILER_H
-#define JET_COMPILER_COMPILER_H
+#ifndef ACORN_COMPILER_COMPILER_H
+#define ACORN_COMPILER_COMPILER_H
 
 #include <string>
 #include <vector>
 
-namespace jet {
+namespace acorn {
 
     namespace compiler {
 
@@ -30,4 +30,4 @@ namespace jet {
 
 }
 
-#endif // JET_COMPILER_COMPILER_H
+#endif // ACORN_COMPILER_COMPILER_H

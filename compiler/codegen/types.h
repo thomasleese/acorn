@@ -2,13 +2,13 @@
 // Created by Thomas Leese on 27/04/2016.
 //
 
-#ifndef JET_CODEGEN_TYPES_H
-#define JET_CODEGEN_TYPES_H
+#ifndef ACORN_CODEGEN_TYPES_H
+#define ACORN_CODEGEN_TYPES_H
 
 #include "../compiler/pass.h"
 #include "../types.h"
 
-namespace jet {
+namespace acorn {
 
     namespace ast {
         struct Node;
@@ -56,4 +56,4 @@ namespace jet {
 
 }
 
-#endif // JET_CODEGEN_TYPES_H
+#endif // ACORN_CODEGEN_TYPES_H

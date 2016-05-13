@@ -1,6 +1,6 @@
 #include "compiler/compiler.h"
 
-using namespace jet;
+using namespace acorn;
 
 int main() {
     compiler::Compiler compiler;

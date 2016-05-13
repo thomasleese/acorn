@@ -2,15 +2,15 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
-#ifndef JET_ERRORS_H
-#define JET_ERRORS_H
+#ifndef ACORN_ERRORS_H
+#define ACORN_ERRORS_H
 
 #include <exception>
 #include <string>
 
 #include "token.h"
 
-namespace jet {
+namespace acorn {
 
     namespace ast {
         struct Node;
@@ -110,4 +110,4 @@ namespace jet {
 
 }
 
-#endif // JET_ERRORS_H
+#endif // ACORN_ERRORS_H

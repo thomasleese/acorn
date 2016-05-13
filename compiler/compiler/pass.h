@@ -2,12 +2,12 @@
 // Created by Thomas Leese on 07/05/2016.
 //
 
-#ifndef JET_COMPILER_PASS_H
-#define JET_COMPILER_PASS_H
+#ifndef ACORN_COMPILER_PASS_H
+#define ACORN_COMPILER_PASS_H
 
 #include <vector>
 
-namespace jet {
+namespace acorn {
 
     namespace errors {
         class CompilerError;
@@ -31,4 +31,4 @@ namespace jet {
 
 }
 
-#endif //JET_COMPILER_PASS_H
+#endif //ACORN_COMPILER_PASS_H

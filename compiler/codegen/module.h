@@ -2,8 +2,8 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
-#ifndef JET_CODEGENERATOR_H
-#define JET_CODEGENERATOR_H
+#ifndef ACORN_CODEGENERATOR_H
+#define ACORN_CODEGENERATOR_H
 
 #include <llvm/IR/MDBuilder.h>
 #include <llvm/IR/IRBuilder.h>
@@ -12,7 +12,7 @@
 #include "../ast/visitor.h"
 #include "../compiler/pass.h"
 
-namespace jet {
+namespace acorn {
 
     namespace ast {
         struct Node;
@@ -100,4 +100,4 @@ namespace jet {
 
 }
 
-#endif // JET_CODEGENERATOR_H
+#endif // ACORN_CODEGENERATOR_H

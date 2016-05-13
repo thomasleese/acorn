@@ -2,8 +2,8 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
-#ifndef JET_SYMBOLTABLE_H
-#define JET_SYMBOLTABLE_H
+#ifndef ACORN_SYMBOLTABLE_H
+#define ACORN_SYMBOLTABLE_H
 
 #include <map>
 #include <string>
@@ -16,7 +16,7 @@ namespace llvm {
     class Value;
 }
 
-namespace jet {
+namespace acorn {
 
     namespace ast {
         struct Node;
@@ -125,4 +125,4 @@ namespace jet {
 
 }
 
-#endif // JET_SYMBOLTABLE_H
+#endif // ACORN_SYMBOLTABLE_H

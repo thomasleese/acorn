@@ -13,8 +13,8 @@
 
 #include "preprocessor.h"
 
-using namespace jet;
-using namespace jet::preprocessor;
+using namespace acorn;
+using namespace acorn::preprocessor;
 
 Action::Action(Action::Kind kind, ast::Statement *statement) :
         kind(kind), statement(statement) {

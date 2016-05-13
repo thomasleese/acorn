@@ -2,8 +2,8 @@
 // Created by Thomas Leese on 13/03/2016.
 //
 
-#ifndef JET_PARSER_H
-#define JET_PARSER_H
+#ifndef ACORN_PARSER_H
+#define ACORN_PARSER_H
 
 #include <deque>
 #include <map>
@@ -12,7 +12,7 @@
 #include "compiler/pass.h"
 #include "token.h"
 
-namespace jet {
+namespace acorn {
 
     namespace ast {
         struct Node;
@@ -120,4 +120,4 @@ namespace jet {
 
 }
 
-#endif // JET_PARSER_H
+#endif // ACORN_PARSER_H

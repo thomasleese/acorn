@@ -12,8 +12,8 @@
 
 #include "parser.h"
 
-using namespace jet;
-using namespace jet::ast;
+using namespace acorn;
+using namespace acorn::ast;
 
 Parser::Parser(std::vector<Token *> tokens) {
     for (auto token : tokens) {
