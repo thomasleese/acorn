@@ -52,6 +52,7 @@ namespace jet {
             SizeofKeyword,
             StrideofKeyword,
             NewKeyword,
+            InoutKeyword,
 
             // literals
             BooleanLiteral,

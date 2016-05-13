@@ -194,7 +194,7 @@ void ModuleGenerator::visit(ast::MappingLiteral *mapping) {
 void ModuleGenerator::visit(ast::RecordLiteral *expression) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
-    auto record = dynamic_cast<types::Record *>(expression->type);
+    //auto record = dynamic_cast<types::Record *>(expression->type);
 
     llvm::Type *llvm_type = generate_type(expression);
 
@@ -242,11 +242,24 @@ void ModuleGenerator::visit(ast::Call *expression) {
         assert(function);
 
         std::vector<llvm::Value *> arguments;
+        int i = 0;
         for (auto argument : expression->arguments) {
+
+
             argument->accept(this);
 
-            arguments.push_back(m_llvmValues.back());
+            auto value = m_llvmValues.back();
             m_llvmValues.pop_back();
+
+            if (dynamic_cast<types::InOut *>(method->parameter_types()[i])) {
+                llvm::LoadInst *load = llvm::dyn_cast<llvm::LoadInst>(value);
+                assert(load);
+
+                value = load->getPointerOperand();
+            }
+
+            arguments.push_back(value);
+            i++;
         }
 
         auto value = m_irBuilder->CreateCall(function, arguments);
@@ -506,8 +519,6 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
             push_error(m_type_generator->next_error());
         }
 
-        type->dump();
-
         auto variable = new llvm::GlobalVariable(*m_module, type, false,
                                                  llvm::GlobalValue::CommonLinkage,
                                                  nullptr, definition->name->value);
@@ -570,10 +581,18 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
     for (auto &arg : function->args()) {
         std::string arg_name = definition->parameters[i]->name->value;
         arg.setName(arg_name);
-        llvm::AllocaInst *alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, arg_name);
-        m_irBuilder->CreateStore(&arg, alloca);
-        auto symbol2 = m_scope.back()->lookup(this, definition, arg_name);
-        symbol2->value = alloca;
+
+        llvm::Value *value = &arg;
+
+        if (!definition->parameters[i]->inout) {
+            auto alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, arg_name);
+            m_irBuilder->CreateStore(&arg, alloca);
+            value = alloca;
+        }
+
+        auto arg_symbol = m_scope.back()->lookup(this, definition, arg_name);
+        arg_symbol->value = value;
+
         i++;
     }
 

@@ -1,9 +1,13 @@
 import 'base'
 
-def size!(inout v as Integer)
+def size!(inout v as Integer) as Void
     v = 10
 end
 
-let a = 0
-size!(a)
-exit(a)
+def do_something() as Integer
+    let a = 1
+    size!(a)
+    return a
+end
+
+exit(do_something())

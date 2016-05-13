@@ -286,6 +286,23 @@ namespace jet {
             Type *m_element_type;
         };
 
+        class InOut : public Type {
+        public:
+            explicit InOut(Type *underlying_type);
+
+            std::string name() const;
+            std::string mangled_name() const;
+
+            Type *underlying_type() const;
+
+            bool isCompatible(const Type *other) const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            Type *m_underlying_type;
+        };
+
         class Record : public Type {
         public:
             Record(std::vector<std::string> field_names, std::vector<Type *> field_types);
@@ -389,6 +406,7 @@ namespace jet {
             virtual void visit(UnsignedInteger *type) = 0;
             virtual void visit(Float *type) = 0;
             virtual void visit(UnsafePointer *type) = 0;
+            virtual void visit(InOut *type) = 0;
             virtual void visit(Record *type) = 0;
             virtual void visit(Tuple *type) = 0;
             virtual void visit(Method *type) = 0;

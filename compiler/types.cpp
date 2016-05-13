@@ -477,6 +477,34 @@ void UnsafePointer::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+InOut::InOut(Type *underlying_type) : m_underlying_type(underlying_type) {
+
+}
+
+std::string InOut::name() const {
+    std::stringstream ss;
+    ss << "InOut{" << m_underlying_type->name() << "}";
+    return ss.str();
+}
+
+std::string InOut::mangled_name() const {
+    std::stringstream ss;
+    ss << "inout" << m_underlying_type->mangled_name();
+    return ss.str();
+}
+
+Type *InOut::underlying_type() const {
+    return m_underlying_type;
+}
+
+bool InOut::isCompatible(const Type *other) const {
+    return m_underlying_type->isCompatible(other);
+}
+
+void InOut::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Record::Record(std::vector<std::string> field_names, std::vector<Type *> field_types) :
         m_field_names(field_names), m_field_types(field_types) {
 

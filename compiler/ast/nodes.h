@@ -289,6 +289,7 @@ namespace jet {
         struct Parameter : Node {
             explicit Parameter(Token *token);
 
+            bool inout;
             Identifier *name;
             Identifier *typeNode;
 

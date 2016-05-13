@@ -71,6 +71,7 @@ void Lexer::loadRules() {
     setKeywordRule(Token::SizeofKeyword, "sizeof");
     setKeywordRule(Token::StrideofKeyword, "strideof");
     setKeywordRule(Token::NewKeyword, "new");
+    setKeywordRule(Token::InoutKeyword, "inout");
 
     setRule(Token::BooleanLiteral, "(true|false)");
     setRule(Token::StringLiteral, "((['\"])((?:.(?!(?<![\\\\])\\2))*.?)\\2)");

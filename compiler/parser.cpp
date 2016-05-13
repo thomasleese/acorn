@@ -626,7 +626,14 @@ Expression *Parser::readOperandExpression() {
 }
 
 Parameter *Parser::readParameter() {
-    Parameter *parameter = new Parameter(m_tokens.front());
+    auto parameter = new Parameter(m_tokens.front());
+
+    if (isToken(Token::InoutKeyword)) {
+        readToken(Token::InoutKeyword);
+        parameter->inout = true;
+    } else {
+        parameter->inout = false;
+    }
 
     parameter->name = readIdentifier(false);
 

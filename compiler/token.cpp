@@ -84,6 +84,8 @@ std::string Token::rule_string(Token::Rule rule) {
             return "strideof";
         case NewKeyword:
             return "new";
+        case InoutKeyword:
+            return "inout";
         case BooleanLiteral:
             return "boolean";
         case IntegerLiteral:

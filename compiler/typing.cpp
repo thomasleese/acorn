@@ -234,7 +234,12 @@ void Inferrer::visit(ast::Cast *cast) {
 void Inferrer::visit(ast::Assignment *expression) {
     expression->lhs->accept(this);
     expression->rhs->accept(this);
-    expression->type = expression->rhs->type;
+
+    if (!expression->lhs->type->isCompatible(expression->rhs->type)) {
+        push_error(new errors::TypeMismatchError(expression->rhs, expression->lhs));
+    } else {
+        expression->type = expression->lhs->type;
+    }
 }
 
 void Inferrer::visit(ast::Selector *expression) {
@@ -316,6 +321,11 @@ void Inferrer::visit(ast::Parameter *parameter) {
     parameter->typeNode->accept(this);
 
     parameter->type = instance_type(parameter->typeNode);
+
+    if (parameter->inout) {
+        parameter->type = new types::InOut(parameter->type);
+    }
+
     symbol->type = parameter->type;
 }
 
@@ -600,8 +610,8 @@ void Checker::visit(ast::Assignment *expression) {
     expression->rhs->accept(this);
     check_not_null(expression);
 
-    // symboltable::Symbol *symbol = m_namespace->lookup(expression->lhs);
-    push_error(new errors::ConstantAssignmentError(expression->lhs));
+    //symboltable::Symbol *symbol = m_namespace->lookup(expression->lhs);
+    //push_error(new errors::ConstantAssignmentError(expression->lhs));
 }
 
 void Checker::visit(ast::Selector *expression) {
