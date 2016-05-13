@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.3)
 
-project(Jet)
+project(Acorn)
 
 # Boost
 set(Boost_USE_STATIC_LIBS OFF)
@@ -23,5 +23,5 @@ set(CMAKE_EXE_LINKER_FLAGS "${LLVM_LD_FLAGS} -lz -fexceptions")
 set(SOURCE_FILES compiler/ast/nodes.cpp compiler/ast/visitor.cpp compiler/builtins.cpp compiler/codegen/types.cpp compiler/codegen/module.cpp compiler/compiler/compiler.cpp compiler/compiler/pass.cpp compiler/errors.cpp compiler/lexer.cpp compiler/main.cpp compiler/parser.cpp compiler/preprocessor.cpp compiler/prettyprinter.cpp compiler/symboltable.cpp compiler/token.cpp compiler/types.cpp compiler/typing.cpp)
 set(LIBRARIES ${Boost_LIBRARIES} icuuc icudata ncurses ${LLVM_LIBS})
 
-add_executable(jet ${SOURCE_FILES})
-target_link_libraries(jet ${LIBRARIES})
+add_executable(acorn ${SOURCE_FILES})
+target_link_libraries(acorn ${LIBRARIES})
