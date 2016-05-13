@@ -164,10 +164,6 @@ void GenericsPass::visit(ast::Selector *expression) {
 
 }
 
-void GenericsPass::visit(ast::Index *expression) {
-
-}
-
 void GenericsPass::visit(ast::Comma *expression) {
 
 }

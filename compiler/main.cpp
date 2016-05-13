@@ -5,7 +5,7 @@ using namespace jet;
 
 int main() {
     compiler::Compiler compiler;
-    if (compiler.compile("test2.jet")) {
+    if (compiler.compile("test.jet")) {
         return 0;
     } else {
         return 1;

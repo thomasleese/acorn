@@ -281,18 +281,6 @@ Selector *Selector::clone() const {
     return new_selector;
 }
 
-void Index::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-Index *Index::clone() const {
-    auto new_index = new Index(this->token);
-    new_index->operand = this->operand->clone();
-    new_index->index = this->index->clone();
-    new_index->type = this->type;
-    return new_index;
-}
-
 Comma::Comma(Token *token) : Expression(token) {
     this->lhs = nullptr;
     this->rhs = nullptr;

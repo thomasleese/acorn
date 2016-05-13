@@ -1,45 +1,9 @@
 import 'base'
 
-type SafePointer{T} as UnsafePointer{T}
-
-type Array{T}
-    elements as SafePointer{T}
-    size as UnsignedInteger
-    capacity as UnsignedInteger
+def size!(inout v as Integer)
+    v = 10
 end
 
-def create_array{T}(n as Integer) as Array{T}
-    let block_size = n * strideof T
-    let elements = malloc{Integer}(size: block_size)
-    let size = 0
-    let capacity = n
-    return new Array{T}(elements: elements, size: size, capacity: capacity)
-end
-
-def grow_if_necessary{T}(array as Array{T}) as Void
-    if array.size == array.capacity
-        let new_capacity = array.capacity + 10 as UnsignedInteger
-        free{T}(pointer: array.elements)
-        array.elements = malloc{T}(size: new_capacity * strideof T)
-        array.new_capacity = new_capacity
-    end
-end
-
-def append{T}(array as Array{T}, item as T) as Void
-    array.grow_if_necessary{Integer}()
-end
-
-let a = create_array{Integer}(n: 10)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
-a.append{Integer}(item: 1)
+let a = 0
+size!(a)
+exit(a)

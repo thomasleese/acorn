@@ -83,12 +83,11 @@ namespace jet {
         ast::SequenceLiteral *readSequenceLiteral();
         ast::MappingLiteral *readMappingLiteral();
         ast::RecordLiteral *readRecordLiteral();
-        ast::Argument *readArgument();
         ast::Call *readCall(ast::Expression *operand);
         ast::CCall *readCCall();
         ast::Cast *readCast(ast::Expression *operand);
         ast::Selector *readSelector(ast::Expression *operand);
-        ast::Index *readIndex(ast::Expression *operand);
+        ast::Call *readIndex(ast::Expression *operand);
         ast::While *readWhile();
         ast::For *readFor();
         ast::If *readIf();

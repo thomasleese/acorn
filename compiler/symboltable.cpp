@@ -249,10 +249,6 @@ void Builder::visit(ast::Selector *expression) {
 
 }
 
-void Builder::visit(ast::Index *expression) {
-
-}
-
 void Builder::visit(ast::Comma *expression) {
 
 }

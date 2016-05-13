@@ -24,7 +24,6 @@ namespace jet {
         struct Cast;
         struct Assignment;
         struct Selector;
-        struct Index;
         struct Comma;
         struct While;
         struct For;
@@ -64,7 +63,6 @@ namespace jet {
             virtual void visit(Cast *expression) = 0;
             virtual void visit(Assignment *expression) = 0;
             virtual void visit(Selector *expression) = 0;
-            virtual void visit(Index *expression) = 0;
             virtual void visit(Comma *expression) = 0;
             virtual void visit(While *expression) = 0;
             virtual void visit(For *expression) = 0;

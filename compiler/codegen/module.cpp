@@ -339,44 +339,6 @@ void ModuleGenerator::visit(ast::Selector *expression) {
     m_llvmValues.push_back(m_irBuilder->CreateLoad(value));
 }
 
-void ModuleGenerator::visit(ast::Index *expression) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
-    expression->operand->accept(this);
-
-    ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
-    if (!identifier) {
-        push_error(new errors::InternalError(expression, "N/A"));
-        return;
-    }
-
-    auto symbol = m_scope.back()->lookup(this, identifier);
-
-    auto instance = symbol->value;
-
-    expression->index->accept(this);
-    llvm::Value *index = m_llvmValues.back();
-    m_llvmValues.pop_back();
-
-    auto i32 = llvm::IntegerType::get(context, 32);
-    auto i64 = llvm::IntegerType::get(context, 64);
-
-    std::vector<llvm::Value *> indexes;
-    indexes.push_back(llvm::ConstantInt::get(i32, 0));
-    indexes.push_back(llvm::ConstantInt::get(i32, 1));
-
-    llvm::Value *elements_value = m_irBuilder->CreateInBoundsGEP(instance, indexes, "elements");
-
-    std::vector<llvm::Value *> element_index;
-    element_index.push_back(llvm::ConstantInt::get(i32, 0));
-    //element_index.push_back(m_irBuilder->CreateIntCast(index, i32, true));
-
-    llvm::Value *value = m_irBuilder->CreateInBoundsGEP(elements_value, element_index, "element");
-
-    //llvm::Value *value = m_irBuilder->CreateAlloca()
-    m_llvmValues.push_back(m_irBuilder->CreateLoad(value));
-}
-
 void ModuleGenerator::visit(ast::Comma *expression) {
     push_error(new errors::InternalError(expression, "N/A"));
 }

@@ -206,16 +206,6 @@ namespace jet {
             Selector *clone() const;
         };
 
-        struct Index : Expression {
-            using Expression::Expression;
-
-            Expression *operand;
-            Expression *index;
-
-            void accept(Visitor *visitor);
-            Index *clone() const;
-        };
-
         struct Comma : Expression {
             Comma(Token *token);
             Comma(Expression *lhs, Expression *rhs, Token *token);

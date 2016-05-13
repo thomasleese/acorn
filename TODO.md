@@ -1,9 +1,10 @@
+- Memory Management
+- Generics
+- Automatic Memory Management
+
 - Merge symbol table builder with parser
 - Use numbers with metadata as mangling instead
 - Implement my own assert macro
-- Proper generics
-
-- Pointers, Memory Management and Garbage Collection
 
 - Plan units of measure
 - Documentation

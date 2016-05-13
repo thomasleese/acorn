@@ -3,13 +3,3 @@ import 'base/types'
 def exit(code as Integer) as Void
     ccall exit(Integer) as Void using code
 end
-
-def malloc{T}(size as Integer) as UnsafePointer{T}
-    let pointer = ccall malloc(Integer) as UnsafePointer{Integer8} using size
-    return pointer as UnsafePointer{T}
-end
-
-def free{T}(pointer as UnsafePointer{T}) as Void
-    let void_pointer = pointer as UnsafePointer{Integer8}
-    ccall free(UnsafePointer{Integer8}) as Void using void_pointer
-end

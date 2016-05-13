@@ -1,0 +1,34 @@
+def malloc(size as Integer) as UnsafePointer{Integer8}
+    let pointer = ccall malloc(Integer) as UnsafePointer{Integer8} using size
+    return pointer
+end
+
+def free(pointer as UnsafePointer{Integer8}) as Void
+    ccall free(UnsafePointer{Integer8}) as Void using pointer
+end
+
+def create_integer_array(capacity as Integer) as Array{Integer}
+    let elements = malloc(strideof Integer * capacity) as UnsafePointer{Integer}
+    return new Array{Integer}(elements: elements, size: 0, capacity: capacity)
+end
+
+def free!(array as Array{Integer}) as Void
+    free(array.elements as UnsafePointer{Integer8})
+end
+
+def setindex!(pointer as UnsafePointer{Integer}, key as Integer, value as Integer) as Void
+    _set_pointer_value(pointer, strideof Integer * key, value)
+end
+
+def setindex!(array as Array{Integer}, key as Integer, value as Integer) as Void
+    array.elements[key] = value
+end
+
+def append!(array as Array{Integer}, value as Integer) as Void
+    array.size = array.size + 1
+    array[array.size - 1] = value
+end
+
+let array = create_integer_array(10)
+array.append!(10)
+array.free!()

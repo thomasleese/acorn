@@ -99,7 +99,6 @@ namespace jet {
             void visit(ast::Cast *expression);
             void visit(ast::Assignment *expression);
             void visit(ast::Selector *expression);
-            void visit(ast::Index *expression);
             void visit(ast::Comma *expression);
             void visit(ast::While *expression);
             void visit(ast::For *expression);

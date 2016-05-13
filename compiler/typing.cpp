@@ -183,6 +183,10 @@ void Inferrer::visit(ast::Call *expression) {
     for (auto arg : expression->arguments) {
         arg->accept(this);
         argument_types.push_back(arg->type);
+
+        if (arg->type == nullptr) {
+            return;
+        }
     }
 
     types::Function *function = dynamic_cast<types::Function *>(expression->operand->type);
@@ -192,11 +196,12 @@ void Inferrer::visit(ast::Call *expression) {
         delete expression->type;
         expression->type = nullptr;
         // FIXME make the construct accept a type directly
+        return;
     }
 
     auto method = function->find_method(expression, argument_types);
     if (method == nullptr) {
-        push_error(new errors::UndefinedError(expression, "Method not found."));
+        push_error(new errors::UndefinedError(expression, "Method with these types"));
     } else {
         expression->type = method->return_type();
     }
@@ -236,35 +241,16 @@ void Inferrer::visit(ast::Selector *expression) {
     expression->operand->accept(this);
 
     auto recordType = dynamic_cast<types::Record *>(expression->operand->type);
-    if (!recordType) {
-        push_error(new errors::TypeInferenceError(expression));
+    if (recordType == nullptr) {
         return;
     }
 
     auto fieldType = recordType->get_field_type(expression->name->value);
-    if (!fieldType) {
-        push_error(new errors::TypeInferenceError(expression));
+    if (fieldType == nullptr) {
         return;
     }
 
     expression->type = fieldType;
-}
-
-void Inferrer::visit(ast::Index *expression) {
-    /*expression->operand->accept(this);
-    expression->index->accept(this);
-
-    auto arrayType = dynamic_cast<types::Array *>(expression->operand->type);
-    if (!arrayType) {
-        throw errors::TypeInferenceError(expression);
-    }
-
-    auto indexType = dynamic_cast<types::Integer *>(expression->index->type);
-    if (!indexType) {
-        throw errors::TypeMismatchError(expression->operand, expression->index);
-    }
-
-    expression->type = arrayType->element_type();*/
 }
 
 void Inferrer::visit(ast::Comma *expression) {
@@ -620,12 +606,6 @@ void Checker::visit(ast::Assignment *expression) {
 
 void Checker::visit(ast::Selector *expression) {
     expression->operand->accept(this);
-    check_not_null(expression);
-}
-
-void Checker::visit(ast::Index *expression) {
-    expression->operand->accept(this);
-    expression->index->accept(this);
     check_not_null(expression);
 }
 
