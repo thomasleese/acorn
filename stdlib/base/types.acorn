@@ -1,15 +1,3 @@
-type Integer as Integer64
-type UnsignedInteger as UnsignedInteger64
-type Float as Float64
-
-type Array{T}
-    elements as UnsafePointer{T}
-    length as Integer
-    capacity as Integer
-end
-
-type String as Array{Integer64}
-
-def -(n as Integer) as Integer
-    return 0 - n
-end
+import 'base/types/primitives'
+import 'base/types/array'
+import 'base/types/string'

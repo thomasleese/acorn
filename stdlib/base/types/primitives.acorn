@@ -1,0 +1,7 @@
+type Integer as Integer64
+type UnsignedInteger as UnsignedInteger64
+type Float as Float64
+
+def -(n as Integer) as Integer
+    return 0 - n
+end
