@@ -206,20 +206,6 @@ void TypeGenerator::visit(types::UnsafePointer *type) {
     }
 }
 
-void TypeGenerator::visit(types::InOut *type) {
-    type->underlying_type()->accept(this);
-    auto underlying_type = take_type(nullptr);
-
-    if (underlying_type) {
-        auto pointer_type = llvm::PointerType::getUnqual(underlying_type);
-        m_type_stack.push_back(pointer_type);
-        m_initialiser_stack.push_back(llvm::ConstantPointerNull::get(pointer_type));
-    } else {
-        m_type_stack.push_back(nullptr);
-        m_initialiser_stack.push_back(nullptr);
-    }
-}
-
 void TypeGenerator::visit(types::Record *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
@@ -267,12 +253,16 @@ void TypeGenerator::visit(types::Method *type) {
     std::vector<llvm::Type *> llvm_parameter_types;
     for (auto parameter_type : type->parameter_types()) {
         parameter_type->accept(this);
-        llvm::Type *llvm_parameter_type = take_type(nullptr);
+        auto llvm_parameter_type = take_type(nullptr);
 
         if (!llvm_parameter_type) {
             m_type_stack.push_back(nullptr);
             m_initialiser_stack.push_back(nullptr);
             return;
+        }
+
+        if (type->is_parameter_inout(parameter_type)) {
+            llvm_parameter_type = llvm::PointerType::getUnqual(llvm_parameter_type);
         }
 
         llvm_parameter_types.push_back(llvm_parameter_type);

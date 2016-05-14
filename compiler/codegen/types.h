@@ -44,7 +44,6 @@ namespace acorn {
             void visit(types::UnsignedInteger *type);
             void visit(types::Float *type);
             void visit(types::UnsafePointer *type);
-            void visit(types::InOut *type);
             void visit(types::Record *type);
             void visit(types::Tuple *type);
             void visit(types::Method *type);

@@ -515,34 +515,6 @@ void UnsafePointer::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-InOut::InOut(Type *underlying_type) : m_underlying_type(underlying_type) {
-
-}
-
-std::string InOut::name() const {
-    std::stringstream ss;
-    ss << "InOut{" << m_underlying_type->name() << "}";
-    return ss.str();
-}
-
-std::string InOut::mangled_name() const {
-    std::stringstream ss;
-    ss << "inout" << m_underlying_type->mangled_name();
-    return ss.str();
-}
-
-Type *InOut::underlying_type() const {
-    return m_underlying_type;
-}
-
-bool InOut::isCompatible(const Type *other) const {
-    return Type::isCompatible(other) || m_underlying_type->isCompatible(other);
-}
-
-void InOut::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 Record::Record(std::vector<std::string> field_names, std::vector<Type *> field_types) :
         m_field_names(field_names), m_field_types(field_types) {
 
@@ -709,6 +681,19 @@ bool Method::could_be_called_with(std::vector<Type *> arguments) {
     }
 
     return true;
+}
+
+void Method::set_parameter_inout(Type *type, bool inout) {
+    m_inouts[type] = inout;
+}
+
+bool Method::is_parameter_inout(Type *type) {
+    auto it = m_inouts.find(type);
+    if (it == m_inouts.end()) {
+        return false;
+    }
+
+    return it->second;
 }
 
 void Method::accept(Visitor *visitor) {

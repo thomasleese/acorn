@@ -1,16 +1,14 @@
 type Integer as Integer64
 type Float as Float64
 
-def set{T}(inout v as T, value as T) as Void
-    v = value
+def exit(code as Integer) as Void
+    ccall exit(Integer) as Void using code
 end
 
-def swap{T}(inout a as T, inout b as T) as Void
-    let c as T = a
-    set(a, b)
-    set(b, a)
+def set(inout variable as Integer, value as Integer) as Void
+    variable = value
 end
 
 let a = 10
-let b = 20
-swap(a, b)
+set(a, 20)
+exit(a)

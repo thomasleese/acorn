@@ -335,6 +335,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
 
         std::string method_name = codegen::mangle_method(symbol->name, method);
         auto method_symbol = symbol->nameSpace->lookup(this, expression, method->mangled_name());
+        auto definition = static_cast<ast::FunctionDefinition *>(method_symbol->node);
 
         if (method->is_generic()) {
             std::map<types::ParameterConstructor *, types::Type *> type_parameters;
@@ -344,12 +345,6 @@ void ModuleGenerator::visit(ast::Call *expression) {
                 auto dt = dynamic_cast<types::Parameter *>(t);
                 if (dt) {
                     type_parameters[dt->constructor()] = argument_types[i];
-                } else {
-                    auto inout = dynamic_cast<types::InOut *>(t);
-                    dt = dynamic_cast<types::Parameter *>(inout->underlying_type());
-                    if (dt) {
-                        type_parameters[dt->constructor()] = argument_types[i];
-                    }
                 }
 
                 // FIXME make algorithm better
@@ -365,7 +360,6 @@ void ModuleGenerator::visit(ast::Call *expression) {
             }
 
             if (m_module->getFunction(method_name) == nullptr) {
-                auto definition = static_cast<ast::FunctionDefinition *>(method_symbol->node);
                 generate_function(definition, type_parameters);
             }
         }
@@ -384,7 +378,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
             auto value = m_llvmValues.back();
             m_llvmValues.pop_back();
 
-            if (dynamic_cast<types::InOut *>(method->parameter_types()[i])) {
+            if (definition->parameters[i]->inout) {
                 llvm::LoadInst *load = llvm::dyn_cast<llvm::LoadInst>(value);
                 assert(load);
 
@@ -475,13 +469,7 @@ void ModuleGenerator::visit(ast::Selector *expression) {
 
     llvm::Value *instance = symbol->value;
 
-    types::Record *recordType;
-    auto inOutType = dynamic_cast<types::InOut *>(expression->operand->type);
-    if (inOutType) {
-        recordType = static_cast<types::Record *>(inOutType->underlying_type());
-    } else {
-        recordType = static_cast<types::Record *>(expression->operand->type);
-    }
+    types::Record *recordType = static_cast<types::Record *>(expression->operand->type);
 
     uint64_t index = recordType->get_field_index(expression->name->value);
 

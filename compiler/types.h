@@ -308,23 +308,6 @@ namespace acorn {
             Type *m_element_type;
         };
 
-        class InOut : public Type {
-        public:
-            explicit InOut(Type *underlying_type);
-
-            std::string name() const;
-            std::string mangled_name() const;
-
-            Type *underlying_type() const;
-
-            bool isCompatible(const Type *other) const;
-
-            void accept(Visitor *visitor);
-
-        private:
-            Type *m_underlying_type;
-        };
-
         class Record : public Type {
         public:
             Record(std::vector<std::string> field_names, std::vector<Type *> field_types);
@@ -371,11 +354,15 @@ namespace acorn {
             Type *return_type() const;
             bool could_be_called_with(std::vector<Type *> arguments);
 
+            void set_parameter_inout(Type *type, bool inout);
+            bool is_parameter_inout(Type *type);
+
             void accept(Visitor *visitor);
 
         private:
             std::vector<Type *> m_parameter_types;
             Type *m_return_type;
+            std::map<Type *, bool> m_inouts;
             bool m_is_generic;
         };
 
@@ -436,7 +423,6 @@ namespace acorn {
             virtual void visit(UnsignedInteger *type) = 0;
             virtual void visit(Float *type) = 0;
             virtual void visit(UnsafePointer *type) = 0;
-            virtual void visit(InOut *type) = 0;
             virtual void visit(Record *type) = 0;
             virtual void visit(Tuple *type) = 0;
             virtual void visit(Method *type) = 0;

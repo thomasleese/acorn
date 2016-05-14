@@ -181,6 +181,7 @@ void Inferrer::visit(ast::RecordLiteral *expression) {
 
 void Inferrer::visit(ast::Call *expression) {
     expression->operand->accept(this);
+    return_if_null_type(expression->operand);
 
     std::vector<types::Type *> argument_types;
     for (auto arg : expression->arguments) {
@@ -261,22 +262,17 @@ void Inferrer::visit(ast::Selector *expression) {
 
     auto record_type = dynamic_cast<types::Record *>(expression->operand->type);
     if (record_type == nullptr) {
-        auto inout_type = dynamic_cast<types::InOut *>(expression->operand->type);
-        record_type = dynamic_cast<types::Record *>(inout_type->underlying_type());
-    }
-
-    if (record_type == nullptr) {
         push_error(new errors::TypeMismatchError(expression, expression->operand));
         return;
     }
 
-    auto fieldType = record_type->get_field_type(expression->name->value);
-    if (fieldType == nullptr) {
+    auto field_type = record_type->get_field_type(expression->name->value);
+    if (field_type == nullptr) {
         push_error(new errors::UndefinedError(expression->name, expression->name->value));
         return;
     }
 
-    expression->type = fieldType;
+    expression->type = field_type;
 }
 
 void Inferrer::visit(ast::Comma *expression) {
@@ -349,9 +345,9 @@ void Inferrer::visit(ast::Parameter *parameter) {
     parameter->type = instance_type(parameter->typeNode);
     return_if_null_type(parameter);
 
-    if (parameter->inout) {
+    /*if (parameter->inout) {
         parameter->type = new types::InOut(parameter->type);
-    }
+    }*/
 
     symbol->type = parameter->type;
 }
@@ -413,6 +409,13 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     definition->returnType->type = instance_type(definition->returnType);
 
     auto method = new types::Method(parameterTypes, definition->returnType->type);
+
+    for (int i = 0; i < parameterTypes.size(); i++) {
+        if (definition->parameters[i]->inout) {
+            method->set_parameter_inout(parameterTypes[i], true);
+        }
+    }
+
     method->set_is_generic(!definition->name->parameters.empty());
     function->add_method(method);
 
