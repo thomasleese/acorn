@@ -98,6 +98,12 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
 
     symboltable::Symbol *to_float = add_base_function(table, "to_float");
     add_base_method(to_float, new types::Method(new types::Integer(64), new types::Float(64)));
+
+    auto getindex = add_base_function(table, "getindex");
+    add_base_method(getindex, new types::Method(new types::UnsafePointer(new types::Integer(64)), new types::Integer(64), new types::Integer(64)));
+
+    auto setindex = add_base_function(table, "setindex!");
+    add_base_method(setindex, new types::Method(new types::UnsafePointer(new types::Integer(64)), new types::Integer(64), new types::Integer(64), new types::Void()));
 }
 
 llvm::Function *create_llvm_function(symboltable::Namespace *table, llvm::Module *module, std::string name, int index) {
@@ -123,12 +129,23 @@ llvm::Function *create_llvm_function(symboltable::Namespace *table, llvm::Module
 static llvm::Argument *self;
 static llvm::Argument *lhs;
 static llvm::Argument *rhs;
+static llvm::Argument *a;
+static llvm::Argument *c;
+static llvm::Argument *b;
 
 void initialise_function_block(llvm::Function *function, llvm::IRBuilder<> *irBuilder) {
     llvm::LLVMContext &context = function->getContext();
 
     llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", function);
     irBuilder->SetInsertPoint(basicBlock);
+}
+
+void initialise_ternary_function(llvm::Function *function, llvm::IRBuilder<> *irBuilder) {
+    a = &function->getArgumentList().front();
+    b = function->getArgumentList().getNext(a);
+    c = function->getArgumentList().getNext(b);
+
+    initialise_function_block(function, irBuilder);
 }
 
 void initialise_binary_function(llvm::Function *function, llvm::IRBuilder<> *irBuilder) {
@@ -145,6 +162,8 @@ void initialise_unary_function(llvm::Function *function, llvm::IRBuilder<> *irBu
 }
 
 void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder) {
+    std::vector<llvm::Value *> index_list;
+
     // multiplication
     llvm::Function *f = create_llvm_function(table, module, "*", 0);
     initialise_binary_function(f, irBuilder);
@@ -196,4 +215,21 @@ void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *mod
     f = create_llvm_function(table, module, "to_float", 0);
     initialise_unary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateSIToFP(self, f->getReturnType()));
+
+    // get index
+    f = create_llvm_function(table, module, "getindex", 0);
+    initialise_binary_function(f, irBuilder);
+    index_list.clear();
+    index_list.push_back(rhs);
+    auto gep = irBuilder->CreateInBoundsGEP(lhs, index_list);
+    irBuilder->CreateRet(irBuilder->CreateLoad(gep));
+
+    // set index
+    f = create_llvm_function(table, module, "setindex!", 0);
+    initialise_ternary_function(f, irBuilder);
+    index_list.clear();
+    index_list.push_back(b);
+    gep = irBuilder->CreateInBoundsGEP(a, index_list);
+    irBuilder->CreateStore(c, gep);
+    irBuilder->CreateRetVoid();
 }

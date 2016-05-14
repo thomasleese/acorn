@@ -335,6 +335,7 @@ namespace acorn {
             Method(Type *return_type);
             Method(Type *parameter1_type, Type *return_type);
             Method(Type *parameter1_type, Type *parameter2_type, Type *return_type);
+            Method(Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type);
 
             std::string name() const;
             std::string mangled_name() const;

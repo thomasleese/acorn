@@ -598,6 +598,13 @@ Method::Method(Type *parameter1_type, Type *parameter2_type, Type *return_type) 
     m_return_type = return_type;
 }
 
+Method::Method(Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type) {
+    m_parameter_types.push_back(parameter1_type);
+    m_parameter_types.push_back(parameter2_type);
+    m_parameter_types.push_back(parameter3_type);
+    m_return_type = return_type;
+}
+
 std::string Method::name() const {
     std::stringstream ss;
     ss << "Method{";

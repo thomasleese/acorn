@@ -658,7 +658,7 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
 
     m_function_pass_manager = new llvm::legacy::FunctionPassManager(m_module);
-    m_function_pass_manager->add(llvm::createFunctionInliningPass());
+    //m_function_pass_manager->add(llvm::createFunctionInliningPass());
     //m_function_pass_manager->add(llvm::createBasicAliasAnalysisPass());
     //m_function_pass_manager->add(llvm::createInstructionCombiningPass());
     //m_function_pass_manager->add(llvm::createReassociatePass());

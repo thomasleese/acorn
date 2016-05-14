@@ -18,12 +18,12 @@ def free!(inout array as Array{Integer}) as Void
     free(array.elements as UnsafePointer{Integer8})
 end
 
-def setindex!(inout pointer as UnsafePointer{Integer}, key as Integer, value as Integer) as Void
-
-end
-
 def setindex!(inout array as Array{Integer}, key as Integer, value as Integer) as Void
     array.elements[key] = value
+end
+
+def getindex(array as Array{Integer}, key as Integer) as Integer
+    return array.elements[key]
 end
 
 def append!(inout array as Array{Integer}, value as Integer) as Void
@@ -33,4 +33,7 @@ end
 
 let array = create_integer_array(10)
 array.append!(10)
+array.append!(20)
+array[1] = 15
+exit(array[1])
 array.free!()

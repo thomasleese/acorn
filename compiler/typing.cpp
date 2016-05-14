@@ -306,16 +306,21 @@ void Inferrer::visit(ast::If *expression) {
 
 void Inferrer::visit(ast::Return *expression) {
     expression->expression->accept(this);
-    expression->type = expression->expression->type;
+    return_if_null_type(expression->expression)
 
     if (m_functionStack.back()) {
         ast::FunctionDefinition *def = m_functionStack.back();
-        if (!def->returnType->type->isCompatible(expression->type)) {
-            push_error(new errors::TypeMismatchError(expression, def->returnType));
+        return_if_null_type(def->returnType)
+        if (!def->returnType->type->isCompatible(expression->expression->type)) {
+            push_error(new errors::TypeMismatchError(expression->expression, def->returnType));
+            return;
         }
     } else {
         push_error(new errors::TypeMismatchError(expression, nullptr));
+        return;
     }
+
+    expression->type = expression->expression->type;
 }
 
 void Inferrer::visit(ast::Spawn *expression) {
