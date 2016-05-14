@@ -2,6 +2,8 @@
 // Created by Thomas Leese on 27/04/2016.
 //
 
+#include <iostream>
+
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Module.h>
@@ -47,12 +49,20 @@ llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
     }
 }
 
-void TypeGenerator::clear_type_parameters() {
-    m_type_parameters.clear();
+void TypeGenerator::push_type_parameter(types::ParameterConstructor *key, types::Type *value) {
+    m_type_parameters[key] = value;
 }
 
-void TypeGenerator::set_type_parameter(types::ParameterConstructor *constructor, types::Type *replacement) {
-    m_type_parameters[constructor] = replacement;
+void TypeGenerator::pop_type_parameter(types::ParameterConstructor *key) {
+    m_type_parameters.erase(key);
+}
+
+types::Type *TypeGenerator::get_type_parameter(types::ParameterConstructor *key) {
+    return m_type_parameters[key];
+}
+
+types::Type *TypeGenerator::get_type_parameter(types::Parameter *key) {
+    return get_type_parameter(key->constructor());
 }
 
 void TypeGenerator::visit(types::ParameterConstructor *type) {

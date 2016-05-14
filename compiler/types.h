@@ -37,6 +37,8 @@ namespace acorn {
             virtual std::string mangled_name() const = 0;
 
             virtual void accept(Visitor *visitor) = 0;
+
+            virtual std::vector<types::Type *> parameters() const;
         };
 
         class Parameter;
@@ -299,6 +301,7 @@ namespace acorn {
             std::string mangled_name() const;
 
             Type *element_type() const;
+            std::vector<Type *> parameters() const;
 
             bool isCompatible(const Type *other) const;
 
@@ -316,6 +319,8 @@ namespace acorn {
             long get_field_index(std::string name);
             Type *get_field_type(std::string name);
             std::vector<Type *> field_types() const;
+
+            std::vector<Type *> parameters() const;
 
             std::string name() const;
             std::string mangled_name() const;

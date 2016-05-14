@@ -23,6 +23,10 @@ bool Type::isCompatible(const Type *other) const {
     return name() == other->name();
 }
 
+std::vector<types::Type *> Type::parameters() const {
+    return std::vector<types::Type *>();
+}
+
 std::string ParameterConstructor::name() const {
     return "ParameterConstructor";
 }
@@ -502,6 +506,12 @@ Type *UnsafePointer::element_type() const {
     return m_element_type;
 }
 
+std::vector<Type *> UnsafePointer::parameters() const {
+    std::vector<Type *> types;
+    types.push_back(m_element_type);
+    return types;
+}
+
 bool UnsafePointer::isCompatible(const Type *other) const {
     auto other_pointer = dynamic_cast<const UnsafePointer *>(other);
     if (other_pointer) {
@@ -553,12 +563,20 @@ std::vector<Type *> Record::field_types() const {
     return m_field_types;
 }
 
+std::vector<Type *> Record::parameters() const {
+    return m_field_types;
+}
+
 std::string Record::name() const {
     std::stringstream ss;
     ss << "Record{";
     for (auto type : m_field_types) {
-        ss << type->name() << ", ";
+        ss << type->name();
+        if (type != m_field_types.back()) {
+            ss << ", ";
+        }
     }
+    ss << "}";
     return ss.str();
 }
 

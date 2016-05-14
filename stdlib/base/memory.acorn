@@ -3,6 +3,7 @@ def malloc(size as Integer) as UnsafePointer{Integer8}
     return pointer
 end
 
-def free(pointer as UnsafePointer{Integer8}) as Void
-    ccall free(UnsafePointer{Integer8}) as Void using pointer
+def free{T}(pointer as UnsafePointer{T}) as Void
+    let raw_pointer = pointer as UnsafePointer{Integer8}
+    ccall free(UnsafePointer{Integer8}) as Void using raw_pointer
 end

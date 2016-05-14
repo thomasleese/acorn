@@ -21,8 +21,10 @@ namespace acorn {
             llvm::Type *take_type(ast::Node *node);
             llvm::Constant *take_initialiser(ast::Node *node);
 
-            void clear_type_parameters();
-            void set_type_parameter(types::ParameterConstructor *constructor, types::Type *replacement);
+            void push_type_parameter(types::ParameterConstructor *key, types::Type *value);
+            void pop_type_parameter(types::ParameterConstructor *key);
+            types::Type *get_type_parameter(types::ParameterConstructor *key);
+            types::Type *get_type_parameter(types::Parameter *key);
 
             void visit(types::ParameterConstructor *type);
             void visit(types::AnyConstructor *type);

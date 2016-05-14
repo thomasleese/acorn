@@ -11,15 +11,15 @@ def create_integer_array(capacity as Integer) as Array{Integer}
     return new Array{Integer}(elements: elements, size: 0, capacity: capacity)
 end
 
-def free!(inout array as Array{Integer}) as Void
-    free(array.elements as UnsafePointer{Integer8})
+def free!{T}(inout array as Array{T}) as Void
+    free(array.elements)
 end
 
 def setindex!{T}(inout array as Array{T}, key as Integer, value as T) as Void
     array.elements[key] = value
 end
 
-def getindex(array as Array{Integer}, key as Integer) as Integer
+def getindex{T}(array as Array{T}, key as Integer) as T
     return array.elements[key]
 end
 

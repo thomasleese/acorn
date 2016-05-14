@@ -3,3 +3,9 @@ import 'base/types'
 def exit(code as Integer) as Void
     ccall exit(Integer) as Void using code
 end
+
+def swap{T}(inout a as T, inout b as T) as Void
+    let old_a = a
+    a = b
+    b = old_a
+end

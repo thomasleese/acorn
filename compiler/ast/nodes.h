@@ -5,6 +5,7 @@
 #ifndef ACORN_AST_NODES_H
 #define ACORN_AST_NODES_H
 
+#include <map>
 #include <string>
 #include <vector>
 
@@ -14,6 +15,7 @@ namespace acorn {
 
     namespace types {
         class Type;
+        class ParameterConstructor;
     }
 
     namespace ast {
@@ -159,6 +161,7 @@ namespace acorn {
 
             Expression *operand;
             std::vector<Expression *> arguments;
+            std::map<types::ParameterConstructor *, types::Type *> inferred_type_parameters;
 
             void accept(Visitor *visitor);
             Call *clone() const;

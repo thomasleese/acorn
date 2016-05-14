@@ -84,6 +84,22 @@ types::Type *Inferrer::instance_type(ast::Identifier *identifier) {
     }
 }
 
+void Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Type *> parameter_types, std::vector<types::Type *> argument_types) {
+    assert(parameter_types.size() == argument_types.size());
+
+    int i = 0;
+    for (auto t : parameter_types) {
+        auto dt = dynamic_cast<types::Parameter *>(t);
+        if (dt) {
+            call->inferred_type_parameters[dt->constructor()] = argument_types[i];
+        } else {
+            infer_call_type_parameters(call, t->parameters(), argument_types[i]->parameters());
+        }
+
+        i++;
+    }
+}
+
 void Inferrer::visit(ast::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
@@ -214,6 +230,22 @@ void Inferrer::visit(ast::Call *expression) {
         }
 
         push_error(new errors::UndefinedError(expression, "Method with " + ss.str() + " types"));
+        return;
+    }
+
+    if (method->is_generic()) {
+        infer_call_type_parameters(expression, method->parameter_types(), argument_types);
+
+        assert(!expression->inferred_type_parameters.empty());
+
+        if (expression->inferred_type_parameters.empty()) {
+            push_error(new errors::InternalError(expression, "Could not infer type parameters."));
+            return;
+        }
+    }
+
+    if (auto p = dynamic_cast<types::Parameter *>(method->return_type())) {
+        expression->type = expression->inferred_type_parameters[p->constructor()];
     } else {
         expression->type = method->return_type();
     }

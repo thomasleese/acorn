@@ -100,10 +100,16 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
     add_base_method(to_float, new types::Method(new types::Integer(64), new types::Float(64)));
 
     auto getindex = add_base_function(table, "getindex");
-    add_base_method(getindex, new types::Method(new types::UnsafePointer(new types::Integer(64)), new types::Integer(64), new types::Integer(64)));
+    auto pc = new types::ParameterConstructor();
+    auto method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc));
+    method->set_is_generic(true);
+    add_base_method(getindex, method);
 
     auto setindex = add_base_function(table, "setindex!");
-    add_base_method(setindex, new types::Method(new types::UnsafePointer(new types::Parameter(nullptr)), new types::Integer(64), new types::Parameter(nullptr), new types::Void()));
+    pc = new types::ParameterConstructor();
+    method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc), new types::Void());
+    method->set_is_generic(true);
+    add_base_method(setindex, method);
 }
 
 llvm::Function *create_llvm_function(symboltable::Namespace *table, llvm::Module *module, std::string name, int index) {
@@ -215,21 +221,32 @@ void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *mod
     f = create_llvm_function(table, module, "to_float", 0);
     initialise_unary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateSIToFP(self, f->getReturnType()));
+}
 
-    // get index
-    f = create_llvm_function(table, module, "getindex", 0);
-    initialise_binary_function(f, irBuilder);
-    index_list.clear();
-    index_list.push_back(rhs);
-    auto gep = irBuilder->CreateInBoundsGEP(lhs, index_list);
-    irBuilder->CreateRet(irBuilder->CreateLoad(gep));
+void builtins::generate_function(symboltable::Symbol *function_symbol, symboltable::Symbol *method_symbol,
+                                 types::Method *method,
+                                 std::string llvm_name, llvm::Module *module, llvm::IRBuilder<> *irBuilder,
+                                 codegen::TypeGenerator *type_generator) {
+    method->accept(type_generator);
 
-    // set index
-    /*f = create_llvm_function(table, module, "setindex!", 0);
+    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(type_generator->take_type(nullptr));
+    assert(type);
+
+    llvm::Function *f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_name, module);
+
+    auto old_insert_point = irBuilder->saveIP();
+
     initialise_ternary_function(f, irBuilder);
-    index_list.clear();
+    std::vector<llvm::Value *> index_list;
     index_list.push_back(b);
-    gep = irBuilder->CreateInBoundsGEP(a, index_list);
-    irBuilder->CreateStore(c, gep);
-    irBuilder->CreateRetVoid();*/
+    auto gep = irBuilder->CreateInBoundsGEP(a, index_list);
+
+    if (function_symbol->name == "setindex!") {
+        irBuilder->CreateStore(c, gep);
+        irBuilder->CreateRetVoid();
+    } else {
+        irBuilder->CreateRet(irBuilder->CreateLoad(gep));
+    }
+
+    irBuilder->restoreIP(old_insert_point);
 }

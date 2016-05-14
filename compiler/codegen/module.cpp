@@ -82,17 +82,21 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     if (!type_parameters.empty()) {
         llvm_function_name += "_";
         for (auto entry : type_parameters) {
-            llvm_function_name += entry.second->mangled_name();
+            auto t = entry.second;
+            while (auto p = dynamic_cast<types::Parameter *>(t)) {
+                t = m_type_generator->get_type_parameter(p);
+                if (t == nullptr) {
+                    return nullptr;
+                }
+            }
+            llvm_function_name += t->mangled_name();
         }
     }
 
-    std::cout << "Def " << llvm_function_name << std::endl;
-
     m_scope.push_back(symbol->nameSpace);
 
-    m_type_generator->clear_type_parameters();
-    for (auto &entry : type_parameters) {
-        m_type_generator->set_type_parameter(entry.first, entry.second);
+    for (auto entry : type_parameters) {
+        m_type_generator->push_type_parameter(entry.first, entry.second);
     }
 
     llvm::Type *llvmType = generate_type(definition, method);
@@ -102,6 +106,8 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 
     llvm::FunctionType *type = static_cast<llvm::FunctionType *>(llvmType);
     llvm::Function *function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
+
+    auto old_insert_point = m_irBuilder->saveIP();
 
     llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);
     m_irBuilder->SetInsertPoint(basicBlock);
@@ -153,8 +159,11 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 
     m_scope.pop_back();
 
-    llvm::Function *main_function = m_module->getFunction("main");
-    m_irBuilder->SetInsertPoint(&main_function->getEntryBlock());
+    for (auto entry : type_parameters) {
+        m_type_generator->pop_type_parameter(entry.first);
+    }
+
+    m_irBuilder->restoreIP(old_insert_point);
 
     return function;
 }
@@ -338,35 +347,40 @@ void ModuleGenerator::visit(ast::Call *expression) {
         auto definition = static_cast<ast::FunctionDefinition *>(method_symbol->node);
 
         if (method->is_generic()) {
-            std::map<types::ParameterConstructor *, types::Type *> type_parameters;
-
-            int i = 0;
-            for (auto t : method->parameter_types()) {
-                auto dt = dynamic_cast<types::Parameter *>(t);
-                if (dt) {
-                    type_parameters[dt->constructor()] = argument_types[i];
-                }
-
-                // FIXME make algorithm better
-
-                i++;
-            }
-
-            assert(type_parameters.size());
+            std::map<types::ParameterConstructor *, types::Type *> type_parameters = expression->inferred_type_parameters;
 
             method_name += "_";
             for (auto entry : type_parameters) {
-                method_name += entry.second->mangled_name();
+                auto t = entry.second;
+                while (auto p = dynamic_cast<types::Parameter *>(t)) {
+                    t = m_type_generator->get_type_parameter(p);
+                    if (t == nullptr) {
+                        return;
+                    }
+                }
+                method_name += t->mangled_name();
             }
 
             if (m_module->getFunction(method_name) == nullptr) {
-                generate_function(definition, type_parameters);
+                if (definition == nullptr) {
+                    for (auto entry : type_parameters) {
+                        m_type_generator->push_type_parameter(entry.first, entry.second);
+                    }
+
+                    builtins::generate_function(symbol, method_symbol, method, method_name, m_module, m_irBuilder, m_type_generator);
+
+                    for (auto entry : type_parameters) {
+                        m_type_generator->pop_type_parameter(entry.first);
+                    }
+                } else {
+                    generate_function(definition, type_parameters);
+                }
             }
         }
 
-        std::cout << "Use " << method_name << std::endl;
         auto function = m_module->getFunction(method_name);
         if (function == nullptr) {
+            push_error(new errors::InternalError(expression, "No LLVM function created: " + method_name + " (" + method->name() + ")!"));
             return;
         }
 
@@ -378,7 +392,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
             auto value = m_llvmValues.back();
             m_llvmValues.pop_back();
 
-            if (definition->parameters[i]->inout) {
+            if (method->is_parameter_inout(method->parameter_types()[i])) {
                 llvm::LoadInst *load = llvm::dyn_cast<llvm::LoadInst>(value);
                 assert(load);
 
@@ -680,8 +694,6 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
 
         llvm::IRBuilder<> tmp_ir(&function->getEntryBlock(), function->getEntryBlock().begin());
         llvm::AllocaInst *variable = tmp_ir.CreateAlloca(type, 0, definition->name->value);
-        initialiser->getType()->dump();
-        variable->dump();
         m_irBuilder->CreateStore(initialiser, variable);
         symbol->value = variable;
     }
