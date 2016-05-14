@@ -302,7 +302,7 @@ void Builder::visit(ast::VariableDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new types::Parameter();
+        sym->type = new types::ParameterConstructor();
         m_scope.back()->insert(this, definition, sym);
     }
 
@@ -337,7 +337,7 @@ void Builder::visit(ast::FunctionDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new types::Parameter();
+        sym->type = new types::ParameterConstructor();
         m_scope.back()->insert(this, definition, sym);
     }
 
@@ -360,7 +360,7 @@ void Builder::visit(ast::TypeDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new types::Parameter();
+        sym->type = new types::Parameter(nullptr);
         m_scope.back()->insert(this, definition, sym);
     }
 

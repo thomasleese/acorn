@@ -17,7 +17,6 @@
 - Strings
 - Unions
 - Any
-- Generics
 
 - Unit tests
 - Mutability

@@ -26,6 +26,7 @@ namespace acorn {
     namespace types {
         class Type;
         class Method;
+        class ParameterConstructor;
     }
 
     namespace codegen {
@@ -47,6 +48,9 @@ namespace acorn {
 
             llvm::Type *generate_type(ast::Node *node, types::Type *type);
             llvm::Type *generate_type(ast::Node *node);
+
+            llvm::Function *generate_function(ast::FunctionDefinition *definition);
+            llvm::Function *generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterConstructor *, types::Type *>);
 
             void visit(ast::CodeBlock *block);
 

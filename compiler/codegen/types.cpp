@@ -47,7 +47,15 @@ llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
     }
 }
 
-void TypeGenerator::visit(types::Parameter *type) {
+void TypeGenerator::clear_type_parameters() {
+    m_type_parameters.clear();
+}
+
+void TypeGenerator::set_type_parameter(types::ParameterConstructor *constructor, types::Type *replacement) {
+    m_type_parameters[constructor] = replacement;
+}
+
+void TypeGenerator::visit(types::ParameterConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
@@ -105,6 +113,16 @@ void TypeGenerator::visit(types::UnionConstructor *type) {
 void TypeGenerator::visit(types::AliasConstructor *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
+}
+
+void TypeGenerator::visit(types::Parameter *type) {
+    auto it = m_type_parameters.find(type->constructor());
+    if (it == m_type_parameters.end()) {
+        m_type_stack.push_back(nullptr);
+        m_initialiser_stack.push_back(nullptr);
+    } else {
+        it->second->accept(this);
+    }
 }
 
 void TypeGenerator::visit(types::Any *type) {

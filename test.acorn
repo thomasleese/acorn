@@ -1,8 +1,16 @@
-import 'base'
+type Integer as Integer64
+type Float as Float64
 
-let array = create_integer_array(10)
-array.append!(10)
-array.append!(20)
-array[1] = 15
-exit(array[1])
-array.free!()
+def set{T}(inout v as T, value as T) as Void
+    v = value
+end
+
+def swap{T}(inout a as T, inout b as T) as Void
+    let c as T = a
+    set(a, b)
+    set(b, a)
+end
+
+let a = 10
+let b = 20
+swap(a, b)

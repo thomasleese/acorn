@@ -15,7 +15,7 @@ def free!(inout array as Array{Integer}) as Void
     free(array.elements as UnsafePointer{Integer8})
 end
 
-def setindex!(inout array as Array{Integer}, key as Integer, value as Integer) as Void
+def setindex!{T}(inout array as Array{T}, key as Integer, value as T) as Void
     array.elements[key] = value
 end
 
@@ -23,7 +23,7 @@ def getindex(array as Array{Integer}, key as Integer) as Integer
     return array.elements[key]
 end
 
-def append!(inout array as Array{Integer}, value as Integer) as Void
+def append!{T}(inout array as Array{T}, value as T) as Void
     array.length = array.length + 1
     array[array.length - 1] = value
 end

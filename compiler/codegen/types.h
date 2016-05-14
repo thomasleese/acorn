@@ -21,7 +21,10 @@ namespace acorn {
             llvm::Type *take_type(ast::Node *node);
             llvm::Constant *take_initialiser(ast::Node *node);
 
-            void visit(types::Parameter *type);
+            void clear_type_parameters();
+            void set_type_parameter(types::ParameterConstructor *constructor, types::Type *replacement);
+
+            void visit(types::ParameterConstructor *type);
             void visit(types::AnyConstructor *type);
             void visit(types::VoidConstructor *type);
             void visit(types::BooleanConstructor *type);
@@ -33,6 +36,7 @@ namespace acorn {
             void visit(types::RecordConstructor *type);
             void visit(types::UnionConstructor *type);
             void visit(types::AliasConstructor *type);
+            void visit(types::Parameter *type);
             void visit(types::Any *type);
             void visit(types::Void *type);
             void visit(types::Boolean *type);
@@ -50,6 +54,8 @@ namespace acorn {
         private:
             std::vector<llvm::Type *> m_type_stack;
             std::vector<llvm::Constant *> m_initialiser_stack;
+
+            std::map<types::ParameterConstructor *, types::Type *> m_type_parameters;
         };
 
     }

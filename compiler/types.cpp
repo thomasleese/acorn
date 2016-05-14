@@ -23,15 +23,20 @@ bool Type::isCompatible(const Type *other) const {
     return name() == other->name();
 }
 
-std::string Parameter::name() const {
-    return "Parameter";
+std::string ParameterConstructor::name() const {
+    return "ParameterConstructor";
 }
 
-std::string Parameter::mangled_name() const {
-    return "p";
+Type *ParameterConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
+    if (parameters.empty()) {
+        return new Parameter(this);
+    } else {
+        pass->push_error(new errors::InvalidTypeConstructor(node));
+        return nullptr;
+    }
 }
 
-void Parameter::accept(Visitor *visitor) {
+void ParameterConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -345,6 +350,30 @@ void AliasConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+Parameter::Parameter(ParameterConstructor *constructor) : m_constructor(constructor) {
+
+}
+
+std::string Parameter::name() const {
+    return "Parameter(Any)";
+}
+
+std::string Parameter::mangled_name() const {
+    return "p";
+}
+
+ParameterConstructor *Parameter::constructor() const {
+    return m_constructor;
+}
+
+bool Parameter::isCompatible(const Type *other) const {
+    return true; // acts like Any
+}
+
+void Parameter::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 std::string Any::name() const {
     return "Any";
 }
@@ -473,6 +502,15 @@ Type *UnsafePointer::element_type() const {
     return m_element_type;
 }
 
+bool UnsafePointer::isCompatible(const Type *other) const {
+    auto other_pointer = dynamic_cast<const UnsafePointer *>(other);
+    if (other_pointer) {
+        return m_element_type->isCompatible(other_pointer->m_element_type);
+    } else {
+        return false;
+    }
+}
+
 void UnsafePointer::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -561,6 +599,25 @@ std::string Record::mangled_name() const {
     return ss.str();
 }
 
+bool Record::isCompatible(const Type *other) const {
+    auto other_record = dynamic_cast<const Record *>(other);
+    if (other_record) {
+        if (m_field_types.size() == other_record->m_field_types.size()) {
+            for (int i = 0; i < m_field_types.size(); i++) {
+                if (!m_field_types[i]->isCompatible(other_record->m_field_types[i])) {
+                    return false;
+                }
+            }
+
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
+
 void Record::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -583,26 +640,23 @@ Method::Method(std::vector<Type *> parameter_types, Type *return_type) :
 
 }
 
-Method::Method(Type *return_type) : m_return_type(return_type) {
+Method::Method(Type *return_type) : m_return_type(return_type), m_is_generic(false) {
 
 }
 
-Method::Method(Type *parameter1_type, Type *return_type) {
+Method::Method(Type *parameter1_type, Type *return_type) : Method(return_type) {
     m_parameter_types.push_back(parameter1_type);
-    m_return_type = return_type;
 }
 
-Method::Method(Type *parameter1_type, Type *parameter2_type, Type *return_type) {
+Method::Method(Type *parameter1_type, Type *parameter2_type, Type *return_type) : Method(return_type) {
     m_parameter_types.push_back(parameter1_type);
     m_parameter_types.push_back(parameter2_type);
-    m_return_type = return_type;
 }
 
-Method::Method(Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type) {
+Method::Method(Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type) : Method(return_type) {
     m_parameter_types.push_back(parameter1_type);
     m_parameter_types.push_back(parameter2_type);
     m_parameter_types.push_back(parameter3_type);
-    m_return_type = return_type;
 }
 
 std::string Method::name() const {
@@ -626,6 +680,14 @@ std::string Method::mangled_name() const {
     return ss.str();
 }
 
+void Method::set_is_generic(bool is_generic) {
+    m_is_generic = is_generic;
+}
+
+bool Method::is_generic() const {
+    return m_is_generic;
+}
+
 std::vector<Type *> Method::parameter_types() const {
     return m_parameter_types;
 }
@@ -641,6 +703,7 @@ bool Method::could_be_called_with(std::vector<Type *> arguments) {
 
     for (unsigned long i = 0; i < arguments.size(); i++) {
         if (!m_parameter_types[i]->isCompatible(arguments[i])) {
+            //std::cout << name() << " couldn't be called because " << "#" << i << " " << m_parameter_types[i]->name() << " " << arguments[i]->name() << " don't match." << std::endl;
             return false;
         }
     }

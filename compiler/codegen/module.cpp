@@ -67,6 +67,98 @@ llvm::Type *ModuleGenerator::generate_type(ast::Node *node) {
     return generate_type(node, node->type);
 }
 
+llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *definition) {
+    std::map<types::ParameterConstructor *, types::Type *> params;
+    return generate_function(definition, params);
+}
+
+llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterConstructor *, types::Type *> type_parameters) {
+    auto function_symbol = m_scope.back()->lookup(this, definition->name);
+    auto method = static_cast<types::Method *>(definition->type);
+    auto symbol = function_symbol->nameSpace->lookup_by_node(this, definition);
+
+    std::string llvm_function_name = codegen::mangle_method(function_symbol->name, method);
+
+    if (!type_parameters.empty()) {
+        llvm_function_name += "_";
+        for (auto entry : type_parameters) {
+            llvm_function_name += entry.second->mangled_name();
+        }
+    }
+
+    std::cout << "Def " << llvm_function_name << std::endl;
+
+    m_scope.push_back(symbol->nameSpace);
+
+    m_type_generator->clear_type_parameters();
+    for (auto &entry : type_parameters) {
+        m_type_generator->set_type_parameter(entry.first, entry.second);
+    }
+
+    llvm::Type *llvmType = generate_type(definition, method);
+    if (llvmType == nullptr) {
+        return nullptr;
+    }
+
+    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(llvmType);
+    llvm::Function *function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
+
+    llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);
+    m_irBuilder->SetInsertPoint(basicBlock);
+
+    int i = 0;
+    for (auto &arg : function->args()) {
+        std::string arg_name = definition->parameters[i]->name->value;
+        arg.setName(arg_name);
+
+        llvm::Value *value = &arg;
+
+        if (!definition->parameters[i]->inout) {
+            auto alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, arg_name);
+            m_irBuilder->CreateStore(&arg, alloca);
+            value = alloca;
+        }
+
+        auto arg_symbol = m_scope.back()->lookup(this, definition, arg_name);
+        arg_symbol->value = value;
+
+        i++;
+    }
+
+    definition->code->accept(this);
+
+    if (definition->code->statements.empty()) {
+        m_irBuilder->CreateRetVoid();
+    } else {
+        if (m_llvmValues.empty()) {
+            m_irBuilder->CreateRetVoid();
+        } else {
+            llvm::Value *value = m_llvmValues.back();
+            m_llvmValues.pop_back();
+
+            if (value == nullptr || !llvm::isa<llvm::ReturnInst>(value)) {
+                m_irBuilder->CreateRetVoid();
+                // m_irBuilder->CreateRet(value);
+            }
+        }
+    }
+
+    std::string str;
+    llvm::raw_string_ostream stream(str);
+    if (llvm::verifyFunction(*function, &stream)) {
+        m_function_pass_manager->run(*function);
+        function->dump();
+        push_error(new errors::InternalError(definition, stream.str()));
+    }
+
+    m_scope.pop_back();
+
+    llvm::Function *main_function = m_module->getFunction("main");
+    m_irBuilder->SetInsertPoint(&main_function->getEntryBlock());
+
+    return function;
+}
+
 void ModuleGenerator::visit(ast::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
@@ -242,14 +334,51 @@ void ModuleGenerator::visit(ast::Call *expression) {
         assert(method);
 
         std::string method_name = codegen::mangle_method(symbol->name, method);
+        auto method_symbol = symbol->nameSpace->lookup(this, expression, method->mangled_name());
+
+        if (method->is_generic()) {
+            std::map<types::ParameterConstructor *, types::Type *> type_parameters;
+
+            int i = 0;
+            for (auto t : method->parameter_types()) {
+                auto dt = dynamic_cast<types::Parameter *>(t);
+                if (dt) {
+                    type_parameters[dt->constructor()] = argument_types[i];
+                } else {
+                    auto inout = dynamic_cast<types::InOut *>(t);
+                    dt = dynamic_cast<types::Parameter *>(inout->underlying_type());
+                    if (dt) {
+                        type_parameters[dt->constructor()] = argument_types[i];
+                    }
+                }
+
+                // FIXME make algorithm better
+
+                i++;
+            }
+
+            assert(type_parameters.size());
+
+            method_name += "_";
+            for (auto entry : type_parameters) {
+                method_name += entry.second->mangled_name();
+            }
+
+            if (m_module->getFunction(method_name) == nullptr) {
+                auto definition = static_cast<ast::FunctionDefinition *>(method_symbol->node);
+                generate_function(definition, type_parameters);
+            }
+        }
+
+        std::cout << "Use " << method_name << std::endl;
         auto function = m_module->getFunction(method_name);
-        assert(function);
+        if (function == nullptr) {
+            return;
+        }
 
         std::vector<llvm::Value *> arguments;
         int i = 0;
         for (auto argument : expression->arguments) {
-
-
             argument->accept(this);
 
             auto value = m_llvmValues.back();
@@ -563,77 +692,17 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
 
         llvm::IRBuilder<> tmp_ir(&function->getEntryBlock(), function->getEntryBlock().begin());
         llvm::AllocaInst *variable = tmp_ir.CreateAlloca(type, 0, definition->name->value);
+        initialiser->getType()->dump();
+        variable->dump();
         m_irBuilder->CreateStore(initialiser, variable);
         symbol->value = variable;
     }
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
-    auto functionSymbol = m_scope.back()->lookup(this, definition->name);
-
-    types::Method *method = static_cast<types::Method *>(definition->type);
-
-    auto symbol = functionSymbol->nameSpace->lookup(this, definition, method->mangled_name());
-
-    std::string llvm_function_name = codegen::mangle_method(functionSymbol->name, method);
-
-    m_scope.push_back(symbol->nameSpace);
-
-    llvm::Type *llvmType = generate_type(definition, method);
-
-    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(llvmType);
-    llvm::Function *function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
-
-    // function->setGC("shadow-stack");
-
-    llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);
-    m_irBuilder->SetInsertPoint(basicBlock);
-
-    int i = 0;
-    for (auto &arg : function->args()) {
-        std::string arg_name = definition->parameters[i]->name->value;
-        arg.setName(arg_name);
-
-        llvm::Value *value = &arg;
-
-        if (!definition->parameters[i]->inout) {
-            auto alloca = m_irBuilder->CreateAlloca(arg.getType(), 0, arg_name);
-            m_irBuilder->CreateStore(&arg, alloca);
-            value = alloca;
-        }
-
-        auto arg_symbol = m_scope.back()->lookup(this, definition, arg_name);
-        arg_symbol->value = value;
-
-        i++;
+    if (definition->name->parameters.empty()) {
+        generate_function(definition);
     }
-
-    definition->code->accept(this);
-
-    if (definition->code->statements.empty()) {
-        m_irBuilder->CreateRetVoid();
-    } else {
-        llvm::Value *value = m_llvmValues.back();
-        m_llvmValues.pop_back();
-
-        if (value == nullptr || !llvm::isa<llvm::ReturnInst>(value)) {
-            m_irBuilder->CreateRetVoid();
-            // m_irBuilder->CreateRet(value);
-        }
-    }
-
-    std::string str;
-    llvm::raw_string_ostream stream(str);
-    if (llvm::verifyFunction(*function, &stream)) {
-        m_function_pass_manager->run(*function);
-        function->dump();
-        push_error(new errors::InternalError(definition, stream.str()));
-    }
-
-    m_scope.pop_back();
-
-    llvm::Function *mainFunction = m_module->getFunction("main");
-    m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
 }
 
 void ModuleGenerator::visit(ast::TypeDefinition *definition) {

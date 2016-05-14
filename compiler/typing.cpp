@@ -347,6 +347,7 @@ void Inferrer::visit(ast::Parameter *parameter) {
     parameter->typeNode->accept(this);
 
     parameter->type = instance_type(parameter->typeNode);
+    return_if_null_type(parameter);
 
     if (parameter->inout) {
         parameter->type = new types::InOut(parameter->type);
@@ -389,6 +390,10 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
+    for (auto p : definition->name->parameters) {
+        p->accept(this);
+    }
+
     std::vector<types::Type *> parameterTypes;
     std::vector<std::string> officialParameterOrder;
     for (auto parameter : definition->parameters) {
@@ -404,10 +409,11 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     }
 
     definition->returnType->accept(this);
+    return_if_null_type(definition->returnType);
     definition->returnType->type = instance_type(definition->returnType);
 
     auto method = new types::Method(parameterTypes, definition->returnType->type);
-
+    method->set_is_generic(!definition->name->parameters.empty());
     function->add_method(method);
 
     functionSymbol->nameSpace->rename(this, symbol, method->mangled_name());
@@ -723,6 +729,10 @@ void Checker::visit(ast::FunctionDefinition *definition) {
 
     // it's valid for the name not to have a type, since it's doesn't exist
     // definition->name->accept(this);
+
+    for (auto p : definition->name->parameters) {
+        p->accept(this);
+    }
 
     definition->returnType->accept(this);
 

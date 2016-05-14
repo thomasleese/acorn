@@ -25,7 +25,6 @@
 #include "../prettyprinter.h"
 #include "../symboltable.h"
 #include "../errors.h"
-#include "../preprocessor.h"
 #include "../Typing.h"
 
 #include "compiler.h"
@@ -93,7 +92,7 @@ bool Compiler::compile(std::string filename) {
 
     debug("Building the Symbol Table...");
 
-    symboltable::Builder *symbolTableBuilder = new symboltable::Builder();
+    auto symbolTableBuilder = new symboltable::Builder();
     module->accept(symbolTableBuilder);
     assert(symbolTableBuilder->isAtRoot());
 
@@ -101,17 +100,10 @@ bool Compiler::compile(std::string filename) {
         return false;
     }
 
-    symboltable::Namespace *rootNamespace = symbolTableBuilder->rootNamespace();
+    auto rootNamespace = symbolTableBuilder->rootNamespace();
     delete symbolTableBuilder;
 
     debug("Parsing generics...");
-
-    auto generics_pass = new preprocessor::GenericsPass(rootNamespace);
-    module->accept(generics_pass);
-
-    if (!check_pass(generics_pass)) {
-        return false;
-    }
 
     auto printer = new PrettyPrinter();
     module->accept(printer);

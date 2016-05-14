@@ -103,7 +103,7 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
     add_base_method(getindex, new types::Method(new types::UnsafePointer(new types::Integer(64)), new types::Integer(64), new types::Integer(64)));
 
     auto setindex = add_base_function(table, "setindex!");
-    add_base_method(setindex, new types::Method(new types::UnsafePointer(new types::Integer(64)), new types::Integer(64), new types::Integer(64), new types::Void()));
+    add_base_method(setindex, new types::Method(new types::UnsafePointer(new types::Parameter(nullptr)), new types::Integer(64), new types::Parameter(nullptr), new types::Void()));
 }
 
 llvm::Function *create_llvm_function(symboltable::Namespace *table, llvm::Module *module, std::string name, int index) {
@@ -225,11 +225,11 @@ void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *mod
     irBuilder->CreateRet(irBuilder->CreateLoad(gep));
 
     // set index
-    f = create_llvm_function(table, module, "setindex!", 0);
+    /*f = create_llvm_function(table, module, "setindex!", 0);
     initialise_ternary_function(f, irBuilder);
     index_list.clear();
     index_list.push_back(b);
     gep = irBuilder->CreateInBoundsGEP(a, index_list);
     irBuilder->CreateStore(c, gep);
-    irBuilder->CreateRetVoid();
+    irBuilder->CreateRetVoid();*/
 }
