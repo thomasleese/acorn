@@ -11,11 +11,11 @@ def create_integer_array(capacity as Integer) as Array{Integer}
     return new Array{Integer}(elements: elements, size: 0, capacity: capacity)
 end
 
-def free!{T}(inout array as Array{T}) as Void
+def free{T}(inout array as Array{T}) as Void
     free(array.elements)
 end
 
-def setindex!{T}(inout array as Array{T}, key as Integer, value as T) as Void
+def setindex{T}(inout array as Array{T}, key as Integer, value as T) as Void
     array.elements[key] = value
 end
 
@@ -23,7 +23,7 @@ def getindex{T}(array as Array{T}, key as Integer) as T
     return array.elements[key]
 end
 
-def append!{T}(inout array as Array{T}, value as T) as Void
+def append{T}(inout array as Array{T}, value as T) as Void
     array.length = array.length + 1
     array[array.length - 1] = value
 end

@@ -1,1 +1,8 @@
-type String as Array{Integer64}
+type UnicodeScalar as UnsignedInteger32
+
+type Character as Array{UnicodeScalar}
+
+type String
+    characters as Array{Character}
+end
+

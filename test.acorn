@@ -1,8 +1,8 @@
 import 'base'
 
-let array = create_integer_array(10)
-array.append!(10)
-array.append!(20)
-array[1] = 15
-exit(array[1])
-array.free!()
+def create_array{T}(t as Type{T}, capacity as Integer) as Array{T}
+    let elements = malloc(strideof T * capacity) as UnsafePointer{T}
+    return new Array{T}(elements: elements, size: 0, capacity: capacity)
+end
+
+let b as Array{Integer32} = create_array(Integer32, 10)

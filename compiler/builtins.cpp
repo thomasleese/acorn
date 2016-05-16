@@ -65,12 +65,15 @@ void add_base_type_constructors(symboltable::Namespace *table) {
     add_symbol(table, "UnsafePointer", new types::UnsafePointerConstructor());
     add_symbol(table, "Function", new types::FunctionConstructor());
     add_symbol(table, "Union", new types::UnionConstructor());
+    add_symbol(table, "Type", new types::TypeDescriptionConstructor());
 }
 
 void builtins::fill_symbol_table(symboltable::Namespace *table) {
     add_base_type_constructors(table);
 
     add_symbol(table, "Nothing", new types::Void());
+    add_symbol(table, "True", new types::Boolean());
+    add_symbol(table, "False", new types::Boolean());
 
     symboltable::Symbol *multiplication = add_base_function(table, "*");
     add_base_method(multiplication, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
@@ -84,6 +87,7 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
     add_base_method(subtraction, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
 
     symboltable::Symbol *equality = add_base_function(table, "==");
+    add_base_method(equality, new types::Method(new types::Boolean(), new types::Boolean(), new types::Boolean()));
     add_base_method(equality, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
     add_base_method(equality, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::Boolean()));
 
@@ -105,7 +109,7 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
     method->set_is_generic(true);
     add_base_method(getindex, method);
 
-    auto setindex = add_base_function(table, "setindex!");
+    auto setindex = add_base_function(table, "setindex");
     pc = new types::ParameterConstructor();
     method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc), new types::Void());
     method->set_is_generic(true);
@@ -167,8 +171,18 @@ void initialise_unary_function(llvm::Function *function, llvm::IRBuilder<> *irBu
     initialise_function_block(function, irBuilder);
 }
 
+void initialiser_boolean_variable(symboltable::Namespace *table, std::string name, llvm::Module *module, llvm::IRBuilder<> *irBuilder, bool value) {
+    auto sym = table->lookup(nullptr, nullptr, name);
+    sym->value = new llvm::GlobalVariable(*module, irBuilder->getInt1Ty(), false,
+                                          llvm::GlobalValue::InternalLinkage,
+                                          irBuilder->getInt1(value), name);
+}
+
 void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *module, llvm::IRBuilder<> *irBuilder) {
-    std::vector<llvm::Value *> index_list;
+    initialiser_boolean_variable(table, "Nothing", module, irBuilder, false);
+    initialiser_boolean_variable(table, "True", module, irBuilder, true);
+    initialiser_boolean_variable(table, "False", module, irBuilder, false);
+    initialiser_boolean_variable(table, "Integer", module, irBuilder, false);
 
     // multiplication
     llvm::Function *f = create_llvm_function(table, module, "*", 0);
@@ -194,13 +208,11 @@ void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *mod
     irBuilder->CreateRet(irBuilder->CreateSub(lhs, rhs));
 
     // equality
-    f = create_llvm_function(table, module, "==", 0);
-    initialise_binary_function(f, irBuilder);
-    irBuilder->CreateRet(irBuilder->CreateICmpEQ(lhs, rhs));
-
-    f = create_llvm_function(table, module, "==", 1);
-    initialise_binary_function(f, irBuilder);
-    irBuilder->CreateRet(irBuilder->CreateICmpEQ(lhs, rhs));
+    for (int i = 0; i < 3; i++) {
+        f = create_llvm_function(table, module, "==", 0);
+        initialise_binary_function(f, irBuilder);
+        irBuilder->CreateRet(irBuilder->CreateICmpEQ(lhs, rhs));
+    }
 
     // not equality
     f = create_llvm_function(table, module, "!=", 0);
@@ -241,7 +253,7 @@ void builtins::generate_function(symboltable::Symbol *function_symbol, symboltab
     index_list.push_back(b);
     auto gep = irBuilder->CreateInBoundsGEP(a, index_list);
 
-    if (function_symbol->name == "setindex!") {
+    if (function_symbol->name == "setindex") {
         irBuilder->CreateStore(c, gep);
         irBuilder->CreateRetVoid();
     } else {

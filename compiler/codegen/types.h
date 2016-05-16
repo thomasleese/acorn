@@ -26,6 +26,8 @@ namespace acorn {
             types::Type *get_type_parameter(types::ParameterConstructor *key);
             types::Type *get_type_parameter(types::Parameter *key);
 
+            void visit_constructor(types::Constructor *type);
+
             void visit(types::ParameterConstructor *type);
             void visit(types::AnyConstructor *type);
             void visit(types::VoidConstructor *type);
@@ -38,6 +40,7 @@ namespace acorn {
             void visit(types::RecordConstructor *type);
             void visit(types::UnionConstructor *type);
             void visit(types::AliasConstructor *type);
+            void visit(types::TypeDescriptionConstructor *type);
             void visit(types::Parameter *type);
             void visit(types::Any *type);
             void visit(types::Void *type);

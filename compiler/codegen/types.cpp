@@ -65,64 +65,65 @@ types::Type *TypeGenerator::get_type_parameter(types::Parameter *key) {
     return get_type_parameter(key->constructor());
 }
 
+void TypeGenerator::visit_constructor(types::Constructor *type) {
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+
+    llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
+
+    m_type_stack.push_back(llvm_type);
+    m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
+}
+
 void TypeGenerator::visit(types::ParameterConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::AnyConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::VoidConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::BooleanConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::IntegerConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::UnsignedIntegerConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::FloatConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::UnsafePointerConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::FunctionConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::RecordConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::UnionConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::AliasConstructor *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::TypeDescriptionConstructor *type) {
+    visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::Parameter *type) {
@@ -143,10 +144,15 @@ void TypeGenerator::visit(types::Any *type) {
 void TypeGenerator::visit(types::Void *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
-    llvm::Type *llvm_type = llvm::Type::getVoidTy(context);
+    /*llvm::Type *llvm_type = llvm::Type::getVoidTy(context);
 
     m_type_stack.push_back(llvm_type);
-    m_initialiser_stack.push_back(llvm::UndefValue::get(llvm_type));
+    m_initialiser_stack.push_back(llvm::UndefValue::get(llvm_type));*/
+
+    llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
+
+    m_type_stack.push_back(llvm_type);
+    m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
 void TypeGenerator::visit(types::Boolean *type) {

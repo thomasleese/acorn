@@ -1,13 +1,11 @@
-- Memory Management
-- Generics
 - Automatic Memory Management
 
 - Merge symbol table builder with parser
 - Use numbers with metadata as mangling instead
-- Implement my own assert macro
 
-- Plan units of measure
-- Documentation
+- Void
+- Boolean
+- Unions
 
 - Arrays
 - Tuples
@@ -15,7 +13,6 @@
 - Dictionaries
 - Characters
 - Strings
-- Unions
 - Any
 
 - Unit tests
@@ -24,6 +21,8 @@
 - Channels
 - Spawns
 - Importing modules
+- Plan units of measure
+- Documentation
 
 - Maths library
 

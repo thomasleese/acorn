@@ -394,7 +394,7 @@ Call *Parser::readIndex(Expression *operand) {
     if (isToken(Token::Assignment)) {
         readToken(Token::Assignment);
         call->arguments.push_back(readExpression());
-        call->operand = new Identifier(token, "setindex!");
+        call->operand = new Identifier(token, "setindex");
     } else {
         call->operand = new Identifier(token, "getindex");
     }

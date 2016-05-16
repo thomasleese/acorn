@@ -2,6 +2,7 @@
 // Created by Thomas Leese on 18/03/2016.
 //
 
+#include <cassert>
 #include <cstring>
 #include <sstream>
 #include <iostream>
@@ -20,7 +21,9 @@ Type::~Type() {
 }
 
 bool Type::isCompatible(const Type *other) const {
-    return name() == other->name();
+    auto name1 = name();
+    auto name2 = other->name();
+    return name1 == name2;
 }
 
 std::vector<types::Type *> Type::parameters() const {
@@ -29,6 +32,14 @@ std::vector<types::Type *> Type::parameters() const {
 
 std::string ParameterConstructor::name() const {
     return "ParameterConstructor";
+}
+
+bool ParameterConstructor::isCompatible(const Type *other) const {
+    if (dynamic_cast<const types::Constructor *>(other)) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 Type *ParameterConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
@@ -293,7 +304,7 @@ AliasConstructor::AliasConstructor(ast::Node *node, Constructor *constructor, st
 }
 
 std::string AliasConstructor::name() const {
-    return "AliasConstructor";
+    return m_constructor->name();
 }
 
 Type *AliasConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
@@ -354,12 +365,31 @@ void AliasConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+std::string TypeDescriptionConstructor::name() const {
+    return "TypeDescriptionConstructor";
+}
+
+Type *TypeDescriptionConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
+    if (parameters.size() == 1) {
+        auto ct = dynamic_cast<types::ConstructedType *>(parameters[0]);
+        assert(ct);
+        return ct->constructor();
+    } else {
+        pass->push_error(new errors::InvalidTypeParameters(node, parameters.size(), 1));
+        return nullptr;
+    }
+}
+
+void TypeDescriptionConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Parameter::Parameter(ParameterConstructor *constructor) : m_constructor(constructor) {
 
 }
 
 std::string Parameter::name() const {
-    return "Parameter(Any)";
+    return "Parameter{Any}";
 }
 
 std::string Parameter::mangled_name() const {
@@ -386,6 +416,10 @@ std::string Any::mangled_name() const {
     return "a";
 }
 
+Constructor *Any::constructor() const {
+    return nullptr;
+}
+
 void Any::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -398,6 +432,10 @@ std::string Void::mangled_name() const {
     return "v";
 }
 
+Constructor *Void::constructor() const {
+    return new VoidConstructor();
+}
+
 void Void::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -408,6 +446,10 @@ std::string Boolean::name() const {
 
 std::string Boolean::mangled_name() const {
     return "b";
+}
+
+Constructor *Boolean::constructor() const {
+    return new BooleanConstructor();
 }
 
 void Boolean::accept(Visitor *visitor) {
@@ -428,6 +470,10 @@ std::string Integer::mangled_name() const {
     std::stringstream ss;
     ss << "i" << m_size;
     return ss.str();
+}
+
+Constructor *Integer::constructor() const {
+    return new IntegerConstructor(m_size);
 }
 
 unsigned int Integer::size() const {
@@ -454,6 +500,10 @@ std::string UnsignedInteger::mangled_name() const {
     return ss.str();
 }
 
+Constructor *UnsignedInteger::constructor() const {
+    return new UnsignedIntegerConstructor(m_size);
+}
+
 unsigned int UnsignedInteger::size() const {
     return m_size;
 }
@@ -478,6 +528,10 @@ std::string Float::mangled_name() const {
     return ss.str();
 }
 
+Constructor *Float::constructor() const {
+    return new FloatConstructor(m_size);
+}
+
 unsigned int Float::size() const {
     return m_size;
 }
@@ -500,6 +554,10 @@ std::string UnsafePointer::mangled_name() const {
     std::stringstream ss;
     ss << "p" << m_element_type->mangled_name();
     return ss.str();
+}
+
+Constructor *UnsafePointer::constructor() const {
+    return new UnsafePointerConstructor();
 }
 
 Type *UnsafePointer::element_type() const {
@@ -589,6 +647,10 @@ std::string Record::mangled_name() const {
     return ss.str();
 }
 
+Constructor *Record::constructor() const {
+    return new RecordConstructor();
+}
+
 bool Record::isCompatible(const Type *other) const {
     auto other_record = dynamic_cast<const Record *>(other);
     if (other_record) {
@@ -670,6 +732,10 @@ std::string Method::mangled_name() const {
     return ss.str();
 }
 
+Constructor *Method::constructor() const {
+    return nullptr;
+}
+
 void Method::set_is_generic(bool is_generic) {
     m_is_generic = is_generic;
 }
@@ -740,6 +806,10 @@ std::string Function::mangled_name() const {
     return ss.str();
 }
 
+Constructor *Function::constructor() const {
+    return nullptr;
+}
+
 void Function::add_method(Method *method) {
     m_methods.push_back(method);
 }
@@ -799,6 +869,10 @@ std::string Union::mangled_name() const {
         ss << type->mangled_name();
     }
     return ss.str();
+}
+
+Constructor *Union::constructor() const {
+    return new UnionConstructor();
 }
 
 std::set<Type *> Union::types() const {

@@ -93,7 +93,14 @@ void Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Ty
         if (dt) {
             call->inferred_type_parameters[dt->constructor()] = argument_types[i];
         } else {
-            infer_call_type_parameters(call, t->parameters(), argument_types[i]->parameters());
+            auto dt2 = dynamic_cast<types::ParameterConstructor *>(t);
+            if (dt2) {
+                auto arg = dynamic_cast<types::Constructor *>(argument_types[i]);
+                assert(arg);
+                call->inferred_type_parameters[dt2] = arg->create(this, call);
+            } else {
+                infer_call_type_parameters(call, t->parameters(), argument_types[i]->parameters());
+            }
         }
 
         i++;
@@ -396,12 +403,12 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
 
     if (definition->typeNode) {
         definition->typeNode->accept(this);
-        type = definition->typeNode->type;
+        type = instance_type(definition->typeNode);
     } else {
         type = definition->expression->type;
     }
 
-    if (!type) {
+    if (type == nullptr) {
         push_error(new errors::TypeInferenceError(definition));
     }
 
@@ -747,7 +754,7 @@ void Checker::visit(ast::VariableDefinition *definition) {
 
     definition->expression->accept(this);
 
-    check_types(definition, definition->expression);
+    check_types(definition->expression, definition);
 }
 
 void Checker::visit(ast::FunctionDefinition *definition) {

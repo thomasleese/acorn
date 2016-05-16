@@ -133,18 +133,18 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 
     definition->code->accept(this);
 
+    auto nothing = m_irBuilder->getInt1(false);
     if (definition->code->statements.empty()) {
-        m_irBuilder->CreateRetVoid();
+        m_irBuilder->CreateRet(nothing);
     } else {
         if (m_llvmValues.empty()) {
-            m_irBuilder->CreateRetVoid();
+            m_irBuilder->CreateRet(nothing);
         } else {
             llvm::Value *value = m_llvmValues.back();
             m_llvmValues.pop_back();
 
             if (value == nullptr || !llvm::isa<llvm::ReturnInst>(value)) {
-                m_irBuilder->CreateRetVoid();
-                // m_irBuilder->CreateRet(value);
+                m_irBuilder->CreateRet(nothing);
             }
         }
     }
@@ -657,6 +657,10 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
 
     if (m_scope.back()->is_root()) {
         llvm::Type *type = generate_type(definition);
+        if (type == nullptr) {
+            return;
+        }
+
         llvm::Constant *initialiser = m_type_generator->take_initialiser(definition);
         if (initialiser == nullptr) {
             push_error(m_type_generator->next_error());
@@ -664,10 +668,9 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
 
         auto variable = new llvm::GlobalVariable(*m_module, type, false,
                                                  llvm::GlobalValue::CommonLinkage,
-                                                 nullptr, definition->name->value);
+                                                 initialiser, definition->name->value);
         variable->setAlignment(4);
         variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
-        variable->setInitializer(initialiser);
 
         symbol->value = variable;
 
@@ -678,6 +681,7 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
 
         llvm::Value *value = m_llvmValues.back();
         m_llvmValues.pop_back();
+
         m_irBuilder->CreateStore(value, variable);
 
         llvm::Function *mainFunction = m_module->getFunction("main");
