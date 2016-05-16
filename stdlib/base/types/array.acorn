@@ -6,9 +6,9 @@ type Array{T}
     capacity as Integer
 end
 
-def create_integer_array(capacity as Integer) as Array{Integer}
-    let elements = malloc(strideof Integer * capacity) as UnsafePointer{Integer}
-    return new Array{Integer}(elements: elements, size: 0, capacity: capacity)
+def create_array{T}(t as Type{T}, capacity as Integer) as Array{T}
+    let elements = malloc(strideof T * capacity) as UnsafePointer{T}
+    return new Array{T}(elements: elements, size: 0, capacity: capacity)
 end
 
 def free{T}(inout array as Array{T}) as Void

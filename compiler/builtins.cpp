@@ -182,7 +182,8 @@ void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *mod
     initialiser_boolean_variable(table, "Nothing", module, irBuilder, false);
     initialiser_boolean_variable(table, "True", module, irBuilder, true);
     initialiser_boolean_variable(table, "False", module, irBuilder, false);
-    initialiser_boolean_variable(table, "Integer", module, irBuilder, false);
+    initialiser_boolean_variable(table, "Integer32", module, irBuilder, false);
+    initialiser_boolean_variable(table, "Integer64", module, irBuilder, false);
 
     // multiplication
     llvm::Function *f = create_llvm_function(table, module, "*", 0);

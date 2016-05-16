@@ -710,7 +710,11 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
 }
 
 void ModuleGenerator::visit(ast::TypeDefinition *definition) {
-    // intentionally do nothing
+    if (definition->alias) {
+        auto new_symbol = m_scope.back()->lookup(this, definition->name);
+        auto old_symbol = m_scope.back()->lookup(this, definition->alias);
+        new_symbol->value = old_symbol->value;
+    }
 }
 
 void ModuleGenerator::visit(ast::DefinitionStatement *statement) {
