@@ -496,8 +496,18 @@ void ModuleGenerator::visit(ast::Cast *cast) {
 
 void ModuleGenerator::visit(ast::Assignment *expression) {
     expression->rhs->accept(this);
-    llvm::Value *value = m_llvmValues.back();
+
+    auto rhs_value = m_llvmValues.back();
     m_llvmValues.pop_back();
+
+    llvm::Value *rhs_variable_pointer = nullptr;
+    if (auto load = dynamic_cast<llvm::LoadInst *>(rhs_value)) {
+        rhs_variable_pointer = load->getPointerOperand();
+    } else if (auto alloca = dynamic_cast<llvm::AllocaInst *>(rhs_value)) {
+        rhs_variable_pointer = alloca;
+    } else if (auto gv = dynamic_cast<llvm::GlobalVariable *>(rhs_value)) {
+        rhs_variable_pointer = gv;
+    }
 
     expression->lhs->accept(this);
 
@@ -515,13 +525,13 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
 
     assert(variable_pointer);
 
-    auto union_type = dynamic_cast<types::Union *>(expression->lhs->type);
-    if (union_type) {
-        bool ok;
-        uint8_t index = union_type->type_index(expression->rhs->type, &ok);
-        assert(ok);  // type checker should catch this
+    auto lhs_union_type = dynamic_cast<types::Union *>(expression->lhs->type);
+    auto rhs_union_type = dynamic_cast<types::Union *>(expression->rhs->type);
 
-        variable_pointer->dump();
+    if (lhs_union_type && !rhs_union_type) {
+        bool ok;
+        uint8_t index = lhs_union_type->type_index(expression->rhs->type, &ok);
+        assert(ok);  // type checker should catch this
 
         std::vector<llvm::Value *> indexes;
         indexes.push_back(m_irBuilder->getInt32(0));
@@ -535,10 +545,35 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
         indexes.push_back(m_irBuilder->getInt32(index + 1));
 
         auto holder_gep = m_irBuilder->CreateInBoundsGEP(variable_pointer, indexes);
-        holder_gep->dump();
-        m_irBuilder->CreateStore(value, holder_gep);
+        m_irBuilder->CreateStore(rhs_value, holder_gep);
+
+        m_llvmValues.push_back(variable_pointer);
+    } else if (rhs_union_type && !lhs_union_type) {
+        bool ok;
+        uint8_t index_we_want = rhs_union_type->type_index(expression->lhs->type, &ok);
+        assert(ok);  // type checker should catch this
+
+        std::vector<llvm::Value *> indexes;
+        indexes.push_back(m_irBuilder->getInt32(0));
+        indexes.push_back(m_irBuilder->getInt32(0));
+
+        assert(rhs_variable_pointer);
+
+        auto index_we_have_gep = m_irBuilder->CreateInBoundsGEP(rhs_variable_pointer, indexes, "union_index_ptr");
+        auto index_we_have = m_irBuilder->CreateLoad(index_we_have_gep, "union_index");
+
+        indexes.clear();
+        indexes.push_back(m_irBuilder->getInt32(0));
+        indexes.push_back(m_irBuilder->getInt32(1 + index_we_want));
+
+        auto holder_gep = m_irBuilder->CreateInBoundsGEP(rhs_variable_pointer, indexes, "union_index_value_ptr");
+        m_irBuilder->CreateStore(m_irBuilder->CreateLoad(holder_gep, "union_index"), variable_pointer);
+
+        auto icmp = m_irBuilder->CreateICmpEQ(m_irBuilder->getInt8(index_we_want), index_we_have, "check_union_type");
+        m_llvmValues.push_back(icmp);
     } else {
-        m_irBuilder->CreateStore(value, variable_pointer);
+        m_irBuilder->CreateStore(rhs_value, variable_pointer);
+        m_llvmValues.push_back(variable_pointer);
     }
 }
 
@@ -573,49 +608,7 @@ void ModuleGenerator::visit(ast::Comma *expression) {
 }
 
 void ModuleGenerator::visit(ast::While *expression) {
-    debug("Creating while statement...");
-
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-    llvm::Function *function = m_irBuilder->GetInsertBlock()->getParent();
-
-    llvm::BasicBlock *while_bb = llvm::BasicBlock::Create(context, "while", function);
-
-    m_irBuilder->CreateBr(while_bb);
-
-    m_irBuilder->SetInsertPoint(while_bb);
-
-    expression->condition->accept(this);
-
-    llvm::Value *condition = m_llvmValues.back();
-    m_llvmValues.pop_back();
-
-    condition = m_irBuilder->CreateICmpEQ(condition, llvm::ConstantInt::get(llvm::Type::getInt1Ty(context), 1), "whilecond");
-
-    llvm::BasicBlock *then_bb = llvm::BasicBlock::Create(context, "whilethen", function);
-    llvm::BasicBlock *merge_bb = llvm::BasicBlock::Create(context, "whilecont");
-
-    m_irBuilder->CreateCondBr(condition, then_bb, merge_bb);
-    m_irBuilder->SetInsertPoint(then_bb);
-
-    debug("Generating loop code...");
-    expression->code->accept(this);
-    //llvm::Value *then_value = m_llvmValues.back();
-    m_llvmValues.pop_back();
-
-    m_irBuilder->CreateBr(while_bb);
-
-    then_bb = m_irBuilder->GetInsertBlock();
-
-    function->getBasicBlockList().push_back(merge_bb);
-    m_irBuilder->SetInsertPoint(merge_bb);
-
-    /*llvm::Type *type = expression->type->create_llvm_type(context);
-    llvm::PHINode *phi = m_irBuilder->CreatePHI(type, 2, "iftmp");
-    phi->addIncoming(then_value, then_bb);*/
-
-    m_llvmValues.push_back(then_bb);
-
-    debug("Ended if statement.");
+    push_error(new errors::InternalError(expression, "N/A"));
 }
 
 void ModuleGenerator::visit(ast::For *expression) {
@@ -655,15 +648,14 @@ void ModuleGenerator::visit(ast::If *expression) {
     function->getBasicBlockList().push_back(else_bb);
     m_irBuilder->SetInsertPoint(else_bb);
 
-    llvm::Value *else_value;
+    llvm::Value *else_value = nullptr;
     if (expression->falseCode) {
         debug("Generating false code...");
         expression->falseCode->accept(this);
         else_value = m_llvmValues.back();
         m_llvmValues.pop_back();
     } else {
-        push_error(new errors::InternalError(expression, "no else"));
-        return;
+        else_value = m_irBuilder->getInt1(false);
     }
 
     m_irBuilder->CreateBr(merge_bb);
@@ -675,6 +667,11 @@ void ModuleGenerator::visit(ast::If *expression) {
 
     llvm::Type *type = generate_type(expression);
     llvm::PHINode *phi = m_irBuilder->CreatePHI(type, 2, "iftmp");
+
+    type->dump();
+    then_value->dump();
+    else_value->dump();
+
     phi->addIncoming(then_value, then_bb);
     phi->addIncoming(else_value, else_bb);
 
@@ -783,11 +780,10 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
 
     module->code->accept(this);
 
+    m_irBuilder->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0));
+
     m_irBuilder->SetInsertPoint(bb1);
     m_irBuilder->CreateRetVoid();
-
-    m_irBuilder->SetInsertPoint(main_bb);
-    m_irBuilder->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0));
 
     std::string str;
     llvm::raw_string_ostream stream(str);

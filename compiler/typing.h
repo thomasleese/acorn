@@ -80,6 +80,7 @@ namespace acorn {
         private:
             symboltable::Namespace *m_namespace;
             std::vector<ast::FunctionDefinition *> m_functionStack;
+            bool m_in_if;
 
         };
 

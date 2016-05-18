@@ -20,8 +20,11 @@ using namespace acorn::typing;
 #define return_if_null(thing) if (thing == nullptr) return;
 #define return_if_null_type(node) return_if_null(node->type)
 
-Inferrer::Inferrer(symboltable::Namespace *rootNamespace) {
-    m_namespace = rootNamespace;
+Inferrer::Inferrer(symboltable::Namespace *rootNamespace) :
+        m_namespace(rootNamespace),
+        m_in_if(false)
+{
+    // intentionally empty
 }
 
 Inferrer::~Inferrer() {
@@ -305,8 +308,15 @@ void Inferrer::visit(ast::Assignment *expression) {
     return_if_null_type(expression->lhs);
     return_if_null_type(expression->rhs);
 
-    if (!expression->lhs->type->isCompatible(expression->rhs->type)) {
-        push_error(new errors::TypeMismatchError(expression->rhs, expression->lhs));
+    auto holder = expression->lhs;
+    auto holdee = expression->rhs;
+
+    if (m_in_if) {
+        std::swap(holder, holdee);
+    }
+
+    if (!holder->type->isCompatible(holdee->type)) {
+        push_error(new errors::TypeMismatchError(holdee, holder));
     } else {
         expression->type = expression->lhs->type;
     }
@@ -346,7 +356,10 @@ void Inferrer::visit(ast::For *expression) {
 }
 
 void Inferrer::visit(ast::If *expression) {
+    m_in_if = true;
     expression->condition->accept(this);
+    m_in_if = false;
+
     expression->trueCode->accept(this);
     if (expression->falseCode) {
         expression->falseCode->accept(this);
