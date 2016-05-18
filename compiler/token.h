@@ -28,6 +28,7 @@ namespace acorn {
             InKeyword,
             IfKeyword,
             ElseKeyword,
+            ThenKeyword,
             AndKeyword,
             OrKeyword,
             NotKeyword,

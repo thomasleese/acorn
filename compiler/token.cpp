@@ -34,6 +34,8 @@ std::string Token::rule_string(Token::Rule rule) {
             return "in";
         case IfKeyword:
             return "if";
+        case ThenKeyword:
+            return "then";
         case ElseKeyword:
             return "else";
         case AndKeyword:

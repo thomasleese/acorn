@@ -47,6 +47,7 @@ void Lexer::loadRules() {
     setKeywordRule(Token::InKeyword, "in");
     setKeywordRule(Token::IfKeyword, "if");
     setKeywordRule(Token::ElseKeyword, "else");
+    setKeywordRule(Token::ThenKeyword, "then");
     setKeywordRule(Token::AndKeyword, "and");
     setKeywordRule(Token::OrKeyword, "or");
     setKeywordRule(Token::NotKeyword, "not");

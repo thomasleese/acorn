@@ -35,7 +35,6 @@ namespace acorn {
         struct CCall;
         struct Cast;
         struct Selector;
-        struct Index;
         struct While;
         struct For;
         struct If;

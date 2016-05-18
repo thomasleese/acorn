@@ -15,6 +15,8 @@
 using namespace acorn;
 using namespace acorn::ast;
 
+#define return_if_null(thing) if (thing == nullptr) return nullptr;
+
 Parser::Parser(std::vector<Token *> tokens) {
     for (auto token : tokens) {
         m_tokens.push_back(token);
@@ -64,7 +66,9 @@ SourceFile *Parser::parse(std::string name) {
 
     // read the remaining statements of the file
     while (!isToken(Token::EndOfFile)) {
-        Statement *statement = readStatement();
+        auto statement = readStatement();
+        if (statement == nullptr) break;
+
         module->code->statements.push_back(statement);
     }
 
@@ -76,11 +80,12 @@ void Parser::debug(std::string line) {
 }
 
 Token *Parser::readToken(Token::Rule rule) {
-    Token *token = m_tokens.front();
+    auto token = m_tokens.front();
     m_tokens.pop_front();
 
     if (token->rule != rule) {
         push_error(new errors::SyntaxError(token, rule));
+        return nullptr;
     }
 
     return token;
@@ -90,7 +95,7 @@ Token *Parser::skipToken(Token::Rule rule) {
     if (isToken(rule)) {
         return readToken(rule);
     } else {
-        return 0;
+        return nullptr;
     }
 }
 
@@ -99,18 +104,20 @@ bool Parser::isToken(Token::Rule rule) const {
         return false;
     }
 
-    Token *token = m_tokens.front();
+    auto token = m_tokens.front();
     return token->rule == rule;
 }
 
 CodeBlock *Parser::readCodeBlock() {
-    debug("Reading CodeBlock...");
-
-    CodeBlock *code = new CodeBlock(m_tokens.front());
+    auto code = new CodeBlock(m_tokens.front());
 
     while (!isToken(Token::EndKeyword)) {
-        Statement *s = readStatement();
-        code->statements.push_back(s);
+        auto statement = readStatement();
+        if (statement == nullptr) {
+            break;
+        }
+
+        code->statements.push_back(statement);
     }
 
     readToken(Token::EndKeyword);
@@ -121,7 +128,11 @@ CodeBlock *Parser::readCodeBlock() {
 Expression *Parser::readExpression() {
     debug("Reading expression...");
 
-    Expression *expr = readUnaryExpression();
+    auto expr = readUnaryExpression();
+    if (expr == nullptr) {
+        return nullptr;
+    }
+
     if (isToken(Token::Operator) || isToken(Token::Assignment)) {
         return readBinaryExpression(expr, 0);
     } else {
@@ -130,7 +141,7 @@ Expression *Parser::readExpression() {
 }
 
 Identifier *Parser::readIdentifier(bool accept_parameters) {
-    Token *token = readToken(Token::Identifier);
+    auto token = readToken(Token::Identifier);
 
     auto identifier = new Identifier(token, token->lexeme);
 
@@ -437,18 +448,38 @@ For *Parser::readFor() {
 }
 
 If *Parser::readIf() {
-    Token *token = readToken(Token::IfKeyword);
+    auto token = readToken(Token::IfKeyword);
 
     If *expression = new If(token);
-    expression->condition = readExpression();
 
-    readToken(Token::Newline);
+    if (isToken(Token::LetKeyword)) {
+        readToken(Token::LetKeyword);
+        expression->let_name = readIdentifier(false);
+        return_if_null(expression->let_name);
+        readToken(Token::AsKeyword);
+        expression->let_type = readIdentifier(true);
+        return_if_null(expression->let_type);
+        readToken(Token::Assignment);
+        expression->let_rhs = readExpression();
+        return_if_null(expression->let_rhs);
+    } else {
+        expression->condition = readExpression();
+        return_if_null(expression->condition);
+    }
+
+    readToken(Token::ThenKeyword);
+
+    return_if_null(readToken(Token::Newline));
 
     expression->trueCode = new CodeBlock(m_tokens.front());
     expression->falseCode = nullptr;
 
     while (!isToken(Token::ElseKeyword) && !isToken(Token::EndKeyword)) {
-        Statement *statement = readStatement();
+        auto statement = readStatement();
+        if (statement == nullptr) {
+            break;
+        }
+
         expression->trueCode->statements.push_back(statement);
     }
 
@@ -599,7 +630,10 @@ Expression *Parser::readPrimaryExpression() {
 }
 
 Expression *Parser::readOperandExpression() {
-    Expression *left = readPrimaryExpression();
+    auto left = readPrimaryExpression();
+    if (left == nullptr) {
+        return nullptr;
+    }
 
     while (true) {
         if (isToken(Token::OpenParenthesis)) {
@@ -754,7 +788,7 @@ Statement *Parser::readStatement() {
         statement = new ExpressionStatement(expression);
     }
 
-    readToken(Token::Newline);
+    return_if_null(readToken(Token::Newline));
 
     return statement;
 }

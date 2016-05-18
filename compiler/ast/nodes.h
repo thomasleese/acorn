@@ -27,7 +27,6 @@ namespace acorn {
             virtual ~Node();
 
             virtual void accept(Visitor *visitor) = 0;
-            virtual Node *clone() const = 0;
 
             Token *token;
             types::Type *type;
@@ -36,14 +35,10 @@ namespace acorn {
         // basic categories
         struct Expression : Node {
             using Node::Node;
-
-            virtual Expression *clone() const = 0;
         };
 
         struct Statement : Node {
             using Node::Node;
-
-            virtual Statement *clone() const = 0;
         };
 
         // misc
@@ -53,7 +48,6 @@ namespace acorn {
             std::vector<Statement *> statements;
 
             void accept(Visitor *visitor);
-            CodeBlock *clone() const;
         };
 
         // expressions
@@ -69,15 +63,12 @@ namespace acorn {
             std::vector<Identifier *> parameters;
 
             void accept(Visitor *visitor);
-            Identifier *clone() const;
         };
 
         struct Definition : Node {
             using Node::Node;
 
             Identifier *name;
-
-            virtual Definition *clone() const = 0;
         };
 
         struct BooleanLiteral : Expression {
@@ -86,7 +77,6 @@ namespace acorn {
             std::string value;
 
             void accept(Visitor *visitor);
-            BooleanLiteral *clone() const;
         };
 
         struct IntegerLiteral : Expression {
@@ -95,7 +85,6 @@ namespace acorn {
             std::string value;
 
             void accept(Visitor *visitor);
-            IntegerLiteral *clone() const;
         };
 
         struct FloatLiteral : Expression {
@@ -104,7 +93,6 @@ namespace acorn {
             std::string value;
 
             void accept(Visitor *visitor);
-            FloatLiteral *clone() const;
         };
 
         struct ImaginaryLiteral : Expression {
@@ -113,7 +101,6 @@ namespace acorn {
             std::string value;
 
             void accept(Visitor *visitor);
-            ImaginaryLiteral *clone() const;
         };
 
         struct StringLiteral : Expression {
@@ -122,7 +109,6 @@ namespace acorn {
             std::string value;
 
             void accept(Visitor *visitor);
-            StringLiteral *clone() const;
         };
 
         struct SequenceLiteral : Expression {
@@ -131,7 +117,6 @@ namespace acorn {
             std::vector<Expression *> elements;
 
             void accept(Visitor *visitor);
-            SequenceLiteral *clone() const;
         };
 
         struct MappingLiteral : Expression {
@@ -141,7 +126,6 @@ namespace acorn {
             std::vector<Expression *> values;
 
             void accept(Visitor *visitor);
-            MappingLiteral *clone() const;
         };
 
         struct RecordLiteral : Expression {
@@ -164,7 +148,6 @@ namespace acorn {
             std::map<types::ParameterConstructor *, types::Type *> inferred_type_parameters;
 
             void accept(Visitor *visitor);
-            Call *clone() const;
         };
 
         struct CCall : Expression {
@@ -176,7 +159,6 @@ namespace acorn {
             std::vector<Expression *> arguments;
 
             void accept(Visitor *visitor);
-            CCall *clone() const;
         };
 
         struct Cast : Expression {
@@ -186,7 +168,6 @@ namespace acorn {
             Identifier *new_type;
 
             void accept(Visitor *visitor);
-            Cast *clone() const;
         };
 
         struct Assignment : Expression {
@@ -196,7 +177,6 @@ namespace acorn {
             Expression *rhs;
 
             void accept(Visitor *visitor);
-            Assignment *clone() const;
         };
 
         struct Selector : Expression {
@@ -206,7 +186,6 @@ namespace acorn {
             Identifier *name;
 
             void accept(Visitor *visitor);
-            Selector *clone() const;
         };
 
         struct Comma : Expression {
@@ -217,7 +196,6 @@ namespace acorn {
             Expression *rhs;
 
             void accept(Visitor *visitor);
-            Comma *clone() const;
         };
 
         struct While : Expression {
@@ -227,7 +205,6 @@ namespace acorn {
             CodeBlock *code;
 
             void accept(Visitor *visitor);
-            While *clone() const;
         };
 
         struct For : Expression {
@@ -238,7 +215,6 @@ namespace acorn {
             CodeBlock *code;
 
             void accept(Visitor *visitor);
-            For *clone() const;
         };
 
         struct If : Expression {
@@ -248,8 +224,11 @@ namespace acorn {
             CodeBlock *trueCode;
             CodeBlock *falseCode;
 
+            Identifier *let_name;
+            Identifier *let_type;
+            Expression *let_rhs;
+
             void accept(Visitor *visitor);
-            If *clone() const;
         };
 
         struct Return : Expression {
@@ -258,7 +237,6 @@ namespace acorn {
             Expression *expression;
 
             void accept(Visitor *visitor);
-            Return *clone() const;
         };
 
         struct Spawn : Expression {
@@ -267,7 +245,6 @@ namespace acorn {
             Call *call;
 
             void accept(Visitor *visitor);
-            Spawn *clone() const;
         };
 
         struct Sizeof : Expression {
@@ -276,7 +253,6 @@ namespace acorn {
             Identifier *identifier;
 
             void accept(Visitor *visitor);
-            Sizeof *clone() const;
         };
 
         struct Strideof : Expression {
@@ -285,7 +261,6 @@ namespace acorn {
             Identifier *identifier;
 
             void accept(Visitor *visitor);
-            Strideof *clone() const;
         };
 
         // misc
@@ -297,7 +272,6 @@ namespace acorn {
             Identifier *typeNode;
 
             void accept(Visitor *visitor);
-            Parameter *clone() const;
         };
 
         // definitions
@@ -309,7 +283,6 @@ namespace acorn {
             Assignment *assignment;
 
             void accept(Visitor *visitor);
-            VariableDefinition *clone() const;
         };
 
         struct FunctionDefinition : Definition {
@@ -320,7 +293,6 @@ namespace acorn {
             Identifier *returnType;
 
             void accept(Visitor *visitor);
-            FunctionDefinition *clone() const;
         };
 
         struct TypeDefinition : Definition {
@@ -332,7 +304,6 @@ namespace acorn {
             std::vector<Identifier *> field_types;
 
             void accept(Visitor *visitor);
-            TypeDefinition *clone() const;
         };
 
         // statements
@@ -342,7 +313,6 @@ namespace acorn {
             Definition *definition;
 
             void accept(Visitor *visitor);
-            DefinitionStatement *clone() const;
         };
 
         struct ExpressionStatement : Statement {
@@ -351,7 +321,6 @@ namespace acorn {
             Expression *expression;
 
             void accept(Visitor *visitor);
-            ExpressionStatement *clone() const;
         };
 
         struct ImportStatement : Statement {
@@ -360,7 +329,6 @@ namespace acorn {
             StringLiteral *path;
 
             void accept(Visitor *visitor);
-            ImportStatement *clone() const;
         };
 
         // source file
@@ -372,11 +340,10 @@ namespace acorn {
             std::vector<ImportStatement *> imports;
 
             void accept(Visitor *visitor);
-            SourceFile *clone() const;
         };
 
     }
 
 }
 
-#endif //ACORN_AST_NODES_H
+#endif // ACORN_AST_NODES_H
