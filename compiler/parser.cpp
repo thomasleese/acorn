@@ -188,6 +188,24 @@ Identifier *Parser::readOperator(bool accept_parameters) {
     return identifier;
 }
 
+ast::VariableDeclaration *Parser::readVariableDeclaration() {
+    auto token = readToken(Token::LetKeyword);
+    return_if_null(token);
+
+    auto name = readIdentifier(false);
+    return_if_null(name);
+
+    ast::Identifier *type = nullptr;
+    if (isToken(Token::AsKeyword)) {
+        readToken(Token::AsKeyword);
+
+        type = readIdentifier(true);
+        return_if_null(type);
+    }
+
+    return new VariableDeclaration(token, name, type);
+}
+
 BooleanLiteral *Parser::readBooleanLiteral() {
     Token *token = readToken(Token::BooleanLiteral);
 
@@ -453,15 +471,16 @@ If *Parser::readIf() {
     If *expression = new If(token);
 
     if (isToken(Token::LetKeyword)) {
-        readToken(Token::LetKeyword);
-        expression->let_name = readIdentifier(false);
-        return_if_null(expression->let_name);
-        readToken(Token::AsKeyword);
-        expression->let_type = readIdentifier(true);
-        return_if_null(expression->let_type);
-        readToken(Token::Assignment);
-        expression->let_rhs = readExpression();
-        return_if_null(expression->let_rhs);
+        auto lhs = readVariableDeclaration();
+        return_if_null(lhs);
+
+        auto assignment_token = readToken(Token::Assignment);
+        return_if_null(assignment_token);
+
+        auto rhs = readExpression();
+        return_if_null(rhs);
+
+        expression->condition = new Assignment(assignment_token, lhs, rhs);
     } else {
         expression->condition = readExpression();
         return_if_null(expression->condition);
@@ -678,23 +697,18 @@ Parameter *Parser::readParameter() {
 }
 
 VariableDefinition *Parser::readVariableDefinition() {
-    Token *token = readToken(Token::LetKeyword);
+    auto lhs = readVariableDeclaration();
+    return_if_null(lhs);
 
-    VariableDefinition *definition = new VariableDefinition(token);
+    auto token = readToken(Token::Assignment);
+    return_if_null(token);
 
-    definition->name = readIdentifier(false);
+    auto rhs = readExpression();
+    return_if_null(rhs);
 
-    if (isToken(Token::AsKeyword)) {
-        readToken(Token::AsKeyword);
-        definition->typeNode = readIdentifier(true);
-    } else {
-        definition->typeNode = nullptr;
-    }
-
-    token = readToken(Token::Assignment);
-
-    definition->assignment = new Assignment(token, definition->name, readExpression());
-
+    auto definition = new VariableDefinition(lhs->token);
+    definition->name = lhs->name();
+    definition->assignment = new Assignment(token, lhs, rhs);
     return definition;
 }
 
@@ -774,16 +788,16 @@ Statement *Parser::readStatement() {
     Statement *statement;
 
     if (isToken(Token::LetKeyword)) {
-        statement = new DefinitionStatement(readVariableDefinition());
+        auto definition = readVariableDefinition();
+        return_if_null(definition);
+        statement = new DefinitionStatement(definition);
     } else if (isToken(Token::DefKeyword)) {
         statement = new DefinitionStatement(readFunctionDefinition());
     } else if (isToken(Token::TypeKeyword)) {
         statement = new DefinitionStatement(readTypeDefinition());
     } else {
         auto expression = readExpression();
-        if (expression == nullptr) {
-            return nullptr;
-        }
+        return_if_null(expression);
 
         statement = new ExpressionStatement(expression);
     }

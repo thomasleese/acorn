@@ -201,6 +201,43 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
     m_llvmValues.push_back(value);
 }
 
+void ModuleGenerator::visit(ast::VariableDeclaration *node) {
+    auto symbol = m_scope.back()->lookup(this, node->name());
+
+    auto llvm_type = generate_type(node);
+    return_if_null(llvm_type);
+
+    auto old_insert_point = m_irBuilder->saveIP();
+
+    if (m_scope.back()->is_root()) {
+        auto llvm_initialiser = m_type_generator->take_initialiser(node);
+        if (llvm_initialiser == nullptr) {
+            push_error(m_type_generator->next_error());
+            return;
+        }
+
+        auto variable = new llvm::GlobalVariable(*m_module, llvm_type, false,
+                                                 llvm::GlobalValue::CommonLinkage,
+                                                 llvm_initialiser, node->name()->value);
+        variable->setAlignment(4);
+        variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
+
+        symbol->value = variable;
+
+        auto insert_function = m_module->getFunction("_init_variables_");
+        m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock());
+    } else {
+        auto insert_function = m_irBuilder->GetInsertBlock()->getParent();
+        m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock());
+
+        symbol->value = m_irBuilder->CreateAlloca(llvm_type, 0, node->name()->value);
+    }
+
+    m_irBuilder->restoreIP(old_insert_point);
+
+    m_llvmValues.push_back(symbol->value);
+}
+
 void ModuleGenerator::visit(ast::BooleanLiteral *boolean) {
     push_error(new errors::InternalError(boolean, "N/A"));
     m_llvmValues.push_back(nullptr);
@@ -463,12 +500,20 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
     m_llvmValues.pop_back();
 
     expression->lhs->accept(this);
-    auto load = dynamic_cast<llvm::LoadInst *>(m_llvmValues.back());
+
+    auto last_value = m_llvmValues.back();
     m_llvmValues.pop_back();
 
-    assert(load);
+    llvm::Value *variable_pointer = nullptr;
+    if (auto load = dynamic_cast<llvm::LoadInst *>(last_value)) {
+        variable_pointer = load->getPointerOperand();
+    } else if (auto alloca = dynamic_cast<llvm::AllocaInst *>(last_value)) {
+        variable_pointer = alloca;
+    } else if (auto gv = dynamic_cast<llvm::GlobalVariable *>(last_value)) {
+        variable_pointer = gv;
+    }
 
-    auto variable_pointer = load->getPointerOperand();
+    assert(variable_pointer);
 
     auto union_type = dynamic_cast<types::Union *>(expression->lhs->type);
     if (union_type) {
@@ -679,40 +724,7 @@ void ModuleGenerator::visit(ast::Parameter *parameter) {
 }
 
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
-    auto symbol = m_scope.back()->lookup(this, definition->name);
-
-    auto llvm_type = generate_type(definition);
-    return_if_null(llvm_type);
-
-    auto old_insert_point = m_irBuilder->saveIP();
-
-    if (m_scope.back()->is_root()) {
-        auto llvm_initialiser = m_type_generator->take_initialiser(definition);
-        if (llvm_initialiser == nullptr) {
-            push_error(m_type_generator->next_error());
-            return;
-        }
-
-        auto variable = new llvm::GlobalVariable(*m_module, llvm_type, false,
-                                                 llvm::GlobalValue::CommonLinkage,
-                                                 llvm_initialiser, definition->name->value);
-        variable->setAlignment(4);
-        variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
-
-        symbol->value = variable;
-
-        auto insert_function = m_module->getFunction("_init_variables_");
-        m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock());
-    } else {
-        auto insert_function = m_irBuilder->GetInsertBlock()->getParent();
-        m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock());
-
-        symbol->value = m_irBuilder->CreateAlloca(llvm_type, 0, definition->name->value);
-    }
-
     definition->assignment->accept(this);
-
-    m_irBuilder->restoreIP(old_insert_point);
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {

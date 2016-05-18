@@ -103,8 +103,6 @@ bool Compiler::compile(std::string filename) {
     auto rootNamespace = symbolTableBuilder->rootNamespace();
     delete symbolTableBuilder;
 
-    debug("Parsing generics...");
-
     auto printer = new PrettyPrinter();
     module->accept(printer);
     printer->print();

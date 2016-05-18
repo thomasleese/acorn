@@ -197,6 +197,13 @@ void Builder::visit(ast::Identifier *identifier) {
 
 }
 
+void Builder::visit(ast::VariableDeclaration *node) {
+    assert(!node->name()->has_parameters());
+
+    Symbol *symbol = new Symbol(node->name()->value);
+    m_scope.back()->insert(this, node, symbol);
+}
+
 void Builder::visit(ast::BooleanLiteral *boolean) {
 
 }
@@ -242,7 +249,8 @@ void Builder::visit(ast::Cast *expression) {
 }
 
 void Builder::visit(ast::Assignment *expression) {
-
+    expression->lhs->accept(this);
+    expression->rhs->accept(this);
 }
 
 void Builder::visit(ast::Selector *expression) {
@@ -293,20 +301,7 @@ void Builder::visit(ast::Parameter *parameter) {
 }
 
 void Builder::visit(ast::VariableDefinition *definition) {
-    Symbol *symbol = new Symbol(definition->name->value);
-    m_scope.back()->insert(this, definition, symbol);
-
-    symbol->nameSpace = new Namespace(m_scope.back());
-
-    m_scope.push_back(symbol->nameSpace);
-
-    for (auto parameter : definition->name->parameters) {
-        Symbol *sym = new Symbol(parameter->value);
-        sym->type = new types::ParameterConstructor();
-        m_scope.back()->insert(this, definition, sym);
-    }
-
-    m_scope.pop_back();
+    definition->assignment->accept(this);
 }
 
 void Builder::visit(ast::FunctionDefinition *definition) {

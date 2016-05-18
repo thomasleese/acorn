@@ -42,6 +42,20 @@ void PrettyPrinter::visit(ast::Identifier *identifier) {
     }
 }
 
+void PrettyPrinter::visit(ast::VariableDeclaration *node) {
+    ss << indentation() << "(VariableDeclaration\n";
+    indent++;
+
+    node->name()->accept(this);
+
+    if (node->has_given_type()) {
+        node->given_type()->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(ast::BooleanLiteral *boolean) {
     ss << indentation() << "(BooleanLiteral " << boolean->value << ")\n";
 }
@@ -273,13 +287,6 @@ void PrettyPrinter::visit(ast::VariableDefinition *definition) {
     ss << indentation() << "(VariableDefinition\n";
     indent++;
 
-    definition->name->accept(this);
-
-    if (definition->typeNode) {
-        definition->typeNode->accept(this);
-    } else {
-        ss << indentation() << "(null)\n";
-    }
     definition->assignment->accept(this);
 
     indent--;

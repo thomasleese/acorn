@@ -6,6 +6,7 @@
 #define ACORN_AST_NODES_H
 
 #include <map>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -63,6 +64,22 @@ namespace acorn {
             std::vector<Identifier *> parameters;
 
             void accept(Visitor *visitor);
+        };
+
+        class VariableDeclaration : public Expression {
+        public:
+            VariableDeclaration(Token *token, Identifier *name = nullptr, Identifier *type = nullptr);
+
+            Identifier *name() const;
+
+            bool has_given_type();
+            Identifier *given_type() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Identifier> m_name;
+            std::unique_ptr<Identifier> m_given_type;
         };
 
         struct Definition : Node {
@@ -224,10 +241,6 @@ namespace acorn {
             CodeBlock *trueCode;
             CodeBlock *falseCode;
 
-            Identifier *let_name;
-            Identifier *let_type;
-            Expression *let_rhs;
-
             void accept(Visitor *visitor);
         };
 
@@ -279,7 +292,6 @@ namespace acorn {
             VariableDefinition(Token *token);
             VariableDefinition(std::string name, Token *token);
 
-            Identifier *typeNode;
             Assignment *assignment;
 
             void accept(Visitor *visitor);

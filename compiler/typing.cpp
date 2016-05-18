@@ -132,6 +132,15 @@ void Inferrer::visit(ast::Identifier *expression) {
     expression->type = symbol->type;
 }
 
+void Inferrer::visit(ast::VariableDeclaration *node) {
+    node->name()->accept(this);
+
+    if (node->has_given_type()) {
+        node->given_type()->accept(this);
+        node->type = instance_type(node->given_type());
+    }
+}
+
 void Inferrer::visit(ast::BooleanLiteral *expression) {
     expression->type = find_type(expression, "Boolean");
 }
@@ -286,8 +295,15 @@ void Inferrer::visit(ast::Assignment *expression) {
     expression->lhs->accept(this);
     expression->rhs->accept(this);
 
-    return_if_null_type(expression->lhs)
-    return_if_null_type(expression->rhs)
+    // variable type inference
+    if (dynamic_cast<ast::VariableDeclaration *>(expression->lhs)) {
+        if (!expression->lhs->type) {
+            expression->lhs->type = expression->rhs->type;
+        }
+    }
+
+    return_if_null_type(expression->lhs);
+    return_if_null_type(expression->rhs);
 
     if (!expression->lhs->type->isCompatible(expression->rhs->type)) {
         push_error(new errors::TypeMismatchError(expression->rhs, expression->lhs));
@@ -393,27 +409,10 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
         return;
     }
 
-    types::Type *type = nullptr;
-
     definition->assignment->accept(this);
 
-    if (definition->typeNode) {
-        definition->typeNode->accept(this);
-        type = instance_type(definition->typeNode);
-    } else {
-        type = definition->assignment->rhs->type;
-    }
-
-    if (type == nullptr) {
-        push_error(new errors::TypeInferenceError(definition));
-    }
-
-    // type is not know when assignment gets parsed
-    definition->assignment->lhs->type = type;
-    definition->assignment->type = type;
-
-    symbol->type = type;
-    definition->type = type;
+    symbol->type = definition->assignment->type;
+    definition->type = definition->assignment->type;
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
@@ -599,6 +598,14 @@ void Checker::visit(ast::Identifier *identifier) {
     check_not_null(identifier);
 }
 
+void Checker::visit(ast::VariableDeclaration *node) {
+    if (node->has_given_type()) {
+        node->given_type()->accept(this);
+    }
+
+    check_not_null(node);
+}
+
 void Checker::visit(ast::BooleanLiteral *boolean) {
     check_not_null(boolean);
 }
@@ -744,10 +751,6 @@ void Checker::visit(ast::Parameter *parameter) {
 void Checker::visit(ast::VariableDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     // definition->name->accept(this);
-
-    if (definition->typeNode) {
-        definition->typeNode->accept(this);
-    }
 
     definition->assignment->accept(this);
 

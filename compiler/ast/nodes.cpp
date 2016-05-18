@@ -55,6 +55,27 @@ void Identifier::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+VariableDeclaration::VariableDeclaration(Token *token, Identifier *name, Identifier *type) :
+        Expression(token), m_name(name), m_given_type(type) {
+
+}
+
+Identifier *VariableDeclaration::name() const {
+    return m_name.get();
+}
+
+bool VariableDeclaration::has_given_type() {
+    return m_given_type != nullptr;
+}
+
+Identifier *VariableDeclaration::given_type() const {
+    return m_given_type.get();
+}
+
+void VariableDeclaration::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 void BooleanLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -192,8 +213,11 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-VariableDefinition::VariableDefinition(Token *token) : Definition(token), assignment(nullptr) {
-    this->typeNode = nullptr;
+VariableDefinition::VariableDefinition(Token *token) :
+        Definition(token),
+        assignment(nullptr)
+{
+    // intentionally empty
 }
 
 VariableDefinition::VariableDefinition(std::string name, Token *token) : VariableDefinition(token) {
