@@ -412,13 +412,12 @@ Parameter* Parameter::clone() const {
     return new_parameter;
 }
 
-VariableDefinition::VariableDefinition(Token *token) : Definition(token), expression(nullptr) {
+VariableDefinition::VariableDefinition(Token *token) : Definition(token), assignment(nullptr) {
     this->typeNode = nullptr;
 }
 
-VariableDefinition::VariableDefinition(std::string name, Token *token) : Definition(token), expression(nullptr) {
+VariableDefinition::VariableDefinition(std::string name, Token *token) : VariableDefinition(token) {
     this->name = new Identifier(token, name);
-    this->typeNode = nullptr;
 }
 
 void VariableDefinition::accept(Visitor *visitor) {
@@ -428,7 +427,7 @@ void VariableDefinition::accept(Visitor *visitor) {
 VariableDefinition* VariableDefinition::clone() const {
     auto new_def = new VariableDefinition(this->token);
     new_def->name = this->name->clone();
-    new_def->expression = this->expression->clone();
+    new_def->assignment = this->assignment->clone();
     if (this->typeNode) {
         new_def->typeNode = this->typeNode->clone();
     }

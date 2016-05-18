@@ -657,9 +657,9 @@ VariableDefinition *Parser::readVariableDefinition() {
         definition->typeNode = nullptr;
     }
 
-    readToken(Token::Assignment);
+    token = readToken(Token::Assignment);
 
-    definition->expression = readExpression();
+    definition->assignment = new Assignment(token, definition->name, readExpression());
 
     return definition;
 }

@@ -3,8 +3,6 @@
 - Merge symbol table builder with parser
 - Use numbers with metadata as mangling instead
 
-- Void
-- Boolean
 - Unions
 
 - Arrays

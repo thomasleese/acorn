@@ -286,12 +286,7 @@ std::string UnionConstructor::name() const {
 }
 
 Type *UnionConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
-    std::set<Type *> types;
-    for (auto parameter : parameters) {
-        types.insert(parameter);
-    }
-
-    return new Union(pass, node, types);
+    return new Union(pass, node, parameters);
 }
 
 void UnionConstructor::accept(Visitor *visitor) {
@@ -837,11 +832,11 @@ void Function::accept(Visitor *visitor) {
 }
 
 Union::Union(Type *type1, Type *type2) {
-    m_types.insert(type1);
-    m_types.insert(type2);
+    m_types.push_back(type1);
+    m_types.push_back(type2);
 }
 
-Union::Union(compiler::Pass *pass, ast::Node *node, std::set<Type *> types) : m_types(types) {
+Union::Union(compiler::Pass *pass, ast::Node *node, std::vector<Type *> types) : m_types(types) {
     if (m_types.size() <= 1) {
         pass->push_error(new errors::InvalidTypeParameters(node, m_types.size(), 2));
     }
@@ -875,8 +870,20 @@ Constructor *Union::constructor() const {
     return new UnionConstructor();
 }
 
-std::set<Type *> Union::types() const {
+std::vector<Type *> Union::types() const {
     return m_types;
+}
+
+uint8_t Union::type_index(const Type *type, bool *exists) const {
+    for (uint8_t i = 0; i < m_types.size(); i++) {
+        if (m_types[i]->isCompatible(type)) {
+            *exists = true;
+            return i;
+        }
+    }
+
+    *exists = false;
+    return 0;
 }
 
 bool Union::isCompatible(const Type *other) const {

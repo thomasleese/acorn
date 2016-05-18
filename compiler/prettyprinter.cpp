@@ -280,7 +280,7 @@ void PrettyPrinter::visit(ast::VariableDefinition *definition) {
     } else {
         ss << indentation() << "(null)\n";
     }
-    definition->expression->accept(this);
+    definition->assignment->accept(this);
 
     indent--;
     ss << indentation() << ")\n";

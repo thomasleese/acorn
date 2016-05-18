@@ -428,20 +428,22 @@ namespace acorn {
         class Union : public ConstructedType {
         public:
             Union(Type *type1, Type *type2);
-            Union(compiler::Pass *pass, ast::Node *node, std::set<Type *> types);
+            Union(compiler::Pass *pass, ast::Node *node, std::vector<Type *> types);
 
             std::string name() const;
             std::string mangled_name() const;
 
             Constructor *constructor() const;
 
-            std::set<Type *> types() const;
+            std::vector<Type *> types() const;
+            uint8_t type_index(const Type *type, bool *exists) const;
+
             bool isCompatible(const Type *other) const;
 
             void accept(Visitor *visitor);
 
         private:
-            std::set<Type *> m_types;
+            std::vector<Type *> m_types;
         };
 
         class Visitor {

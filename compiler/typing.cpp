@@ -157,7 +157,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
         element->accept(this);
     }
 
-    std::set<types::Type *> types;
+    std::vector<types::Type *> types;
     for (auto element : sequence->elements) {
         bool inList = false;
         for (auto type : types) {
@@ -168,7 +168,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
         }
 
         if (!inList) {
-            types.insert(element->type);
+            types.push_back(element->type);
         }
     }
 
@@ -384,10 +384,6 @@ void Inferrer::visit(ast::Parameter *parameter) {
     parameter->type = instance_type(parameter->typeNode);
     return_if_null_type(parameter);
 
-    /*if (parameter->inout) {
-        parameter->type = new types::InOut(parameter->type);
-    }*/
-
     symbol->type = parameter->type;
 }
 
@@ -399,18 +395,22 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
 
     types::Type *type = nullptr;
 
-    definition->expression->accept(this);
+    definition->assignment->accept(this);
 
     if (definition->typeNode) {
         definition->typeNode->accept(this);
         type = instance_type(definition->typeNode);
     } else {
-        type = definition->expression->type;
+        type = definition->assignment->rhs->type;
     }
 
     if (type == nullptr) {
         push_error(new errors::TypeInferenceError(definition));
     }
+
+    // type is not know when assignment gets parsed
+    definition->assignment->lhs->type = type;
+    definition->assignment->type = type;
 
     symbol->type = type;
     definition->type = type;
@@ -573,7 +573,7 @@ void Checker::check_types(ast::Node *lhs, ast::Node *rhs) {
 
     bool compatible = lhs->type->isCompatible(rhs->type);
     if (!compatible) {
-        push_error(new errors::TypeMismatchError(lhs, rhs));
+        push_error(new errors::TypeMismatchError(rhs, lhs));
     }
 }
 
@@ -683,9 +683,6 @@ void Checker::visit(ast::Assignment *expression) {
     expression->lhs->accept(this);
     expression->rhs->accept(this);
     check_not_null(expression);
-
-    //symboltable::Symbol *symbol = m_namespace->lookup(expression->lhs);
-    //push_error(new errors::ConstantAssignmentError(expression->lhs));
 }
 
 void Checker::visit(ast::Selector *expression) {
@@ -752,9 +749,9 @@ void Checker::visit(ast::VariableDefinition *definition) {
         definition->typeNode->accept(this);
     }
 
-    definition->expression->accept(this);
+    definition->assignment->accept(this);
 
-    check_types(definition->expression, definition);
+    check_types(definition, definition->assignment->rhs);
 }
 
 void Checker::visit(ast::FunctionDefinition *definition) {

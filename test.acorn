@@ -1,3 +1,5 @@
 import 'base'
 
-let b as Array{Integer} = create_array(Integer, 10)
+let a as Union{Boolean, Void} = Nothing
+a = True
+a = False

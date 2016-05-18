@@ -306,7 +306,7 @@ namespace acorn {
             VariableDefinition(std::string name, Token *token);
 
             Identifier *typeNode;
-            Expression *expression;
+            Assignment *assignment;
 
             void accept(Visitor *visitor);
             VariableDefinition *clone() const;

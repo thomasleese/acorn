@@ -297,6 +297,35 @@ void TypeGenerator::visit(types::Function *type) {
 }
 
 void TypeGenerator::visit(types::Union *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    llvm::LLVMContext &context = llvm::getGlobalContext();
+
+    std::vector<llvm::Type *> llvm_types;
+    std::vector<llvm::Constant *> llvm_initialisers;
+
+    auto i8 = llvm::IntegerType::getInt8Ty(context);
+
+    llvm_types.push_back(i8);
+    llvm_initialisers.push_back(llvm::ConstantInt::get(i8, 0));
+
+    for (auto field_type : type->types()) {
+        field_type->accept(this);
+
+        llvm::Type *llvm_field_type = take_type(nullptr);
+        llvm::Constant *llvm_field_initialiser = take_initialiser(nullptr);
+
+        if (llvm_field_type == nullptr || llvm_field_initialiser == nullptr) {
+            m_type_stack.push_back(nullptr);
+            m_initialiser_stack.push_back(nullptr);
+            return;
+        }
+
+        llvm_types.push_back(llvm_field_type);
+        llvm_initialisers.push_back(llvm_field_initialiser);
+    }
+
+    auto struct_type = llvm::StructType::get(context, llvm_types);
+    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
+
+    m_type_stack.push_back(struct_type);
+    m_initialiser_stack.push_back(struct_initialiser);
 }

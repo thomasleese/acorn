@@ -28,6 +28,8 @@
 using namespace acorn;
 using namespace acorn::codegen;
 
+#define return_if_null(thing) if (thing == nullptr) return;
+
 std::string codegen::mangle_method(std::string name, types::Method *type) {
     return "_A_" + name + "_" + type->mangled_name();
 }
@@ -466,7 +468,33 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
 
     assert(load);
 
-    m_irBuilder->CreateStore(value, load->getPointerOperand());
+    auto variable_pointer = load->getPointerOperand();
+
+    auto union_type = dynamic_cast<types::Union *>(expression->lhs->type);
+    if (union_type) {
+        bool ok;
+        uint8_t index = union_type->type_index(expression->rhs->type, &ok);
+        assert(ok);  // type checker should catch this
+
+        variable_pointer->dump();
+
+        std::vector<llvm::Value *> indexes;
+        indexes.push_back(m_irBuilder->getInt32(0));
+        indexes.push_back(m_irBuilder->getInt32(0));
+
+        auto index_gep = m_irBuilder->CreateInBoundsGEP(variable_pointer, indexes);
+        m_irBuilder->CreateStore(m_irBuilder->getInt8(index), index_gep);
+
+        indexes.clear();
+        indexes.push_back(m_irBuilder->getInt32(0));
+        indexes.push_back(m_irBuilder->getInt32(index + 1));
+
+        auto holder_gep = m_irBuilder->CreateInBoundsGEP(variable_pointer, indexes);
+        holder_gep->dump();
+        m_irBuilder->CreateStore(value, holder_gep);
+    } else {
+        m_irBuilder->CreateStore(value, variable_pointer);
+    }
 }
 
 void ModuleGenerator::visit(ast::Selector *expression) {
@@ -653,54 +681,38 @@ void ModuleGenerator::visit(ast::Parameter *parameter) {
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
     auto symbol = m_scope.back()->lookup(this, definition->name);
 
-    debug("Defining a new variable: " + symbol->name);
+    auto llvm_type = generate_type(definition);
+    return_if_null(llvm_type);
+
+    auto old_insert_point = m_irBuilder->saveIP();
 
     if (m_scope.back()->is_root()) {
-        llvm::Type *type = generate_type(definition);
-        if (type == nullptr) {
+        auto llvm_initialiser = m_type_generator->take_initialiser(definition);
+        if (llvm_initialiser == nullptr) {
+            push_error(m_type_generator->next_error());
             return;
         }
 
-        llvm::Constant *initialiser = m_type_generator->take_initialiser(definition);
-        if (initialiser == nullptr) {
-            push_error(m_type_generator->next_error());
-        }
-
-        auto variable = new llvm::GlobalVariable(*m_module, type, false,
+        auto variable = new llvm::GlobalVariable(*m_module, llvm_type, false,
                                                  llvm::GlobalValue::CommonLinkage,
-                                                 initialiser, definition->name->value);
+                                                 llvm_initialiser, definition->name->value);
         variable->setAlignment(4);
         variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
 
         symbol->value = variable;
 
-        llvm::Function *function = m_module->getFunction("_init_variables_");
-        m_irBuilder->SetInsertPoint(&function->getEntryBlock());
-
-        definition->expression->accept(this);
-
-        llvm::Value *value = m_llvmValues.back();
-        m_llvmValues.pop_back();
-
-        m_irBuilder->CreateStore(value, variable);
-
-        llvm::Function *mainFunction = m_module->getFunction("main");
-        m_irBuilder->SetInsertPoint(&mainFunction->getEntryBlock());
+        auto insert_function = m_module->getFunction("_init_variables_");
+        m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock());
     } else {
-        llvm::Function *function = m_irBuilder->GetInsertBlock()->getParent();
+        auto insert_function = m_irBuilder->GetInsertBlock()->getParent();
+        m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock());
 
-        definition->expression->accept(this);
-
-        llvm::Value *initialiser = m_llvmValues.back();
-        m_llvmValues.pop_back();
-
-        llvm::Type *type = generate_type(definition);
-
-        llvm::IRBuilder<> tmp_ir(&function->getEntryBlock(), function->getEntryBlock().begin());
-        llvm::AllocaInst *variable = tmp_ir.CreateAlloca(type, 0, definition->name->value);
-        m_irBuilder->CreateStore(initialiser, variable);
-        symbol->value = variable;
+        symbol->value = m_irBuilder->CreateAlloca(llvm_type, 0, definition->name->value);
     }
+
+    definition->assignment->accept(this);
+
+    m_irBuilder->restoreIP(old_insert_point);
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
