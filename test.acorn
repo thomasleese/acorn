@@ -1,6 +1,6 @@
 import 'base'
 
-let a as Union{Boolean, Void} = Nothing
+let a as Maybe{Boolean} = Nothing
 
 if let b as Boolean = a then
     if b then

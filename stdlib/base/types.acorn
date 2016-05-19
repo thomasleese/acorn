@@ -1,5 +1,3 @@
 import 'base/types/primitives'
 import 'base/types/array'
 import 'base/types/string'
-
-type Maybe{T} as Union{Void, T}

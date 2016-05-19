@@ -188,8 +188,8 @@ namespace acorn {
         class AliasConstructor : public Constructor {
 
         public:
-            explicit AliasConstructor(ast::Node *node, Constructor *constructor,
-                                      std::vector<Parameter *> input_arameters, std::vector<Type *> outputParameters);
+            explicit AliasConstructor(Constructor *constructor, std::vector<Parameter *> input_parameters,
+                                      std::vector<Type *> output_parameters);
 
             std::string name() const;
 

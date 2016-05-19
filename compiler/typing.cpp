@@ -512,13 +512,18 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
         std::vector<types::Type *> outputParameters;
         for (auto t : definition->alias->parameters) {
             t->accept(this);
-            outputParameters.push_back(t->type);
+
+            // FIXME - copy what Record does
+            if (auto cons = dynamic_cast<types::Constructor *>(t->type)) {
+                outputParameters.push_back(cons->create(this, t));
+            } else {
+                outputParameters.push_back(t->type);
+            }
         }
 
         auto type_constructor = find_type_constructor(definition, definition->alias->value);
         definition->alias->type = type_constructor;
-        type = new types::AliasConstructor(definition, type_constructor,
-                                           input_parameters, outputParameters);
+        type = new types::AliasConstructor(type_constructor, input_parameters, outputParameters);
     } else {
         std::vector<std::string> field_names;
         std::vector<types::Constructor *> field_types;

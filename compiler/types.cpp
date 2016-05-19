@@ -293,8 +293,11 @@ void UnionConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-AliasConstructor::AliasConstructor(ast::Node *node, Constructor *constructor, std::vector<Parameter *> input_parameters, std::vector<Type *> outputParameters) :
-        m_constructor(constructor), m_input_parameters(input_parameters), m_output_parameters(outputParameters) {
+AliasConstructor::AliasConstructor(Constructor *constructor, std::vector<Parameter *> input_parameters, std::vector<Type *> outputParameters) :
+        m_constructor(constructor),
+        m_input_parameters(input_parameters),
+        m_output_parameters(outputParameters)
+{
 
 }
 
@@ -353,7 +356,7 @@ Type *AliasConstructor::create(compiler::Pass *pass, ast::Node *node, std::vecto
         }
     }
 
-    return m_constructor->create(pass, node, parameters);
+    return m_constructor->create(pass, node, actualParameters);
 }
 
 void AliasConstructor::accept(Visitor *visitor) {
