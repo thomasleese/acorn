@@ -127,7 +127,7 @@ void Inferrer::visit(ast::Identifier *expression) {
         p->accept(this);
     }
 
-    auto symbol = m_namespace->lookup(this, expression, expression->value);
+    auto symbol = m_namespace->lookup(this, expression);
     if (symbol == nullptr) {
         return;
     }
@@ -138,9 +138,12 @@ void Inferrer::visit(ast::Identifier *expression) {
 void Inferrer::visit(ast::VariableDeclaration *node) {
     node->name()->accept(this);
 
+    auto symbol = m_namespace->lookup(this, node->name());
+
     if (node->has_given_type()) {
         node->given_type()->accept(this);
         node->type = instance_type(node->given_type());
+        symbol->type = node->type;
     }
 }
 
