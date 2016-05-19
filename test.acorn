@@ -1,13 +1,3 @@
 import 'base'
 
-let a as Maybe{Boolean} = Nothing
-
-if let b as Boolean = a then
-    if b then
-        exit(0)
-    else
-        exit(1)
-    end
-else if let v as Void = a then
-    exit(2)
-end
+let s = "Hello, world!"

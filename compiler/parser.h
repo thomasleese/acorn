@@ -75,7 +75,6 @@ namespace acorn {
         ast::Identifier *readIdentifier(bool accept_parameters);
         ast::Identifier *readOperator(bool accept_parameters);
         ast::VariableDeclaration *readVariableDeclaration();
-        ast::BooleanLiteral *readBooleanLiteral();
         ast::IntegerLiteral *readIntegerLiteral();
         ast::FloatLiteral *readFloatLiteral();
         ast::ImaginaryLiteral *readImaginaryLiteral();

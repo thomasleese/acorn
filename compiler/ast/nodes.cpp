@@ -76,10 +76,6 @@ void VariableDeclaration::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-void BooleanLiteral::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 void IntegerLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }

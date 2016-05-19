@@ -5,4 +5,3 @@ type Character as Array{UnicodeScalar}
 type String
     characters as Array{Character}
 end
-

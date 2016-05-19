@@ -56,10 +56,6 @@ void PrettyPrinter::visit(ast::VariableDeclaration *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::BooleanLiteral *boolean) {
-    ss << indentation() << "(BooleanLiteral " << boolean->value << ")\n";
-}
-
 void PrettyPrinter::visit(ast::IntegerLiteral *expression) {
     ss << indentation() << "(IntegerLiteral " << expression->value << ")\n";
 }

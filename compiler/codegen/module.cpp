@@ -238,11 +238,6 @@ void ModuleGenerator::visit(ast::VariableDeclaration *node) {
     m_llvmValues.push_back(symbol->value);
 }
 
-void ModuleGenerator::visit(ast::BooleanLiteral *boolean) {
-    push_error(new errors::InternalError(boolean, "N/A"));
-    m_llvmValues.push_back(nullptr);
-}
-
 void ModuleGenerator::visit(ast::IntegerLiteral *expression) {
     debug("Making integer literal: " + expression->value);
 
@@ -499,6 +494,8 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
 
     auto rhs_value = m_llvmValues.back();
     m_llvmValues.pop_back();
+
+    return_if_null(rhs_value);
 
     llvm::Value *rhs_variable_pointer = nullptr;
     if (auto load = dynamic_cast<llvm::LoadInst *>(rhs_value)) {

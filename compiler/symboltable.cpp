@@ -204,10 +204,6 @@ void Builder::visit(ast::VariableDeclaration *node) {
     m_scope.back()->insert(this, node, symbol);
 }
 
-void Builder::visit(ast::BooleanLiteral *boolean) {
-
-}
-
 void Builder::visit(ast::IntegerLiteral *expression) {
 
 }

@@ -88,14 +88,6 @@ namespace acorn {
             Identifier *name;
         };
 
-        struct BooleanLiteral : Expression {
-            using Expression::Expression;
-
-            std::string value;
-
-            void accept(Visitor *visitor);
-        };
-
         struct IntegerLiteral : Expression {
             using Expression::Expression;
 
@@ -153,7 +145,6 @@ namespace acorn {
             std::vector<Expression *> field_values;
 
             void accept(Visitor *visitor);
-            RecordLiteral *clone() const;
         };
 
         struct Call : Expression {

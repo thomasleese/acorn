@@ -206,22 +206,6 @@ ast::VariableDeclaration *Parser::readVariableDeclaration() {
     return new VariableDeclaration(token, name, type);
 }
 
-BooleanLiteral *Parser::readBooleanLiteral() {
-    Token *token = readToken(Token::BooleanLiteral);
-
-    BooleanLiteral *literal = new BooleanLiteral(token);
-
-    if (token->lexeme == "true") {
-        literal->value = true;
-    } else if (token->lexeme == "false") {
-        literal->value = false;
-    } else {
-        assert(false && "Not here!");
-    }
-
-    return literal;
-}
-
 IntegerLiteral *Parser::readIntegerLiteral() {
     Token *token = readToken(Token::IntegerLiteral);
 
@@ -606,8 +590,6 @@ Expression *Parser::readPrimaryExpression() {
         Expression *expr = readExpression();
         readToken(Token::CloseParenthesis);
         return expr;
-    } else if (isToken(Token::BooleanLiteral)) {
-        return readBooleanLiteral();
     } else if (isToken(Token::IntegerLiteral)) {
         return readIntegerLiteral();
     } else if (isToken(Token::FloatLiteral)) {

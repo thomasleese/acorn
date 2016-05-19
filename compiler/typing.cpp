@@ -147,10 +147,6 @@ void Inferrer::visit(ast::VariableDeclaration *node) {
     }
 }
 
-void Inferrer::visit(ast::BooleanLiteral *expression) {
-    expression->type = find_type(expression, "Boolean");
-}
-
 void Inferrer::visit(ast::IntegerLiteral *expression) {
     expression->type = find_type(expression, "Integer");
 }
@@ -625,10 +621,6 @@ void Checker::visit(ast::VariableDeclaration *node) {
     }
 
     check_not_null(node);
-}
-
-void Checker::visit(ast::BooleanLiteral *boolean) {
-    check_not_null(boolean);
 }
 
 void Checker::visit(ast::IntegerLiteral *expression) {

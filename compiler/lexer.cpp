@@ -74,7 +74,6 @@ void Lexer::loadRules() {
     setKeywordRule(Token::NewKeyword, "new");
     setKeywordRule(Token::InoutKeyword, "inout");
 
-    setRule(Token::BooleanLiteral, "(true|false)");
     setRule(Token::StringLiteral, "((['\"])((?:.(?!(?<![\\\\])\\2))*.?)\\2)");
     setRule(Token::ImaginaryLiteral, "([0-9]+(\\.[0-9]+)?[ij])");
     setRule(Token::FloatLiteral, "([0-9]+\\.[0-9]+)");

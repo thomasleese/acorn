@@ -12,7 +12,6 @@ namespace acorn {
         struct CodeBlock;
         struct Identifier;
         class VariableDeclaration;
-        struct BooleanLiteral;
         struct IntegerLiteral;
         struct FloatLiteral;
         struct ImaginaryLiteral;
@@ -52,7 +51,6 @@ namespace acorn {
             // expressions
             virtual void visit(Identifier *identifier) = 0;
             virtual void visit(VariableDeclaration *node) = 0;
-            virtual void visit(BooleanLiteral *boolean) = 0;
             virtual void visit(IntegerLiteral *expression) = 0;
             virtual void visit(FloatLiteral *expression) = 0;
             virtual void visit(ImaginaryLiteral *expression) = 0;

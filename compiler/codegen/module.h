@@ -56,7 +56,6 @@ namespace acorn {
 
             void visit(ast::Identifier *expression);
             void visit(ast::VariableDeclaration *node);
-            void visit(ast::BooleanLiteral *boolean);
             void visit(ast::IntegerLiteral *expression);
             void visit(ast::FloatLiteral *expression);
             void visit(ast::ImaginaryLiteral *imaginary);

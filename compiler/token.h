@@ -56,7 +56,6 @@ namespace acorn {
             InoutKeyword,
 
             // literals
-            BooleanLiteral,
             StringLiteral,
             ImaginaryLiteral,
             FloatLiteral,
