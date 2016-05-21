@@ -645,10 +645,6 @@ void ModuleGenerator::visit(ast::While *expression) {
     m_irBuilder->SetInsertPoint(else_bb);
 }
 
-void ModuleGenerator::visit(ast::For *expression) {
-    push_error(new errors::InternalError(expression, "Should not be in the lowered AST."));
-}
-
 void ModuleGenerator::visit(ast::If *expression) {
     expression->condition->accept(this);
     auto condition = pop_value();

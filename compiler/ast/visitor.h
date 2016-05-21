@@ -26,7 +26,6 @@ namespace acorn {
         struct Assignment;
         struct Selector;
         class While;
-        struct For;
         struct If;
         struct Return;
         struct Spawn;
@@ -65,7 +64,6 @@ namespace acorn {
             virtual void visit(Assignment *expression) = 0;
             virtual void visit(Selector *expression) = 0;
             virtual void visit(While *expression) = 0;
-            virtual void visit(For *expression) = 0;
             virtual void visit(If *expression) = 0;
             virtual void visit(Return *expression) = 0;
             virtual void visit(Spawn *expression) = 0;

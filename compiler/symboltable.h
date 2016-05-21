@@ -101,7 +101,6 @@ namespace acorn {
             void visit(ast::Assignment *expression);
             void visit(ast::Selector *expression);
             void visit(ast::While *expression);
-            void visit(ast::For *expression);
             void visit(ast::If *expression);
             void visit(ast::Return *expression);
             void visit(ast::Spawn *expression);

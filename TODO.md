@@ -4,8 +4,8 @@
 - Use numbers with metadata as mangling instead
 
 - Design types better (try to remove constructors?)
+- Enumerate/Range
 - Arrays
-- Tuples
 - Sets
 - Dictionaries
 - Characters

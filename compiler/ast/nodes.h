@@ -223,16 +223,6 @@ namespace acorn {
             std::unique_ptr<CodeBlock> m_code;
         };
 
-        struct For : Expression {
-            using Expression::Expression;
-
-            Identifier *name;
-            Expression *iterator;
-            CodeBlock *code;
-
-            void accept(Visitor *visitor);
-        };
-
         struct If : Expression {
             using Expression::Expression;
 

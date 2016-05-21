@@ -262,10 +262,6 @@ void Builder::visit(ast::While *expression) {
     expression->code()->accept(this);
 }
 
-void Builder::visit(ast::For *expression) {
-
-}
-
 void Builder::visit(ast::If *expression) {
     expression->condition->accept(this);
 

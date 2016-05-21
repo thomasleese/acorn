@@ -202,18 +202,6 @@ void PrettyPrinter::visit(ast::While *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::For *expression) {
-    ss << indentation() << "(For\n";
-    indent++;
-
-    expression->name->accept(this);
-    expression->iterator->accept(this);
-    expression->code->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
 void PrettyPrinter::visit(ast::If *expression) {
     ss << indentation() << "(If\n";
     indent++;

@@ -369,10 +369,6 @@ void Inferrer::visit(ast::While *expression) {
     expression->type = expression->code()->type;
 }
 
-void Inferrer::visit(ast::For *expression) {
-    push_error(new errors::InternalError(expression, "For should never be in the lowered AST."));
-}
-
 void Inferrer::visit(ast::If *expression) {
     m_in_if = true;
     expression->condition->accept(this);
@@ -741,10 +737,6 @@ void Checker::visit(ast::While *expression) {
     expression->condition()->accept(this);
     expression->code()->accept(this);
     check_not_null(expression);
-}
-
-void Checker::visit(ast::For *expression) {
-    push_error(new errors::InternalAstError(expression));
 }
 
 void Checker::visit(ast::If *expression) {

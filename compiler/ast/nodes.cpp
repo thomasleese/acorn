@@ -209,10 +209,6 @@ void While::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-void For::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 void If::accept(Visitor *visitor) {
     visitor->visit(this);
 }
