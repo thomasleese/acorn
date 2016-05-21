@@ -1,3 +1,10 @@
 import 'base'
 
-let s = "Hello, world!"
+let a = create_array(Integer, 20)
+
+let i = 0
+while i < 5 do
+    a.append(i)
+end
+
+exit(a.length)

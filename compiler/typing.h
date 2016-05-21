@@ -42,6 +42,7 @@ namespace acorn {
             types::Type *instance_type(ast::Identifier *identifier);
 
             void infer_call_type_parameters(ast::Call *call, std::vector<types::Type *> parameter_types, std::vector<types::Type *> argument_types);
+            types::Type *replace_type_parameters(types::Type *type, std::map<types::ParameterConstructor *, types::Type *> replacements);
 
         public:
             void visit(ast::CodeBlock *block);

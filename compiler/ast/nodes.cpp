@@ -161,6 +161,22 @@ void Comma::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+While::While(Token *token, Expression *condition, CodeBlock *code) :
+        Expression(token),
+        m_condition(condition),
+        m_code(code)
+{
+    // intentionally left empty
+}
+
+Expression *While::condition() const {
+    return m_condition.get();
+}
+
+CodeBlock *While::code() const {
+    return m_code.get();
+}
+
 void While::accept(Visitor *visitor) {
     visitor->visit(this);
 }

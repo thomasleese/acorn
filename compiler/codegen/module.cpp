@@ -170,6 +170,18 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     return function;
 }
 
+void ModuleGenerator::push_value(llvm::Value *value) {
+    m_llvmValues.push_back(value);
+}
+
+llvm::Value *ModuleGenerator::pop_value() {
+    assert(!m_llvmValues.empty());
+
+    auto value = m_llvmValues.back();
+    m_llvmValues.pop_back();
+    return value;
+}
+
 void ModuleGenerator::visit(ast::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
@@ -181,24 +193,24 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
 
     auto symbol = m_scope.back()->lookup(this, identifier);
     if (symbol == nullptr) {
-        m_llvmValues.push_back(nullptr);
+        push_value(nullptr);
         return;
     }
 
     if (!symbol->value) {
         push_error(new errors::InternalError(identifier, "should not be nullptr"));
-        m_llvmValues.push_back(nullptr);
+        push_value(nullptr);
         return;
     }
 
     if (identifier->has_parameters()) {
         push_error(new errors::InternalError(identifier, "should not have parameters"));
-        m_llvmValues.push_back(nullptr);
+        push_value(nullptr);
         return;
     }
 
     llvm::Value *value = m_irBuilder->CreateLoad(symbol->value);
-    m_llvmValues.push_back(value);
+    push_value(value);
 }
 
 void ModuleGenerator::visit(ast::VariableDeclaration *node) {
@@ -235,7 +247,7 @@ void ModuleGenerator::visit(ast::VariableDeclaration *node) {
 
     m_irBuilder->restoreIP(old_insert_point);
 
-    m_llvmValues.push_back(symbol->value);
+    push_value(symbol->value);
 }
 
 void ModuleGenerator::visit(ast::IntegerLiteral *expression) {
@@ -249,7 +261,7 @@ void ModuleGenerator::visit(ast::IntegerLiteral *expression) {
     ss >> integer;
 
     llvm::Constant *value = llvm::ConstantInt::get(type, integer, true);
-    m_llvmValues.push_back(value);
+    push_value(value);
 }
 
 void ModuleGenerator::visit(ast::FloatLiteral *expression) {
@@ -263,17 +275,17 @@ void ModuleGenerator::visit(ast::FloatLiteral *expression) {
     ss >> floatValue;
 
     llvm::Constant *value = llvm::ConstantFP::get(type, floatValue);
-    m_llvmValues.push_back(value);
+    push_value(value);
 }
 
 void ModuleGenerator::visit(ast::ImaginaryLiteral *imaginary) {
     push_error(new errors::InternalError(imaginary, "N/A"));
-    m_llvmValues.push_back(nullptr);
+    push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::StringLiteral *expression) {
     push_error(new errors::InternalError(expression, "N/A"));
-    m_llvmValues.push_back(nullptr);
+    push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
@@ -322,12 +334,12 @@ void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
 
     m_irBuilder->CreateStore(elements_instance, elements_value);
 
-    m_llvmValues.push_back(m_irBuilder->CreateLoad(instance));
+    push_value(m_irBuilder->CreateLoad(instance));
 }
 
 void ModuleGenerator::visit(ast::MappingLiteral *mapping) {
     push_error(new errors::InternalError(mapping, "N/A"));
-    m_llvmValues.push_back(nullptr);
+    push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::RecordLiteral *expression) {
@@ -346,8 +358,7 @@ void ModuleGenerator::visit(ast::RecordLiteral *expression) {
 
         expression->field_values[i]->accept(this);
 
-        auto value = m_llvmValues.back();
-        m_llvmValues.pop_back();
+        auto value = pop_value();
 
         std::vector<llvm::Value *> indexes;
         indexes.push_back(index0);
@@ -357,14 +368,12 @@ void ModuleGenerator::visit(ast::RecordLiteral *expression) {
         m_irBuilder->CreateStore(value, ptr);
     }
 
-    m_llvmValues.push_back(m_irBuilder->CreateLoad(instance));
+    push_value(m_irBuilder->CreateLoad(instance));
 }
 
 void ModuleGenerator::visit(ast::Call *expression) {
     ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
     if (identifier) {
-        debug("Generating a call to: " + identifier->value);
-
         auto symbol = m_scope.back()->lookup(this, identifier);
         types::Function *functionType = dynamic_cast<types::Function *>(symbol->type);
 
@@ -389,6 +398,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
                 while (auto p = dynamic_cast<types::Parameter *>(t)) {
                     t = m_type_generator->get_type_parameter(p);
                     if (t == nullptr) {
+                        push_value(nullptr);
                         return;
                     }
                 }
@@ -415,6 +425,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
         auto function = m_module->getFunction(method_name);
         if (function == nullptr) {
             push_error(new errors::InternalError(expression, "No LLVM function created: " + method_name + " (" + method->name() + ")!"));
+            push_value(nullptr);
             return;
         }
 
@@ -423,8 +434,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
         for (auto argument : expression->arguments) {
             argument->accept(this);
 
-            auto value = m_llvmValues.back();
-            m_llvmValues.pop_back();
+            auto value = pop_value();
 
             if (method->is_parameter_inout(method->parameter_types()[i])) {
                 llvm::LoadInst *load = llvm::dyn_cast<llvm::LoadInst>(value);
@@ -438,11 +448,10 @@ void ModuleGenerator::visit(ast::Call *expression) {
         }
 
         auto value = m_irBuilder->CreateCall(function, arguments);
-        m_llvmValues.push_back(value);
-
-        debug("Ending call to: " + identifier->value);
+        push_value(value);
     } else {
         push_error(new errors::InternalError(expression, "Not an identifier."));
+        push_value(nullptr);
     }
 }
 
@@ -469,32 +478,26 @@ void ModuleGenerator::visit(ast::CCall *ccall) {
     for (auto argument : ccall->arguments) {
         argument->accept(this);
 
-        llvm::Value *argValue = m_llvmValues.back();
-        m_llvmValues.pop_back();
+        auto argValue = pop_value();
         arguments.push_back(argValue);
     }
 
     llvm::Value *value = m_irBuilder->CreateCall(function, arguments);
-    m_llvmValues.push_back(value);
+    push_value(value);
 }
 
 void ModuleGenerator::visit(ast::Cast *cast) {
     cast->operand->accept(this);
-
-    llvm::Value *value = m_llvmValues.back();
-    m_llvmValues.pop_back();
+    auto value = pop_value();
 
     llvm::Type *destination_type = generate_type(cast);
     llvm::Value *new_value = m_irBuilder->CreateBitCast(value, destination_type);
-    m_llvmValues.push_back(new_value);
+    push_value(new_value);
 }
 
 void ModuleGenerator::visit(ast::Assignment *expression) {
     expression->rhs->accept(this);
-
-    auto rhs_value = m_llvmValues.back();
-    m_llvmValues.pop_back();
-
+    auto rhs_value = pop_value();
     return_if_null(rhs_value);
 
     llvm::Value *rhs_variable_pointer = nullptr;
@@ -507,16 +510,14 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
     }
 
     expression->lhs->accept(this);
-
-    auto last_value = m_llvmValues.back();
-    m_llvmValues.pop_back();
+    auto lhs_value = pop_value();
 
     llvm::Value *variable_pointer = nullptr;
-    if (auto load = dynamic_cast<llvm::LoadInst *>(last_value)) {
+    if (auto load = dynamic_cast<llvm::LoadInst *>(lhs_value)) {
         variable_pointer = load->getPointerOperand();
-    } else if (auto alloca = dynamic_cast<llvm::AllocaInst *>(last_value)) {
+    } else if (auto alloca = dynamic_cast<llvm::AllocaInst *>(lhs_value)) {
         variable_pointer = alloca;
-    } else if (auto gv = dynamic_cast<llvm::GlobalVariable *>(last_value)) {
+    } else if (auto gv = dynamic_cast<llvm::GlobalVariable *>(lhs_value)) {
         variable_pointer = gv;
     }
 
@@ -544,7 +545,7 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
         auto holder_gep = m_irBuilder->CreateInBoundsGEP(variable_pointer, indexes);
         m_irBuilder->CreateStore(rhs_value, holder_gep);
 
-        m_llvmValues.push_back(variable_pointer);
+        push_value(variable_pointer);
     } else if (rhs_union_type && !lhs_union_type) {
         bool ok;
         uint8_t index_we_want = rhs_union_type->type_index(expression->lhs->type, &ok);
@@ -567,10 +568,12 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
         m_irBuilder->CreateStore(m_irBuilder->CreateLoad(holder_gep, "union_index"), variable_pointer);
 
         auto icmp = m_irBuilder->CreateICmpEQ(m_irBuilder->getInt8(index_we_want), index_we_have, "check_union_type");
-        m_llvmValues.push_back(icmp);
+        push_value(icmp);
     } else {
+        variable_pointer->dump();
+        rhs_value->dump();
         m_irBuilder->CreateStore(rhs_value, variable_pointer);
-        m_llvmValues.push_back(variable_pointer);
+        push_value(variable_pointer);
     }
 }
 
@@ -578,6 +581,7 @@ void ModuleGenerator::visit(ast::Selector *expression) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     expression->operand->accept(this);
+    pop_value();
 
     ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
     if (!identifier) {
@@ -597,7 +601,7 @@ void ModuleGenerator::visit(ast::Selector *expression) {
     indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), index));
 
     llvm::Value *value = m_irBuilder->CreateInBoundsGEP(instance, indexes);
-    m_llvmValues.push_back(m_irBuilder->CreateLoad(value));
+    push_value(m_irBuilder->CreateLoad(value));
 }
 
 void ModuleGenerator::visit(ast::Comma *expression) {
@@ -616,9 +620,7 @@ void ModuleGenerator::visit(ast::If *expression) {
     debug("Creating if statement...");
 
     expression->condition->accept(this);
-
-    llvm::Value *condition = m_llvmValues.back();
-    m_llvmValues.pop_back();
+    auto condition = pop_value();
 
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
@@ -635,8 +637,7 @@ void ModuleGenerator::visit(ast::If *expression) {
 
     debug("Generating true code...");
     expression->trueCode->accept(this);
-    llvm::Value *then_value = m_llvmValues.back();
-    m_llvmValues.pop_back();
+    auto then_value = pop_value();
 
     m_irBuilder->CreateBr(merge_bb);
 
@@ -649,8 +650,7 @@ void ModuleGenerator::visit(ast::If *expression) {
     if (expression->falseCode) {
         debug("Generating false code...");
         expression->falseCode->accept(this);
-        else_value = m_llvmValues.back();
-        m_llvmValues.pop_back();
+        else_value = pop_value();
     } else {
         else_value = m_irBuilder->getInt1(false);
     }
@@ -672,21 +672,16 @@ void ModuleGenerator::visit(ast::If *expression) {
     phi->addIncoming(then_value, then_bb);
     phi->addIncoming(else_value, else_bb);
 
-    m_llvmValues.push_back(phi);
+    push_value(phi);
 
     debug("Ended if statement.");
 }
 
 void ModuleGenerator::visit(ast::Return *expression) {
-    debug("Generating return statement.");
-
     expression->expression->accept(this);
+    auto value = pop_value();
 
-    llvm::Value *value = m_llvmValues.back();
-    m_llvmValues.pop_back();
-
-    llvm::Value *returnValue = m_irBuilder->CreateRet(value);
-    m_llvmValues.push_back(returnValue);
+    push_value(m_irBuilder->CreateRet(value));
 }
 
 void ModuleGenerator::visit(ast::Spawn *expression) {
@@ -700,7 +695,7 @@ void ModuleGenerator::visit(ast::Sizeof *expression) {
     uint64_t size = m_data_layout->getTypeStoreSize(type);
 
     auto i64 = llvm::IntegerType::getInt64Ty(context);
-    m_llvmValues.push_back(llvm::ConstantInt::get(i64, size, true));
+    push_value(llvm::ConstantInt::get(i64, size, true));
 }
 
 void ModuleGenerator::visit(ast::Strideof *expression) {
@@ -710,7 +705,7 @@ void ModuleGenerator::visit(ast::Strideof *expression) {
     uint64_t size = m_data_layout->getTypeAllocSize(type);
 
     auto i64 = llvm::IntegerType::getInt64Ty(context);
-    m_llvmValues.push_back(llvm::ConstantInt::get(i64, size, true));
+    push_value(llvm::ConstantInt::get(i64, size, true));
 }
 
 void ModuleGenerator::visit(ast::Parameter *parameter) {
@@ -719,6 +714,7 @@ void ModuleGenerator::visit(ast::Parameter *parameter) {
 
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
     definition->assignment->accept(this);
+    pop_value();
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
@@ -776,6 +772,7 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     m_irBuilder->CreateCall(function);
 
     module->code->accept(this);
+    assert(m_llvmValues.empty());
 
     m_irBuilder->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0));
 

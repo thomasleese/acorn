@@ -194,8 +194,8 @@ void PrettyPrinter::visit(ast::While *expression) {
     ss << indentation() << "(While\n";
     indent++;
 
-    expression->condition->accept(this);
-    expression->code->accept(this);
+    expression->condition()->accept(this);
+    expression->code()->accept(this);
 
     indent--;
     ss << indentation() << ")\n";

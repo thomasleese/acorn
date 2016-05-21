@@ -26,8 +26,26 @@ bool Type::isCompatible(const Type *other) const {
     return name1 == name2;
 }
 
+Type *Type::get_parameter(int i) const {
+    assert(i < m_parameters.size());
+    return m_parameters[i];
+}
+
+void Type::set_parameter(int i, Type *type) {
+    assert(i < m_parameters.size());
+    m_parameters[i] = type;
+}
+
 std::vector<types::Type *> Type::parameters() const {
-    return std::vector<types::Type *>();
+    return m_parameters;
+}
+
+Type *Constructor::create(compiler::Pass *pass, ast::Node *node) {
+    return create(pass, node, std::vector<Type *>());
+}
+
+std::string Constructor::mangled_name() const {
+    return "c";
 }
 
 std::string ParameterConstructor::name() const {
@@ -35,11 +53,7 @@ std::string ParameterConstructor::name() const {
 }
 
 bool ParameterConstructor::isCompatible(const Type *other) const {
-    if (dynamic_cast<const types::Constructor *>(other)) {
-        return true;
-    } else {
-        return false;
-    }
+    return (bool) dynamic_cast<const types::Constructor *>(other);
 }
 
 Type *ParameterConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
@@ -51,16 +65,12 @@ Type *ParameterConstructor::create(compiler::Pass *pass, ast::Node *node, std::v
     }
 }
 
+ParameterConstructor *ParameterConstructor::clone() const {
+    return new ParameterConstructor();
+}
+
 void ParameterConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
-}
-
-Type *Constructor::create(compiler::Pass *pass, ast::Node *node) {
-    return create(pass, node, std::vector<Type *>());
-}
-
-std::string Constructor::mangled_name() const {
-    return "c";
 }
 
 std::string AnyConstructor::name() const {
@@ -74,6 +84,10 @@ Type *AnyConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<
         pass->push_error(new errors::InvalidTypeConstructor(node));
         return nullptr;
     }
+}
+
+AnyConstructor *AnyConstructor::clone() const {
+    return new AnyConstructor();
 }
 
 void AnyConstructor::accept(Visitor *visitor) {
@@ -93,6 +107,10 @@ Type *VoidConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector
     }
 }
 
+VoidConstructor *VoidConstructor::clone() const {
+    return new VoidConstructor();
+}
+
 void VoidConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -108,6 +126,10 @@ Type *BooleanConstructor::create(compiler::Pass *pass, ast::Node *node, std::vec
         pass->push_error(new errors::InvalidTypeConstructor(node));
         return nullptr;
     }
+}
+
+BooleanConstructor *BooleanConstructor::clone() const {
+    return new BooleanConstructor();
 }
 
 void BooleanConstructor::accept(Visitor *visitor) {
@@ -133,6 +155,10 @@ Type *IntegerConstructor::create(compiler::Pass *pass, ast::Node *node, std::vec
     }
 }
 
+IntegerConstructor *IntegerConstructor::clone() const {
+    return new IntegerConstructor(m_size);
+}
+
 void IntegerConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -154,6 +180,10 @@ Type *UnsignedIntegerConstructor::create(compiler::Pass *pass, ast::Node *node, 
         pass->push_error(new errors::InvalidTypeConstructor(node));
         return nullptr;
     }
+}
+
+UnsignedIntegerConstructor *UnsignedIntegerConstructor::clone() const {
+    return new UnsignedIntegerConstructor(m_size);
 }
 
 void UnsignedIntegerConstructor::accept(Visitor *visitor) {
@@ -179,6 +209,10 @@ Type *FloatConstructor::create(compiler::Pass *pass, ast::Node *node, std::vecto
     }
 }
 
+FloatConstructor *FloatConstructor::clone() const {
+    return new FloatConstructor(m_size);
+}
+
 void FloatConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -194,6 +228,10 @@ Type *UnsafePointerConstructor::create(compiler::Pass *pass, ast::Node *node, st
         pass->push_error(new errors::InvalidTypeParameters(node, parameters.size(), 1));
         return nullptr;
     }
+}
+
+UnsafePointerConstructor *UnsafePointerConstructor::clone() const {
+    return new UnsafePointerConstructor();
 }
 
 void UnsafePointerConstructor::accept(Visitor *visitor) {
@@ -218,6 +256,10 @@ Type *FunctionConstructor::create(compiler::Pass *pass, ast::Node *node, std::ve
     }
 
     return function;
+}
+
+FunctionConstructor *FunctionConstructor::clone() const {
+    return new FunctionConstructor();
 }
 
 void FunctionConstructor::accept(Visitor *visitor) {
@@ -277,6 +319,29 @@ Type *RecordConstructor::create(compiler::Pass *pass, ast::Node *node, std::vect
     }
 }
 
+RecordConstructor *RecordConstructor::clone() const {
+    std::vector<Parameter *> input_parameters;
+    for (auto element : m_input_parameters) {
+        input_parameters.push_back(element->clone());
+    }
+
+    std::vector<Constructor *> field_types;
+    for (auto element : m_field_types) {
+        field_types.push_back(element->clone());
+    }
+
+    std::vector<std::vector<Type *> > field_parameters;
+    for (auto p : m_field_parameters) {
+        std::vector<Type *> v;
+        for (auto a : p) {
+            v.push_back(a->clone());
+        }
+        field_parameters.push_back(v);
+    }
+
+    return new RecordConstructor(input_parameters, m_field_names, field_types, field_parameters);
+}
+
 void RecordConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -286,17 +351,26 @@ std::string UnionConstructor::name() const {
 }
 
 Type *UnionConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
-    return new Union(pass, node, parameters);
+    if (parameters.empty()) {
+        pass->push_error(new errors::InvalidTypeParameters(node, parameters.size(), 1));
+        return nullptr;
+    } else {
+        return new Union(parameters);
+    }
+}
+
+UnionConstructor *UnionConstructor::clone() const {
+    return new UnionConstructor();
 }
 
 void UnionConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-AliasConstructor::AliasConstructor(Constructor *constructor, std::vector<Parameter *> input_parameters, std::vector<Type *> outputParameters) :
+AliasConstructor::AliasConstructor(Constructor *constructor, std::vector<Parameter *> input_parameters, std::vector<Type *> output_parameters) :
         m_constructor(constructor),
         m_input_parameters(input_parameters),
-        m_output_parameters(outputParameters)
+        m_output_parameters(output_parameters)
 {
 
 }
@@ -359,6 +433,20 @@ Type *AliasConstructor::create(compiler::Pass *pass, ast::Node *node, std::vecto
     return m_constructor->create(pass, node, actualParameters);
 }
 
+AliasConstructor *AliasConstructor::clone() const {
+    std::vector<Parameter *> input_parameters;
+    for (auto p : m_input_parameters) {
+        input_parameters.push_back(p->clone());
+    }
+
+    std::vector<Type *> output_parameters;
+    for (auto p : m_output_parameters) {
+        output_parameters.push_back(p->clone());
+    }
+
+    return new AliasConstructor(m_constructor->clone(), input_parameters, output_parameters);
+}
+
 void AliasConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -376,6 +464,10 @@ Type *TypeDescriptionConstructor::create(compiler::Pass *pass, ast::Node *node, 
         pass->push_error(new errors::InvalidTypeParameters(node, parameters.size(), 1));
         return nullptr;
     }
+}
+
+TypeDescriptionConstructor *TypeDescriptionConstructor::clone() const {
+    return new TypeDescriptionConstructor();
 }
 
 void TypeDescriptionConstructor::accept(Visitor *visitor) {
@@ -402,6 +494,11 @@ bool Parameter::isCompatible(const Type *other) const {
     return true; // acts like Any
 }
 
+Parameter *Parameter::clone() const {
+    // don't clone constructor
+    return new Parameter(m_constructor);
+}
+
 void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -415,7 +512,11 @@ std::string Any::mangled_name() const {
 }
 
 Constructor *Any::constructor() const {
-    return nullptr;
+    return new AnyConstructor();
+}
+
+Any *Any::clone() const {
+    return new Any();
 }
 
 void Any::accept(Visitor *visitor) {
@@ -434,6 +535,10 @@ Constructor *Void::constructor() const {
     return new VoidConstructor();
 }
 
+Void *Void::clone() const {
+    return new Void();
+}
+
 void Void::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -448,6 +553,10 @@ std::string Boolean::mangled_name() const {
 
 Constructor *Boolean::constructor() const {
     return new BooleanConstructor();
+}
+
+Boolean *Boolean::clone() const {
+    return new Boolean();
 }
 
 void Boolean::accept(Visitor *visitor) {
@@ -478,6 +587,10 @@ unsigned int Integer::size() const {
     return m_size;
 }
 
+Integer *Integer::clone() const {
+    return new Integer(m_size);
+}
+
 void Integer::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -504,6 +617,10 @@ Constructor *UnsignedInteger::constructor() const {
 
 unsigned int UnsignedInteger::size() const {
     return m_size;
+}
+
+UnsignedInteger *UnsignedInteger::clone() const {
+    return new UnsignedInteger(m_size);
 }
 
 void UnsignedInteger::accept(Visitor *visitor) {
@@ -534,23 +651,27 @@ unsigned int Float::size() const {
     return m_size;
 }
 
+Float *Float::clone() const {
+    return new Float(m_size);
+}
+
 void Float::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
 UnsafePointer::UnsafePointer(Type *element_type) {
-    m_element_type = element_type;
+    m_parameters.push_back(element_type);
 }
 
 std::string UnsafePointer::name() const {
     std::stringstream ss;
-    ss << "UnsafePointer{" << m_element_type->name() << "}";
+    ss << "UnsafePointer{" << element_type()->name() << "}";
     return ss.str();
 }
 
 std::string UnsafePointer::mangled_name() const {
     std::stringstream ss;
-    ss << "p" << m_element_type->mangled_name();
+    ss << "p" << element_type()->mangled_name();
     return ss.str();
 }
 
@@ -559,22 +680,21 @@ Constructor *UnsafePointer::constructor() const {
 }
 
 Type *UnsafePointer::element_type() const {
-    return m_element_type;
-}
-
-std::vector<Type *> UnsafePointer::parameters() const {
-    std::vector<Type *> types;
-    types.push_back(m_element_type);
-    return types;
+    assert(m_parameters.size() == 1);
+    return m_parameters[0];
 }
 
 bool UnsafePointer::isCompatible(const Type *other) const {
     auto other_pointer = dynamic_cast<const UnsafePointer *>(other);
     if (other_pointer) {
-        return m_element_type->isCompatible(other_pointer->m_element_type);
+        return element_type()->isCompatible(other_pointer->element_type());
     } else {
         return false;
     }
+}
+
+UnsafePointer *UnsafePointer::clone() const {
+    return new UnsafePointer(element_type()->clone());
 }
 
 void UnsafePointer::accept(Visitor *visitor) {
@@ -582,8 +702,9 @@ void UnsafePointer::accept(Visitor *visitor) {
 }
 
 Record::Record(std::vector<std::string> field_names, std::vector<Type *> field_types) :
-        m_field_names(field_names), m_field_types(field_types) {
-
+        m_field_names(field_names)
+{
+    m_parameters = field_types;
 }
 
 bool Record::has_field(std::string name) {
@@ -612,23 +733,19 @@ Type *Record::get_field_type(std::string name) {
         return nullptr;
     }
 
-    return m_field_types[index];
+    return m_parameters[index];
 }
 
 std::vector<Type *> Record::field_types() const {
-    return m_field_types;
-}
-
-std::vector<Type *> Record::parameters() const {
-    return m_field_types;
+    return m_parameters;
 }
 
 std::string Record::name() const {
     std::stringstream ss;
     ss << "Record{";
-    for (auto type : m_field_types) {
+    for (auto type : m_parameters) {
         ss << type->name();
-        if (type != m_field_types.back()) {
+        if (type != m_parameters.back()) {
             ss << ", ";
         }
     }
@@ -639,7 +756,7 @@ std::string Record::name() const {
 std::string Record::mangled_name() const {
     std::stringstream ss;
     ss << "r";
-    for (auto type : m_field_types) {
+    for (auto type : m_parameters) {
         ss << type->mangled_name();
     }
     return ss.str();
@@ -652,9 +769,9 @@ Constructor *Record::constructor() const {
 bool Record::isCompatible(const Type *other) const {
     auto other_record = dynamic_cast<const Record *>(other);
     if (other_record) {
-        if (m_field_types.size() == other_record->m_field_types.size()) {
-            for (int i = 0; i < m_field_types.size(); i++) {
-                if (!m_field_types[i]->isCompatible(other_record->m_field_types[i])) {
+        if (m_parameters.size() == other_record->m_parameters.size()) {
+            for (int i = 0; i < m_parameters.size(); i++) {
+                if (!m_parameters[i]->isCompatible(other_record->m_parameters[i])) {
                     return false;
                 }
             }
@@ -666,6 +783,15 @@ bool Record::isCompatible(const Type *other) const {
     } else {
         return false;
     }
+}
+
+Record *Record::clone() const {
+    std::vector<Type *> field_types;
+    for (auto t : m_parameters) {
+        field_types.push_back(t->clone());
+    }
+
+    return new Record(m_field_names, field_types);
 }
 
 void Record::accept(Visitor *visitor) {
@@ -684,38 +810,38 @@ void Tuple::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Method::Method(std::vector<Type *> parameter_types, Type *return_type) :
-        m_parameter_types(parameter_types),
-        m_return_type(return_type) {
-
+Method::Method(std::vector<Type *> parameter_types, Type *return_type) {
+    m_parameters.push_back(return_type);
+    for (auto p : parameter_types) {
+        m_parameters.push_back(p);
+    }
 }
 
-Method::Method(Type *return_type) : m_return_type(return_type), m_is_generic(false) {
-
+Method::Method(Type *return_type) : m_is_generic(false) {
+    m_parameters.push_back(return_type);
 }
 
 Method::Method(Type *parameter1_type, Type *return_type) : Method(return_type) {
-    m_parameter_types.push_back(parameter1_type);
+    m_parameters.push_back(parameter1_type);
 }
 
 Method::Method(Type *parameter1_type, Type *parameter2_type, Type *return_type) : Method(return_type) {
-    m_parameter_types.push_back(parameter1_type);
-    m_parameter_types.push_back(parameter2_type);
+    m_parameters.push_back(parameter1_type);
+    m_parameters.push_back(parameter2_type);
 }
 
 Method::Method(Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type) : Method(return_type) {
-    m_parameter_types.push_back(parameter1_type);
-    m_parameter_types.push_back(parameter2_type);
-    m_parameter_types.push_back(parameter3_type);
+    m_parameters.push_back(parameter1_type);
+    m_parameters.push_back(parameter2_type);
+    m_parameters.push_back(parameter3_type);
 }
 
 std::string Method::name() const {
     std::stringstream ss;
     ss << "Method{";
-    for (auto type : m_parameter_types) {
+    for (auto type : m_parameters) {
         ss << type->name() << ", ";
     }
-    ss << m_return_type->name();
     ss << "}";
     return ss.str();
 }
@@ -723,10 +849,9 @@ std::string Method::name() const {
 std::string Method::mangled_name() const {
     std::stringstream ss;
     ss << "m";
-    for (auto type : m_parameter_types) {
+    for (auto type : m_parameters) {
         ss << type->mangled_name();
     }
-    ss << m_return_type->mangled_name();
     return ss.str();
 }
 
@@ -743,21 +868,26 @@ bool Method::is_generic() const {
 }
 
 std::vector<Type *> Method::parameter_types() const {
-    return m_parameter_types;
+    std::vector<Type *> parameters;
+    for (int i = 1; i < m_parameters.size(); i++) {
+        parameters.push_back(m_parameters[i]);
+    }
+    return parameters;
 }
 
 Type *Method::return_type() const {
-    return m_return_type;
+    return m_parameters[0];
 }
 
 bool Method::could_be_called_with(std::vector<Type *> arguments) {
-    if (arguments.size() != m_parameter_types.size()) {
+    auto parameters = parameter_types();
+
+    if (arguments.size() != parameters.size()) {
         return false;
     }
 
     for (unsigned long i = 0; i < arguments.size(); i++) {
-        if (!m_parameter_types[i]->isCompatible(arguments[i])) {
-            //std::cout << name() << " couldn't be called because " << "#" << i << " " << m_parameter_types[i]->name() << " " << arguments[i]->name() << " don't match." << std::endl;
+        if (!parameters[i]->isCompatible(arguments[i])) {
             return false;
         }
     }
@@ -778,6 +908,11 @@ bool Method::is_parameter_inout(Type *type) {
     return it->second;
 }
 
+Method *Method::clone() const {
+    assert(false);
+    return nullptr;
+}
+
 void Method::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -785,9 +920,9 @@ void Method::accept(Visitor *visitor) {
 std::string Function::name() const {
     std::stringstream ss;
     ss << "Function{";
-    for (auto method : m_methods) {
+    for (auto method : m_parameters) {
         ss << method->name();
-        if (method != m_methods.back()) {
+        if (method != m_parameters.back()) {
             ss << ", ";
         }
     }
@@ -798,7 +933,7 @@ std::string Function::name() const {
 std::string Function::mangled_name() const {
     std::stringstream ss;
     ss << "f";
-    for (auto method : m_methods) {
+    for (auto method : m_parameters) {
         ss << method->mangled_name();
     }
     return ss.str();
@@ -809,11 +944,13 @@ Constructor *Function::constructor() const {
 }
 
 void Function::add_method(Method *method) {
-    m_methods.push_back(method);
+    m_parameters.push_back(method);
 }
 
 Method *Function::find_method(ast::Node *node, std::vector<Type *> arguments) const {
-    for (auto method : m_methods) {
+    for (auto p : m_parameters) {
+        auto method = dynamic_cast<Method *>(p);
+        assert(method);
         if (method->could_be_called_with(arguments)) {
             return method;
         }
@@ -823,11 +960,19 @@ Method *Function::find_method(ast::Node *node, std::vector<Type *> arguments) co
 }
 
 Method *Function::get_method(int index) const {
-    return m_methods[index];
+    auto p = m_parameters[index];
+    auto method = dynamic_cast<Method *>(p);
+    assert(method);
+    return method;
 }
 
 int Function::no_methods() const {
-    return m_methods.size();
+    return m_parameters.size();
+}
+
+Function *Function::clone() const {
+    assert(false);
+    return nullptr;
 }
 
 void Function::accept(Visitor *visitor) {
@@ -835,26 +980,23 @@ void Function::accept(Visitor *visitor) {
 }
 
 Union::Union(Type *type1, Type *type2) {
-    m_types.push_back(type1);
-    m_types.push_back(type2);
+    m_parameters.push_back(type1);
+    m_parameters.push_back(type2);
 }
 
-Union::Union(compiler::Pass *pass, ast::Node *node, std::vector<Type *> types) : m_types(types) {
-    if (m_types.size() <= 1) {
-        pass->push_error(new errors::InvalidTypeParameters(node, m_types.size(), 2));
-    }
+Union::Union(std::vector<Type *> types) {
+    assert(!types.empty());
+    m_parameters = types;
 }
 
 std::string Union::name() const {
     std::stringstream ss;
     ss << "Union{";
-    unsigned long i = 0;
-    for (auto type : m_types) {
+    for (auto type : m_parameters) {
         ss << type->name();
-        if (i < m_types.size() - 1) {
+        if (type != m_parameters.back()) {
             ss << ", ";
         }
-        i++;
     }
     ss << "}";
     return ss.str();
@@ -863,7 +1005,7 @@ std::string Union::name() const {
 std::string Union::mangled_name() const {
     std::stringstream ss;
     ss << "u";
-    for (auto type : m_types) {
+    for (auto type : m_parameters) {
         ss << type->mangled_name();
     }
     return ss.str();
@@ -874,12 +1016,12 @@ Constructor *Union::constructor() const {
 }
 
 std::vector<Type *> Union::types() const {
-    return m_types;
+    return m_parameters;
 }
 
 uint8_t Union::type_index(const Type *type, bool *exists) const {
-    for (uint8_t i = 0; i < m_types.size(); i++) {
-        if (m_types[i]->isCompatible(type)) {
+    for (uint8_t i = 0; i < m_parameters.size(); i++) {
+        if (m_parameters[i]->isCompatible(type)) {
             *exists = true;
             return i;
         }
@@ -890,13 +1032,22 @@ uint8_t Union::type_index(const Type *type, bool *exists) const {
 }
 
 bool Union::isCompatible(const Type *other) const {
-    for (auto type : m_types) {
+    for (auto type : m_parameters) {
         if (type->isCompatible(other)) {
             return true;
         }
     }
 
     return false;
+}
+
+Union *Union::clone() const {
+    std::vector<Type *> types;
+    for (auto t : m_parameters) {
+        types.push_back(t->clone());
+    }
+
+    return new Union(types);
 }
 
 void Union::accept(Visitor *visitor) {

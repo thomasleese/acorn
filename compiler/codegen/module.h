@@ -52,6 +52,9 @@ namespace acorn {
             llvm::Function *generate_function(ast::FunctionDefinition *definition);
             llvm::Function *generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterConstructor *, types::Type *>);
 
+            void push_value(llvm::Value *value);
+            llvm::Value *pop_value();
+
             void visit(ast::CodeBlock *block);
 
             void visit(ast::Identifier *expression);

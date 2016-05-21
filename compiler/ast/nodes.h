@@ -206,13 +206,18 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct While : Expression {
-            using Expression::Expression;
+        class While : public Expression {
+        public:
+            While(Token *token, Expression *condition, CodeBlock *code);
 
-            Expression *condition;
-            CodeBlock *code;
+            Expression *condition() const;
+            CodeBlock *code() const;
 
             void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Expression> m_condition;
+            std::unique_ptr<CodeBlock> m_code;
         };
 
         struct For : Expression {

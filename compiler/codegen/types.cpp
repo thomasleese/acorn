@@ -11,6 +11,7 @@
 #include "../Errors.h"
 
 #include "types.h"
+#include "../ast/nodes.h"
 
 using namespace acorn;
 using namespace acorn::codegen;
@@ -21,7 +22,7 @@ llvm::Type *TypeGenerator::take_type(ast::Node *node) {
         m_type_stack.pop_back();
 
         if (node && result == nullptr) {
-            push_error(new errors::InternalError(node, "Invalid LLVM type generated."));
+            push_error(new errors::InternalError(node, "Invalid LLVM type generated. (" + node->type->name() + ")"));
             return nullptr;
         }
 

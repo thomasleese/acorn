@@ -36,9 +36,16 @@ namespace acorn {
 
             virtual std::string mangled_name() const = 0;
 
+            virtual Type *clone() const = 0;
+
+            Type *get_parameter(int i) const;
+            void set_parameter(int i, Type *type);
+            std::vector<Type *> parameters() const;
+
             virtual void accept(Visitor *visitor) = 0;
 
-            virtual std::vector<types::Type *> parameters() const;
+        protected:
+            std::vector<Type *> m_parameters;
         };
 
         class Parameter;
@@ -50,6 +57,8 @@ namespace acorn {
             virtual Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) = 0;
 
             std::string mangled_name() const;
+
+            virtual Constructor *clone() const = 0;
         };
 
         class ParameterConstructor : public Constructor {
@@ -60,6 +69,8 @@ namespace acorn {
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
+            ParameterConstructor *clone() const;
+
             void accept(Visitor *visitor);
         };
 
@@ -68,6 +79,8 @@ namespace acorn {
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+
+            AnyConstructor *clone() const;
 
             void accept(Visitor *visitor);
         };
@@ -78,6 +91,8 @@ namespace acorn {
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
+            VoidConstructor *clone() const;
+
             void accept(Visitor *visitor);
         };
 
@@ -86,6 +101,8 @@ namespace acorn {
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+
+            BooleanConstructor *clone() const;
 
             void accept(Visitor *visitor);
         };
@@ -97,6 +114,8 @@ namespace acorn {
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+
+            IntegerConstructor *clone() const;
 
             void accept(Visitor *visitor);
 
@@ -112,6 +131,8 @@ namespace acorn {
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
+            UnsignedIntegerConstructor *clone() const;
+
             void accept(Visitor *visitor);
 
         private:
@@ -126,6 +147,8 @@ namespace acorn {
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
+            FloatConstructor *clone() const;
+
             void accept(Visitor *visitor);
 
         private:
@@ -139,6 +162,8 @@ namespace acorn {
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
+            UnsafePointerConstructor *clone() const;
+
             void accept(Visitor *visitor);
 
         };
@@ -148,6 +173,8 @@ namespace acorn {
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+
+            FunctionConstructor *clone() const;
 
             void accept(Visitor *visitor);
         };
@@ -163,6 +190,8 @@ namespace acorn {
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+
+            RecordConstructor *clone() const;
 
             void accept(Visitor *visitor);
 
@@ -181,6 +210,8 @@ namespace acorn {
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
+            UnionConstructor *clone() const;
+
             void accept(Visitor *visitor);
 
         };
@@ -194,6 +225,8 @@ namespace acorn {
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+
+            AliasConstructor *clone() const;
 
             void accept(Visitor *visitor);
 
@@ -212,6 +245,8 @@ namespace acorn {
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+
+            TypeDescriptionConstructor *clone() const;
 
             void accept(Visitor *visitor);
 
@@ -235,6 +270,8 @@ namespace acorn {
 
             bool isCompatible(const Type *other) const;
 
+            Parameter *clone() const;
+
             void accept(Visitor *visitor);
 
         private:
@@ -249,6 +286,8 @@ namespace acorn {
 
             Constructor *constructor() const;
 
+            Any *clone() const;
+
             void accept(Visitor *visitor);
         };
 
@@ -259,6 +298,8 @@ namespace acorn {
 
             Constructor *constructor() const;
 
+            Void *clone() const;
+
             void accept(Visitor *visitor);
         };
 
@@ -268,6 +309,8 @@ namespace acorn {
             std::string mangled_name() const;
 
             Constructor *constructor() const;
+
+            Boolean *clone() const;
 
             void accept(Visitor *visitor);
         };
@@ -282,6 +325,8 @@ namespace acorn {
             Constructor *constructor() const;
 
             unsigned int size() const;
+
+            Integer *clone() const;
 
             void accept(Visitor *visitor);
 
@@ -300,6 +345,8 @@ namespace acorn {
 
             unsigned int size() const;
 
+            UnsignedInteger *clone() const;
+
             void accept(Visitor *visitor);
 
         private:
@@ -317,6 +364,8 @@ namespace acorn {
 
             unsigned int size() const;
 
+            Float *clone() const;
+
             void accept(Visitor *visitor);
 
         private:
@@ -333,14 +382,12 @@ namespace acorn {
             Constructor *constructor() const;
 
             Type *element_type() const;
-            std::vector<Type *> parameters() const;
 
             bool isCompatible(const Type *other) const;
 
-            void accept(Visitor *visitor);
+            UnsafePointer *clone() const;
 
-        private:
-            Type *m_element_type;
+            void accept(Visitor *visitor);
         };
 
         class Record : public ConstructedType {
@@ -352,8 +399,6 @@ namespace acorn {
             Type *get_field_type(std::string name);
             std::vector<Type *> field_types() const;
 
-            std::vector<Type *> parameters() const;
-
             std::string name() const;
             std::string mangled_name() const;
 
@@ -361,11 +406,12 @@ namespace acorn {
 
             bool isCompatible(const Type *other) const;
 
+            Record *clone() const;
+
             void accept(Visitor *visitor);
 
         protected:
             std::vector<std::string> m_field_names;
-            std::vector<Type *> m_field_types;
         };
 
         class Tuple : public Record {
@@ -398,11 +444,11 @@ namespace acorn {
             void set_parameter_inout(Type *type, bool inout);
             bool is_parameter_inout(Type *type);
 
+            Method *clone() const;
+
             void accept(Visitor *visitor);
 
         private:
-            std::vector<Type *> m_parameter_types;
-            Type *m_return_type;
             std::map<Type *, bool> m_inouts;
             bool m_is_generic;
         };
@@ -419,16 +465,15 @@ namespace acorn {
             Method *get_method(int index) const;
             int no_methods() const;
 
-            void accept(Visitor *visitor);
+            Function *clone() const;
 
-        private:
-            std::vector<Method *> m_methods;
+            void accept(Visitor *visitor);
         };
 
         class Union : public ConstructedType {
         public:
             Union(Type *type1, Type *type2);
-            Union(compiler::Pass *pass, ast::Node *node, std::vector<Type *> types);
+            Union(std::vector<Type *> types);
 
             std::string name() const;
             std::string mangled_name() const;
@@ -440,10 +485,9 @@ namespace acorn {
 
             bool isCompatible(const Type *other) const;
 
-            void accept(Visitor *visitor);
+            Union *clone() const;
 
-        private:
-            std::vector<Type *> m_types;
+            void accept(Visitor *visitor);
         };
 
         class Visitor {

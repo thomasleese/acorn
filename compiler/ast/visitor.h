@@ -25,7 +25,7 @@ namespace acorn {
         struct Assignment;
         struct Selector;
         struct Comma;
-        struct While;
+        class While;
         struct For;
         struct If;
         struct Return;

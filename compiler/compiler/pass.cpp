@@ -4,6 +4,8 @@
 
 #include <cassert>
 
+#include "../errors.h"
+
 #include "pass.h"
 
 using namespace acorn;
@@ -15,6 +17,7 @@ bool Pass::has_errors() const {
 
 void Pass::push_error(errors::CompilerError *error) {
     m_errors.push_back(error);
+    error->print();
 }
 
 errors::CompilerError *Pass::next_error() {

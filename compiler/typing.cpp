@@ -110,6 +110,19 @@ void Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Ty
     }
 }
 
+types::Type *Inferrer::replace_type_parameters(types::Type *type, std::map<types::ParameterConstructor *, types::Type *> replacements) {
+    auto parameter = dynamic_cast<types::Parameter *>(type);
+    if (parameter) {
+        type = replacements[parameter->constructor()];
+    }
+
+    for (int i = 0; i < type->parameters().size(); i++) {
+        type->set_parameter(i, replace_type_parameters(type->parameters()[i], replacements));
+    }
+
+    return type;
+}
+
 void Inferrer::visit(ast::CodeBlock *block) {
     for (auto statement : block->statements) {
         statement->accept(this);
@@ -187,9 +200,9 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
     if (types.empty()) {
         elementType = new types::Any();
     } else if (types.size() != 1) {
-        elementType = new types::Union(this, sequence, types);
+        elementType = new types::Union(types);
     } else {
-        elementType = *(types.begin());
+        elementType = types[0];
     }
 
     std::vector<types::Type *> args;
@@ -262,11 +275,10 @@ void Inferrer::visit(ast::Call *expression) {
         }
     }
 
-    if (auto p = dynamic_cast<types::Parameter *>(method->return_type())) {
-        expression->type = expression->inferred_type_parameters[p->constructor()];
-    } else {
-        expression->type = method->return_type();
-    }
+    auto return_type = method->return_type()->clone();
+    return_type = replace_type_parameters(return_type, expression->inferred_type_parameters);
+
+    expression->type = return_type;
 }
 
 void Inferrer::visit(ast::CCall *ccall) {
@@ -344,10 +356,10 @@ void Inferrer::visit(ast::Comma *expression) {
 }
 
 void Inferrer::visit(ast::While *expression) {
-    expression->condition->accept(this);
-    expression->code->accept(this);
+    expression->condition()->accept(this);
+    expression->code()->accept(this);
 
-    expression->type = expression->code->type;
+    expression->type = expression->code()->type;
 }
 
 void Inferrer::visit(ast::For *expression) {
@@ -717,8 +729,8 @@ void Checker::visit(ast::Comma *expression) {
 }
 
 void Checker::visit(ast::While *expression) {
-    expression->condition->accept(this);
-    expression->code->accept(this);
+    expression->condition()->accept(this);
+    expression->code()->accept(this);
     check_not_null(expression);
 }
 

@@ -142,6 +142,7 @@ Expression *Parser::readExpression() {
 
 Identifier *Parser::readIdentifier(bool accept_parameters) {
     auto token = readToken(Token::Identifier);
+    return_if_null(token);
 
     auto identifier = new Identifier(token, token->lexeme);
 
@@ -416,26 +417,28 @@ Call *Parser::readIndex(Expression *operand) {
 }
 
 While *Parser::readWhile() {
-    Token *token = readToken(Token::WhileKeyword);
+    auto token = readToken(Token::WhileKeyword);
+    return_if_null(token);
 
-    While *expression = new While(token);
-    expression->condition = readExpression();
+    auto condition = readExpression();
+    return_if_null(condition);
 
-    readToken(Token::Newline);
+    return_if_null(readToken(Token::DoKeyword));
+    return_if_null(readToken(Token::Newline));
 
-    expression->code = readCodeBlock();
-    return expression;
+    auto code = readCodeBlock();
+    return_if_null(code);
+
+    return new While(token, condition, code);
 }
 
 For *Parser::readFor() {
-    debug("Reading For...");
-
     Token *token = readToken(Token::ForKeyword);
+    return_if_null(token);
 
     For *expression = new For(token);
     expression->name = readIdentifier(false);
-
-    debug("Name: " + expression->name->value);
+    return_if_null(expression->name);
 
     readToken(Token::InKeyword);
     expression->iterator = readExpression();
