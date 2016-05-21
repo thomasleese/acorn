@@ -439,7 +439,6 @@ While *Parser::readWhile() {
     auto condition = readExpression(true);
     return_if_null(condition);
 
-    return_if_null(readToken(Token::DoKeyword));
     return_if_null(readToken(Token::Newline));
 
     auto code = readCodeBlock();
@@ -460,7 +459,6 @@ CodeBlock *Parser::readFor() {
     auto iterator = readExpression(true);
     return_if_null(iterator);
 
-    return_if_null(readToken(Token::DoKeyword));
     return_if_null(readToken(Token::Newline));
 
     auto loop_code = readCodeBlock();
@@ -512,8 +510,6 @@ If *Parser::readIf() {
         expression->condition = readExpression(true);
         return_if_null(expression->condition);
     }
-
-    readToken(Token::ThenKeyword);
 
     return_if_null(readToken(Token::Newline));
 
