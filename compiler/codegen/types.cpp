@@ -119,6 +119,10 @@ void TypeGenerator::visit(types::UnionConstructor *type) {
     visit_constructor(type);
 }
 
+void TypeGenerator::visit(types::TupleConstructor *type) {
+    visit_constructor(type);
+}
+
 void TypeGenerator::visit(types::AliasConstructor *type) {
     visit_constructor(type);
 }
@@ -253,8 +257,7 @@ void TypeGenerator::visit(types::Record *type) {
 }
 
 void TypeGenerator::visit(types::Tuple *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
+    visit(static_cast<types::Record *>(type));
 }
 
 void TypeGenerator::visit(types::Method *type) {

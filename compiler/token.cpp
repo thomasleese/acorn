@@ -38,12 +38,6 @@ std::string Token::rule_string(Token::Rule rule) {
             return "then";
         case ElseKeyword:
             return "else";
-        case AndKeyword:
-            return "and";
-        case OrKeyword:
-            return "or";
-        case NotKeyword:
-            return "not";
         case ContinueKeyword:
             return "continue";
         case BreakKeyword:

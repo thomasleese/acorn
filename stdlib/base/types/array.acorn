@@ -27,3 +27,17 @@ def append{T}(inout array as Array{T}, value as T) as Void
     array.length = array.length + 1
     array[array.length - 1] = value
 end
+
+type _ArrayState as Integer
+
+def start{T}(array as Array{T}) as _ArrayState
+    return 0
+end
+
+def next{T}(array as Array{T}, state as _ArrayState) as Tuple{T, _ArrayState}
+    return array[state], state + 1
+end
+
+def done{T}(array as Array{T}, state as _ArrayState) as Boolean
+    return state >= array.length
+end

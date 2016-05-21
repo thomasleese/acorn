@@ -55,10 +55,16 @@ SourceFile *Parser::parse(std::string name) {
         }
 
         Parser parser(tokens);
-        SourceFile *module2 = parser.parse(filename);
+        auto module2 = parser.parse(filename);
 
-        for (auto statement : module2->code->statements) {
-            module->code->statements.push_back(statement);
+        if (parser.has_errors()) {
+            while (parser.has_errors()) {
+                push_error(parser.next_error());
+            }
+        } else {
+            for (auto statement : module2->code->statements) {
+                module->code->statements.push_back(statement);
+            }
         }
 
         delete module2;
@@ -125,10 +131,10 @@ CodeBlock *Parser::readCodeBlock() {
     return code;
 }
 
-Expression *Parser::readExpression() {
+Expression *Parser::readExpression(bool parse_comma) {
     debug("Reading expression...");
 
-    auto expr = readUnaryExpression();
+    auto expr = readUnaryExpression(parse_comma);
     if (expr == nullptr) {
         return nullptr;
     }
@@ -252,7 +258,7 @@ SequenceLiteral *Parser::readSequenceLiteral() {
     SequenceLiteral *literal = new SequenceLiteral(token);
 
     while (!isToken(Token::CloseBracket)) {
-        literal->elements.push_back(readExpression());
+        literal->elements.push_back(readExpression(false));
 
         if (isToken(Token::Comma)) {
             readToken(Token::Comma);
@@ -272,9 +278,9 @@ MappingLiteral *Parser::readMappingLiteral() {
     MappingLiteral *literal = new MappingLiteral(token);
 
     while (!isToken(Token::CloseBrace)) {
-        Expression *key = readExpression();
+        Expression *key = readExpression(false);
         readToken(Token::Colon);
-        Expression *value = readExpression();
+        Expression *value = readExpression(false);
 
         literal->keys.push_back(key);
         literal->values.push_back(value);
@@ -303,7 +309,7 @@ RecordLiteral *Parser::readRecordLiteral() {
     while (!isToken(Token::CloseParenthesis)) {
         literal->field_names.push_back(readIdentifier(false));
         readToken(Token::Colon);
-        literal->field_values.push_back(readExpression());
+        literal->field_values.push_back(readExpression(false));
 
         if (isToken(Token::Comma)) {
             readToken(Token::Comma);
@@ -324,7 +330,7 @@ Call *Parser::readCall(Expression *operand) {
     call->operand = operand;
 
     while (!isToken(Token::CloseParenthesis)) {
-        call->arguments.push_back(readExpression());
+        call->arguments.push_back(readExpression(false));
 
         if (isToken(Token::Comma)) {
             readToken(Token::Comma);
@@ -365,7 +371,7 @@ CCall *Parser::readCCall() {
         readToken(Token::UsingKeyword);
 
         while (true) {
-            ccall->arguments.push_back(readExpression());
+            ccall->arguments.push_back(readExpression(false));
 
             if (isToken(Token::Comma)) {
                 readToken(Token::Comma);
@@ -392,7 +398,16 @@ Selector *Parser::readSelector(Expression *operand) {
 
     Selector *selector = new Selector(token);
     selector->operand = operand;
-    selector->name = readIdentifier(true);
+
+    if (isToken(Token::IntegerLiteral)) {
+        auto il = readIntegerLiteral();
+        std::string name = il->value;
+        selector->name = new Identifier(il->token, name);
+        delete il;
+    } else {
+        selector->name = readIdentifier(true);
+    }
+
     return selector;
 }
 
@@ -401,13 +416,13 @@ Call *Parser::readIndex(Expression *operand) {
 
     auto call = new Call(token);
     call->arguments.push_back(operand);
-    call->arguments.push_back(readExpression());
+    call->arguments.push_back(readExpression(true));
 
     readToken(Token::CloseBracket);
 
     if (isToken(Token::Assignment)) {
         readToken(Token::Assignment);
-        call->arguments.push_back(readExpression());
+        call->arguments.push_back(readExpression(true));
         call->operand = new Identifier(token, "setindex");
     } else {
         call->operand = new Identifier(token, "getindex");
@@ -420,7 +435,7 @@ While *Parser::readWhile() {
     auto token = readToken(Token::WhileKeyword);
     return_if_null(token);
 
-    auto condition = readExpression();
+    auto condition = readExpression(true);
     return_if_null(condition);
 
     return_if_null(readToken(Token::DoKeyword));
@@ -441,7 +456,7 @@ For *Parser::readFor() {
     return_if_null(expression->name);
 
     readToken(Token::InKeyword);
-    expression->iterator = readExpression();
+    expression->iterator = readExpression(true);
 
     readToken(Token::Newline);
 
@@ -464,12 +479,12 @@ If *Parser::readIf() {
         auto assignment_token = readToken(Token::Assignment);
         return_if_null(assignment_token);
 
-        auto rhs = readExpression();
+        auto rhs = readExpression(true);
         return_if_null(rhs);
 
         expression->condition = new Assignment(assignment_token, lhs, rhs);
     } else {
-        expression->condition = readExpression();
+        expression->condition = readExpression(true);
         return_if_null(expression->condition);
     }
 
@@ -511,14 +526,14 @@ Return *Parser::readReturn() {
     Token *token = readToken(Token::ReturnKeyword);
 
     Return *r = new Return(token);
-    r->expression = readExpression();
+    r->expression = readExpression(true);
     return r;
 }
 
 Spawn *Parser::readSpawn() {
     Token *token = readToken(Token::SpawnKeyword);
 
-    Expression *expr = readExpression();
+    Expression *expr = readExpression(true);
     Call *call = dynamic_cast<Call *>(expr);
     if (call) {
         return new Spawn(token, call);
@@ -540,15 +555,15 @@ Strideof *Parser::readStrideof() {
     return new Strideof(token, identifier);
 }
 
-Expression *Parser::readUnaryExpression() {
+Expression *Parser::readUnaryExpression(bool parse_comma) {
     if (isToken(Token::Operator)) {
         Call *expr = new Call(m_tokens.front());
         expr->operand = readOperator(true);
-        expr->arguments.push_back(readUnaryExpression());
+        expr->arguments.push_back(readUnaryExpression(false));
 
         return expr;
     } else {
-        return readOperandExpression();
+        return readOperandExpression(parse_comma);
     }
 }
 
@@ -566,7 +581,7 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
             readToken(Token::Assignment);
         }
 
-        Expression *rhs = readOperandExpression();
+        Expression *rhs = readOperandExpression(true);
 
         while ((isToken(Token::Operator) || isToken(Token::Assignment)) && m_operatorPrecendence[m_tokens.front()->lexeme] > m_operatorPrecendence[opName]) {
             rhs = readBinaryExpression(rhs, m_operatorPrecendence[m_tokens.front()->lexeme]);
@@ -590,7 +605,7 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
 Expression *Parser::readPrimaryExpression() {
     if (isToken(Token::OpenParenthesis)) {
         readToken(Token::OpenParenthesis);
-        Expression *expr = readExpression();
+        Expression *expr = readExpression(true);
         readToken(Token::CloseParenthesis);
         return expr;
     } else if (isToken(Token::IntegerLiteral)) {
@@ -633,7 +648,7 @@ Expression *Parser::readPrimaryExpression() {
     }
 }
 
-Expression *Parser::readOperandExpression() {
+Expression *Parser::readOperandExpression(bool parse_comma) {
     auto left = readPrimaryExpression();
     if (left == nullptr) {
         return nullptr;
@@ -655,6 +670,23 @@ Expression *Parser::readOperandExpression() {
             } else {
                 left = selector;
             }
+        } else if (parse_comma && isToken(Token::Comma)) {
+            readToken(Token::Comma);
+
+            auto rhs = readExpression(true);
+            std::vector<Expression *> elements;
+
+            elements.push_back(left);
+
+            if (auto tuple = dynamic_cast<TupleLiteral *>(rhs)) {
+                for (auto e : tuple->elements()) {
+                    elements.push_back(e);
+                }
+            } else {
+                elements.push_back(rhs);
+            }
+
+            left = new TupleLiteral(left->token, elements);
         } else {
             break;
         }
@@ -688,7 +720,7 @@ VariableDefinition *Parser::readVariableDefinition() {
     auto token = readToken(Token::Assignment);
     return_if_null(token);
 
-    auto rhs = readExpression();
+    auto rhs = readExpression(true);
     return_if_null(rhs);
 
     auto definition = new VariableDefinition(lhs->token);
@@ -781,7 +813,7 @@ Statement *Parser::readStatement() {
     } else if (isToken(Token::TypeKeyword)) {
         statement = new DefinitionStatement(readTypeDefinition());
     } else {
-        auto expression = readExpression();
+        auto expression = readExpression(true);
         return_if_null(expression);
 
         statement = new ExpressionStatement(expression);

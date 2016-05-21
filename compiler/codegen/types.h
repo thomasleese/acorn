@@ -39,6 +39,7 @@ namespace acorn {
             void visit(types::FunctionConstructor *type);
             void visit(types::RecordConstructor *type);
             void visit(types::UnionConstructor *type);
+            void visit(types::TupleConstructor *type);
             void visit(types::AliasConstructor *type);
             void visit(types::TypeDescriptionConstructor *type);
             void visit(types::Parameter *type);

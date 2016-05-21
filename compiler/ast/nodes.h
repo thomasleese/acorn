@@ -147,6 +147,18 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
+        class TupleLiteral : public Expression {
+        public:
+            TupleLiteral(Token *token, std::vector<Expression *> elements);
+
+            std::vector<Expression *> elements();
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::vector<std::unique_ptr<Expression> > m_elements;
+        };
+
         struct Call : Expression {
             Call(Token *token);
             Call(std::string name, Token *token);
@@ -192,16 +204,6 @@ namespace acorn {
 
             Expression *operand;
             Identifier *name;
-
-            void accept(Visitor *visitor);
-        };
-
-        struct Comma : Expression {
-            Comma(Token *token);
-            Comma(Expression *lhs, Expression *rhs, Token *token);
-
-            Expression *lhs;
-            Expression *rhs;
 
             void accept(Visitor *visitor);
         };

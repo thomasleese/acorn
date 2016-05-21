@@ -66,7 +66,7 @@ bool Compiler::check_pass(Pass *pass) const {
     }
 }
 
-void Compiler::debug(std::string line) {
+void Compiler::debug(std::string line) const {
     std::cerr << line << std::endl;
 }
 
@@ -85,7 +85,7 @@ bool Compiler::compile(std::string filename) {
     debug("Parsing...");
 
     auto parser = new Parser(tokens);
-    ast::SourceFile *module = parser->parse(filename);
+    auto module = parser->parse(filename);
     if (!check_pass(parser)) {
         return false;
     }

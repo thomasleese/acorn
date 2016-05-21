@@ -7,3 +7,8 @@ type Maybe{T} as Union{Void, T}
 def -(n as Integer) as Integer
     return 0 - n
 end
+
+def +=(inout i as Integer, amount as Integer) as Integer
+    i = i + amount
+    return i
+end

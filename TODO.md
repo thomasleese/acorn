@@ -3,7 +3,6 @@
 - Merge symbol table builder with parser
 - Use numbers with metadata as mangling instead
 
-- While loop
 - Design types better (try to remove constructors?)
 - Arrays
 - Tuples

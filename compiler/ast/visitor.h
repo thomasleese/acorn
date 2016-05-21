@@ -19,12 +19,12 @@ namespace acorn {
         struct SequenceLiteral;
         struct MappingLiteral;
         struct RecordLiteral;
+        class TupleLiteral;
         struct Call;
         struct CCall;
         struct Cast;
         struct Assignment;
         struct Selector;
-        struct Comma;
         class While;
         struct For;
         struct If;
@@ -58,12 +58,12 @@ namespace acorn {
             virtual void visit(SequenceLiteral *expression) = 0;
             virtual void visit(MappingLiteral *expression) = 0;
             virtual void visit(RecordLiteral *expression) = 0;
+            virtual void visit(TupleLiteral *expression) = 0;
             virtual void visit(Call *expression) = 0;
             virtual void visit(CCall *expression) = 0;
             virtual void visit(Cast *expression) = 0;
             virtual void visit(Assignment *expression) = 0;
             virtual void visit(Selector *expression) = 0;
-            virtual void visit(Comma *expression) = 0;
             virtual void visit(While *expression) = 0;
             virtual void visit(For *expression) = 0;
             virtual void visit(If *expression) = 0;

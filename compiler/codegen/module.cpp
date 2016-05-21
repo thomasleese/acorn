@@ -362,6 +362,32 @@ void ModuleGenerator::visit(ast::RecordLiteral *expression) {
     push_value(m_irBuilder->CreateLoad(instance));
 }
 
+void ModuleGenerator::visit(ast::TupleLiteral *expression) {
+    auto &context = llvm::getGlobalContext();
+
+    auto llvm_type = generate_type(expression);
+
+    auto instance = m_irBuilder->CreateAlloca(llvm_type);
+
+    auto i32 = llvm::IntegerType::get(context, 32);
+    auto index0 = llvm::ConstantInt::get(i32, 0);
+
+    auto elements = expression->elements();
+    for (int i = 0; i < elements.size(); i++) {
+        elements[i]->accept(this);
+        auto value = pop_value();
+
+        std::vector<llvm::Value *> indexes;
+        indexes.push_back(index0);
+        indexes.push_back(m_irBuilder->getInt32(i));
+
+        auto ptr = m_irBuilder->CreateInBoundsGEP(instance, indexes);
+        m_irBuilder->CreateStore(value, ptr);
+    }
+
+    push_value(m_irBuilder->CreateLoad(instance));
+}
+
 void ModuleGenerator::visit(ast::Call *expression) {
     ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
     if (identifier) {
@@ -428,7 +454,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
             auto value = pop_value();
 
             if (method->is_parameter_inout(method->parameter_types()[i])) {
-                llvm::LoadInst *load = llvm::dyn_cast<llvm::LoadInst>(value);
+                auto load = llvm::dyn_cast<llvm::LoadInst>(value);
                 assert(load);
 
                 value = load->getPointerOperand();
@@ -591,10 +617,6 @@ void ModuleGenerator::visit(ast::Selector *expression) {
 
     llvm::Value *value = m_irBuilder->CreateInBoundsGEP(instance, indexes);
     push_value(m_irBuilder->CreateLoad(value));
-}
-
-void ModuleGenerator::visit(ast::Comma *expression) {
-    push_error(new errors::InternalError(expression, "N/A"));
 }
 
 void ModuleGenerator::visit(ast::While *expression) {

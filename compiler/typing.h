@@ -55,12 +55,12 @@ namespace acorn {
             void visit(ast::SequenceLiteral *sequence);
             void visit(ast::MappingLiteral *mapping);
             void visit(ast::RecordLiteral *expression);
+            void visit(ast::TupleLiteral *expression);
             void visit(ast::Call *expression);
             void visit(ast::CCall *ccall);
             void visit(ast::Cast *expression);
             void visit(ast::Assignment *expression);
             void visit(ast::Selector *expression);
-            void visit(ast::Comma *expression);
             void visit(ast::While *expression);
             void visit(ast::For *expression);
             void visit(ast::If *expression);
@@ -105,12 +105,12 @@ namespace acorn {
             void visit(ast::SequenceLiteral *sequence);
             void visit(ast::MappingLiteral *mapping);
             void visit(ast::RecordLiteral *expression);
+            void visit(ast::TupleLiteral *expression);
             void visit(ast::Call *expression);
             void visit(ast::CCall *ccall);
             void visit(ast::Cast *expression);
             void visit(ast::Assignment *expression);
             void visit(ast::Selector *expression);
-            void visit(ast::Comma *expression);
             void visit(ast::While *expression);
             void visit(ast::For *expression);
             void visit(ast::If *expression);

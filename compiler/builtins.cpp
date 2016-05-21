@@ -65,6 +65,7 @@ void add_base_type_constructors(symboltable::Namespace *table) {
     add_symbol(table, "UnsafePointer", new types::UnsafePointerConstructor());
     add_symbol(table, "Function", new types::FunctionConstructor());
     add_symbol(table, "Union", new types::UnionConstructor());
+    add_symbol(table, "Tuple", new types::TupleConstructor());
     add_symbol(table, "Type", new types::TypeDescriptionConstructor());
 }
 
@@ -74,6 +75,9 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
     add_symbol(table, "Nothing", new types::Void());
     add_symbol(table, "True", new types::Boolean());
     add_symbol(table, "False", new types::Boolean());
+
+    auto not_ = add_base_function(table, "not");
+    add_base_method(not_, new types::Method(new types::Boolean(), new types::Boolean()));
 
     symboltable::Symbol *multiplication = add_base_function(table, "*");
     add_base_method(multiplication, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
@@ -96,6 +100,9 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
 
     symboltable::Symbol *less_than = add_base_function(table, "<");
     add_base_method(less_than, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
+
+    auto gte = add_base_function(table, ">=");
+    add_base_method(gte, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
 
     symboltable::Symbol *to_integer = add_base_function(table, "to_integer");
     add_base_method(to_integer, new types::Method(new types::Float(64), new types::Integer(64)));
@@ -185,8 +192,13 @@ void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *mod
     initialiser_boolean_variable(table, "Integer32", module, irBuilder, false);
     initialiser_boolean_variable(table, "Integer64", module, irBuilder, false);
 
+    // not
+    llvm::Function *f = create_llvm_function(table, module, "not", 0);
+    initialise_unary_function(f, irBuilder);
+    irBuilder->CreateRet(irBuilder->CreateNot(self));
+
     // multiplication
-    llvm::Function *f = create_llvm_function(table, module, "*", 0);
+    f = create_llvm_function(table, module, "*", 0);
     initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateMul(lhs, rhs));
 
@@ -224,6 +236,11 @@ void builtins::fill_llvm_module(symboltable::Namespace *table, llvm::Module *mod
     f = create_llvm_function(table, module, "<", 0);
     initialise_binary_function(f, irBuilder);
     irBuilder->CreateRet(irBuilder->CreateICmpSLT(lhs, rhs));
+
+    // greater than or equal to
+    f = create_llvm_function(table, module, ">=", 0);
+    initialise_binary_function(f, irBuilder);
+    irBuilder->CreateRet(irBuilder->CreateICmpSGE(lhs, rhs));
 
     // to integer
     f = create_llvm_function(table, module, "to_integer", 0);

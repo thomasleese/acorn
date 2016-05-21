@@ -71,7 +71,7 @@ namespace acorn {
         ast::CodeBlock *readCodeBlock();
 
         // expressions
-        ast::Expression *readExpression();
+        ast::Expression *readExpression(bool parse_comma);
         ast::Identifier *readIdentifier(bool accept_parameters);
         ast::Identifier *readOperator(bool accept_parameters);
         ast::VariableDeclaration *readVariableDeclaration();
@@ -94,10 +94,10 @@ namespace acorn {
         ast::Spawn *readSpawn();
         ast::Sizeof *readSizeof();
         ast::Strideof *readStrideof();
-        ast::Expression *readUnaryExpression();
+        ast::Expression *readUnaryExpression(bool parse_comma);
         ast::Expression *readBinaryExpression(ast::Expression *lhs, int minPrecedence);
         ast::Expression *readPrimaryExpression();
-        ast::Expression *readOperandExpression();
+        ast::Expression *readOperandExpression(bool parse_comma);
 
         // misc
         ast::Parameter *readParameter();

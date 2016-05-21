@@ -3,9 +3,22 @@ import 'base'
 let a = create_array(Integer, 20)
 
 let i = 0
-while i < 5 do
+while i < 6 do
     a.append(i)
-    i = i + 1
+    i += 1
 end
 
-exit(a.length)
+let sum = 0
+
+for i in a do
+    sum += i
+end
+
+let state = start(a)
+while not done(a, state) do
+    let temp = next(a, state)
+    state = temp.1
+    sum += temp.0
+end
+
+exit(sum)

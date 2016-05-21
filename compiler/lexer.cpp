@@ -48,9 +48,6 @@ void Lexer::loadRules() {
     setKeywordRule(Token::IfKeyword, "if");
     setKeywordRule(Token::ElseKeyword, "else");
     setKeywordRule(Token::ThenKeyword, "then");
-    setKeywordRule(Token::AndKeyword, "and");
-    setKeywordRule(Token::OrKeyword, "or");
-    setKeywordRule(Token::NotKeyword, "not");
     setKeywordRule(Token::ContinueKeyword, "continue");
     setKeywordRule(Token::BreakKeyword, "break");
     setKeywordRule(Token::TryKeyword, "try");
@@ -91,7 +88,7 @@ void Lexer::loadRules() {
     setRule(Token::Semicolon, "(;)");
 
     setRule(Token::Assignment, "(=[^=])");
-    setRule(Token::Operator, "(<-|->|\\+=|!=|==|[\\^\\+\\*\\-[:Sm:]])");
+    setRule(Token::Operator, "(and|or|not|<-|->|>=|<=|\\+=|!=|==|[\\^\\+\\*\\-[:Sm:]])");
 
     std::string nameInitialRegex = "[:L*:][:Nl:][:Sc:][:So:]√_";
     std::string nameAfterRegex = nameInitialRegex + "![:N*:][:M*:][:Sk:][:Pc:]";

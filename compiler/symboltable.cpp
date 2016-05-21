@@ -232,6 +232,10 @@ void Builder::visit(ast::RecordLiteral *expression) {
 
 }
 
+void Builder::visit(ast::TupleLiteral *expression) {
+
+}
+
 void Builder::visit(ast::Call *expression) {
 
 }
@@ -253,12 +257,9 @@ void Builder::visit(ast::Selector *expression) {
 
 }
 
-void Builder::visit(ast::Comma *expression) {
-
-}
-
 void Builder::visit(ast::While *expression) {
-
+    expression->condition()->accept(this);
+    expression->code()->accept(this);
 }
 
 void Builder::visit(ast::For *expression) {

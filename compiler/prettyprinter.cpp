@@ -112,6 +112,18 @@ void PrettyPrinter::visit(ast::RecordLiteral *expression) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(ast::TupleLiteral *expression) {
+    ss << indentation() << "(TupleLiteral\n";
+    indent++;
+
+    for (auto element : expression->elements()) {
+        element->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(ast::Call *expression) {
     ss << indentation() << "(Call\n";
     indent++;
@@ -174,17 +186,6 @@ void PrettyPrinter::visit(ast::Selector *expression) {
 
     expression->operand->accept(this);
     expression->name->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
-void PrettyPrinter::visit(ast::Comma *expression) {
-    ss << indentation() << "(Comma\n";
-    indent++;
-
-    expression->lhs->accept(this);
-    expression->rhs->accept(this);
 
     indent--;
     ss << indentation() << ")\n";

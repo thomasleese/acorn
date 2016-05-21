@@ -216,6 +216,17 @@ namespace acorn {
 
         };
 
+        class TupleConstructor : public Constructor {
+        public:
+            std::string name() const;
+
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+
+            TupleConstructor *clone() const;
+
+            void accept(Visitor *visitor);
+        };
+
         class AliasConstructor : public Constructor {
 
         public:
@@ -505,6 +516,7 @@ namespace acorn {
             virtual void visit(FunctionConstructor *type) = 0;
             virtual void visit(RecordConstructor *type) = 0;
             virtual void visit(UnionConstructor *type) = 0;
+            virtual void visit(TupleConstructor *type) = 0;
             virtual void visit(AliasConstructor *type) = 0;
             virtual void visit(TypeDescriptionConstructor *type) = 0;
             virtual void visit(Parameter *type) = 0;

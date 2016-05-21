@@ -367,6 +367,27 @@ void UnionConstructor::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+std::string TupleConstructor::name() const {
+    return "TupleConstructor";
+}
+
+Type *TupleConstructor::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
+    if (parameters.empty()) {
+        pass->push_error(new errors::InvalidTypeParameters(node, parameters.size(), 1));
+        return nullptr;
+    } else {
+        return new Tuple(parameters);
+    }
+}
+
+TupleConstructor *TupleConstructor::clone() const {
+    return new TupleConstructor();
+}
+
+void TupleConstructor::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 AliasConstructor::AliasConstructor(Constructor *constructor, std::vector<Parameter *> input_parameters, std::vector<Type *> output_parameters) :
         m_constructor(constructor),
         m_input_parameters(input_parameters),

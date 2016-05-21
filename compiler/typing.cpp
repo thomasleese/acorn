@@ -226,6 +226,17 @@ void Inferrer::visit(ast::RecordLiteral *expression) {
     // TODO check matches definition of record
 }
 
+void Inferrer::visit(ast::TupleLiteral *expression) {
+    std::vector<types::Type *> element_types;
+
+    for (auto value : expression->elements()) {
+        value->accept(this);
+        element_types.push_back(value->type);
+    }
+
+    expression->type = new types::Tuple(element_types);
+}
+
 void Inferrer::visit(ast::Call *expression) {
     expression->operand->accept(this);
     return_if_null_type(expression->operand);
@@ -349,10 +360,6 @@ void Inferrer::visit(ast::Selector *expression) {
     }
 
     expression->type = field_type;
-}
-
-void Inferrer::visit(ast::Comma *expression) {
-    push_error(new errors::TypeInferenceError(expression));
 }
 
 void Inferrer::visit(ast::While *expression) {
@@ -678,6 +685,14 @@ void Checker::visit(ast::RecordLiteral *expression) {
     check_not_null(expression);
 }
 
+void Checker::visit(ast::TupleLiteral *expression) {
+    for (auto element : expression->elements()) {
+        element->accept(this);
+    }
+
+    check_not_null(expression);
+}
+
 void Checker::visit(ast::Call *expression) {
     expression->operand->accept(this);
 
@@ -719,12 +734,6 @@ void Checker::visit(ast::Assignment *expression) {
 
 void Checker::visit(ast::Selector *expression) {
     expression->operand->accept(this);
-    check_not_null(expression);
-}
-
-void Checker::visit(ast::Comma *expression) {
-    expression->lhs->accept(this);
-    expression->rhs->accept(this);
     check_not_null(expression);
 }
 

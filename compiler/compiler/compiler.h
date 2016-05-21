@@ -22,7 +22,7 @@ namespace acorn {
 
             bool check_pass(Pass *pass) const;
 
-            void debug(std::string line);
+            void debug(std::string line) const;
             bool compile(std::string filename);
 
         };

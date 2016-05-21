@@ -104,6 +104,26 @@ void RecordLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+TupleLiteral::TupleLiteral(Token *token, std::vector<Expression *> elements) :
+        Expression(token)
+{
+    for (auto e : elements) {
+        m_elements.push_back(std::unique_ptr<Expression>(e));
+    }
+}
+
+std::vector<Expression *> TupleLiteral::elements() {
+    std::vector<Expression *> elements;
+    for (auto &e : m_elements) {
+        elements.push_back(e.get());
+    }
+    return elements;
+}
+
+void TupleLiteral::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Call::Call(Token *token) : Expression(token), operand(nullptr) {
 
 }
@@ -144,20 +164,6 @@ void Assignment::accept(Visitor *visitor) {
 }
 
 void Selector::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-Comma::Comma(Token *token) : Expression(token) {
-    this->lhs = nullptr;
-    this->rhs = nullptr;
-}
-
-Comma::Comma(Expression *lhs, Expression *rhs, Token *token) : Expression(token) {
-    this->lhs = lhs;
-    this->rhs = rhs;
-}
-
-void Comma::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
