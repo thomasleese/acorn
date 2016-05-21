@@ -42,8 +42,6 @@ namespace acorn {
             explicit ModuleGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout);
             ~ModuleGenerator();
 
-            void debug(std::string line);
-
             llvm::Module *module() const;
 
             llvm::Type *generate_type(ast::Node *node, types::Type *type);
@@ -98,7 +96,6 @@ namespace acorn {
             llvm::IRBuilder<> *m_irBuilder;
             llvm::MDBuilder *m_mdBuilder;
             llvm::DataLayout *m_data_layout;
-            llvm::legacy::FunctionPassManager *m_function_pass_manager;
 
             std::vector<llvm::Value *> m_llvmValues;
 

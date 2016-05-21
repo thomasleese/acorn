@@ -48,10 +48,6 @@ ModuleGenerator::~ModuleGenerator() {
     delete m_mdBuilder;
 }
 
-void ModuleGenerator::debug(std::string line) {
-    // std::cerr << line << std::endl;
-}
-
 llvm::Module *ModuleGenerator::module() const {
     return m_module;
 }
@@ -153,7 +149,6 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     std::string str;
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
-        m_function_pass_manager->run(*function);
         function->dump();
         push_error(new errors::InternalError(definition, stream.str()));
     }
@@ -193,8 +188,6 @@ void ModuleGenerator::visit(ast::CodeBlock *block) {
 }
 
 void ModuleGenerator::visit(ast::Identifier *identifier) {
-    debug("Finding named value: " + identifier->value);
-
     auto symbol = m_scope.back()->lookup(this, identifier);
     if (symbol == nullptr) {
         push_value(nullptr);
@@ -255,31 +248,25 @@ void ModuleGenerator::visit(ast::VariableDeclaration *node) {
 }
 
 void ModuleGenerator::visit(ast::IntegerLiteral *expression) {
-    debug("Making integer literal: " + expression->value);
-
-    llvm::Type *type = generate_type(expression);
+    auto type = generate_type(expression);
 
     uint64_t integer;
     std::stringstream ss;
     ss << expression->value;
     ss >> integer;
 
-    llvm::Constant *value = llvm::ConstantInt::get(type, integer, true);
-    push_value(value);
+    push_value(llvm::ConstantInt::get(type, integer, true));
 }
 
 void ModuleGenerator::visit(ast::FloatLiteral *expression) {
-    debug("Making float literal: " + expression->value);
-
-    llvm::Type *type = generate_type(expression);
+    auto type = generate_type(expression);
 
     double floatValue;
     std::stringstream ss;
     ss << expression->value;
     ss >> floatValue;
 
-    llvm::Constant *value = llvm::ConstantFP::get(type, floatValue);
-    push_value(value);
+    push_value(llvm::ConstantFP::get(type, floatValue));
 }
 
 void ModuleGenerator::visit(ast::ImaginaryLiteral *imaginary) {
@@ -574,8 +561,6 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
         auto icmp = m_irBuilder->CreateICmpEQ(m_irBuilder->getInt8(index_we_want), index_we_have, "check_union_type");
         push_value(icmp);
     } else {
-        variable_pointer->dump();
-        rhs_value->dump();
         m_irBuilder->CreateStore(rhs_value, variable_pointer);
         push_value(variable_pointer);
     }
@@ -659,7 +644,6 @@ void ModuleGenerator::visit(ast::If *expression) {
     m_irBuilder->CreateCondBr(condition, then_bb, else_bb);
     m_irBuilder->SetInsertPoint(then_bb);
 
-    debug("Generating true code...");
     expression->trueCode->accept(this);
     auto then_value = pop_value();
 
@@ -672,7 +656,6 @@ void ModuleGenerator::visit(ast::If *expression) {
 
     llvm::Value *else_value = nullptr;
     if (expression->falseCode) {
-        debug("Generating false code...");
         expression->falseCode->accept(this);
         else_value = pop_value();
     } else {
@@ -689,16 +672,10 @@ void ModuleGenerator::visit(ast::If *expression) {
     llvm::Type *type = generate_type(expression);
     llvm::PHINode *phi = m_irBuilder->CreatePHI(type, 2, "iftmp");
 
-    type->dump();
-    then_value->dump();
-    else_value->dump();
-
     phi->addIncoming(then_value, then_bb);
     phi->addIncoming(else_value, else_bb);
 
     push_value(phi);
-
-    debug("Ended if statement.");
 }
 
 void ModuleGenerator::visit(ast::Return *expression) {
@@ -709,27 +686,20 @@ void ModuleGenerator::visit(ast::Return *expression) {
 }
 
 void ModuleGenerator::visit(ast::Spawn *expression) {
-    debug("Generating spawn statement.");
+    push_error(new errors::InternalError(expression, "N/A"));
+    push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::Sizeof *expression) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
-    llvm::Type *type = generate_type(expression);
+    auto type = generate_type(expression);
     uint64_t size = m_data_layout->getTypeStoreSize(type);
-
-    auto i64 = llvm::IntegerType::getInt64Ty(context);
-    push_value(llvm::ConstantInt::get(i64, size, true));
+    push_value(m_irBuilder->getInt64(size));
 }
 
 void ModuleGenerator::visit(ast::Strideof *expression) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
-    llvm::Type *type = generate_type(expression);
+    auto type = generate_type(expression);
     uint64_t size = m_data_layout->getTypeAllocSize(type);
-
-    auto i64 = llvm::IntegerType::getInt64Ty(context);
-    push_value(llvm::ConstantInt::get(i64, size, true));
+    push_value(m_irBuilder->getInt64(size));
 }
 
 void ModuleGenerator::visit(ast::Parameter *parameter) {
@@ -776,16 +746,6 @@ void ModuleGenerator::visit(ast::ImportStatement *statement) {
 
 void ModuleGenerator::visit(ast::SourceFile *module) {
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
-
-    m_function_pass_manager = new llvm::legacy::FunctionPassManager(m_module);
-    //m_function_pass_manager->add(llvm::createFunctionInliningPass());
-    //m_function_pass_manager->add(llvm::createBasicAliasAnalysisPass());
-    //m_function_pass_manager->add(llvm::createInstructionCombiningPass());
-    //m_function_pass_manager->add(llvm::createReassociatePass());
-    //m_function_pass_manager->add(llvm::createGVNPass());
-    //m_function_pass_manager->add(llvm::createCFGSimplificationPass());
-    //m_function_pass_manager->add(llvm::createInstructionCombiningPass());
-    m_function_pass_manager->doFinalization();
 
     builtins::fill_llvm_module(m_scope.back(), m_module, m_irBuilder);
 
