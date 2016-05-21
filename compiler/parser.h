@@ -88,7 +88,7 @@ namespace acorn {
         ast::Selector *readSelector(ast::Expression *operand);
         ast::Call *readIndex(ast::Expression *operand);
         ast::While *readWhile();
-        ast::For *readFor();
+        ast::CodeBlock *readFor();
         ast::If *readIf();
         ast::Return *readReturn();
         ast::Spawn *readSpawn();

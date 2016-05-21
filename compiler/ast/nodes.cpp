@@ -128,8 +128,16 @@ Call::Call(Token *token) : Expression(token), operand(nullptr) {
 
 }
 
-Call::Call(std::string name, Token *token) : Expression(token) {
+Call::Call(Token *token, std::string name, Expression *arg1, Expression *arg2) : Call(token) {
     this->operand = new Identifier(token, name);
+
+    if (arg1) {
+        this->arguments.push_back(arg1);
+    }
+
+    if (arg2) {
+        this->arguments.push_back(arg2);
+    }
 }
 
 void Call::accept(Visitor *visitor) {
@@ -161,6 +169,20 @@ Assignment::Assignment(Token *token, Expression *lhs, Expression *rhs) : Express
 
 void Assignment::accept(Visitor *visitor) {
     visitor->visit(this);
+}
+
+Selector::Selector(Token *token, Expression *operand, Identifier *field) :
+        Expression(token),
+        operand(operand),
+        name(field)
+{
+
+}
+
+Selector::Selector(Token *token, Expression *operand, std::string field) :
+        Selector(token, operand, new Identifier(token, field))
+{
+
 }
 
 void Selector::accept(Visitor *visitor) {
@@ -238,8 +260,11 @@ VariableDefinition::VariableDefinition(Token *token) :
     // intentionally empty
 }
 
-VariableDefinition::VariableDefinition(std::string name, Token *token) : VariableDefinition(token) {
+VariableDefinition::VariableDefinition(Token *token, std::string name, Expression *value) :
+        VariableDefinition(token)
+{
     this->name = new Identifier(token, name);
+    this->assignment = new Assignment(token, new VariableDeclaration(token, this->name), value);
 }
 
 void VariableDefinition::accept(Visitor *visitor) {

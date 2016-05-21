@@ -43,8 +43,8 @@ namespace acorn {
         };
 
         // misc
-        struct CodeBlock : Node {
-            using Node::Node;
+        struct CodeBlock : Expression {
+            using Expression::Expression;
 
             std::vector<Statement *> statements;
 
@@ -160,8 +160,8 @@ namespace acorn {
         };
 
         struct Call : Expression {
-            Call(Token *token);
-            Call(std::string name, Token *token);
+            explicit Call(Token *token);
+            Call(Token *token, std::string name, Expression *arg1 = nullptr, Expression *arg2 = nullptr);
 
             Expression *operand;
             std::vector<Expression *> arguments;
@@ -200,7 +200,8 @@ namespace acorn {
         };
 
         struct Selector : Expression {
-            using Expression::Expression;
+            Selector(Token *token, Expression *operand, Identifier *field);
+            Selector(Token *token, Expression *operand, std::string field);
 
             Expression *operand;
             Identifier *name;
@@ -287,8 +288,8 @@ namespace acorn {
 
         // definitions
         struct VariableDefinition : Definition {
-            VariableDefinition(Token *token);
-            VariableDefinition(std::string name, Token *token);
+            explicit VariableDefinition(Token *token);
+            VariableDefinition(Token *token, std::string name, Expression *value = nullptr);
 
             Assignment *assignment;
 

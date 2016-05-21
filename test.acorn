@@ -9,16 +9,8 @@ while i < 6 do
 end
 
 let sum = 0
-
 for i in a do
     sum += i
-end
-
-let state = start(a)
-while not done(a, state) do
-    let temp = next(a, state)
-    state = temp.1
-    sum += temp.0
 end
 
 exit(sum)

@@ -395,20 +395,21 @@ Cast *Parser::readCast(Expression *operand) {
 
 Selector *Parser::readSelector(Expression *operand) {
     Token *token = readToken(Token::Dot);
+    return_if_null(token);
 
-    Selector *selector = new Selector(token);
-    selector->operand = operand;
+    Identifier *name = nullptr;
 
     if (isToken(Token::IntegerLiteral)) {
         auto il = readIntegerLiteral();
-        std::string name = il->value;
-        selector->name = new Identifier(il->token, name);
+        name = new Identifier(il->token, il->value);
         delete il;
     } else {
-        selector->name = readIdentifier(true);
+        name = readIdentifier(true);
     }
 
-    return selector;
+    return_if_null(name);
+
+    return new Selector(token, operand, name);
 }
 
 Call *Parser::readIndex(Expression *operand) {
@@ -447,24 +448,48 @@ While *Parser::readWhile() {
     return new While(token, condition, code);
 }
 
-For *Parser::readFor() {
+CodeBlock *Parser::readFor() {
     Token *token = readToken(Token::ForKeyword);
     return_if_null(token);
 
-    For *expression = new For(token);
-    expression->name = readIdentifier(false);
-    return_if_null(expression->name);
+    auto variable = readIdentifier(false);
+    return_if_null(variable);
 
-    readToken(Token::InKeyword);
-    expression->iterator = readExpression(true);
+    return_if_null(readToken(Token::InKeyword));
 
-    readToken(Token::Newline);
+    auto iterator = readExpression(true);
+    return_if_null(iterator);
 
-    expression->code = readCodeBlock();
+    return_if_null(readToken(Token::DoKeyword));
+    return_if_null(readToken(Token::Newline));
 
-    debug("Ending For!");
+    auto loop_code = readCodeBlock();
+    return_if_null(loop_code);
 
-    return expression;
+    std::string for_id;
+    std::stringstream ss;
+    ss << token;
+    ss >> for_id;
+
+    std::string state_variable_name = "state_" + for_id;
+    std::string next_state_variable_name = "next_state_" + for_id;
+
+    auto code_block = new CodeBlock(token);
+
+    auto state_variable = new VariableDefinition(token, state_variable_name, new Call(token, "start", iterator));
+    code_block->statements.push_back(new DefinitionStatement(state_variable));
+
+    auto condition = new Call(token, "not", new Call(token, "done", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
+    auto while_code = new While(token, condition, loop_code);
+
+    auto next_state_variable = new VariableDefinition(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
+    loop_code->statements.insert(loop_code->statements.begin(), new DefinitionStatement(next_state_variable));
+    loop_code->statements.insert(loop_code->statements.begin() + 1, new ExpressionStatement(new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name(), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1"))));
+    loop_code->statements.insert(loop_code->statements.begin() + 1, new ExpressionStatement(new Assignment(token, variable, new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0"))));
+
+    code_block->statements.push_back(new ExpressionStatement(while_code));
+
+    return code_block;
 }
 
 If *Parser::readIf() {
