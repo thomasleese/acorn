@@ -142,8 +142,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
         if (m_llvmValues.empty()) {
             m_irBuilder->CreateRet(nothing);
         } else {
-            llvm::Value *value = m_llvmValues.back();
-            m_llvmValues.pop_back();
+            auto value = pop_value();
 
             if (value == nullptr || !llvm::isa<llvm::ReturnInst>(value)) {
                 m_irBuilder->CreateRet(nothing);
@@ -183,9 +182,14 @@ llvm::Value *ModuleGenerator::pop_value() {
 }
 
 void ModuleGenerator::visit(ast::CodeBlock *block) {
+    llvm::Value *last_value = nullptr;
+
     for (auto statement : block->statements) {
         statement->accept(this);
+        last_value = pop_value();
     }
+
+    push_value(last_value);
 }
 
 void ModuleGenerator::visit(ast::Identifier *identifier) {
@@ -609,7 +613,29 @@ void ModuleGenerator::visit(ast::Comma *expression) {
 }
 
 void ModuleGenerator::visit(ast::While *expression) {
-    push_error(new errors::InternalError(expression, "N/A"));
+    auto &context = llvm::getGlobalContext();
+
+    auto function = m_irBuilder->GetInsertBlock()->getParent();
+
+    auto entry_bb = llvm::BasicBlock::Create(context, "while_entry", function);
+    m_irBuilder->CreateBr(entry_bb);
+
+    m_irBuilder->SetInsertPoint(entry_bb);
+    expression->condition()->accept(this);
+    auto condition = m_irBuilder->CreateICmpEQ(pop_value(), m_irBuilder->getInt1(true), "while_cond");
+
+    auto loop_bb = llvm::BasicBlock::Create(context, "while_loop", function);
+    auto else_bb = llvm::BasicBlock::Create(context, "while_else", function);
+
+    m_irBuilder->CreateCondBr(condition, loop_bb, else_bb);
+    m_irBuilder->SetInsertPoint(loop_bb);
+
+    expression->code()->accept(this);
+    auto then_value = pop_value();
+    push_value(then_value);
+    m_irBuilder->CreateBr(entry_bb);
+
+    m_irBuilder->SetInsertPoint(else_bb);
 }
 
 void ModuleGenerator::visit(ast::For *expression) {
@@ -617,8 +643,6 @@ void ModuleGenerator::visit(ast::For *expression) {
 }
 
 void ModuleGenerator::visit(ast::If *expression) {
-    debug("Creating if statement...");
-
     expression->condition->accept(this);
     auto condition = pop_value();
 
@@ -715,12 +739,16 @@ void ModuleGenerator::visit(ast::Parameter *parameter) {
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
     definition->assignment->accept(this);
     pop_value();
+
+    push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
     if (definition->name->parameters.empty()) {
         generate_function(definition);
     }
+
+    push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::TypeDefinition *definition) {
@@ -729,16 +757,17 @@ void ModuleGenerator::visit(ast::TypeDefinition *definition) {
         auto old_symbol = m_scope.back()->lookup(this, definition->alias);
         new_symbol->value = old_symbol->value;
     }
+
+    push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::DefinitionStatement *statement) {
-    debug("Generating definition statement.");
     statement->definition->accept(this);
 }
 
 void ModuleGenerator::visit(ast::ExpressionStatement *statement) {
-    debug("Generating expression statement.");
     statement->expression->accept(this);
+    // we don't pop a value here because we should end up just pushing it again
 }
 
 void ModuleGenerator::visit(ast::ImportStatement *statement) {
@@ -772,9 +801,9 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     m_irBuilder->CreateCall(function);
 
     module->code->accept(this);
-    assert(m_llvmValues.empty());
+    assert(m_llvmValues.size() == 1);
 
-    m_irBuilder->CreateRet(llvm::ConstantInt::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), 0));
+    m_irBuilder->CreateRet(m_irBuilder->getInt32(0));
 
     m_irBuilder->SetInsertPoint(bb1);
     m_irBuilder->CreateRetVoid();

@@ -256,7 +256,7 @@ void builtins::generate_function(symboltable::Symbol *function_symbol, symboltab
 
     if (function_symbol->name == "setindex") {
         irBuilder->CreateStore(c, gep);
-        irBuilder->CreateRetVoid();
+        irBuilder->CreateRet(irBuilder->getInt1(false));
     } else {
         irBuilder->CreateRet(irBuilder->CreateLoad(gep));
     }
