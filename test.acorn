@@ -3,9 +3,9 @@ import 'base'
 let a = create_array(Integer, 20)
 
 let i = 0
-while i < 6
+
+for i in range(5)
     a.append(i)
-    i += 1
 end
 
 let sum = 0

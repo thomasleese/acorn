@@ -12,3 +12,24 @@ def +=(inout i as Integer, amount as Integer) as Integer
     i = i + amount
     return i
 end
+
+type Range
+    start as Integer
+    stop as Integer
+end
+
+def range(stop as Integer) as Range
+    return new Range(start: 0, stop: stop)
+end
+
+def start(range as Range) as Integer
+    return 0
+end
+
+def next(range as Range, state as Integer) as Tuple{Integer, Integer}
+    return (range.start + state), (state + 1)
+end
+
+def done(range as Range, state as Integer) as Boolean
+    return state >= (range.stop - range.start)
+end
