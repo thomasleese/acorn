@@ -11,9 +11,10 @@
 using namespace acorn;
 using namespace acorn::codegen;
 
-BuiltinGenerator::BuiltinGenerator(llvm::Module *module, llvm::IRBuilder<> *ir_builder, TypeGenerator *type_generator) :
+BuiltinGenerator::BuiltinGenerator(llvm::Module *module, llvm::IRBuilder<> *ir_builder, llvm::DataLayout *data_layout, TypeGenerator *type_generator) :
         m_module(module),
         m_ir_builder(ir_builder),
+        m_data_layout(data_layout),
         m_type_generator(type_generator)
 {
 
@@ -76,8 +77,7 @@ void BuiltinGenerator::generate(symboltable::Namespace *table) {
 }
 
 llvm::Function *BuiltinGenerator::generate_function(symboltable::Symbol *function_symbol, symboltable::Symbol *method_symbol, std::string llvm_name) {
-    auto method = method_symbol->type;
-
+    auto method = dynamic_cast<types::Method *>(method_symbol->type);
     method->accept(m_type_generator);
 
     auto type = static_cast<llvm::FunctionType *>(m_type_generator->take_type(nullptr));
@@ -86,22 +86,46 @@ llvm::Function *BuiltinGenerator::generate_function(symboltable::Symbol *functio
     auto old_insert_point = m_ir_builder->saveIP();
 
     auto function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_name, m_module);
-    initialise_function(function, 3);
+    initialise_function(function, method->parameter_types().size());
 
-    std::vector<llvm::Value *> index_list;
-    index_list.push_back(m_args[1]);
-    auto gep = m_ir_builder->CreateInBoundsGEP(m_args[0], index_list);
-
-    if (function_symbol->name == "setindex") {
-        m_ir_builder->CreateStore(m_args[2], gep);
-        m_ir_builder->CreateRet(m_ir_builder->getInt1(false));
+    if (function_symbol->name == "sizeof") {
+        generate_sizeof(method, function);
+    } else if (function_symbol->name == "strideof") {
+        generate_strideof(method, function);
     } else {
-        m_ir_builder->CreateRet(m_ir_builder->CreateLoad(gep));
+        std::vector<llvm::Value *> index_list;
+        index_list.push_back(m_args[1]);
+        auto gep = m_ir_builder->CreateInBoundsGEP(m_args[0], index_list);
+
+        if (function_symbol->name == "setindex") {
+            m_ir_builder->CreateStore(m_args[2], gep);
+            m_ir_builder->CreateRet(m_ir_builder->getInt1(false));
+        } else {
+            m_ir_builder->CreateRet(m_ir_builder->CreateLoad(gep));
+        }
     }
 
     m_ir_builder->restoreIP(old_insert_point);
 
     return function;
+}
+
+void BuiltinGenerator::generate_sizeof(types::Method *method, llvm::Function *function) {
+    auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
+    type->create(nullptr, nullptr)->accept(m_type_generator);
+    auto llvm_type = m_type_generator->take_type(nullptr);
+
+    uint64_t size = m_data_layout->getTypeStoreSize(llvm_type);
+    m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
+}
+
+void BuiltinGenerator::generate_strideof(types::Method *method, llvm::Function *function) {
+    auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
+    type->create(nullptr, nullptr)->accept(m_type_generator);
+    auto llvm_type = m_type_generator->take_type(nullptr);
+
+    uint64_t size = m_data_layout->getTypeAllocSize(llvm_type);
+    m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
 }
 
 llvm::Function *BuiltinGenerator::create_llvm_function(symboltable::Namespace *table, std::string name, int index) {

@@ -110,6 +110,13 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);
     m_irBuilder->SetInsertPoint(basicBlock);
 
+    for (ast::Identifier *param : definition->name->parameters) {
+        auto s = m_scope.back()->lookup(this, definition, param->value);
+        auto alloca = m_irBuilder->CreateAlloca(m_irBuilder->getInt1Ty(), 0, param->value);
+        m_irBuilder->CreateStore(m_irBuilder->getInt1(false), alloca);
+        s->value = alloca;
+    }
+
     int i = 0;
     for (auto &arg : function->args()) {
         std::string arg_name = definition->parameters[i]->name->value;
@@ -709,18 +716,6 @@ void ModuleGenerator::visit(ast::Spawn *expression) {
     push_value(nullptr);
 }
 
-void ModuleGenerator::visit(ast::Sizeof *expression) {
-    auto type = generate_type(expression);
-    uint64_t size = m_data_layout->getTypeStoreSize(type);
-    push_value(m_irBuilder->getInt64(size));
-}
-
-void ModuleGenerator::visit(ast::Strideof *expression) {
-    auto type = generate_type(expression);
-    uint64_t size = m_data_layout->getTypeAllocSize(type);
-    push_value(m_irBuilder->getInt64(size));
-}
-
 void ModuleGenerator::visit(ast::Parameter *parameter) {
     push_error(new errors::InternalError(parameter, "N/A"));
 }
@@ -766,7 +761,7 @@ void ModuleGenerator::visit(ast::ImportStatement *statement) {
 void ModuleGenerator::visit(ast::SourceFile *module) {
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
 
-    m_builtin_generator = new BuiltinGenerator(m_module, m_irBuilder, m_type_generator);
+    m_builtin_generator = new BuiltinGenerator(m_module, m_irBuilder, m_data_layout, m_type_generator);
     m_builtin_generator->generate(m_scope.back());
 
     llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);

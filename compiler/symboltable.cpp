@@ -290,6 +290,18 @@ void Builder::add_builtin_functions() {
     method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc), new types::Void());
     method->set_is_generic(true);
     add_builtin_method(setindex, method);
+
+    auto sizeof_ = add_builtin_function("sizeof");
+    pc = new types::ParameterType();
+    method = new types::Method(pc, new types::Integer(64));
+    method->set_is_generic(true);
+    add_builtin_method(sizeof_, method);
+
+    auto strideof_ = add_builtin_function("strideof");
+    pc = new types::ParameterType();
+    method = new types::Method(pc, new types::Integer(64));
+    method->set_is_generic(true);
+    add_builtin_method(strideof_, method);
 }
 
 void Builder::add_builtins() {
@@ -388,14 +400,6 @@ void Builder::visit(ast::Return *expression) {
 }
 
 void Builder::visit(ast::Spawn *expression) {
-
-}
-
-void Builder::visit(ast::Sizeof *expression) {
-
-}
-
-void Builder::visit(ast::Strideof *expression) {
 
 }
 

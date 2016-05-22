@@ -188,16 +188,6 @@ void Checker::visit(ast::Spawn *expression) {
     check_not_null(expression);
 }
 
-void Checker::visit(ast::Sizeof *expression) {
-    expression->identifier->accept(this);
-    check_not_null(expression);
-}
-
-void Checker::visit(ast::Strideof *expression) {
-    expression->identifier->accept(this);
-    check_not_null(expression);
-}
-
 void Checker::visit(ast::Parameter *parameter) {
     parameter->typeNode->accept(this);
 

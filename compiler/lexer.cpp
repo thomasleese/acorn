@@ -66,8 +66,6 @@ void Lexer::loadRules() {
     setKeywordRule(Token::SpawnKeyword, "spawn");
     setKeywordRule(Token::CCallKeyword, "ccall");
     setKeywordRule(Token::UsingKeyword, "using");
-    setKeywordRule(Token::SizeofKeyword, "sizeof");
-    setKeywordRule(Token::StrideofKeyword, "strideof");
     setKeywordRule(Token::NewKeyword, "new");
     setKeywordRule(Token::InoutKeyword, "inout");
     setKeywordRule(Token::ProtocolKeyword, "protocol");

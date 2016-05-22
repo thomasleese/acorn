@@ -3,8 +3,6 @@
 - Merge symbol table builder with parser
 - Use numbers with metadata as mangling instead
 
-- make sizeof and strideof functions
-
 - Comments
 - Protocols
 - Enumerate

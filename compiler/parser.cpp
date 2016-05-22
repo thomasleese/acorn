@@ -564,18 +564,6 @@ Spawn *Parser::readSpawn() {
     }
 }
 
-Sizeof *Parser::readSizeof() {
-    Token *token = readToken(Token::SizeofKeyword);
-    Identifier *identifier = readIdentifier(true);
-    return new Sizeof(token, identifier);
-}
-
-Strideof *Parser::readStrideof() {
-    Token *token = readToken(Token::StrideofKeyword);
-    Identifier *identifier = readIdentifier(true);
-    return new Strideof(token, identifier);
-}
-
 Expression *Parser::readUnaryExpression(bool parse_comma) {
     if (isToken(Token::Operator)) {
         Call *expr = new Call(m_tokens.front());
@@ -653,10 +641,6 @@ Expression *Parser::readPrimaryExpression() {
         return readSpawn();
     } else if (isToken(Token::CCallKeyword)) {
         return readCCall();
-    } else if (isToken(Token::SizeofKeyword)) {
-        return readSizeof();
-    } else if (isToken(Token::StrideofKeyword)) {
-        return readStrideof();
     } else if (isToken(Token::NewKeyword)) {
         return readRecordLiteral();
     } else if (isToken(Token::Identifier)) {

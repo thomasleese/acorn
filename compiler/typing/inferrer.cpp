@@ -406,16 +406,6 @@ void Inferrer::visit(ast::Spawn *expression) {
     expression->type = expression->call->type;
 }
 
-void Inferrer::visit(ast::Sizeof *expression) {
-    expression->identifier->accept(this);
-    expression->type = find_type(expression, "Integer64");
-}
-
-void Inferrer::visit(ast::Strideof *expression) {
-    expression->identifier->accept(this);
-    expression->type = find_type(expression, "Integer64");
-}
-
 void Inferrer::visit(ast::Parameter *parameter) {
     auto symbol = m_namespace->lookup(this, parameter, parameter->name->value);
     if (symbol == nullptr) {

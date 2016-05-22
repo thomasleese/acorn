@@ -47,8 +47,6 @@ namespace acorn {
             SpawnKeyword,
             CCallKeyword,
             UsingKeyword,
-            SizeofKeyword,
-            StrideofKeyword,
             NewKeyword,
             InoutKeyword,
             ProtocolKeyword,

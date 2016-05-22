@@ -7,7 +7,7 @@ type Array{T}
 end
 
 def create_array{T}(t as Type{T}, capacity as Integer) as Array{T}
-    let elements = malloc(strideof T * capacity) as UnsafePointer{T}
+    let elements = malloc(strideof(T) * capacity) as UnsafePointer{T}
     return new Array{T}(elements: elements, size: 0, capacity: capacity)
 end
 

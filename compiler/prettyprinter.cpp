@@ -237,26 +237,6 @@ void PrettyPrinter::visit(ast::Spawn *expression) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Sizeof *expression) {
-    ss << indentation() << "(Sizeof\n";
-    indent++;
-
-    expression->identifier->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
-void PrettyPrinter::visit(ast::Strideof *expression) {
-    ss << indentation() << "(Strideof\n";
-    indent++;
-
-    expression->identifier->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
 void PrettyPrinter::visit(ast::Parameter *parameter) {
     ss << indentation() << "(Parameter\n";
     indent++;

@@ -249,22 +249,6 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct Sizeof : Expression {
-            Sizeof(Token *token, Identifier *identifier);
-
-            Identifier *identifier;
-
-            void accept(Visitor *visitor);
-        };
-
-        struct Strideof : Expression {
-            Strideof(Token *token, Identifier *identifier);
-
-            Identifier *identifier;
-
-            void accept(Visitor *visitor);
-        };
-
         // misc
         struct Parameter : Node {
             explicit Parameter(Token *token);

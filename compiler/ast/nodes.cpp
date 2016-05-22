@@ -225,22 +225,6 @@ void Spawn::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Sizeof::Sizeof(Token *token, Identifier *identifier) : Expression(token) {
-    this->identifier = identifier;
-}
-
-void Sizeof::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-Strideof::Strideof(Token *token, Identifier *identifier) : Expression(token) {
-    this->identifier = identifier;
-}
-
-void Strideof::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 Parameter::Parameter(Token *token) : Node(token), name(nullptr), typeNode(nullptr) {
 
 }

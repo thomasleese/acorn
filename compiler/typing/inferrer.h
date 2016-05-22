@@ -71,8 +71,6 @@ namespace acorn {
             void visit(ast::If *expression);
             void visit(ast::Return *expression);
             void visit(ast::Spawn *expression);
-            void visit(ast::Sizeof *expression);
-            void visit(ast::Strideof *expression);
             void visit(ast::Parameter *parameter);
             void visit(ast::VariableDefinition *definition);
             void visit(ast::FunctionDefinition *definition);
