@@ -6,7 +6,7 @@
 #define ACORN_CODEGEN_TYPES_H
 
 #include "../compiler/pass.h"
-#include "../types.h"
+#include "../typing/types.h"
 
 namespace acorn {
 

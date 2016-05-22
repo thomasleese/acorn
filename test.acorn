@@ -1,16 +1,3 @@
-import 'base'
+type Integer as Integer64
 
-let a = create_array(Integer, 20)
-
-let i = 0
-
-for i in range(5)
-    a.append(i)
-end
-
-let sum = 0
-for i in a
-    sum += i
-end
-
-exit(sum)
+let a = 10

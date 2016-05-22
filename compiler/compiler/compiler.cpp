@@ -25,7 +25,7 @@
 #include "../prettyprinter.h"
 #include "../symboltable.h"
 #include "../errors.h"
-#include "../Typing.h"
+#include "../typing/typing.h"
 
 #include "compiler.h"
 

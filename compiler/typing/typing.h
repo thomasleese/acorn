@@ -7,8 +7,8 @@
 
 #include <vector>
 
-#include "ast/visitor.h"
-#include "compiler/pass.h"
+#include "../ast/visitor.h"
+#include "../compiler/pass.h"
 
 namespace acorn {
 

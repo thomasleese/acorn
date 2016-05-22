@@ -7,7 +7,7 @@
 
 #include "ast/nodes.h"
 #include "Lexer.h"
-#include "Types.h"
+#include "typing/types.h"
 
 #include "errors.h"
 

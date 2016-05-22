@@ -9,7 +9,7 @@
 #include "Lexer.h"
 #include "Errors.h"
 #include "builtins.h"
-#include "Types.h"
+#include "typing/types.h"
 
 #include "SymbolTable.h"
 

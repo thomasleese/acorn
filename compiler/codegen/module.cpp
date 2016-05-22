@@ -20,7 +20,7 @@
 #include "../builtins.h"
 #include "../errors.h"
 #include "../symbolTable.h"
-#include "../types.h"
+#include "../typing/types.h"
 #include "types.h"
 
 #include "module.h"

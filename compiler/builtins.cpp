@@ -8,7 +8,7 @@
 #include <llvm/IR/Module.h>
 
 #include "symboltable.h"
-#include "types.h"
+#include "typing/types.h"
 #include "codegen/module.h"
 #include "codegen/types.h"
 
