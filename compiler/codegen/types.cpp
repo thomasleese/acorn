@@ -50,15 +50,15 @@ llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
     }
 }
 
-void TypeGenerator::push_type_parameter(types::ParameterConstructor *key, types::Type *value) {
+void TypeGenerator::push_type_parameter(types::ParameterType *key, types::Type *value) {
     m_type_parameters[key] = value;
 }
 
-void TypeGenerator::pop_type_parameter(types::ParameterConstructor *key) {
+void TypeGenerator::pop_type_parameter(types::ParameterType *key) {
     m_type_parameters.erase(key);
 }
 
-types::Type *TypeGenerator::get_type_parameter(types::ParameterConstructor *key) {
+types::Type *TypeGenerator::get_type_parameter(types::ParameterType *key) {
     return m_type_parameters[key];
 }
 
@@ -66,7 +66,7 @@ types::Type *TypeGenerator::get_type_parameter(types::Parameter *key) {
     return get_type_parameter(key->constructor());
 }
 
-void TypeGenerator::visit_constructor(types::Constructor *type) {
+void TypeGenerator::visit_constructor(types::TypeType *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
@@ -75,59 +75,59 @@ void TypeGenerator::visit_constructor(types::Constructor *type) {
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(types::ParameterConstructor *type) {
+void TypeGenerator::visit(types::ParameterType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::AnyConstructor *type) {
+void TypeGenerator::visit(types::AnyType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::VoidConstructor *type) {
+void TypeGenerator::visit(types::VoidType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::BooleanConstructor *type) {
+void TypeGenerator::visit(types::BooleanType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::IntegerConstructor *type) {
+void TypeGenerator::visit(types::IntegerType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::UnsignedIntegerConstructor *type) {
+void TypeGenerator::visit(types::UnsignedIntegerType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::FloatConstructor *type) {
+void TypeGenerator::visit(types::FloatType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::UnsafePointerConstructor *type) {
+void TypeGenerator::visit(types::UnsafePointerType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::FunctionConstructor *type) {
+void TypeGenerator::visit(types::FunctionType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::RecordConstructor *type) {
+void TypeGenerator::visit(types::RecordType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::UnionConstructor *type) {
+void TypeGenerator::visit(types::UnionType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::TupleConstructor *type) {
+void TypeGenerator::visit(types::TupleType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::AliasConstructor *type) {
+void TypeGenerator::visit(types::AliasType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::TypeDescriptionConstructor *type) {
+void TypeGenerator::visit(types::TypeTypeType *type) {
     visit_constructor(type);
 }
 

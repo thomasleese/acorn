@@ -31,10 +31,9 @@ namespace acorn {
             virtual ~Type();
 
             virtual std::string name() const = 0;
-
-            virtual bool isCompatible(const Type *other) const;
-
             virtual std::string mangled_name() const = 0;
+
+            virtual bool is_compatible(const Type *other) const;
 
             virtual Type *clone() const = 0;
 
@@ -50,88 +49,72 @@ namespace acorn {
 
         class Parameter;
 
-        // type constructors
-        class Constructor : public Type {
+        // type "type"s -- i.e. the type of concrete types
+        class TypeType : public Type {
         public:
             Type *create(compiler::Pass *pass, ast::Node *node);
             virtual Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) = 0;
 
             std::string mangled_name() const;
 
-            virtual Constructor *clone() const = 0;
+            virtual TypeType *clone() const = 0;
         };
 
-        class ParameterConstructor : public Constructor {
+        class ParameterType : public TypeType {
         public:
             std::string name() const;
 
-            bool isCompatible(const Type *other) const;
+            bool is_compatible(const Type *other) const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            ParameterConstructor *clone() const;
+            ParameterType *clone() const;
 
             void accept(Visitor *visitor);
         };
 
-        class AnyConstructor : public Constructor {
+        class AnyType : public TypeType {
         public:
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            AnyConstructor *clone() const;
+            AnyType *clone() const;
 
             void accept(Visitor *visitor);
         };
 
-        class VoidConstructor : public Constructor {
+        class VoidType : public TypeType {
         public:
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            VoidConstructor *clone() const;
+            VoidType *clone() const;
 
             void accept(Visitor *visitor);
         };
 
-        class BooleanConstructor : public Constructor {
+        class BooleanType : public TypeType {
         public:
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            BooleanConstructor *clone() const;
+            BooleanType *clone() const;
 
             void accept(Visitor *visitor);
         };
 
-        class IntegerConstructor : public Constructor {
+        class IntegerType : public TypeType {
         public:
-            IntegerConstructor(unsigned int size);
+            IntegerType(unsigned int size);
 
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            IntegerConstructor *clone() const;
-
-            void accept(Visitor *visitor);
-
-        private:
-            unsigned int m_size;
-        };
-
-        class UnsignedIntegerConstructor : public Constructor {
-        public:
-            UnsignedIntegerConstructor(unsigned int size);
-
-            std::string name() const;
-
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
-
-            UnsignedIntegerConstructor *clone() const;
+            IntegerType *clone() const;
 
             void accept(Visitor *visitor);
 
@@ -139,15 +122,31 @@ namespace acorn {
             unsigned int m_size;
         };
 
-        class FloatConstructor : public Constructor {
+        class UnsignedIntegerType : public TypeType {
         public:
-            FloatConstructor(int size);
+            UnsignedIntegerType(unsigned int size);
 
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            FloatConstructor *clone() const;
+            UnsignedIntegerType *clone() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            unsigned int m_size;
+        };
+
+        class FloatType : public TypeType {
+        public:
+            FloatType(int size);
+
+            std::string name() const;
+
+            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+
+            FloatType *clone() const;
 
             void accept(Visitor *visitor);
 
@@ -155,94 +154,94 @@ namespace acorn {
             int m_size;
         };
 
-        class UnsafePointerConstructor : public Constructor {
+        class UnsafePointerType : public TypeType {
 
         public:
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            UnsafePointerConstructor *clone() const;
+            UnsafePointerType *clone() const;
 
             void accept(Visitor *visitor);
 
         };
 
-        class FunctionConstructor : public Constructor {
+        class FunctionType : public TypeType {
         public:
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            FunctionConstructor *clone() const;
+            FunctionType *clone() const;
 
             void accept(Visitor *visitor);
         };
 
-        class RecordConstructor : public Constructor {
+        class RecordType : public TypeType {
 
         public:
-            RecordConstructor();
-            RecordConstructor(std::vector<Parameter *> input_parameters, std::vector<std::string> field_names,
-                              std::vector<Constructor *> field_types,
+            RecordType();
+            RecordType(std::vector<Parameter *> input_parameters, std::vector<std::string> field_names,
+                              std::vector<TypeType *> field_types,
                               std::vector<std::vector<Type *> > field_parameters);
 
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            RecordConstructor *clone() const;
+            RecordType *clone() const;
 
             void accept(Visitor *visitor);
 
         private:
             std::vector<Parameter *> m_input_parameters;
             std::vector<std::string> m_field_names;
-            std::vector<Constructor *> m_field_types;
+            std::vector<TypeType *> m_field_types;
             std::vector<std::vector<Type *> > m_field_parameters;
 
         };
 
-        class UnionConstructor : public Constructor {
+        class UnionType : public TypeType {
 
         public:
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            UnionConstructor *clone() const;
+            UnionType *clone() const;
 
             void accept(Visitor *visitor);
 
         };
 
-        class TupleConstructor : public Constructor {
+        class TupleType : public TypeType {
         public:
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            TupleConstructor *clone() const;
+            TupleType *clone() const;
 
             void accept(Visitor *visitor);
         };
 
-        class AliasConstructor : public Constructor {
+        class AliasType : public TypeType {
 
         public:
-            explicit AliasConstructor(Constructor *constructor, std::vector<Parameter *> input_parameters,
+            explicit AliasType(TypeType *constructor, std::vector<Parameter *> input_parameters,
                                       std::vector<Type *> output_parameters);
 
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            AliasConstructor *clone() const;
+            AliasType *clone() const;
 
             void accept(Visitor *visitor);
 
         private:
-            Constructor *m_constructor;
+            TypeType *m_constructor;
             std::vector<Parameter *> m_input_parameters;
             std::vector<Type *> m_output_parameters;
             std::map<int, int> m_parameterMapping;
@@ -250,14 +249,14 @@ namespace acorn {
 
         };
 
-        class TypeDescriptionConstructor : public Constructor {
+        class TypeTypeType : public TypeType {
 
         public:
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            TypeDescriptionConstructor *clone() const;
+            TypeTypeType *clone() const;
 
             void accept(Visitor *visitor);
 
@@ -265,28 +264,28 @@ namespace acorn {
 
         class ConstructedType : public Type {
         public:
-            virtual Constructor *constructor() const = 0;
+            virtual TypeType *constructor() const = 0;
         };
 
         // constructed types
         class Parameter : public ConstructedType {
 
         public:
-            Parameter(ParameterConstructor *constructor);
+            Parameter(ParameterType *constructor);
 
             std::string name() const;
             std::string mangled_name() const;
 
-            ParameterConstructor *constructor() const;
+            ParameterType *constructor() const;
 
-            bool isCompatible(const Type *other) const;
+            bool is_compatible(const Type *other) const;
 
             Parameter *clone() const;
 
             void accept(Visitor *visitor);
 
         private:
-            ParameterConstructor *m_constructor;
+            ParameterType *m_constructor;
 
         };
 
@@ -295,7 +294,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             Any *clone() const;
 
@@ -307,7 +306,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             Void *clone() const;
 
@@ -319,7 +318,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             Boolean *clone() const;
 
@@ -333,7 +332,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             unsigned int size() const;
 
@@ -352,7 +351,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             unsigned int size() const;
 
@@ -371,7 +370,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             unsigned int size() const;
 
@@ -390,11 +389,11 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             Type *element_type() const;
 
-            bool isCompatible(const Type *other) const;
+            bool is_compatible(const Type *other) const;
 
             UnsafePointer *clone() const;
 
@@ -413,9 +412,9 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
-            bool isCompatible(const Type *other) const;
+            bool is_compatible(const Type *other) const;
 
             Record *clone() const;
 
@@ -443,7 +442,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             void set_is_generic(bool is_generic);
             bool is_generic() const;
@@ -469,7 +468,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             void add_method(Method *method);
             Method *find_method(ast::Node *node, std::vector<Type *> arguments) const;
@@ -489,12 +488,12 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            Constructor *constructor() const;
+            TypeType *constructor() const;
 
             std::vector<Type *> types() const;
             uint8_t type_index(const Type *type, bool *exists) const;
 
-            bool isCompatible(const Type *other) const;
+            bool is_compatible(const Type *other) const;
 
             Union *clone() const;
 
@@ -505,20 +504,20 @@ namespace acorn {
         public:
             virtual ~Visitor();
 
-            virtual void visit(ParameterConstructor *type) = 0;
-            virtual void visit(AnyConstructor *type) = 0;
-            virtual void visit(VoidConstructor *type) = 0;
-            virtual void visit(BooleanConstructor *type) = 0;
-            virtual void visit(IntegerConstructor *type) = 0;
-            virtual void visit(UnsignedIntegerConstructor *type) = 0;
-            virtual void visit(FloatConstructor *type) = 0;
-            virtual void visit(UnsafePointerConstructor *type) = 0;
-            virtual void visit(FunctionConstructor *type) = 0;
-            virtual void visit(RecordConstructor *type) = 0;
-            virtual void visit(UnionConstructor *type) = 0;
-            virtual void visit(TupleConstructor *type) = 0;
-            virtual void visit(AliasConstructor *type) = 0;
-            virtual void visit(TypeDescriptionConstructor *type) = 0;
+            virtual void visit(ParameterType *type) = 0;
+            virtual void visit(AnyType *type) = 0;
+            virtual void visit(VoidType *type) = 0;
+            virtual void visit(BooleanType *type) = 0;
+            virtual void visit(IntegerType *type) = 0;
+            virtual void visit(UnsignedIntegerType *type) = 0;
+            virtual void visit(FloatType *type) = 0;
+            virtual void visit(UnsafePointerType *type) = 0;
+            virtual void visit(FunctionType *type) = 0;
+            virtual void visit(RecordType *type) = 0;
+            virtual void visit(UnionType *type) = 0;
+            virtual void visit(TupleType *type) = 0;
+            virtual void visit(AliasType *type) = 0;
+            virtual void visit(TypeTypeType *type) = 0;
             virtual void visit(Parameter *type) = 0;
             virtual void visit(Any *type) = 0;
             virtual void visit(Void *type) = 0;

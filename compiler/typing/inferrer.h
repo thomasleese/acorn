@@ -22,7 +22,7 @@ namespace acorn {
 
     namespace types {
         class Type;
-        class Constructor;
+        class TypeType;
         class Parameter;
     }
 
@@ -36,7 +36,7 @@ namespace acorn {
             ~Inferrer();
 
         private:
-            types::Constructor *find_type_constructor(ast::Node *node, std::string name);
+            types::TypeType *find_type_constructor(ast::Node *node, std::string name);
 
             types::Type *find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters);
             types::Type *find_type(ast::Node *node, std::string name);
@@ -48,7 +48,7 @@ namespace acorn {
                                             std::vector<types::Type *> argument_types);
 
             types::Type *replace_type_parameters(types::Type *type,
-                                                 std::map<types::ParameterConstructor *, types::Type *> replacements);
+                                                 std::map<types::ParameterType *, types::Type *> replacements);
 
         public:
             void visit(ast::CodeBlock *block);

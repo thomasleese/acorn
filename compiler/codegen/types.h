@@ -21,27 +21,27 @@ namespace acorn {
             llvm::Type *take_type(ast::Node *node);
             llvm::Constant *take_initialiser(ast::Node *node);
 
-            void push_type_parameter(types::ParameterConstructor *key, types::Type *value);
-            void pop_type_parameter(types::ParameterConstructor *key);
-            types::Type *get_type_parameter(types::ParameterConstructor *key);
+            void push_type_parameter(types::ParameterType *key, types::Type *value);
+            void pop_type_parameter(types::ParameterType *key);
+            types::Type *get_type_parameter(types::ParameterType *key);
             types::Type *get_type_parameter(types::Parameter *key);
 
-            void visit_constructor(types::Constructor *type);
+            void visit_constructor(types::TypeType *type);
 
-            void visit(types::ParameterConstructor *type);
-            void visit(types::AnyConstructor *type);
-            void visit(types::VoidConstructor *type);
-            void visit(types::BooleanConstructor *type);
-            void visit(types::IntegerConstructor *type);
-            void visit(types::UnsignedIntegerConstructor *type);
-            void visit(types::FloatConstructor *type);
-            void visit(types::UnsafePointerConstructor *type);
-            void visit(types::FunctionConstructor *type);
-            void visit(types::RecordConstructor *type);
-            void visit(types::UnionConstructor *type);
-            void visit(types::TupleConstructor *type);
-            void visit(types::AliasConstructor *type);
-            void visit(types::TypeDescriptionConstructor *type);
+            void visit(types::ParameterType *type);
+            void visit(types::AnyType *type);
+            void visit(types::VoidType *type);
+            void visit(types::BooleanType *type);
+            void visit(types::IntegerType *type);
+            void visit(types::UnsignedIntegerType *type);
+            void visit(types::FloatType *type);
+            void visit(types::UnsafePointerType *type);
+            void visit(types::FunctionType *type);
+            void visit(types::RecordType *type);
+            void visit(types::UnionType *type);
+            void visit(types::TupleType *type);
+            void visit(types::AliasType *type);
+            void visit(types::TypeTypeType *type);
             void visit(types::Parameter *type);
             void visit(types::Any *type);
             void visit(types::Void *type);
@@ -60,7 +60,7 @@ namespace acorn {
             std::vector<llvm::Type *> m_type_stack;
             std::vector<llvm::Constant *> m_initialiser_stack;
 
-            std::map<types::ParameterConstructor *, types::Type *> m_type_parameters;
+            std::map<types::ParameterType *, types::Type *> m_type_parameters;
         };
 
     }

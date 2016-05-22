@@ -45,28 +45,28 @@ void add_base_method(symboltable::Symbol *function, types::Method *method) {
 }
 
 void add_base_type_constructors(symboltable::Namespace *table) {
-    add_symbol(table, "Any", new types::AnyConstructor());
-    add_symbol(table, "Void", new types::VoidConstructor());
-    add_symbol(table, "Boolean", new types::BooleanConstructor());
-    add_symbol(table, "Integer8", new types::IntegerConstructor(8));
-    add_symbol(table, "Integer16", new types::IntegerConstructor(16));
-    add_symbol(table, "Integer32", new types::IntegerConstructor(32));
-    add_symbol(table, "Integer64", new types::IntegerConstructor(64));
-    add_symbol(table, "Integer128", new types::IntegerConstructor(128));
-    add_symbol(table, "UnsignedInteger8", new types::UnsignedIntegerConstructor(8));
-    add_symbol(table, "UnsignedInteger16", new types::UnsignedIntegerConstructor(16));
-    add_symbol(table, "UnsignedInteger32", new types::UnsignedIntegerConstructor(32));
-    add_symbol(table, "UnsignedInteger64", new types::UnsignedIntegerConstructor(64));
-    add_symbol(table, "UnsignedInteger128", new types::UnsignedIntegerConstructor(128));
-    add_symbol(table, "Float16", new types::FloatConstructor(16));
-    add_symbol(table, "Float32", new types::FloatConstructor(32));
-    add_symbol(table, "Float64", new types::FloatConstructor(64));
-    add_symbol(table, "Float128", new types::FloatConstructor(128));
-    add_symbol(table, "UnsafePointer", new types::UnsafePointerConstructor());
-    add_symbol(table, "Function", new types::FunctionConstructor());
-    add_symbol(table, "Union", new types::UnionConstructor());
-    add_symbol(table, "Tuple", new types::TupleConstructor());
-    add_symbol(table, "Type", new types::TypeDescriptionConstructor());
+    add_symbol(table, "Any", new types::AnyType());
+    add_symbol(table, "Void", new types::VoidType());
+    add_symbol(table, "Boolean", new types::BooleanType());
+    add_symbol(table, "Integer8", new types::IntegerType(8));
+    add_symbol(table, "Integer16", new types::IntegerType(16));
+    add_symbol(table, "Integer32", new types::IntegerType(32));
+    add_symbol(table, "Integer64", new types::IntegerType(64));
+    add_symbol(table, "Integer128", new types::IntegerType(128));
+    add_symbol(table, "UnsignedInteger8", new types::UnsignedIntegerType(8));
+    add_symbol(table, "UnsignedInteger16", new types::UnsignedIntegerType(16));
+    add_symbol(table, "UnsignedInteger32", new types::UnsignedIntegerType(32));
+    add_symbol(table, "UnsignedInteger64", new types::UnsignedIntegerType(64));
+    add_symbol(table, "UnsignedInteger128", new types::UnsignedIntegerType(128));
+    add_symbol(table, "Float16", new types::FloatType(16));
+    add_symbol(table, "Float32", new types::FloatType(32));
+    add_symbol(table, "Float64", new types::FloatType(64));
+    add_symbol(table, "Float128", new types::FloatType(128));
+    add_symbol(table, "UnsafePointer", new types::UnsafePointerType());
+    add_symbol(table, "Function", new types::FunctionType());
+    add_symbol(table, "Union", new types::UnionType());
+    add_symbol(table, "Tuple", new types::TupleType());
+    add_symbol(table, "Type", new types::TypeTypeType());
 }
 
 void builtins::fill_symbol_table(symboltable::Namespace *table) {
@@ -111,13 +111,13 @@ void builtins::fill_symbol_table(symboltable::Namespace *table) {
     add_base_method(to_float, new types::Method(new types::Integer(64), new types::Float(64)));
 
     auto getindex = add_base_function(table, "getindex");
-    auto pc = new types::ParameterConstructor();
+    auto pc = new types::ParameterType();
     auto method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc));
     method->set_is_generic(true);
     add_base_method(getindex, method);
 
     auto setindex = add_base_function(table, "setindex");
-    pc = new types::ParameterConstructor();
+    pc = new types::ParameterType();
     method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc), new types::Void());
     method->set_is_generic(true);
     add_base_method(setindex, method);

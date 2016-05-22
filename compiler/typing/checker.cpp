@@ -32,7 +32,7 @@ void Checker::check_types(ast::Node *lhs, ast::Node *rhs) {
     check_not_null(lhs);
     check_not_null(rhs);
 
-    bool compatible = lhs->type->isCompatible(rhs->type);
+    bool compatible = lhs->type->is_compatible(rhs->type);
     if (!compatible) {
         push_error(new errors::TypeMismatchError(rhs, lhs));
     }

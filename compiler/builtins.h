@@ -27,7 +27,7 @@ namespace acorn {
 
     namespace types {
         class Type;
-        class ParameterConstructor;
+        class ParameterType;
         class Method;
     }
 

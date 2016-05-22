@@ -66,11 +66,11 @@ llvm::Type *ModuleGenerator::generate_type(ast::Node *node) {
 }
 
 llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *definition) {
-    std::map<types::ParameterConstructor *, types::Type *> params;
+    std::map<types::ParameterType *, types::Type *> params;
     return generate_function(definition, params);
 }
 
-llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterConstructor *, types::Type *> type_parameters) {
+llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *> type_parameters) {
     auto function_symbol = m_scope.back()->lookup(this, definition->name);
     auto method = static_cast<types::Method *>(definition->type);
     auto symbol = function_symbol->nameSpace->lookup_by_node(this, definition);
@@ -407,7 +407,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
         auto definition = static_cast<ast::FunctionDefinition *>(method_symbol->node);
 
         if (method->is_generic()) {
-            std::map<types::ParameterConstructor *, types::Type *> type_parameters = expression->inferred_type_parameters;
+            std::map<types::ParameterType *, types::Type *> type_parameters = expression->inferred_type_parameters;
 
             method_name += "_";
             for (auto entry : type_parameters) {

@@ -142,7 +142,7 @@ bool Symbol::is_function() const {
 }
 
 bool Symbol::is_type() const {
-    return dynamic_cast<types::Constructor *>(this->type) != nullptr;
+    return dynamic_cast<types::TypeType *>(this->type) != nullptr;
 }
 
 bool Symbol::is_variable() const {
@@ -325,7 +325,7 @@ void Builder::visit(ast::FunctionDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new types::ParameterConstructor();
+        sym->type = new types::ParameterType();
         m_scope.back()->insert(this, definition, sym);
     }
 

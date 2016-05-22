@@ -22,7 +22,7 @@ namespace acorn {
 
     namespace types {
         class Type;
-        class Constructor;
+        class TypeType;
         class Parameter;
     }
 

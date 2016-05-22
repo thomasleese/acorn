@@ -1,3 +1,4 @@
-type Integer as Integer64
+import 'base'
 
-let a = 10
+let a = create_array(Integer, 15)
+exit(a.length)

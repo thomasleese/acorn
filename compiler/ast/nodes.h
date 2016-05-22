@@ -16,7 +16,7 @@ namespace acorn {
 
     namespace types {
         class Type;
-        class ParameterConstructor;
+        class ParameterType;
     }
 
     namespace ast {
@@ -165,7 +165,7 @@ namespace acorn {
 
             Expression *operand;
             std::vector<Expression *> arguments;
-            std::map<types::ParameterConstructor *, types::Type *> inferred_type_parameters;
+            std::map<types::ParameterType *, types::Type *> inferred_type_parameters;
 
             void accept(Visitor *visitor);
         };
