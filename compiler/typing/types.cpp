@@ -45,7 +45,11 @@ Type *TypeType::create(compiler::Pass *pass, ast::Node *node) {
 }
 
 std::string TypeType::mangled_name() const {
-    return "c";
+    return "?";
+}
+
+TypeType *TypeType::type() const {
+    return new TypeDescriptionType();
 }
 
 std::string ParameterType::name() const {
@@ -472,26 +476,24 @@ void AliasType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-std::string TypeTypeType::name() const {
-    return "TypeTypeType";
+std::string TypeDescriptionType::name() const {
+    return "TypeDescriptionType";
 }
 
-Type *TypeTypeType::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
+Type *TypeDescriptionType::create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) {
     if (parameters.size() == 1) {
-        auto ct = dynamic_cast<types::ConstructedType *>(parameters[0]);
-        assert(ct);
-        return ct->constructor();
+        return parameters[0]->type();
     } else {
         pass->push_error(new errors::InvalidTypeParameters(node, parameters.size(), 1));
         return nullptr;
     }
 }
 
-TypeTypeType *TypeTypeType::clone() const {
-    return new TypeTypeType();
+TypeDescriptionType *TypeDescriptionType::clone() const {
+    return new TypeDescriptionType();
 }
 
-void TypeTypeType::accept(Visitor *visitor) {
+void TypeDescriptionType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -507,7 +509,7 @@ std::string Parameter::mangled_name() const {
     return "p";
 }
 
-ParameterType *Parameter::constructor() const {
+ParameterType *Parameter::type() const {
     return m_constructor;
 }
 
@@ -516,7 +518,7 @@ bool Parameter::is_compatible(const Type *other) const {
 }
 
 Parameter *Parameter::clone() const {
-    // don't clone constructor
+    // don't clone type
     return new Parameter(m_constructor);
 }
 
@@ -532,7 +534,7 @@ std::string Any::mangled_name() const {
     return "a";
 }
 
-TypeType *Any::constructor() const {
+AnyType *Any::type() const {
     return new AnyType();
 }
 
@@ -552,7 +554,7 @@ std::string Void::mangled_name() const {
     return "v";
 }
 
-TypeType *Void::constructor() const {
+VoidType *Void::type() const {
     return new VoidType();
 }
 
@@ -572,7 +574,7 @@ std::string Boolean::mangled_name() const {
     return "b";
 }
 
-TypeType *Boolean::constructor() const {
+BooleanType *Boolean::type() const {
     return new BooleanType();
 }
 
@@ -600,7 +602,7 @@ std::string Integer::mangled_name() const {
     return ss.str();
 }
 
-TypeType *Integer::constructor() const {
+IntegerType *Integer::type() const {
     return new IntegerType(m_size);
 }
 
@@ -632,7 +634,7 @@ std::string UnsignedInteger::mangled_name() const {
     return ss.str();
 }
 
-TypeType *UnsignedInteger::constructor() const {
+UnsignedIntegerType *UnsignedInteger::type() const {
     return new UnsignedIntegerType(m_size);
 }
 
@@ -664,7 +666,7 @@ std::string Float::mangled_name() const {
     return ss.str();
 }
 
-TypeType *Float::constructor() const {
+FloatType *Float::type() const {
     return new FloatType(m_size);
 }
 
@@ -696,7 +698,7 @@ std::string UnsafePointer::mangled_name() const {
     return ss.str();
 }
 
-TypeType *UnsafePointer::constructor() const {
+UnsafePointerType *UnsafePointer::type() const {
     return new UnsafePointerType();
 }
 
@@ -783,7 +785,7 @@ std::string Record::mangled_name() const {
     return ss.str();
 }
 
-TypeType *Record::constructor() const {
+RecordType *Record::type() const {
     return new RecordType();
 }
 
@@ -876,7 +878,7 @@ std::string Method::mangled_name() const {
     return ss.str();
 }
 
-TypeType *Method::constructor() const {
+TypeType *Method::type() const {
     return nullptr;
 }
 
@@ -960,8 +962,8 @@ std::string Function::mangled_name() const {
     return ss.str();
 }
 
-TypeType *Function::constructor() const {
-    return nullptr;
+FunctionType *Function::type() const {
+    return new FunctionType();
 }
 
 void Function::add_method(Method *method) {
@@ -1032,7 +1034,7 @@ std::string Union::mangled_name() const {
     return ss.str();
 }
 
-TypeType *Union::constructor() const {
+UnionType *Union::type() const {
     return new UnionType();
 }
 

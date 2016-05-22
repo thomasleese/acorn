@@ -94,7 +94,7 @@ void Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Ty
     for (auto t : parameter_types) {
         auto dt = dynamic_cast<types::Parameter *>(t);
         if (dt) {
-            call->inferred_type_parameters[dt->constructor()] = argument_types[i];
+            call->inferred_type_parameters[dt->type()] = argument_types[i];
         } else {
             auto dt2 = dynamic_cast<types::ParameterType *>(t);
             if (dt2) {
@@ -113,7 +113,7 @@ void Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Ty
 types::Type *Inferrer::replace_type_parameters(types::Type *type, std::map<types::ParameterType *, types::Type *> replacements) {
     auto parameter = dynamic_cast<types::Parameter *>(type);
     if (parameter) {
-        type = replacements[parameter->constructor()];
+        type = replacements[parameter->type()];
     }
 
     for (int i = 0; i < type->parameters().size(); i++) {

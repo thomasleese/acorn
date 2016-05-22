@@ -66,7 +66,7 @@ void add_base_type_constructors(symboltable::Namespace *table) {
     add_symbol(table, "Function", new types::FunctionType());
     add_symbol(table, "Union", new types::UnionType());
     add_symbol(table, "Tuple", new types::TupleType());
-    add_symbol(table, "Type", new types::TypeTypeType());
+    add_symbol(table, "Type", new types::TypeDescriptionType());
 }
 
 void builtins::fill_symbol_table(symboltable::Namespace *table) {

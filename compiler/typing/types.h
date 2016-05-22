@@ -25,6 +25,8 @@ namespace acorn {
 
         class Visitor;
 
+        class TypeType;
+
         class Type {
 
         public:
@@ -35,6 +37,7 @@ namespace acorn {
 
             virtual bool is_compatible(const Type *other) const;
 
+            virtual TypeType *type() const = 0;
             virtual Type *clone() const = 0;
 
             Type *get_parameter(int i) const;
@@ -57,6 +60,7 @@ namespace acorn {
 
             std::string mangled_name() const;
 
+            virtual TypeType *type() const;
             virtual TypeType *clone() const = 0;
         };
 
@@ -249,26 +253,21 @@ namespace acorn {
 
         };
 
-        class TypeTypeType : public TypeType {
+        class TypeDescriptionType : public TypeType {
 
         public:
             std::string name() const;
 
             Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
 
-            TypeTypeType *clone() const;
+            TypeDescriptionType *clone() const;
 
             void accept(Visitor *visitor);
 
         };
 
-        class ConstructedType : public Type {
-        public:
-            virtual TypeType *constructor() const = 0;
-        };
-
         // constructed types
-        class Parameter : public ConstructedType {
+        class Parameter : public Type {
 
         public:
             Parameter(ParameterType *constructor);
@@ -276,7 +275,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            ParameterType *constructor() const;
+            ParameterType *type() const;
 
             bool is_compatible(const Type *other) const;
 
@@ -294,45 +293,45 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            AnyType *type() const;
 
             Any *clone() const;
 
             void accept(Visitor *visitor);
         };
 
-        class Void : public ConstructedType {
+        class Void : public Type {
         public:
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            VoidType *type() const;
 
             Void *clone() const;
 
             void accept(Visitor *visitor);
         };
 
-        class Boolean : public ConstructedType {
+        class Boolean : public Type {
         public:
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            BooleanType *type() const;
 
             Boolean *clone() const;
 
             void accept(Visitor *visitor);
         };
 
-        class Integer : public ConstructedType {
+        class Integer : public Type {
         public:
             explicit Integer(unsigned int size);
 
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            IntegerType *type() const;
 
             unsigned int size() const;
 
@@ -344,14 +343,14 @@ namespace acorn {
             unsigned int m_size;
         };
 
-        class UnsignedInteger : public ConstructedType {
+        class UnsignedInteger : public Type {
         public:
             explicit UnsignedInteger(unsigned int size);
 
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            UnsignedIntegerType *type() const;
 
             unsigned int size() const;
 
@@ -363,14 +362,14 @@ namespace acorn {
             unsigned int m_size;
         };
 
-        class Float : public ConstructedType {
+        class Float : public Type {
         public:
             explicit Float(unsigned int size);
 
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            FloatType *type() const;
 
             unsigned int size() const;
 
@@ -382,14 +381,14 @@ namespace acorn {
             unsigned int m_size;
         };
 
-        class UnsafePointer : public ConstructedType {
+        class UnsafePointer : public Type {
         public:
             explicit UnsafePointer(Type *element_type);
 
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            UnsafePointerType *type() const;
 
             Type *element_type() const;
 
@@ -400,7 +399,7 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class Record : public ConstructedType {
+        class Record : public Type {
         public:
             Record(std::vector<std::string> field_names, std::vector<Type *> field_types);
 
@@ -412,7 +411,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            RecordType *type() const;
 
             bool is_compatible(const Type *other) const;
 
@@ -442,7 +441,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            TypeType *type() const;
 
             void set_is_generic(bool is_generic);
             bool is_generic() const;
@@ -463,12 +462,12 @@ namespace acorn {
             bool m_is_generic;
         };
 
-        class Function : public ConstructedType {
+        class Function : public Type {
         public:
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            FunctionType *type() const;
 
             void add_method(Method *method);
             Method *find_method(ast::Node *node, std::vector<Type *> arguments) const;
@@ -480,7 +479,7 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class Union : public ConstructedType {
+        class Union : public Type {
         public:
             Union(Type *type1, Type *type2);
             Union(std::vector<Type *> types);
@@ -488,7 +487,7 @@ namespace acorn {
             std::string name() const;
             std::string mangled_name() const;
 
-            TypeType *constructor() const;
+            UnionType *type() const;
 
             std::vector<Type *> types() const;
             uint8_t type_index(const Type *type, bool *exists) const;
@@ -517,7 +516,8 @@ namespace acorn {
             virtual void visit(UnionType *type) = 0;
             virtual void visit(TupleType *type) = 0;
             virtual void visit(AliasType *type) = 0;
-            virtual void visit(TypeTypeType *type) = 0;
+            virtual void visit(TypeDescriptionType *type) = 0;
+
             virtual void visit(Parameter *type) = 0;
             virtual void visit(Any *type) = 0;
             virtual void visit(Void *type) = 0;

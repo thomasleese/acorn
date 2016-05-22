@@ -128,7 +128,7 @@ RedefinedError::RedefinedError(ast::Node *node, std::string name) :
 InvalidTypeConstructor::InvalidTypeConstructor(ast::Node *node) :
         CompilerError(node) {
     m_prefix = "Invalid type";
-    m_message = "This is not a type constructor.";
+    m_message = "This is not a type type.";
 }
 
 InvalidTypeParameters::InvalidTypeParameters(ast::Node *node, unsigned long given_no, unsigned long expected_no) :

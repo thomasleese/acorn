@@ -41,7 +41,7 @@ namespace acorn {
             void visit(types::UnionType *type);
             void visit(types::TupleType *type);
             void visit(types::AliasType *type);
-            void visit(types::TypeTypeType *type);
+            void visit(types::TypeDescriptionType *type);
             void visit(types::Parameter *type);
             void visit(types::Any *type);
             void visit(types::Void *type);

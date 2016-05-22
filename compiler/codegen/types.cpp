@@ -63,7 +63,7 @@ types::Type *TypeGenerator::get_type_parameter(types::ParameterType *key) {
 }
 
 types::Type *TypeGenerator::get_type_parameter(types::Parameter *key) {
-    return get_type_parameter(key->constructor());
+    return get_type_parameter(key->type());
 }
 
 void TypeGenerator::visit_constructor(types::TypeType *type) {
@@ -127,12 +127,12 @@ void TypeGenerator::visit(types::AliasType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::TypeTypeType *type) {
+void TypeGenerator::visit(types::TypeDescriptionType *type) {
     visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::Parameter *type) {
-    auto it = m_type_parameters.find(type->constructor());
+    auto it = m_type_parameters.find(type->type());
     if (it == m_type_parameters.end()) {
         m_type_stack.push_back(nullptr);
         m_initialiser_stack.push_back(nullptr);
