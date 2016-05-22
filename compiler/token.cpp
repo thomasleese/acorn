@@ -79,7 +79,7 @@ std::string Token::rule_string(Token::Rule rule) {
         case InoutKeyword:
             return "inout";
         case ProtocolKeyword:
-            return "inout";
+            return "protocol";
         case IntegerLiteral:
             return "integer";
         case FloatLiteral:

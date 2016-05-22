@@ -264,8 +264,14 @@ void TypeDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-MethodSignature::MethodSignature(Token *token) : Node(token) {
-
+MethodSignature::MethodSignature(Token *token, Identifier *name, std::vector<Identifier *> parameter_types, Identifier *return_type) :
+        Node(token),
+        m_name(name),
+        m_return_type(return_type)
+{
+    for (auto p : parameter_types) {
+        m_parameter_types.push_back(std::unique_ptr<Identifier>(p));
+    }
 }
 
 Identifier *MethodSignature::name() const {
@@ -284,15 +290,18 @@ Identifier *MethodSignature::return_type() const {
     return m_return_type.get();
 }
 
-ProtocolDefinition::ProtocolDefinition(Token *token) :
-        Definition(token),
-        m_alias(nullptr)
-{
+void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-Identifier *ProtocolDefinition::alias() const {
-    return m_alias;
+ProtocolDefinition::ProtocolDefinition(Token *token, Identifier *name, std::vector<MethodSignature *> methods) :
+        Definition(token)
+{
+    this->name = name;
+
+    for (auto method : methods) {
+        m_methods.push_back(std::unique_ptr<MethodSignature>(method));
+    }
 }
 
 std::vector<MethodSignature *> ProtocolDefinition::methods() const {

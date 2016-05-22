@@ -804,6 +804,50 @@ TypeDefinition *Parser::readTypeDefinition() {
     return definition;
 }
 
+ast::ProtocolDefinition *Parser::readProtocolDefinition() {
+    auto token = readToken(Token::ProtocolKeyword);
+
+    auto name = readIdentifier(true);
+    std::vector<MethodSignature *> methods;
+
+    readToken(Token::Newline);
+
+    while (!isToken(Token::EndKeyword)) {
+        auto method_token = readToken(Token::DefKeyword);
+        return_if_null(method_token);
+
+        auto method_name = readIdentifier(false);
+        return_if_null(method_name);
+
+        std::vector<Identifier *> parameter_types;
+
+        return_if_null(readToken(Token::OpenParenthesis));
+        while (!isToken(Token::CloseParenthesis)) {
+            parameter_types.push_back(readIdentifier(true));
+
+            if (isToken(Token::Comma)) {
+                readToken(Token::Comma);
+            } else {
+                break;  // no more parameters, apparently
+            }
+        }
+
+        readToken(Token::CloseParenthesis);
+
+        readToken(Token::AsKeyword);
+        auto return_type = readIdentifier(true);
+        return_if_null(return_type);
+
+        return_if_null(readToken(Token::Newline));
+
+        methods.push_back(new MethodSignature(method_token, method_name, parameter_types, return_type));
+    }
+
+    readToken(Token::EndKeyword);
+
+    return new ProtocolDefinition(token, name, methods);
+}
+
 Statement *Parser::readStatement() {
     debug("Reading Statement...");
 
@@ -817,6 +861,8 @@ Statement *Parser::readStatement() {
         statement = new DefinitionStatement(readFunctionDefinition());
     } else if (isToken(Token::TypeKeyword)) {
         statement = new DefinitionStatement(readTypeDefinition());
+    } else if (isToken(Token::ProtocolKeyword)) {
+        statement = new DefinitionStatement(readProtocolDefinition());
     } else {
         auto expression = readExpression(true);
         return_if_null(expression);

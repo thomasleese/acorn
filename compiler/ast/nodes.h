@@ -293,11 +293,13 @@ namespace acorn {
 
         class MethodSignature : public Node {
         public:
-            explicit MethodSignature(Token *token);
+            MethodSignature(Token *token, Identifier *name, std::vector<Identifier *> parameter_types, Identifier *return_type);
 
             Identifier *name() const;
             std::vector<Identifier *> parameter_types() const;
             Identifier *return_type() const;
+
+            void accept(Visitor *visitor);
 
         private:
             std::unique_ptr<Identifier> m_name;
@@ -307,15 +309,13 @@ namespace acorn {
 
         class ProtocolDefinition : public Definition {
         public:
-            explicit ProtocolDefinition(Token *token);
+            ProtocolDefinition(Token *token, Identifier *name, std::vector<MethodSignature *> methods);
 
-            Identifier *alias() const;
             std::vector<MethodSignature *> methods() const;
 
             void accept(Visitor *visitor);
 
         private:
-            Identifier *m_alias;
             std::vector<std::unique_ptr<MethodSignature> > m_methods;
         };
 

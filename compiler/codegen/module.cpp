@@ -746,12 +746,6 @@ void ModuleGenerator::visit(ast::TypeDefinition *definition) {
 }
 
 void ModuleGenerator::visit(ast::ProtocolDefinition *definition) {
-    if (definition->alias()) {
-        auto new_symbol = m_scope.back()->lookup(this, definition->name);
-        auto old_symbol = m_scope.back()->lookup(this, definition->alias());
-        new_symbol->value = old_symbol->value;
-    }
-
     push_value(nullptr);
 }
 
