@@ -560,6 +560,10 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
     m_namespace = oldNamespace;
 }
 
+void Inferrer::visit(ast::ProtocolDefinition *definition) {
+
+}
+
 void Inferrer::visit(ast::DefinitionStatement *statement) {
     statement->definition->accept(this);
     statement->type = statement->definition->type;

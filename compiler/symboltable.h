@@ -121,6 +121,8 @@ namespace acorn {
             void visit(ast::VariableDefinition *definition);
             void visit(ast::FunctionDefinition *definition);
             void visit(ast::TypeDefinition *definition);
+            void visit(ast::ProtocolDefinition *definition);
+
             void visit(ast::DefinitionStatement *statement);
             void visit(ast::ExpressionStatement *statement);
             void visit(ast::ImportStatement *statement);

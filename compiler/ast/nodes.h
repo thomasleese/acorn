@@ -291,6 +291,34 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
+        class MethodSignature : public Node {
+        public:
+            explicit MethodSignature(Token *token);
+
+            Identifier *name() const;
+            std::vector<Identifier *> parameter_types() const;
+            Identifier *return_type() const;
+
+        private:
+            std::unique_ptr<Identifier> m_name;
+            std::vector<std::unique_ptr<Identifier>> m_parameter_types;
+            std::unique_ptr<Identifier> m_return_type;
+        };
+
+        class ProtocolDefinition : public Definition {
+        public:
+            explicit ProtocolDefinition(Token *token);
+
+            Identifier *alias() const;
+            std::vector<MethodSignature *> methods() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            Identifier *m_alias;
+            std::vector<std::unique_ptr<MethodSignature> > m_methods;
+        };
+
         // statements
         struct DefinitionStatement : Statement {
             explicit DefinitionStatement(Definition *definition);

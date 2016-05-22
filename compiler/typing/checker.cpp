@@ -259,6 +259,10 @@ void Checker::visit(ast::TypeDefinition *definition) {
     m_namespace = oldNamespace;
 }
 
+void Checker::visit(ast::ProtocolDefinition *definition) {
+    check_not_null(definition);
+}
+
 void Checker::visit(ast::DefinitionStatement *statement) {
     statement->definition->accept(this);
     check_not_null(statement);

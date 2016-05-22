@@ -33,6 +33,7 @@ namespace acorn {
         struct VariableDefinition;
         struct FunctionDefinition;
         struct TypeDefinition;
+        class ProtocolDefinition;
         struct DefinitionStatement;
         struct ExpressionStatement;
         struct ImportStatement;
@@ -73,6 +74,7 @@ namespace acorn {
             virtual void visit(VariableDefinition *definition) = 0;
             virtual void visit(FunctionDefinition *definition) = 0;
             virtual void visit(TypeDefinition *definition) = 0;
+            virtual void visit(ProtocolDefinition *definition) = 0;
 
             // statements
             virtual void visit(DefinitionStatement *statement) = 0;

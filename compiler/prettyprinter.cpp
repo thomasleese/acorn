@@ -294,6 +294,20 @@ void PrettyPrinter::visit(ast::TypeDefinition *definition) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(ast::ProtocolDefinition *definition) {
+    ss << indentation() << "(ProtocolDefinition\n";
+    indent++;
+
+    definition->name->accept(this);
+
+    for (auto method : definition->methods()) {
+        method->name()->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(ast::DefinitionStatement *statement) {
     ss << indentation() << "(DefinitionStatement\n";
     indent++;

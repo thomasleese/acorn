@@ -479,6 +479,12 @@ void Builder::visit(ast::TypeDefinition *definition) {
     m_scope.pop_back();
 }
 
+void Builder::visit(ast::ProtocolDefinition *definition) {
+    for (auto method : definition->methods()) {
+        method->accept(this);
+    }
+}
+
 void Builder::visit(ast::DefinitionStatement *statement) {
     statement->definition->accept(this);
 }
