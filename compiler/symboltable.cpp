@@ -2,13 +2,13 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
 
 #include "ast/nodes.h"
 #include "Lexer.h"
 #include "Errors.h"
-#include "builtins.h"
 #include "typing/types.h"
 
 #include "SymbolTable.h"
@@ -174,9 +174,9 @@ Symbol* Symbol::clone() const {
 
 Builder::Builder() {
     m_root = new Namespace(nullptr);
-    builtins::fill_symbol_table(m_root);
-
     m_scope.push_back(m_root);
+
+    add_builtins();
 }
 
 bool Builder::isAtRoot() const {
@@ -185,6 +185,117 @@ bool Builder::isAtRoot() const {
 
 Namespace *Builder::rootNamespace() {
     return m_root;
+}
+
+Symbol *Builder::add_builtin_symbol(std::string name, types::Type *type) {
+    auto symbol = new Symbol(name);
+    symbol->type = type;
+    symbol->is_builtin = true;
+    m_scope.back()->insert(nullptr, nullptr, symbol);
+    return symbol;
+}
+
+Symbol *Builder::add_builtin_function(std::string name) {
+    auto symbol = add_builtin_symbol(name, new types::Function());
+    symbol->nameSpace = new Namespace(m_scope.back());
+    return symbol;
+}
+
+Symbol *Builder::add_builtin_method(symboltable::Symbol *function, types::Method *method) {
+    auto symbol = new Symbol(method->mangled_name());
+    symbol->type = method;
+    symbol->nameSpace = new Namespace(function->nameSpace);
+    function->nameSpace->insert(nullptr, nullptr, symbol);
+
+    auto function_type = static_cast<types::Function *>(function->type);
+    function_type->add_method(method);
+
+    return symbol;
+}
+
+void Builder::add_builtin_types() {
+    add_builtin_symbol("Any", new types::AnyType());
+    add_builtin_symbol("Void", new types::VoidType());
+    add_builtin_symbol("Boolean", new types::BooleanType());
+    add_builtin_symbol("Integer8", new types::IntegerType(8));
+    add_builtin_symbol("Integer16", new types::IntegerType(16));
+    add_builtin_symbol("Integer32", new types::IntegerType(32));
+    add_builtin_symbol("Integer64", new types::IntegerType(64));
+    add_builtin_symbol("Integer128", new types::IntegerType(128));
+    add_builtin_symbol("UnsignedInteger8", new types::UnsignedIntegerType(8));
+    add_builtin_symbol("UnsignedInteger16", new types::UnsignedIntegerType(16));
+    add_builtin_symbol("UnsignedInteger32", new types::UnsignedIntegerType(32));
+    add_builtin_symbol("UnsignedInteger64", new types::UnsignedIntegerType(64));
+    add_builtin_symbol("UnsignedInteger128", new types::UnsignedIntegerType(128));
+    add_builtin_symbol("Float16", new types::FloatType(16));
+    add_builtin_symbol("Float32", new types::FloatType(32));
+    add_builtin_symbol("Float64", new types::FloatType(64));
+    add_builtin_symbol("Float128", new types::FloatType(128));
+    add_builtin_symbol("UnsafePointer", new types::UnsafePointerType());
+    add_builtin_symbol("Function", new types::FunctionType());
+    add_builtin_symbol("Union", new types::UnionType());
+    add_builtin_symbol("Tuple", new types::TupleType());
+    add_builtin_symbol("Type", new types::TypeDescriptionType());
+}
+
+void Builder::add_builtin_variables() {
+    add_builtin_symbol("Nothing", new types::Void());
+    add_builtin_symbol("True", new types::Boolean());
+    add_builtin_symbol("False", new types::Boolean());
+}
+
+void Builder::add_builtin_functions() {
+    auto not_ = add_builtin_function("not");
+    add_builtin_method(not_, new types::Method(new types::Boolean(), new types::Boolean()));
+
+    symboltable::Symbol *multiplication = add_builtin_function("*");
+    add_builtin_method(multiplication, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
+
+    symboltable::Symbol *addition = add_builtin_function("+");
+    add_builtin_method(addition, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
+    add_builtin_method(addition, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::UnsignedInteger(64)));
+    add_builtin_method(addition, new types::Method(new types::Float(64), new types::Float(64), new types::Float(64)));
+
+    symboltable::Symbol *subtraction = add_builtin_function("-");
+    add_builtin_method(subtraction, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
+
+    symboltable::Symbol *equality = add_builtin_function("==");
+    add_builtin_method(equality, new types::Method(new types::Boolean(), new types::Boolean(), new types::Boolean()));
+    add_builtin_method(equality, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
+    add_builtin_method(equality, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::Boolean()));
+
+    symboltable::Symbol *not_equality = add_builtin_function("!=");
+    add_builtin_method(not_equality, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
+
+    symboltable::Symbol *less_than = add_builtin_function("<");
+    add_builtin_method(less_than, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
+
+    auto gte = add_builtin_function(">=");
+    add_builtin_method(gte, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
+
+    symboltable::Symbol *to_integer = add_builtin_function("to_integer");
+    add_builtin_method(to_integer, new types::Method(new types::Float(64), new types::Integer(64)));
+
+    symboltable::Symbol *to_float = add_builtin_function("to_float");
+    add_builtin_method(to_float, new types::Method(new types::Integer(64), new types::Float(64)));
+
+    auto getindex = add_builtin_function("getindex");
+    auto pc = new types::ParameterType();
+    auto method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc));
+    method->set_is_generic(true);
+    add_builtin_method(getindex, method);
+
+    auto setindex = add_builtin_function("setindex");
+    pc = new types::ParameterType();
+    method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc), new types::Void());
+    method->set_is_generic(true);
+    add_builtin_method(setindex, method);
+}
+
+void Builder::add_builtins() {
+    add_builtin_types();
+    add_builtin_variables();
+    add_builtin_functions();
 }
 
 void Builder::visit(ast::CodeBlock *block) {

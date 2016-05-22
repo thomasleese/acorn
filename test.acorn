@@ -1,4 +1,10 @@
 import 'base'
 
 let a = create_array(Integer, 15)
+
+let i = 0
+for i in range(10)
+    a.append(i)
+end
+
 exit(a.length)

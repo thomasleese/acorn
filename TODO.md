@@ -3,7 +3,10 @@
 - Merge symbol table builder with parser
 - Use numbers with metadata as mangling instead
 
-- Design types better (try to remove constructors?)
+- make sizeof and strideof functions
+
+- Comments
+- Protocols
 - Enumerate
 - Arrays
 - Sets
@@ -20,6 +23,7 @@
 - Importing modules
 - Plan units of measure
 - Documentation
+- GUI
 
 - Maths library
 

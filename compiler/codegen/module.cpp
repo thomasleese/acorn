@@ -17,10 +17,10 @@
 #include <llvm/Transforms/IPO.h>
 
 #include "../ast/nodes.h"
-#include "../builtins.h"
 #include "../errors.h"
 #include "../symbolTable.h"
 #include "../typing/types.h"
+#include "builtins.h"
 #include "types.h"
 
 #include "module.h"
@@ -428,7 +428,8 @@ void ModuleGenerator::visit(ast::Call *expression) {
                         m_type_generator->push_type_parameter(entry.first, entry.second);
                     }
 
-                    builtins::generate_function(symbol, method_symbol, method, method_name, m_module, m_irBuilder, m_type_generator);
+                    m_builtin_generator->generate_function(symbol, method_symbol, method_name);
+                    //builtins::generate_function(symbol, method_symbol, method, method_name, m_module, m_irBuilder, m_type_generator);
 
                     for (auto entry : type_parameters) {
                         m_type_generator->pop_type_parameter(entry.first);
@@ -765,7 +766,8 @@ void ModuleGenerator::visit(ast::ImportStatement *statement) {
 void ModuleGenerator::visit(ast::SourceFile *module) {
     m_module = new llvm::Module(module->name, llvm::getGlobalContext());
 
-    builtins::fill_llvm_module(m_scope.back(), m_module, m_irBuilder);
+    m_builtin_generator = new BuiltinGenerator(m_module, m_irBuilder, m_type_generator);
+    m_builtin_generator->generate(m_scope.back());
 
     llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);

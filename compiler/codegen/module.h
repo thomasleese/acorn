@@ -31,8 +31,8 @@ namespace acorn {
 
     namespace codegen {
 
+        class BuiltinGenerator;
         class TypeGenerator;
-        class TypeInitialiserGenerator;
 
         std::string mangle_method(std::string name, types::Method *type);
 
@@ -98,6 +98,7 @@ namespace acorn {
 
             std::vector<llvm::Value *> m_llvmValues;
 
+            BuiltinGenerator *m_builtin_generator;
             TypeGenerator *m_type_generator;
         };
 

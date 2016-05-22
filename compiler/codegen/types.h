@@ -8,6 +8,11 @@
 #include "../compiler/pass.h"
 #include "../typing/types.h"
 
+namespace llvm {
+    class Constant;
+    class Type;
+}
+
 namespace acorn {
 
     namespace ast {

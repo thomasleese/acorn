@@ -51,6 +51,7 @@ namespace acorn {
             StrideofKeyword,
             NewKeyword,
             InoutKeyword,
+            ProtocolKeyword,
 
             // literals
             StringLiteral,

@@ -24,6 +24,7 @@ namespace acorn {
 
     namespace types {
         class Type;
+        class Method;
     }
 
     namespace compiler {
@@ -83,6 +84,18 @@ namespace acorn {
 
             bool isAtRoot() const;
             Namespace *rootNamespace();
+
+        private:
+            Symbol *add_builtin_symbol(std::string name, types::Type *type);
+            Symbol *add_builtin_function(std::string name);
+            Symbol *add_builtin_method(symboltable::Symbol *function, types::Method *method);
+
+            void add_builtin_types();
+            void add_builtin_variables();
+            void add_builtin_functions();
+
+        public:
+            void add_builtins();
 
             void visit(ast::CodeBlock *block);
             void visit(ast::Identifier *identifier);
