@@ -44,7 +44,7 @@ SourceFile *Parser::parse(std::string name) {
 
     // FIXME, implement a proper module system
     for (auto import : module->imports) {
-        std::string filename = "stdlib/" + import->path->value + ".acorn";
+        std::string filename = "library/" + import->path->value + ".acorn";
 
         Lexer lexer;
         std::vector<Token *> tokens = lexer.tokenise(filename);

@@ -1,9 +1,17 @@
 import 'base'
 
-protocol Iterator{T, E, S}
-    def start(T) as S
-    def next(T, S) as Tuple{E, S}
-    def done(T, S) as Boolean
+protocol IteratorWithState{T, S}
+    def start(Self) as S
+    def next(Self, S) as Tuple{T, S}
+    def done(Self, S) as Boolean
+end #type Iterator{T} as IteratorWithState{T, Any}
+
+def sum{S}(iterator as IteratorWithState{Integer, S}) as Integer
+    let total = 0
+    let i = 0
+    for i in iterator
+        total += i
+    end
 end
 
 let a = create_array(Integer, 15)

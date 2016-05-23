@@ -253,6 +253,10 @@ namespace acorn {
 
         };
 
+        class ProtocolType : public TypeType {
+
+        };
+
         class TypeDescriptionType : public TypeType {
 
         public:
@@ -499,6 +503,10 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
+        class Protocol : public Type {
+
+        };
+
         class Visitor {
         public:
             virtual ~Visitor();
@@ -516,6 +524,7 @@ namespace acorn {
             virtual void visit(UnionType *type) = 0;
             virtual void visit(TupleType *type) = 0;
             virtual void visit(AliasType *type) = 0;
+            virtual void visit(ProtocolType *type) = 0;
             virtual void visit(TypeDescriptionType *type) = 0;
 
             virtual void visit(Parameter *type) = 0;
@@ -531,6 +540,7 @@ namespace acorn {
             virtual void visit(Method *type) = 0;
             virtual void visit(Function *type) = 0;
             virtual void visit(Union *type) = 0;
+            virtual void visit(Protocol *type) = 0;
         };
 
     };

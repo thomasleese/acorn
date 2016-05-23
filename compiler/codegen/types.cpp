@@ -127,6 +127,10 @@ void TypeGenerator::visit(types::AliasType *type) {
     visit_constructor(type);
 }
 
+void TypeGenerator::visit(types::ProtocolType *type) {
+    visit_constructor(type);
+}
+
 void TypeGenerator::visit(types::TypeDescriptionType *type) {
     visit_constructor(type);
 }
@@ -332,4 +336,9 @@ void TypeGenerator::visit(types::Union *type) {
 
     m_type_stack.push_back(struct_type);
     m_initialiser_stack.push_back(struct_initialiser);
+}
+
+void TypeGenerator::visit(types::Protocol *type) {
+    m_type_stack.push_back(nullptr);
+    m_initialiser_stack.push_back(nullptr);
 }

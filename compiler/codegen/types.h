@@ -47,6 +47,8 @@ namespace acorn {
             void visit(types::TupleType *type);
             void visit(types::AliasType *type);
             void visit(types::TypeDescriptionType *type);
+            void visit(types::ProtocolType *type);
+
             void visit(types::Parameter *type);
             void visit(types::Any *type);
             void visit(types::Void *type);
@@ -60,6 +62,7 @@ namespace acorn {
             void visit(types::Method *type);
             void visit(types::Function *type);
             void visit(types::Union *type);
+            void visit(types::Protocol *type);
 
         private:
             std::vector<llvm::Type *> m_type_stack;

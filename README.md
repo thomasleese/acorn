@@ -7,8 +7,8 @@
 
 ## Progress
 
-- Lexer ~
-- Parser ~
+- Lexer ✓
+- Parser ✓
 - Error Handler ✓
 - Type Checker ~
 - Code Generator ~
@@ -19,10 +19,6 @@
 - http://docs.julialang.org/en/release-0.4/manual/methods/
   - Multiple-dispatch
   - Overloading operators
-- Named parameters **only**
 - https://github.com/tj/luna
 - Implicit return
-
-## Future
-
 - Type Inference
