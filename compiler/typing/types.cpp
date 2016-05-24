@@ -8,7 +8,7 @@
 #include <iostream>
 
 #include "../ast/nodes.h"
-#include "../compiler/pass.h"
+#include "../pass.h"
 #include "../errors.h"
 
 #include "types.h"

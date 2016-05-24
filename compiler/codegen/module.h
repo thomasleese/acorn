@@ -11,7 +11,7 @@
 #include <llvm/IR/LegacyPassManager.h>
 
 #include "../ast/visitor.h"
-#include "../compiler/pass.h"
+#include "../pass.h"
 
 namespace acorn {
 

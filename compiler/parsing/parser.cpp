@@ -6,9 +6,9 @@
 #include <iostream>
 #include <sstream>
 
-#include "ast/nodes.h"
-#include "Errors.h"
-#include "Lexer.h"
+#include "../ast/nodes.h"
+#include "../errors.h"
+#include "lexer.h"
 
 #include "parser.h"
 

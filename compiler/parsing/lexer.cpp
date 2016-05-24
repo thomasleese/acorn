@@ -9,7 +9,7 @@
 #include <unicode/unistr.h>
 #include <boost/regex/icu.hpp>
 
-#include "Errors.h"
+#include "../errors.h"
 
 #include "lexer.h"
 

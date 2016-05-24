@@ -5,7 +5,7 @@
 #ifndef ACORN_CODEGEN_TYPES_H
 #define ACORN_CODEGEN_TYPES_H
 
-#include "../compiler/pass.h"
+#include "../pass.h"
 #include "../typing/types.h"
 
 namespace llvm {

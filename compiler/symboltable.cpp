@@ -7,8 +7,8 @@
 #include <sstream>
 
 #include "ast/nodes.h"
-#include "Lexer.h"
-#include "Errors.h"
+#include "errors.h"
+#include "parsing/lexer.h"
 #include "typing/types.h"
 
 #include "SymbolTable.h"

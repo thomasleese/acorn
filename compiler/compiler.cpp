@@ -18,15 +18,15 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
 
-#include "../ast/nodes.h"
-#include "../codegen/module.h"
-#include "../lexer.h"
-#include "../parser.h"
-#include "../prettyprinter.h"
-#include "../symboltable.h"
-#include "../errors.h"
-#include "../typing/checker.h"
-#include "../typing/inferrer.h"
+#include "ast/nodes.h"
+#include "codegen/module.h"
+#include "parsing/lexer.h"
+#include "parsing/parser.h"
+#include "prettyprinter.h"
+#include "symboltable.h"
+#include "errors.h"
+#include "typing/checker.h"
+#include "typing/inferrer.h"
 
 #include "compiler.h"
 

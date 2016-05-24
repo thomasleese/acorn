@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "ast/visitor.h"
-#include "compiler/pass.h"
+#include "pass.h"
 
 namespace llvm {
     class Value;

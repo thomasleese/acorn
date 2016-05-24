@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "compiler/pass.h"
+#include "../pass.h"
 #include "token.h"
 
 namespace acorn {

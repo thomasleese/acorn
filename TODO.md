@@ -1,8 +1,9 @@
 - Automatic Memory Management
 
-- Merge symbol table builder with parser
+- Merge symbol table builder with parser (and implement detection of for variable)
 - Use numbers with metadata as mangling instead
 
+- Type{Array{Integer}}
 - Comments
 - Protocols
 - Enumerate
@@ -12,6 +13,7 @@
 - Characters
 - Strings
 - Any
+- Modules
 
 - Unit tests
 - Mutability

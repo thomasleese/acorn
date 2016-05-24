@@ -4,7 +4,7 @@
 
 #include <cassert>
 
-#include "../errors.h"
+#include "errors.h"
 
 #include "pass.h"
 

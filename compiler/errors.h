@@ -8,7 +8,7 @@
 #include <exception>
 #include <string>
 
-#include "token.h"
+#include "parsing/token.h"
 
 namespace acorn {
 
