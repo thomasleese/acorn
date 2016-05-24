@@ -16,6 +16,10 @@ namespace acorn {
         struct Node;
     }
 
+    namespace types {
+        class Type;
+    }
+
     namespace errors {
 
         class CompilerError : public std::exception {
@@ -94,6 +98,7 @@ namespace acorn {
         class TypeMismatchError : public CompilerError {
         public:
             TypeMismatchError(ast::Node *node1, ast::Node *node2);
+            TypeMismatchError(ast::Node *node, types::Type *type1, types::Type *type2);
         };
 
         class TypeInferenceError : public CompilerError {

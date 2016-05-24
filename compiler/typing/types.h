@@ -30,6 +30,8 @@ namespace acorn {
         class Type {
 
         public:
+            explicit Type();
+            explicit Type(std::vector<Type *> parameters);
             virtual ~Type();
 
             virtual std::string name() const = 0;
@@ -38,10 +40,9 @@ namespace acorn {
             virtual bool is_compatible(const Type *other) const;
 
             virtual TypeType *type() const = 0;
-            virtual Type *clone() const = 0;
 
-            Type *get_parameter(int i) const;
-            void set_parameter(int i, Type *type);
+            virtual Type *with_parameters(std::vector<Type *> parameters) = 0;
+
             std::vector<Type *> parameters() const;
 
             virtual void accept(Visitor *visitor) = 0;
@@ -55,13 +56,16 @@ namespace acorn {
         // type "type"s -- i.e. the type of concrete types
         class TypeType : public Type {
         public:
-            Type *create(compiler::Pass *pass, ast::Node *node);
-            virtual Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters) = 0;
+            explicit TypeType();
+            explicit TypeType(std::vector<TypeType *> parameters);
+            virtual Type *create(compiler::Pass *pass, ast::Node *node) = 0;
 
             std::string mangled_name() const;
 
             virtual TypeType *type() const;
-            virtual TypeType *clone() const = 0;
+
+            TypeType *with_parameters(std::vector<Type *> parameters);
+            virtual TypeType *with_parameters(std::vector<TypeType *> parameters) = 0;
         };
 
         class ParameterType : public TypeType {
@@ -70,9 +74,9 @@ namespace acorn {
 
             bool is_compatible(const Type *other) const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            ParameterType *clone() const;
+            ParameterType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -81,9 +85,9 @@ namespace acorn {
         public:
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            AnyType *clone() const;
+            AnyType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -92,9 +96,9 @@ namespace acorn {
         public:
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            VoidType *clone() const;
+            VoidType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -103,9 +107,9 @@ namespace acorn {
         public:
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            BooleanType *clone() const;
+            BooleanType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -116,9 +120,9 @@ namespace acorn {
 
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            IntegerType *clone() const;
+            IntegerType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -132,9 +136,9 @@ namespace acorn {
 
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            UnsignedIntegerType *clone() const;
+            UnsignedIntegerType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -148,9 +152,9 @@ namespace acorn {
 
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            FloatType *clone() const;
+            FloatType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -159,25 +163,28 @@ namespace acorn {
         };
 
         class UnsafePointerType : public TypeType {
-
         public:
+            explicit UnsafePointerType(TypeType *element_type = nullptr);
+
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            bool has_element_type() const;
+            TypeType *element_type() const;
 
-            UnsafePointerType *clone() const;
+            Type *create(compiler::Pass *pass, ast::Node *node);
+
+            UnsafePointerType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
-
         };
 
         class FunctionType : public TypeType {
         public:
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            FunctionType *clone() const;
+            FunctionType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -186,34 +193,40 @@ namespace acorn {
 
         public:
             RecordType();
-            RecordType(std::vector<Parameter *> input_parameters, std::vector<std::string> field_names,
-                              std::vector<TypeType *> field_types,
-                              std::vector<std::vector<Type *> > field_parameters);
+            RecordType(std::vector<ParameterType *> input_parameters,
+                       std::vector<std::string> field_names,
+                       std::vector<TypeType *> field_types);
+            RecordType(std::vector<ParameterType *> input_parameters,
+                       std::vector<std::string> field_names,
+                       std::vector<TypeType *> field_types,
+                       std::vector<TypeType *> parameters);
 
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            RecordType *clone() const;
+            RecordType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
 
         private:
-            std::vector<Parameter *> m_input_parameters;
+            std::vector<ParameterType *> m_input_parameters;
             std::vector<std::string> m_field_names;
             std::vector<TypeType *> m_field_types;
-            std::vector<std::vector<Type *> > m_field_parameters;
 
         };
 
         class UnionType : public TypeType {
 
         public:
+            UnionType();
+            explicit UnionType(std::vector<TypeType *> parameters);
+
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            UnionType *clone() const;
+            UnionType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -221,11 +234,14 @@ namespace acorn {
 
         class TupleType : public TypeType {
         public:
+            TupleType();
+            explicit TupleType(std::vector<TypeType *> parameters);
+
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            TupleType *clone() const;
+            TupleType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -233,21 +249,20 @@ namespace acorn {
         class AliasType : public TypeType {
 
         public:
-            explicit AliasType(TypeType *constructor, std::vector<Parameter *> input_parameters,
-                                      std::vector<Type *> output_parameters);
+            AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters);
+            AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters, std::vector<TypeType *> parameters);
 
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            Type *create(compiler::Pass *pass, ast::Node *node);
 
-            AliasType *clone() const;
+            AliasType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
 
         private:
-            TypeType *m_constructor;
-            std::vector<Parameter *> m_input_parameters;
-            std::vector<Type *> m_output_parameters;
+            TypeType *m_alias;
+            std::vector<ParameterType *> m_input_parameters;
             std::map<int, int> m_parameterMapping;
             std::vector<Type *> m_knownTypes;
 
@@ -258,16 +273,18 @@ namespace acorn {
         };
 
         class TypeDescriptionType : public TypeType {
-
         public:
+            explicit TypeDescriptionType(TypeType *type = nullptr);
+
             std::string name() const;
 
-            Type *create(compiler::Pass *pass, ast::Node *node, std::vector<Type *> parameters);
+            bool is_compatible(const Type *other) const;
 
-            TypeDescriptionType *clone() const;
+            Type *create(compiler::Pass *pass, ast::Node *node);
+
+            TypeDescriptionType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
-
         };
 
         // constructed types
@@ -283,7 +300,7 @@ namespace acorn {
 
             bool is_compatible(const Type *other) const;
 
-            Parameter *clone() const;
+            Parameter *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -299,7 +316,7 @@ namespace acorn {
 
             AnyType *type() const;
 
-            Any *clone() const;
+            Any *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -311,7 +328,7 @@ namespace acorn {
 
             VoidType *type() const;
 
-            Void *clone() const;
+            Void *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -323,7 +340,7 @@ namespace acorn {
 
             BooleanType *type() const;
 
-            Boolean *clone() const;
+            Boolean *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -339,7 +356,7 @@ namespace acorn {
 
             unsigned int size() const;
 
-            Integer *clone() const;
+            Integer *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -358,7 +375,7 @@ namespace acorn {
 
             unsigned int size() const;
 
-            UnsignedInteger *clone() const;
+            UnsignedInteger *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -377,7 +394,7 @@ namespace acorn {
 
             unsigned int size() const;
 
-            Float *clone() const;
+            Float *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -398,7 +415,7 @@ namespace acorn {
 
             bool is_compatible(const Type *other) const;
 
-            UnsafePointer *clone() const;
+            UnsafePointer *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -419,7 +436,7 @@ namespace acorn {
 
             bool is_compatible(const Type *other) const;
 
-            Record *clone() const;
+            Record *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -457,7 +474,7 @@ namespace acorn {
             void set_parameter_inout(Type *type, bool inout);
             bool is_parameter_inout(Type *type);
 
-            Method *clone() const;
+            Method *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
 
@@ -478,7 +495,7 @@ namespace acorn {
             Method *get_method(int index) const;
             int no_methods() const;
 
-            Function *clone() const;
+            Function *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -498,7 +515,7 @@ namespace acorn {
 
             bool is_compatible(const Type *other) const;
 
-            Union *clone() const;
+            Union *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
         };

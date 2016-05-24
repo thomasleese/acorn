@@ -38,13 +38,15 @@ namespace acorn {
         private:
             types::TypeType *find_type_constructor(ast::Node *node, std::string name);
 
-            types::Type *find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters);
-            types::Type *find_type(ast::Node *node, std::string name);
-            types::Type *find_type(ast::Identifier *type);
+            types::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters);
+            types::TypeType *find_type(ast::Node *node, std::string name);
+            types::TypeType *find_type(ast::Identifier *type);
 
+            types::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters);
+            types::Type *instance_type(ast::Node *node, std::string name);
             types::Type *instance_type(ast::Identifier *identifier);
 
-            void infer_call_type_parameters(ast::Call *call, std::vector<types::Type *> parameter_types,
+            bool infer_call_type_parameters(ast::Call *call, std::vector<types::Type *> parameter_types,
                                             std::vector<types::Type *> argument_types);
 
             types::Type *replace_type_parameters(types::Type *type,
@@ -85,6 +87,7 @@ namespace acorn {
             symboltable::Namespace *m_namespace;
             std::vector<ast::FunctionDefinition *> m_functionStack;
             bool m_in_if;
+            bool m_as_type;
 
         };
 

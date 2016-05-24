@@ -207,7 +207,8 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
         return;
     }
 
-    if (identifier->has_parameters()) {
+    auto tt = dynamic_cast<types::TypeType *>(symbol->type);
+    if (!tt && identifier->has_parameters()) {
         push_error(new errors::InternalError(identifier, "should not have parameters"));
         push_value(nullptr);
         return;
@@ -346,6 +347,10 @@ void ModuleGenerator::visit(ast::RecordLiteral *expression) {
     //auto record = dynamic_cast<types::Record *>(expression->type);
 
     llvm::Type *llvm_type = generate_type(expression);
+    if (llvm_type == nullptr) {
+        push_value(nullptr);
+        return;
+    }
 
     auto instance = m_irBuilder->CreateAlloca(llvm_type);
 
@@ -471,6 +476,8 @@ void ModuleGenerator::visit(ast::Call *expression) {
             arguments.push_back(value);
             i++;
         }
+
+        function->dump();
 
         auto value = m_irBuilder->CreateCall(function, arguments);
         push_value(value);

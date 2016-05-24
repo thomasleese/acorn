@@ -26,6 +26,7 @@ void BuiltinGenerator::generate(symboltable::Namespace *table) {
     initialise_boolean_variable(table, "False", false);
     initialise_boolean_variable(table, "Integer32", false);
     initialise_boolean_variable(table, "Integer64", false);
+    initialise_boolean_variable(table, "UnsafePointer", false);
 
     // not
     llvm::Function *f = create_llvm_function(table, "not", 0);

@@ -22,7 +22,8 @@ using namespace acorn::typing;
 
 Inferrer::Inferrer(symboltable::Namespace *rootNamespace) :
         m_namespace(rootNamespace),
-        m_in_if(false)
+        m_in_if(false),
+        m_as_type(false)
 {
     // intentionally empty
 }
@@ -45,7 +46,7 @@ types::TypeType *Inferrer::find_type_constructor(ast::Node *node, std::string na
     }
 }
 
-types::Type *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters) {
+types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters) {
     std::vector<types::Type *> parameterTypes;
 
     for (auto parameter : parameters) {
@@ -55,72 +56,95 @@ types::Type *Inferrer::find_type(ast::Node *node, std::string name, std::vector<
 
     types::TypeType *typeConstructor = find_type_constructor(node, name);
     if (typeConstructor != nullptr) {
-        return typeConstructor->create(this, node, parameterTypes);
+        return typeConstructor->with_parameters(parameterTypes);
     } else {
         push_error(new errors::InvalidTypeConstructor(node));
         return nullptr;
     }
 }
 
-types::Type *Inferrer::find_type(ast::Node *node, std::string name) {
+types::TypeType *Inferrer::find_type(ast::Node *node, std::string name) {
     return find_type(node, name, std::vector<ast::Identifier *>());
 }
 
-types::Type *Inferrer::find_type(ast::Identifier *type) {
+types::TypeType *Inferrer::find_type(ast::Identifier *type) {
     return find_type(type, type->value, type->parameters);
 }
 
-types::Type *Inferrer::instance_type(ast::Identifier *identifier) {
-    types::TypeType *type_constructor = dynamic_cast<types::TypeType *>(identifier->type);
-    if (type_constructor) {
-        std::vector<types::Type *> parameterTypes;
-
-        for (auto parameter : identifier->parameters) {
-            parameter->type = instance_type(parameter);
-            parameterTypes.push_back(parameter->type);
-        }
-
-        return type_constructor->create(this, identifier, parameterTypes);
-    } else {
-        push_error(new errors::InvalidTypeConstructor(identifier));
+types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters) {
+    types::TypeType *type_constructor = find_type(node, name, parameters);
+    if (type_constructor == nullptr) {
         return nullptr;
     }
+
+    return type_constructor->create(this, node);
 }
 
-void Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Type *> parameter_types, std::vector<types::Type *> argument_types) {
+types::Type *Inferrer::instance_type(ast::Node *node, std::string name) {
+    return instance_type(node, name, std::vector<ast::Identifier *>());
+}
+
+types::Type *Inferrer::instance_type(ast::Identifier *identifier) {
+    return instance_type(identifier, identifier->value, identifier->parameters);
+}
+
+bool Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Type *> parameter_types, std::vector<types::Type *> argument_types) {
     assert(parameter_types.size() == argument_types.size());
 
     int i = 0;
     for (auto t : parameter_types) {
         auto dt = dynamic_cast<types::Parameter *>(t);
         if (dt) {
-            call->inferred_type_parameters[dt->type()] = argument_types[i];
+            auto it = call->inferred_type_parameters.find(dt->type());
+            if (it != call->inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
+                push_error(new errors::TypeMismatchError(call, argument_types[i], it->second));
+                return false;
+            } else {
+                call->inferred_type_parameters[dt->type()] = argument_types[i];
+            }
         } else {
             auto dt2 = dynamic_cast<types::ParameterType *>(t);
             if (dt2) {
                 auto arg = dynamic_cast<types::TypeType *>(argument_types[i]);
                 assert(arg);
-                call->inferred_type_parameters[dt2] = arg->create(this, call);
+
+                auto it = call->inferred_type_parameters.find(dt2);
+                if (it != call->inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
+                    push_error(new errors::TypeMismatchError(call, argument_types[i], it->second));
+                    return false;
+                } else {
+                    call->inferred_type_parameters[dt2] = arg->create(this, call);
+                }
             } else {
-                infer_call_type_parameters(call, t->parameters(), argument_types[i]->parameters());
+                if (!infer_call_type_parameters(call, t->parameters(), argument_types[i]->parameters())) {
+                    return false;
+                }
             }
         }
 
         i++;
     }
+
+    return true;
 }
 
 types::Type *Inferrer::replace_type_parameters(types::Type *type, std::map<types::ParameterType *, types::Type *> replacements) {
     auto parameter = dynamic_cast<types::Parameter *>(type);
     if (parameter) {
-        type = replacements[parameter->type()];
+        auto it = replacements.find(parameter->type());
+        assert(it != replacements.end());
+        type = it->second;
     }
 
-    for (int i = 0; i < type->parameters().size(); i++) {
-        type->set_parameter(i, replace_type_parameters(type->parameters()[i], replacements));
+    assert(type);
+
+    auto parameters = type->parameters();
+
+    for (int i = 0; i < parameters.size(); i++) {
+        parameters[i] = replace_type_parameters(parameters[i], replacements);
     }
 
-    return type;
+    return type->with_parameters(parameters);
 }
 
 void Inferrer::visit(ast::CodeBlock *block) {
@@ -136,16 +160,19 @@ void Inferrer::visit(ast::CodeBlock *block) {
 }
 
 void Inferrer::visit(ast::Identifier *expression) {
-    for (auto p : expression->parameters) {
-        p->accept(this);
-    }
-
     auto symbol = m_namespace->lookup(this, expression);
     if (symbol == nullptr) {
         return;
     }
 
-    expression->type = symbol->type;
+    if (dynamic_cast<types::TypeType *>(symbol->type)) {
+        expression->type = find_type(expression);
+    } else {
+        // it *must* be empty
+        assert(expression->parameters.empty());
+
+        expression->type = symbol->type;
+    }
 }
 
 void Inferrer::visit(ast::VariableDeclaration *node) {
@@ -154,26 +181,29 @@ void Inferrer::visit(ast::VariableDeclaration *node) {
     auto symbol = m_namespace->lookup(this, node->name());
 
     if (node->has_given_type()) {
+        m_as_type = true;
         node->given_type()->accept(this);
+        m_as_type = false;
+
         node->type = instance_type(node->given_type());
         symbol->type = node->type;
     }
 }
 
 void Inferrer::visit(ast::IntegerLiteral *expression) {
-    expression->type = find_type(expression, "Integer");
+    expression->type = instance_type(expression, "Integer");
 }
 
 void Inferrer::visit(ast::FloatLiteral *expression) {
-    expression->type = find_type(expression, "Float");
+    expression->type = instance_type(expression, "Float");
 }
 
 void Inferrer::visit(ast::ImaginaryLiteral *expression) {
-    expression->type = find_type(expression, "Complex");
+    expression->type = instance_type(expression, "Complex");
 }
 
 void Inferrer::visit(ast::StringLiteral *expression) {
-    expression->type = find_type(expression, "String");
+    expression->type = instance_type(expression, "String");
 }
 
 void Inferrer::visit(ast::SequenceLiteral *sequence) {
@@ -205,9 +235,11 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
         elementType = types[0];
     }
 
-    std::vector<types::Type *> args;
-    args.push_back(elementType);
-    sequence->type = find_type_constructor(sequence, "Array")->create(this, sequence, args);
+    std::vector<types::Type *> p;
+    p.push_back(elementType);
+
+    auto array_type = find_type(sequence, "Array")->with_parameters(p);
+    sequence->type = array_type->create(this, sequence);
 }
 
 void Inferrer::visit(ast::MappingLiteral *mapping) {
@@ -276,9 +308,9 @@ void Inferrer::visit(ast::Call *expression) {
     }
 
     if (method->is_generic()) {
-        infer_call_type_parameters(expression, method->parameter_types(), argument_types);
-
-        assert(!expression->inferred_type_parameters.empty());
+        if (!infer_call_type_parameters(expression, method->parameter_types(), argument_types)) {
+            return;
+        }
 
         if (expression->inferred_type_parameters.empty()) {
             push_error(new errors::InternalError(expression, "Could not infer type parameters."));
@@ -286,8 +318,8 @@ void Inferrer::visit(ast::Call *expression) {
         }
     }
 
-    auto return_type = method->return_type()->clone();
-    return_type = replace_type_parameters(return_type, expression->inferred_type_parameters);
+    auto return_type = replace_type_parameters(method->return_type(),
+                                               expression->inferred_type_parameters);
 
     expression->type = return_type;
 }
@@ -388,8 +420,10 @@ void Inferrer::visit(ast::Return *expression) {
 
     if (m_functionStack.back()) {
         ast::FunctionDefinition *def = m_functionStack.back();
-        return_if_null_type(def->returnType)
-        if (!def->returnType->type->is_compatible(expression->expression->type)) {
+        auto method = static_cast<types::Method *>(def->type);
+        return_if_null(method);
+
+        if (!method->return_type()->is_compatible(expression->expression->type)) {
             push_error(new errors::TypeMismatchError(expression->expression, def->returnType));
             return;
         }
@@ -461,9 +495,14 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 
     definition->returnType->accept(this);
     return_if_null_type(definition->returnType);
-    definition->returnType->type = instance_type(definition->returnType);
 
-    auto method = new types::Method(parameterTypes, definition->returnType->type);
+    auto return_type = instance_type(definition->returnType);
+    if (return_type == nullptr) {
+        m_namespace = oldNamespace;
+        return;
+    }
+
+    auto method = new types::Method(parameterTypes, return_type);
 
     for (int i = 0; i < parameterTypes.size(); i++) {
         if (definition->parameters[i]->inout) {
@@ -495,63 +534,45 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    std::vector<types::Parameter *> input_parameters;
+    std::vector<types::ParameterType *> input_parameters;
     for (auto t : definition->name->parameters) {
         t->accept(this);
 
-        auto param = dynamic_cast<types::Parameter *>(t->type);
-        if (param == nullptr) {
-            push_error(new errors::InvalidTypeParameters(t, 0, 0));
-            return;
-        }
+        auto param = dynamic_cast<types::ParameterType *>(t->type);
+        assert(param);
 
         input_parameters.push_back(param);
     }
 
     types::Type *type;
     if (definition->alias) {
-        std::vector<types::Type *> outputParameters;
-        for (auto t : definition->alias->parameters) {
-            t->accept(this);
+        m_as_type = true;
+        definition->alias->accept(this);
+        m_as_type = false;
 
-            // FIXME - copy what Record does
-            if (auto cons = dynamic_cast<types::TypeType *>(t->type)) {
-                outputParameters.push_back(cons->create(this, t));
-            } else {
-                outputParameters.push_back(t->type);
-            }
-        }
+        auto alias = dynamic_cast<types::TypeType *>(definition->alias->type);
+        assert(alias);
 
-        auto type_constructor = find_type_constructor(definition, definition->alias->value);
-        definition->alias->type = type_constructor;
-        type = new types::AliasType(type_constructor, input_parameters, outputParameters);
+        type = new types::AliasType(alias, input_parameters);
     } else {
         std::vector<std::string> field_names;
         std::vector<types::TypeType *> field_types;
-        std::vector<std::vector<types::Type *> > field_parameters;
 
         for (auto name : definition->field_names) {
             field_names.push_back(name->value);
         }
 
         for (auto type : definition->field_types) {
-            auto type_constructor = find_type_constructor(type, type->value);
+            m_as_type = true;
+            type->accept(this);
+            m_as_type = false;
 
-            std::vector<types::Type *> parameters;
-            for (auto t : type->parameters) {
-                t->accept(this);
-                parameters.push_back(t->type);
-            }
-
-            field_types.push_back(type_constructor);
-            field_parameters.push_back(parameters);
-
-            type->type = type_constructor;
+            auto type_type = dynamic_cast<types::TypeType *>(type->type);
+            assert(type_type);
+            field_types.push_back(type_type);
         }
 
-        type = new types::RecordType(input_parameters,
-                                            field_names, field_types,
-                                            field_parameters);
+        type = new types::RecordType(input_parameters, field_names, field_types);
     }
 
     symbol->type = type;

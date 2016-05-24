@@ -1,9 +1,8 @@
 - Automatic Memory Management
 
-- Merge symbol table builder with parser (and implement detection of for variable)
-- Use numbers with metadata as mangling instead
-
-- Type{Array{Integer}}
+- Make booleantype, integertype, etc have only one possible 'creation'
+- Make ::create not accept pass and nodes
+- Split up type parsing in parser
 - Comments
 - Protocols
 - Enumerate

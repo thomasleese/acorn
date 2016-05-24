@@ -141,12 +141,19 @@ InvalidTypeParameters::InvalidTypeParameters(ast::Node *node, unsigned long give
 }
 
 TypeMismatchError::TypeMismatchError(ast::Node *node1, ast::Node *node2) :
-        CompilerError(node1) {
+        TypeMismatchError(node1, node1->type, node2->type)
+{
+
+}
+
+TypeMismatchError::TypeMismatchError(ast::Node *node, types::Type *type1, types::Type *type2) :
+        CompilerError(node)
+{
     m_prefix = "Invalid types";
 
     std::stringstream ss;
-    ss << "Got: " << node1->type->name() << "\n";
-    ss << "Expected: " << node2->type->name();
+    ss << "Got: " << type1->name() << "\n";
+    ss << "Expected: " << type2->name();
     m_message = ss.str();
 }
 

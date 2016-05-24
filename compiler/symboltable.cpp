@@ -463,7 +463,7 @@ void Builder::visit(ast::TypeDefinition *definition) {
 
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
-        sym->type = new types::Parameter(nullptr);
+        sym->type = new types::ParameterType();
         m_scope.back()->insert(this, definition, sym);
     }
 
