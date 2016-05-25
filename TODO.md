@@ -1,19 +1,16 @@
-- Automatic Memory Management
-
-- Make booleantype, integertype, etc have only one possible 'creation'
-- Make ::create not accept pass and nodes
-- Split up type parsing in parser
-- Comments
 - Protocols
+- Comments
+- Any
 - Enumerate
+- Enum
+- Characters
+- Strings
 - Arrays
 - Sets
 - Dictionaries
-- Characters
-- Strings
-- Any
+- Record (change instance structure, remove new keyword)
 - Modules
-
+- Automatic Memory Management
 - Unit tests
 - Mutability
 - Running code outside functions
@@ -23,12 +20,13 @@
 - Plan units of measure
 - Documentation
 - GUI
-
-- Maths library
-
-- Data Structures library
+- Maths
+- Data Structures
   - Ropes
 
+- 10,000 LOC
+
+- The code below must work:
 
     def after(n as Integer) as Channel{Void}
         let channel = new Channel{Void}(buffer: 0)
