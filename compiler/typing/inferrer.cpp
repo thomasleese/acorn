@@ -372,6 +372,7 @@ void Inferrer::visit(ast::Assignment *expression) {
 
 void Inferrer::visit(ast::Selector *expression) {
     expression->operand->accept(this);
+    return_if_null_type(expression->operand);
 
     auto record_type = dynamic_cast<types::Record *>(expression->operand->type);
     if (record_type == nullptr) {
