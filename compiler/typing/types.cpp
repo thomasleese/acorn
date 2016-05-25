@@ -534,6 +534,43 @@ void AliasType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+ProtocolType::ProtocolType(std::vector<ParameterType *> input_parameters, std::vector<Method *> methods)
+        : m_input_parameters(input_parameters), m_methods(methods)
+{
+
+}
+
+ProtocolType::ProtocolType(std::vector<ParameterType *> input_parameters, std::vector<Method *> methods, std::vector<TypeType *> parameters)
+        : TypeType(parameters), m_input_parameters(input_parameters), m_methods(methods)
+{
+
+}
+
+std::string ProtocolType::name() const {
+    return "ProtocolType";
+}
+
+bool ProtocolType::is_compatible(const Type *other) const {
+    return false;
+}
+
+Type *ProtocolType::create(compiler::Pass *pass, ast::Node *node) {
+    if (m_parameters.size() == m_input_parameters.size()) {
+        return new Protocol(this);
+    } else {
+        pass->push_error(new errors::InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
+        return nullptr;
+    }
+}
+
+ProtocolType *ProtocolType::with_parameters(std::vector<TypeType *> parameters) {
+    return new ProtocolType(m_input_parameters, m_methods, parameters);
+}
+
+void ProtocolType::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 TypeDescriptionType::TypeDescriptionType(TypeType *type) {
     if (type) {
         m_parameters.push_back(type);
@@ -1180,6 +1217,45 @@ Union *Union::with_parameters(std::vector<Type *> parameters) {
 }
 
 void Union::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+Protocol::Protocol(ProtocolType *type) : m_type(type) {
+
+}
+
+std::string Protocol::name() const {
+    std::stringstream ss;
+    ss << "Protocol{";
+    for (auto p : m_parameters) {
+        ss << p->name() << ", ";
+    }
+    ss << "}";
+    return ss.str();
+}
+
+std::string Protocol::mangled_name() const {
+    std::stringstream ss;
+    ss << "pr";
+    for (auto p : m_parameters) {
+        ss << p->name();
+    }
+    return ss.str();
+}
+
+ProtocolType *Protocol::type() const {
+    return m_type;
+}
+
+bool Protocol::is_compatible(const Type *other) const {
+    return false;
+}
+
+Protocol *Protocol::with_parameters(std::vector<Type *> parameters) {
+    return this; // FIXME
+}
+
+void Protocol::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

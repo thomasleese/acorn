@@ -307,15 +307,9 @@ void Inferrer::visit(ast::Call *expression) {
         return;
     }
 
-    if (method->is_generic()) {
-        if (!infer_call_type_parameters(expression, method->parameter_types(), argument_types)) {
-            return;
-        }
-
-        if (expression->inferred_type_parameters.empty()) {
-            push_error(new errors::InternalError(expression, "Could not infer type parameters."));
-            return;
-        }
+    if (!infer_call_type_parameters(expression, method->parameter_types(), argument_types)) {
+        push_error(new errors::InternalError(expression, "Could not infer type parameters."));
+        return;
     }
 
     auto return_type = replace_type_parameters(method->return_type(),
@@ -582,7 +576,44 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
 }
 
 void Inferrer::visit(ast::ProtocolDefinition *definition) {
+    auto symbol = m_namespace->lookup(this, definition, definition->name->value);
 
+    symboltable::Namespace *oldNamespace = m_namespace;
+    m_namespace = symbol->nameSpace;
+
+    std::vector<types::ParameterType *> input_parameters;
+    for (auto t : definition->name->parameters) {
+        t->accept(this);
+
+        auto param = dynamic_cast<types::ParameterType *>(t->type);
+        assert(param);
+
+        input_parameters.push_back(param);
+    }
+
+    std::vector<types::Method *> methods;
+    for (auto signature : definition->methods()) {
+        std::vector<types::Type *> parameter_types;
+        for (auto p : signature->parameter_types()) {
+            p->accept(this);
+            return_if_null(p->type);
+
+            parameter_types.push_back(p->type);
+        }
+
+        signature->return_type()->accept(this);
+        auto return_type = signature->return_type()->type;
+        return_if_null(return_type);
+
+        auto method = new types::Method(parameter_types, return_type);
+        method->set_is_generic(!definition->name->parameters.empty());
+        methods.push_back(method);
+    }
+
+    definition->type = new types::ProtocolType(input_parameters, methods);
+    symbol->type = definition->type;
+
+    m_namespace = oldNamespace;
 }
 
 void Inferrer::visit(ast::DefinitionStatement *statement) {

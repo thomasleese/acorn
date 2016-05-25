@@ -268,8 +268,26 @@ namespace acorn {
 
         };
 
-        class ProtocolType : public TypeType {
+        class Method; // FIXME replace with 'MethodType'
 
+        class ProtocolType : public TypeType {
+        public:
+            explicit ProtocolType(std::vector<ParameterType *> input_parameters, std::vector<Method *> methods);
+            ProtocolType(std::vector<ParameterType *> input_parameters, std::vector<Method *> methods, std::vector<TypeType *> parameters);
+
+            std::string name() const;
+
+            bool is_compatible(const Type *other) const;
+
+            Type *create(compiler::Pass *pass, ast::Node *node);
+
+            ProtocolType *with_parameters(std::vector<TypeType *> parameters);
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::vector<ParameterType *> m_input_parameters;
+            std::vector<Method *> m_methods;
         };
 
         class TypeDescriptionType : public TypeType {
@@ -521,7 +539,22 @@ namespace acorn {
         };
 
         class Protocol : public Type {
+        public:
+            explicit Protocol(ProtocolType *type);
 
+            std::string name() const;
+            std::string mangled_name() const;
+
+            ProtocolType *type() const;
+
+            bool is_compatible(const Type *other) const;
+
+            Protocol *with_parameters(std::vector<Type *> parameters);
+
+            void accept(Visitor *visitor);
+
+        private:
+            ProtocolType *m_type;
         };
 
         class Visitor {
