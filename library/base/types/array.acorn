@@ -41,3 +41,36 @@ end
 def done{T}(array as Array{T}, state as _ArrayState) as Boolean
     return state >= array.length
 end
+
+def sum(iterator as Array{Integer}) as Integer
+    let total = 0
+
+    # iterator over values
+    let i = 0
+    for i in iterator
+        total += i
+    end
+
+    return total
+end
+
+
+type Enumeration{T}
+    array as Array{T}
+end
+
+def enumerate{T}(array as Array{T}) as Enumeration{T}
+    return new Enumeration{T}(array: array)
+end
+
+def start{T}(enumeration as Enumeration{T}) as Integer
+    return 0
+end
+
+def next{T}(enumeration as Enumeration{T}, state as Integer) as Tuple{Tuple{Integer, T}, _ArrayState}
+    return (state, enumeration.array[state]), state + 1
+end
+
+def done{T}(enumeration as Enumeration{T}, state as Integer) as Boolean
+    return state >= enumeration.array.length
+end

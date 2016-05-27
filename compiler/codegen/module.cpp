@@ -611,16 +611,9 @@ void ModuleGenerator::visit(ast::Selector *expression) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     expression->operand->accept(this);
-    pop_value();
 
-    ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
-    if (!identifier) {
-        push_error(new errors::InternalError(expression, "N/A"));
-    }
-
-    auto symbol = m_scope.back()->lookup(this, identifier);
-
-    llvm::Value *instance = symbol->value;
+    llvm::LoadInst *load = static_cast<llvm::LoadInst *>(pop_value());
+    auto instance = load->getPointerOperand();
 
     types::Record *recordType = static_cast<types::Record *>(expression->operand->type);
 

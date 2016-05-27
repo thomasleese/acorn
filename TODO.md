@@ -1,5 +1,4 @@
 - Any
-- Enumerate
 - Enum
 - Characters
 - Strings
