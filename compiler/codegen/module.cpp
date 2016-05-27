@@ -245,7 +245,7 @@ void ModuleGenerator::visit(ast::VariableDeclaration *node) {
         m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock());
     } else {
         auto insert_function = m_irBuilder->GetInsertBlock()->getParent();
-        m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock());
+        m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock().front());
 
         symbol->value = m_irBuilder->CreateAlloca(llvm_type, 0, node->name()->value);
     }
