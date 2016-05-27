@@ -551,12 +551,13 @@ std::string ProtocolType::name() const {
 }
 
 bool ProtocolType::is_compatible(const Type *other) const {
+    std::cout << this->name() << " " << other->name() << std::endl;
     return false;
 }
 
 Type *ProtocolType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.size() == m_input_parameters.size()) {
-        return new Protocol(this);
+        return new Protocol(m_methods, this);
     } else {
         pass->push_error(new errors::InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
         return nullptr;
@@ -621,7 +622,7 @@ Parameter::Parameter(ParameterType *constructor) : m_constructor(constructor) {
 }
 
 std::string Parameter::name() const {
-    return "Parameter{Any}";
+    return "Parameter";
 }
 
 std::string Parameter::mangled_name() const {
@@ -1009,7 +1010,10 @@ std::string Method::name() const {
     std::stringstream ss;
     ss << "Method{";
     for (auto type : m_parameters) {
-        ss << type->name() << ", ";
+        ss << type->name();
+        if (type != m_parameters.back()) {
+            ss << ", ";
+        }
     }
     ss << "}";
     return ss.str();
@@ -1057,7 +1061,7 @@ bool Method::could_be_called_with(std::vector<Type *> arguments) {
 
     for (unsigned long i = 0; i < arguments.size(); i++) {
         bool compatible = parameters[i]->is_compatible(arguments[i]);
-        // std::cout << parameters[i]->name() << " ? " << arguments[i]->name() << " = " << compatible << std::endl;
+        std::cout << parameters[i]->name() << " ? " << arguments[i]->name() << " = " << compatible << std::endl;
         if (!compatible) {
             return false;
         }
@@ -1224,11 +1228,20 @@ Protocol::Protocol(ProtocolType *type) : m_type(type) {
 
 }
 
+Protocol::Protocol(std::vector<Method *> methods, ProtocolType *type) : m_type(type) {
+    for (auto method : methods) {
+        m_parameters.push_back(method);
+    }
+}
+
 std::string Protocol::name() const {
     std::stringstream ss;
     ss << "Protocol{";
     for (auto p : m_parameters) {
-        ss << p->name() << ", ";
+        ss << p->name();
+        if (p != m_parameters.back()) {
+            ss << ", ";
+        }
     }
     ss << "}";
     return ss.str();
@@ -1247,12 +1260,31 @@ ProtocolType *Protocol::type() const {
     return m_type;
 }
 
+std::vector<Method *> Protocol::methods() const {
+    std::vector<Method *> methods;
+    for (auto param : m_parameters) {
+        auto method = dynamic_cast<Method *>(param);
+        assert(method);
+        methods.push_back(method);
+    }
+    return methods;
+}
+
 bool Protocol::is_compatible(const Type *other) const {
+    std::cout << this->name() << " " << other->name() << std::endl;
     return false;
 }
 
 Protocol *Protocol::with_parameters(std::vector<Type *> parameters) {
-    return this; // FIXME
+    std::vector<Method *> methods;
+    for (auto param : parameters) {
+        auto method = dynamic_cast<Method *>(param);
+        assert(method);
+        methods.push_back(method);
+    }
+
+    // FIXME should m_type be null here?
+    return new Protocol(methods, m_type);
 }
 
 void Protocol::accept(Visitor *visitor) {

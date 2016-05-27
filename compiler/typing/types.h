@@ -541,11 +541,13 @@ namespace acorn {
         class Protocol : public Type {
         public:
             explicit Protocol(ProtocolType *type);
+            Protocol(std::vector<Method *> methods, ProtocolType *type);
 
             std::string name() const;
             std::string mangled_name() const;
 
             ProtocolType *type() const;
+            std::vector<Method *> methods() const;
 
             bool is_compatible(const Type *other) const;
 

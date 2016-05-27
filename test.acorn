@@ -1,17 +1,12 @@
 import 'base'
 
-protocol IteratorWithState{T, S}
-    def start(Self) as S
-    def next(Self, S) as Tuple{T, S}
-    def done(Self, S) as Boolean
-end #type Iterator{T} as IteratorWithState{T, Any}
-
-def sum{S}(iterator as IteratorWithState{Integer, S}) as Integer
+def sum(iterator as Array{Integer}) as Integer
     let total = 0
     let i = 0
     for i in iterator
         total += i
     end
+    return total
 end
 
 let a = create_array(Integer, 15)
@@ -21,4 +16,4 @@ for i in range(10)
     a.append(i)
 end
 
-exit(a.length)
+exit(sum(a))
