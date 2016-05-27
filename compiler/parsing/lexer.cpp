@@ -35,7 +35,7 @@ void Lexer::setKeywordRule(Token::Rule rule, std::string keyword) {
 void Lexer::loadRules() {
     setRule(Token::Whitespace, "([\t ]+)");
     setRule(Token::Newline, "([\r\n]+)");
-    setRule(Token::Comment, "(#[^\n\r]+)");
+    setRule(Token::Comment, "(#[^\r\n]*[\r\n]+)");
 
     setKeywordRule(Token::LetKeyword, "let");
     setKeywordRule(Token::DefKeyword, "def");

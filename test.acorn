@@ -2,10 +2,13 @@ import 'base'
 
 def sum(iterator as Array{Integer}) as Integer
     let total = 0
+
+    # iterator over values
     let i = 0
     for i in iterator
         total += i
     end
+
     return total
 end
 
