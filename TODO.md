@@ -1,10 +1,10 @@
-- Protocols
 - Comments
 - Any
 - Enumerate
 - Enum
 - Characters
 - Strings
+- File I/O
 - Arrays
 - Sets
 - Dictionaries
@@ -23,6 +23,9 @@
 - Maths
 - Data Structures
   - Ropes
+- Protocols
+- Arrays of protocols
+- Variables of protocols
 
 - 10,000 LOC
 
