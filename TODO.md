@@ -1,6 +1,6 @@
 - Pattern matching
 - Remove 'if let'
-- 'loop', break and continue
+- 'repeat', break and continue
 - Better iterators and iterables
 - Range literals
 - Remove 'Parameter' from visitor
@@ -31,8 +31,6 @@
 - Arrays of protocols
 - Variables of protocols
 - Hindley–Milner type system
-
-- 10,000 LOC
 
 - The code below must work:
 

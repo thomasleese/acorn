@@ -68,7 +68,7 @@ namespace acorn {
         bool isToken(Token::Rule rule) const;
 
         // misc
-        ast::CodeBlock *readCodeBlock();
+        ast::CodeBlock *readCodeBlock(bool in_switch = false);
 
         // expressions
         ast::Expression *readExpression(bool parse_comma);
@@ -92,8 +92,8 @@ namespace acorn {
         ast::If *readIf();
         ast::Return *readReturn();
         ast::Spawn *readSpawn();
-        ast::Sizeof *readSizeof();
-        ast::Strideof *readStrideof();
+        ast::Case *readCase();
+        ast::Switch *readSwitch();
         ast::Expression *readUnaryExpression(bool parse_comma);
         ast::Expression *readBinaryExpression(ast::Expression *lhs, int minPrecedence);
         ast::Expression *readPrimaryExpression();

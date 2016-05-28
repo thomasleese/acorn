@@ -404,10 +404,15 @@ void Builder::visit(ast::Spawn *expression) {
 void Builder::visit(ast::Switch *expression) {
     for (auto entry : expression->cases()) {
         entry->condition()->accept(this);
-        entry->assignment()->accept(this);
+
+        if (entry->assignment()) {
+            entry->assignment()->accept(this);
+        }
     }
 
-    expression->default_block()->accept(this);
+    if (expression->default_block()) {
+        expression->default_block()->accept(this);
+    }
 }
 
 void Builder::visit(ast::Parameter *parameter) {

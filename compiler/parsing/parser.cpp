@@ -114,10 +114,10 @@ bool Parser::isToken(Token::Rule rule) const {
     return token->rule == rule;
 }
 
-CodeBlock *Parser::readCodeBlock() {
+CodeBlock *Parser::readCodeBlock(bool in_switch) {
     auto code = new CodeBlock(m_tokens.front());
 
-    while (!isToken(Token::EndKeyword)) {
+    while (!isToken(Token::EndKeyword) && !(in_switch && (isToken(Token::CaseKeyword) || isToken(Token::DefaultKeyword)))) {
         auto statement = readStatement();
         if (statement == nullptr) {
             break;
@@ -126,7 +126,15 @@ CodeBlock *Parser::readCodeBlock() {
         code->statements.push_back(statement);
     }
 
-    readToken(Token::EndKeyword);
+    if (in_switch) {
+        if (isToken(Token::CaseKeyword) || isToken(Token::DefaultKeyword) || isToken(Token::EndKeyword)) {
+            return code;
+        } else {
+            assert(false);
+        }
+    } else {
+        return_if_null(readToken(Token::EndKeyword));
+    }
 
     return code;
 }
@@ -576,6 +584,58 @@ Spawn *Parser::readSpawn() {
     }
 }
 
+Case *Parser::readCase() {
+    auto token = readToken(Token::CaseKeyword);
+    return_if_null(token);
+
+    auto condition = readExpression(true);
+    return_if_null(condition);
+
+    Expression *assignment = nullptr;
+    if (isToken(Token::UsingKeyword)) {
+        readToken(Token::UsingKeyword);
+
+        if (isToken(Token::LetKeyword)) {
+            assignment = readVariableDeclaration();
+        } else {
+            assignment = readExpression(true);
+        }
+    }
+
+    return_if_null(readToken(Token::Newline));
+
+    auto code = readCodeBlock(true);
+    return_if_null(code);
+
+    return new Case(token, condition, assignment, code);
+}
+
+Switch *Parser::readSwitch() {
+    auto token = readToken(Token::SwitchKeyword);
+    return_if_null(token);
+
+    auto expression = readExpression(true);
+    return_if_null(expression);
+
+    return_if_null(readToken(Token::Newline));
+
+    std::vector<Case *> cases;
+    while (isToken(Token::CaseKeyword)) {
+        auto entry = readCase();
+        return_if_null(entry);
+        cases.push_back(entry);
+    }
+
+    CodeBlock *default_block = nullptr;
+    if (isToken(Token::DefaultKeyword)) {
+        default_block = readCodeBlock(true);
+    }
+
+    return_if_null(readToken(Token::EndKeyword));
+
+    return new Switch(token, expression, cases, default_block);
+}
+
 Expression *Parser::readUnaryExpression(bool parse_comma) {
     if (isToken(Token::Operator)) {
         Call *expr = new Call(m_tokens.front());
@@ -647,6 +707,8 @@ Expression *Parser::readPrimaryExpression() {
         return readFor();
     } else if (isToken(Token::IfKeyword)) {
         return readIf();
+    } else if (isToken(Token::SwitchKeyword)) {
+        return readSwitch();
     } else if (isToken(Token::ReturnKeyword)) {
         return readReturn();
     } else if (isToken(Token::SpawnKeyword)) {
