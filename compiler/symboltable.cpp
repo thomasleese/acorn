@@ -214,7 +214,6 @@ Symbol *Builder::add_builtin_method(symboltable::Symbol *function, types::Method
 }
 
 void Builder::add_builtin_types() {
-    add_builtin_symbol("Any", new types::AnyType());
     add_builtin_symbol("Void", new types::VoidType());
     add_builtin_symbol("Boolean", new types::BooleanType());
     add_builtin_symbol("Integer8", new types::IntegerType(8));

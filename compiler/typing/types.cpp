@@ -98,31 +98,6 @@ void ParameterType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-std::string AnyType::name() const {
-    return "AnyType";
-}
-
-Type *AnyType::create(compiler::Pass *pass, ast::Node *node) {
-    if (m_parameters.empty()) {
-        return new Any();
-    } else {
-        pass->push_error(new errors::InvalidTypeConstructor(node));
-        return nullptr;
-    }
-}
-
-AnyType *AnyType::with_parameters(std::vector<TypeType *> parameters) {
-    if (parameters.empty()) {
-        return this;
-    } else {
-        return nullptr;
-    }
-}
-
-void AnyType::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 std::string VoidType::name() const {
     return "VoidType";
 }
@@ -646,30 +621,6 @@ Parameter *Parameter::with_parameters(std::vector<Type *> parameters) {
 }
 
 void Parameter::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-std::string Any::name() const {
-    return "Any";
-}
-
-std::string Any::mangled_name() const {
-    return "a";
-}
-
-AnyType *Any::type() const {
-    return new AnyType();
-}
-
-Any *Any::with_parameters(std::vector<Type *> parameters) {
-    if (parameters.empty()) {
-        return this;
-    } else {
-        return nullptr;
-    }
-}
-
-void Any::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

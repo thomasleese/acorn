@@ -1,4 +1,6 @@
-- Any
+- Hindley–Milner type system
+
+- Better iterators and iterables
 - Enum
 - Characters
 - Strings

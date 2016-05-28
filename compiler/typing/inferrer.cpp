@@ -228,7 +228,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
 
     types::Type *elementType;
     if (types.empty()) {
-        elementType = new types::Any();
+        elementType = nullptr;
     } else if (types.size() != 1) {
         elementType = new types::Union(types);
     } else {

@@ -13,3 +13,36 @@ for b in enumerate(a)
 end
 
 exit(sum(a))
+
+
+
+
+
+
+
+
+# type ArrayIterator{T}
+#     array as Array{T}
+#     state as Integer
+# end
+#
+# def iterate{T}(array as Array{T}) as ArrayIterator{T}
+#     return new ArrayIterator{T}(array: array, state: 0)
+# end
+#
+# def next{T}(inout iterator as ArrayIterator{T}) as Maybe{T}
+#     if iterator.state >= iterator.array.length
+#         return Nothing
+#     else
+#         iterator.state += 1
+#         return iterator.array[state]
+#     end
+# end
+#
+# protocol Iterator{T}
+#     def next(Self) as Maybe{T}
+# end
+#
+# protocol Iterable{T}
+#     def iterate(Self) as Iterator{T}
+# end

@@ -79,10 +79,6 @@ void TypeGenerator::visit(types::ParameterType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::AnyType *type) {
-    visit_constructor(type);
-}
-
 void TypeGenerator::visit(types::VoidType *type) {
     visit_constructor(type);
 }
@@ -145,18 +141,8 @@ void TypeGenerator::visit(types::Parameter *type) {
     }
 }
 
-void TypeGenerator::visit(types::Any *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
-}
-
 void TypeGenerator::visit(types::Void *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
-
-    /*llvm::Type *llvm_type = llvm::Type::getVoidTy(context);
-
-    m_type_stack.push_back(llvm_type);
-    m_initialiser_stack.push_back(llvm::UndefValue::get(llvm_type));*/
 
     llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
 

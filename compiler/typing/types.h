@@ -81,17 +81,6 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class AnyType : public TypeType {
-        public:
-            std::string name() const;
-
-            Type *create(compiler::Pass *pass, ast::Node *node);
-
-            AnyType *with_parameters(std::vector<TypeType *> parameters);
-
-            void accept(Visitor *visitor);
-        };
-
         class VoidType : public TypeType {
         public:
             std::string name() const;
@@ -327,18 +316,6 @@ namespace acorn {
 
         };
 
-        class Any : public Type {
-        public:
-            std::string name() const;
-            std::string mangled_name() const;
-
-            AnyType *type() const;
-
-            Any *with_parameters(std::vector<Type *> parameters);
-
-            void accept(Visitor *visitor);
-        };
-
         class Void : public Type {
         public:
             std::string name() const;
@@ -564,7 +541,6 @@ namespace acorn {
             virtual ~Visitor();
 
             virtual void visit(ParameterType *type) = 0;
-            virtual void visit(AnyType *type) = 0;
             virtual void visit(VoidType *type) = 0;
             virtual void visit(BooleanType *type) = 0;
             virtual void visit(IntegerType *type) = 0;
@@ -580,7 +556,6 @@ namespace acorn {
             virtual void visit(TypeDescriptionType *type) = 0;
 
             virtual void visit(Parameter *type) = 0;
-            virtual void visit(Any *type) = 0;
             virtual void visit(Void *type) = 0;
             virtual void visit(Boolean *type) = 0;
             virtual void visit(Integer *type) = 0;

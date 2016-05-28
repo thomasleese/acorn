@@ -34,7 +34,6 @@ namespace acorn {
             void visit_constructor(types::TypeType *type);
 
             void visit(types::ParameterType *type);
-            void visit(types::AnyType *type);
             void visit(types::VoidType *type);
             void visit(types::BooleanType *type);
             void visit(types::IntegerType *type);
@@ -50,7 +49,6 @@ namespace acorn {
             void visit(types::ProtocolType *type);
 
             void visit(types::Parameter *type);
-            void visit(types::Any *type);
             void visit(types::Void *type);
             void visit(types::Boolean *type);
             void visit(types::Integer *type);
