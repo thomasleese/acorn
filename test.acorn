@@ -1,48 +1,18 @@
-import 'base'
+type Integer as Integer64
 
-let a = create_array(Integer, 15)
-
-let i = 0
-for i in range(10)
-    a.append(i)
+enum MaybeInteger
+    Some as Integer
+    Nothing
 end
 
-let b = 0, 0
-for b in enumerate(a)
+let perhaps_integer = MaybeInteger.Some(10)
 
+match i
+    where Some(n)
+        # do something
+    end
+
+    where Nothing
+        # do something else
+    end
 end
-
-exit(sum(a))
-
-
-
-
-
-
-
-
-# type ArrayIterator{T}
-#     array as Array{T}
-#     state as Integer
-# end
-#
-# def iterate{T}(array as Array{T}) as ArrayIterator{T}
-#     return new ArrayIterator{T}(array: array, state: 0)
-# end
-#
-# def next{T}(inout iterator as ArrayIterator{T}) as Maybe{T}
-#     if iterator.state >= iterator.array.length
-#         return Nothing
-#     else
-#         iterator.state += 1
-#         return iterator.array[state]
-#     end
-# end
-#
-# protocol Iterator{T}
-#     def next(Self) as Maybe{T}
-# end
-#
-# protocol Iterable{T}
-#     def iterate(Self) as Iterator{T}
-# end

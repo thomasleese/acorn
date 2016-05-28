@@ -1,19 +1,21 @@
-- Hindley–Milner type system
-
+- Enum, pattern matching and (if|while) let
+- 'loop', break and continue
+- Match on integers, etc
 - Better iterators and iterables
-- Enum
+- Range literals
+
 - Characters
 - Strings
+
 - File I/O
 - Arrays
 - Sets
 - Dictionaries
-- Record (change instance structure, remove new keyword)
+- Records (change instance structure, remove new keyword)
 - Modules
 - Automatic Memory Management
 - Unit tests
 - Mutability
-- Running code outside functions
 - Channels
 - Spawns
 - Importing modules
@@ -26,6 +28,7 @@
 - Protocols
 - Arrays of protocols
 - Variables of protocols
+- Hindley–Milner type system
 
 - 10,000 LOC
 

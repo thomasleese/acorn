@@ -448,6 +448,18 @@ While *Parser::readWhile() {
 }
 
 CodeBlock *Parser::readFor() {
+    /*
+     * for item in blah
+     *
+     * let iterator = iterate(blah)
+     * while True
+     *     let maybe_item = next(iterator)
+     *     if item = maybe_item
+     *         <code>
+     *     else
+     *         break
+     */
+
     Token *token = readToken(Token::ForKeyword);
     return_if_null(token);
 

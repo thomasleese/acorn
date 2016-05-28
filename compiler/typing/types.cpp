@@ -350,7 +350,10 @@ std::string RecordType::name() const {
 
 TypeType *replace_parameters(TypeType *type, std::map<ParameterType *, TypeType *> mapping) {
     if (auto p = dynamic_cast<ParameterType *>(type)) {
-        type = mapping[p];
+        auto it = mapping.find(p);
+        if (it != mapping.end()) {
+            type = it->second;
+        }
     }
 
     auto parameters = type->parameters();
@@ -412,7 +415,14 @@ std::string UnionType::name() const {
 }
 
 Type *UnionType::create(compiler::Pass *pass, ast::Node *node) {
-    return new Union(m_parameters);
+    std::vector<Type *> parameters;
+    for (auto param : m_parameters) {
+        auto tt = dynamic_cast<TypeType *>(param);
+        assert(tt);
+        parameters.push_back(tt->create(pass, node));
+    }
+
+    return new Union(parameters);
 }
 
 UnionType *UnionType::with_parameters(std::vector<TypeType *> parameters) {
