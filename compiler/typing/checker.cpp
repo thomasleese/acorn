@@ -188,6 +188,23 @@ void Checker::visit(ast::Spawn *expression) {
     check_not_null(expression);
 }
 
+void Checker::visit(ast::Switch *expression) {
+    expression->expression()->accept(this);
+
+    for (auto entry : expression->cases()) {
+        entry->condition()->accept(this);
+        entry->assignment()->accept(this);
+        entry->code()->accept(this);
+        check_not_null(entry);
+    }
+
+    if (expression->default_block()) {
+        check_not_null(expression->default_block());
+    }
+
+    check_not_null(expression);
+}
+
 void Checker::visit(ast::Parameter *parameter) {
     parameter->typeNode->accept(this);
 

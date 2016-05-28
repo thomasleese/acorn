@@ -249,6 +249,38 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
+        class Case : public Node {
+        public:
+            Case(Token *token, Expression *condition, Expression *assignment, CodeBlock *code);
+
+            Expression *condition() const;
+            Expression *assignment() const;
+            CodeBlock *code() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Expression> m_condition;
+            std::unique_ptr<Expression> m_assignment;
+            std::unique_ptr<CodeBlock> m_code;
+        };
+
+        class Switch : public Expression {
+        public:
+            Switch(Token *token, Expression *expression, std::vector<Case *> cases, CodeBlock *default_block = nullptr);
+
+            Expression *expression() const;
+            std::vector<Case *> cases() const;
+            CodeBlock *default_block() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Expression> m_expression;
+            std::vector<std::unique_ptr<Case> > m_cases;
+            std::unique_ptr<CodeBlock> m_default_block;
+        };
+
         // misc
         struct Parameter : Node {
             explicit Parameter(Token *token);

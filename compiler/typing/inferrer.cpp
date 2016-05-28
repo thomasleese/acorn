@@ -436,6 +436,10 @@ void Inferrer::visit(ast::Spawn *expression) {
     expression->type = expression->call->type;
 }
 
+void Inferrer::visit(ast::Switch *expression) {
+    expression->type = nullptr;
+}
+
 void Inferrer::visit(ast::Parameter *parameter) {
     auto symbol = m_namespace->lookup(this, parameter, parameter->name->value);
     if (symbol == nullptr) {

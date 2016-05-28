@@ -79,6 +79,7 @@ namespace acorn {
             void visit(ast::If *expression);
             void visit(ast::Return *expression);
             void visit(ast::Spawn *expression);
+            void visit(ast::Switch *expression);
 
             void visit(ast::Parameter *parameter);
 

@@ -237,6 +237,26 @@ void PrettyPrinter::visit(ast::Spawn *expression) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(ast::Switch *expression) {
+    ss << indentation() << "(Switch\n";
+    indent++;
+
+    expression->expression()->accept(this);
+
+    for (auto entry : expression->cases()) {
+        entry->condition()->accept(this);
+        entry->assignment()->accept(this);
+        entry->code()->accept(this);
+    }
+
+    if (expression->default_block()) {
+        expression->default_block()->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(ast::Parameter *parameter) {
     ss << indentation() << "(Parameter\n";
     indent++;

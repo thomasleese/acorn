@@ -86,6 +86,8 @@ std::string Token::rule_string(Token::Rule rule) {
             return "switch";
         case CaseKeyword:
             return "case";
+        case DefaultKeyword:
+            return "default";
         case IntegerLiteral:
             return "integer";
         case FloatLiteral:

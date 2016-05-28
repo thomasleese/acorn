@@ -768,6 +768,11 @@ void ModuleGenerator::visit(ast::Spawn *expression) {
     push_value(nullptr);
 }
 
+void ModuleGenerator::visit(ast::Switch *expression) {
+    push_error(new errors::InternalError(expression, "N/A"));
+    push_value(nullptr);
+}
+
 void ModuleGenerator::visit(ast::Parameter *parameter) {
     push_error(new errors::InternalError(parameter, "N/A"));
 }

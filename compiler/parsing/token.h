@@ -53,6 +53,7 @@ namespace acorn {
             EnumKeyword,
             SwitchKeyword,
             CaseKeyword,
+            DefaultKeyword,
 
             // literals
             StringLiteral,

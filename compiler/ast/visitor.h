@@ -29,6 +29,7 @@ namespace acorn {
         struct If;
         struct Return;
         struct Spawn;
+        class Switch;
         struct Parameter;
         struct VariableDefinition;
         struct FunctionDefinition;
@@ -67,6 +68,7 @@ namespace acorn {
             virtual void visit(If *expression) = 0;
             virtual void visit(Return *expression) = 0;
             virtual void visit(Spawn *expression) = 0;
+            virtual void visit(Switch *expression) = 0;
 
             // misc
             virtual void visit(Parameter *parameter) = 0;

@@ -3,6 +3,7 @@
 - 'loop', break and continue
 - Better iterators and iterables
 - Range literals
+- Remove 'Parameter' from visitor
 
 - Match on integers, etc
 - Modules

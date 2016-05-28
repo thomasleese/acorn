@@ -401,6 +401,15 @@ void Builder::visit(ast::Spawn *expression) {
 
 }
 
+void Builder::visit(ast::Switch *expression) {
+    for (auto entry : expression->cases()) {
+        entry->condition()->accept(this);
+        entry->assignment()->accept(this);
+    }
+
+    expression->default_block()->accept(this);
+}
+
 void Builder::visit(ast::Parameter *parameter) {
     Symbol *symbol = new Symbol(parameter->name->value);
     m_scope.back()->insert(this, parameter, symbol);

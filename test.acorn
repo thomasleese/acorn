@@ -8,7 +8,7 @@ end
 let perhaps_integer = MaybeInteger.Some(10)
 
 switch perhaps_integer
-case MaybeInteger.Some(let n)
+case MaybeInteger.Some using let n
     exit(n)
 
 case MaybeInteger.None

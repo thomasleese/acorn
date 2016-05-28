@@ -70,8 +70,9 @@ void Lexer::loadRules() {
     setKeywordRule(Token::InoutKeyword, "inout");
     setKeywordRule(Token::ProtocolKeyword, "protocol");
     setKeywordRule(Token::EnumKeyword, "enum");
-    setKeywordRule(Token::SwitchKeyword, "swift");
+    setKeywordRule(Token::SwitchKeyword, "switch");
     setKeywordRule(Token::CaseKeyword, "case");
+    setKeywordRule(Token::DefaultKeyword, "case");
 
     setRule(Token::StringLiteral, "((['\"])((?:.(?!(?<![\\\\])\\2))*.?)\\2)");
     setRule(Token::ImaginaryLiteral, "([0-9]+(\\.[0-9]+)?[ij])");

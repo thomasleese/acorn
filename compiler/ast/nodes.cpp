@@ -225,6 +225,56 @@ void Spawn::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+Case::Case(Token *token, Expression *condition, Expression *assignment, CodeBlock *code) :
+        Node(token), m_condition(condition), m_assignment(assignment), m_code(code)
+{
+
+}
+
+Expression *Case::condition() const {
+    return m_condition.get();
+}
+
+Expression *Case::assignment() const {
+    return m_assignment.get();
+}
+
+CodeBlock *Case::code() const {
+    return m_code.get();
+}
+
+void Case::accept(Visitor *visitor) {
+    // visitor->visit(this);
+}
+
+Switch::Switch(Token *token, Expression *expression, std::vector<Case *> cases, CodeBlock *default_block) :
+        Expression(token), m_expression(expression), m_default_block(default_block)
+{
+    for (auto entry : cases) {
+        m_cases.push_back(std::unique_ptr<Case>(entry));
+    }
+}
+
+Expression *Switch::expression() const {
+    return m_expression.get();
+}
+
+std::vector<Case *> Switch::cases() const {
+    std::vector<Case *> cases;
+    for (auto &entry : m_cases) {
+        cases.push_back(entry.get());
+    }
+    return cases;
+}
+
+CodeBlock *Switch::default_block() const {
+    return m_default_block.get();
+}
+
+void Switch::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Parameter::Parameter(Token *token) : Node(token), name(nullptr), typeNode(nullptr) {
 
 }
