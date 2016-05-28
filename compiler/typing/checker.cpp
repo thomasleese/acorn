@@ -263,6 +263,14 @@ void Checker::visit(ast::ProtocolDefinition *definition) {
     check_not_null(definition);
 }
 
+void Checker::visit(ast::EnumDefinition *definition) {
+    for (auto element : definition->elements()) {
+        check_not_null(element);
+    }
+
+    check_not_null(definition);
+}
+
 void Checker::visit(ast::DefinitionStatement *statement) {
     statement->definition->accept(this);
     check_not_null(statement);

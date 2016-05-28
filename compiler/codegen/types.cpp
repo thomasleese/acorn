@@ -111,7 +111,7 @@ void TypeGenerator::visit(types::RecordType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::UnionType *type) {
+void TypeGenerator::visit(types::EnumType *type) {
     visit_constructor(type);
 }
 
@@ -290,7 +290,7 @@ void TypeGenerator::visit(types::Function *type) {
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(types::Union *type) {
+void TypeGenerator::visit(types::Enum *type) {
     llvm::LLVMContext &context = llvm::getGlobalContext();
 
     std::vector<llvm::Type *> llvm_types;
@@ -301,7 +301,7 @@ void TypeGenerator::visit(types::Union *type) {
     llvm_types.push_back(i8);
     llvm_initialisers.push_back(llvm::ConstantInt::get(i8, 0));
 
-    for (auto field_type : type->types()) {
+    for (auto field_type : type->element_types()) {
         field_type->accept(this);
 
         llvm::Type *llvm_field_type = take_type(nullptr);

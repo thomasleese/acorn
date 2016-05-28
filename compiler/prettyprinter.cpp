@@ -308,6 +308,20 @@ void PrettyPrinter::visit(ast::ProtocolDefinition *definition) {
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(ast::EnumDefinition *definition) {
+    ss << indentation() << "(EnumDefinition\n";
+    indent++;
+
+    definition->name->accept(this);
+
+    for (auto element : definition->elements()) {
+        element->name()->accept(this);
+    }
+
+    indent--;
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(ast::DefinitionStatement *statement) {
     ss << indentation() << "(DefinitionStatement\n";
     indent++;

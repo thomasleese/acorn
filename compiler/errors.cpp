@@ -152,8 +152,15 @@ TypeMismatchError::TypeMismatchError(ast::Node *node, types::Type *type1, types:
     m_prefix = "Invalid types";
 
     std::stringstream ss;
-    ss << "Got: " << type1->name() << "\n";
-    ss << "Expected: " << type2->name();
+
+    if (type1) {
+        ss << "Got: " << type1->name() << "\n";
+    }
+
+    if (type2) {
+        ss << "Expected: " << type2->name();
+    }
+
     m_message = ss.str();
 }
 

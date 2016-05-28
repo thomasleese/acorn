@@ -51,6 +51,16 @@ namespace acorn {
             std::vector<Type *> m_parameters;
         };
 
+        /* useful type interfaces go here */
+        class Selectable {
+        public:
+            virtual ~Selectable();
+
+            virtual bool has_child(std::string name) = 0;
+            virtual Type *child_type(std::string name) = 0;
+        };
+
+        /* actual type definitions go here */
         class Parameter;
 
         // type "type"s -- i.e. the type of concrete types
@@ -205,20 +215,31 @@ namespace acorn {
 
         };
 
-        class UnionType : public TypeType {
-
+        class EnumType : public TypeType, public Selectable {
         public:
-            UnionType();
-            explicit UnionType(std::vector<TypeType *> parameters);
+            EnumType(std::vector<ParameterType *> input_parameters,
+                     std::vector<std::string> names,
+                     std::vector<TypeType *> types);
+            EnumType(std::vector<ParameterType *> input_parameters,
+                     std::vector<std::string> names,
+                     std::vector<TypeType *> types,
+                     std::vector<TypeType *> parameters);
 
             std::string name() const;
 
+            bool has_child(std::string name);
+            Type *child_type(std::string name);
+
             Type *create(compiler::Pass *pass, ast::Node *node);
 
-            UnionType *with_parameters(std::vector<TypeType *> parameters);
+            EnumType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
 
+        private:
+            std::vector<ParameterType *> m_input_parameters;
+            std::vector<std::string> m_element_names;
+            std::vector<TypeType *> m_element_types;
         };
 
         class TupleType : public TypeType {
@@ -415,7 +436,7 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class Record : public Type {
+        class Record : public Type, public Selectable {
         public:
             Record(std::vector<std::string> field_names, std::vector<Type *> field_types);
 
@@ -423,6 +444,9 @@ namespace acorn {
             long get_field_index(std::string name);
             Type *get_field_type(std::string name);
             std::vector<Type *> field_types() const;
+
+            bool has_child(std::string name);
+            Type *child_type(std::string name);
 
             std::string name() const;
             std::string mangled_name() const;
@@ -495,24 +519,33 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class Union : public Type {
+        class Enum : public Type, public Selectable {
         public:
-            Union(Type *type1, Type *type2);
-            Union(std::vector<Type *> types);
+            Enum(EnumType *type, std::string name1, Type *type1, std::string name2, Type *type2);
+            Enum(EnumType *type, std::vector<std::string> names, std::vector<Type *> types);
 
             std::string name() const;
             std::string mangled_name() const;
 
-            UnionType *type() const;
+            EnumType *type() const;
 
-            std::vector<Type *> types() const;
+            std::vector<Type *> element_types() const;
+            std::vector<std::string> element_names() const;
             uint8_t type_index(const Type *type, bool *exists) const;
+
+            bool has_child(std::string name);
+            uint8_t child_index(std::string name, bool *exists) const;
+            Type *child_type(std::string name);
 
             bool is_compatible(const Type *other) const;
 
-            Union *with_parameters(std::vector<Type *> parameters);
+            Enum *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
+
+        private:
+            EnumType *m_type;
+            std::vector<std::string> m_element_names;
         };
 
         class Protocol : public Type {
@@ -549,7 +582,7 @@ namespace acorn {
             virtual void visit(UnsafePointerType *type) = 0;
             virtual void visit(FunctionType *type) = 0;
             virtual void visit(RecordType *type) = 0;
-            virtual void visit(UnionType *type) = 0;
+            virtual void visit(EnumType *type) = 0;
             virtual void visit(TupleType *type) = 0;
             virtual void visit(AliasType *type) = 0;
             virtual void visit(ProtocolType *type) = 0;
@@ -566,7 +599,7 @@ namespace acorn {
             virtual void visit(Tuple *type) = 0;
             virtual void visit(Method *type) = 0;
             virtual void visit(Function *type) = 0;
-            virtual void visit(Union *type) = 0;
+            virtual void visit(Enum *type) = 0;
             virtual void visit(Protocol *type) = 0;
         };
 

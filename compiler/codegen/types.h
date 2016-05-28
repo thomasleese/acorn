@@ -42,7 +42,7 @@ namespace acorn {
             void visit(types::UnsafePointerType *type);
             void visit(types::FunctionType *type);
             void visit(types::RecordType *type);
-            void visit(types::UnionType *type);
+            void visit(types::EnumType *type);
             void visit(types::TupleType *type);
             void visit(types::AliasType *type);
             void visit(types::TypeDescriptionType *type);
@@ -59,7 +59,7 @@ namespace acorn {
             void visit(types::Tuple *type);
             void visit(types::Method *type);
             void visit(types::Function *type);
-            void visit(types::Union *type);
+            void visit(types::Enum *type);
             void visit(types::Protocol *type);
 
         private:

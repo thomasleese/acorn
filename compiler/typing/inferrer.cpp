@@ -140,11 +140,15 @@ types::Type *Inferrer::replace_type_parameters(types::Type *type, std::map<types
 
     auto parameters = type->parameters();
 
-    for (int i = 0; i < parameters.size(); i++) {
-        parameters[i] = replace_type_parameters(parameters[i], replacements);
-    }
+    if (parameters.empty()) {
+        return type;
+    } else {
+        for (int i = 0; i < parameters.size(); i++) {
+            parameters[i] = replace_type_parameters(parameters[i], replacements);
+        }
 
-    return type->with_parameters(parameters);
+        return type->with_parameters(parameters);
+    }
 }
 
 void Inferrer::visit(ast::CodeBlock *block) {
@@ -226,20 +230,15 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
         }
     }
 
-    types::Type *elementType;
-    if (types.empty()) {
-        elementType = nullptr;
-    } else if (types.size() != 1) {
-        elementType = new types::Union(types);
+    if (types.size() == 1) {
+        std::vector<types::Type *> p;
+        p.push_back(types[0]);
+        auto array_type = find_type(sequence, "Array")->with_parameters(p);
+        sequence->type = array_type->create(this, sequence);
     } else {
-        elementType = types[0];
+        // FIXME show error
+        sequence->type = nullptr;
     }
-
-    std::vector<types::Type *> p;
-    p.push_back(elementType);
-
-    auto array_type = find_type(sequence, "Array")->with_parameters(p);
-    sequence->type = array_type->create(this, sequence);
 }
 
 void Inferrer::visit(ast::MappingLiteral *mapping) {
@@ -315,6 +314,8 @@ void Inferrer::visit(ast::Call *expression) {
     auto return_type = replace_type_parameters(method->return_type(),
                                                expression->inferred_type_parameters);
 
+    std::cout << "call " << return_type << std::endl;
+
     expression->type = return_type;
 }
 
@@ -374,13 +375,13 @@ void Inferrer::visit(ast::Selector *expression) {
     expression->operand->accept(this);
     return_if_null_type(expression->operand);
 
-    auto record_type = dynamic_cast<types::Record *>(expression->operand->type);
-    if (record_type == nullptr) {
-        push_error(new errors::TypeMismatchError(expression, expression->operand));
+    auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type);
+    if (selectable == nullptr) {
+        push_error(new errors::TypeMismatchError(expression->operand, expression));
         return;
     }
 
-    auto field_type = record_type->get_field_type(expression->name->value);
+    auto field_type = selectable->child_type(expression->name->value);
     if (field_type == nullptr) {
         push_error(new errors::UndefinedError(expression->name, expression->name->value));
         return;
@@ -612,6 +613,50 @@ void Inferrer::visit(ast::ProtocolDefinition *definition) {
     }
 
     definition->type = new types::ProtocolType(input_parameters, methods);
+    symbol->type = definition->type;
+
+    m_namespace = oldNamespace;
+}
+
+void Inferrer::visit(ast::EnumDefinition *definition) {
+    auto symbol = m_namespace->lookup(this, definition, definition->name->value);
+
+    symboltable::Namespace *oldNamespace = m_namespace;
+    m_namespace = symbol->nameSpace;
+
+    std::vector<types::ParameterType *> input_parameters;
+    for (auto t : definition->name->parameters) {
+        t->accept(this);
+
+        auto param = dynamic_cast<types::ParameterType *>(t->type);
+        assert(param);
+
+        input_parameters.push_back(param);
+    }
+
+    std::vector<std::string> element_names;
+    std::vector<types::TypeType *> element_types;
+
+    for (auto element : definition->elements()) {
+        types::TypeType *type = nullptr;
+
+        element_names.push_back(element->name()->value);
+
+        if (element->type_name()) {
+            element->type_name()->accept(this);
+            return_if_null_type(element->type_name());
+            type = dynamic_cast<types::TypeType *>(element->type_name()->type);
+            assert(type);
+        } else {
+            type = new types::VoidType();
+        }
+
+        element_types.push_back(type);
+
+        element->type = type;
+    }
+
+    definition->type = new types::EnumType(input_parameters, element_names, element_types);
     symbol->type = definition->type;
 
     m_namespace = oldNamespace;

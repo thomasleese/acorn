@@ -2,7 +2,7 @@ type Integer as Integer64
 type UnsignedInteger as UnsignedInteger64
 type Float as Float64
 
-type Maybe{T} as Union{Void, T}
+type Maybe{T} as Enum{Void, T}
 
 def -(n as Integer) as Integer
     return 0 - n

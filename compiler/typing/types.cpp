@@ -38,6 +38,10 @@ std::vector<types::Type *> Type::parameters() const {
     return m_parameters;
 }
 
+Selectable::~Selectable() {
+
+}
+
 TypeType::TypeType() {
 
 }
@@ -402,34 +406,60 @@ void RecordType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-UnionType::UnionType() {
+EnumType::EnumType(std::vector<ParameterType *> input_parameters, std::vector<std::string> names, std::vector<TypeType *> types) :
+        m_input_parameters(input_parameters), m_element_names(names), m_element_types(types)
+{
 
 }
 
-UnionType::UnionType(std::vector<TypeType *> parameters) : TypeType(parameters) {
+EnumType::EnumType(std::vector<ParameterType *> input_parameters, std::vector<std::string> names, std::vector<TypeType *> types, std::vector<TypeType *> parameters) :
+        TypeType(parameters), m_input_parameters(input_parameters), m_element_names(names), m_element_types(types)
+{
 
 }
 
-std::string UnionType::name() const {
-    return "UnionType";
+std::string EnumType::name() const {
+    return "EnumType";
 }
 
-Type *UnionType::create(compiler::Pass *pass, ast::Node *node) {
-    std::vector<Type *> parameters;
-    for (auto param : m_parameters) {
-        auto tt = dynamic_cast<TypeType *>(param);
-        assert(tt);
-        parameters.push_back(tt->create(pass, node));
+bool EnumType::has_child(std::string name) {
+    auto it = std::find(m_element_names.begin(), m_element_names.end(), name);
+    return it != m_element_names.end();
+}
+
+Type *EnumType::child_type(std::string name) {
+    auto it = std::find(m_element_names.begin(), m_element_names.end(), name);
+    if (it == m_element_names.end()) {
+        return nullptr;
+    } else {
+        auto enum_type = create(nullptr, nullptr);
+
+        long index = std::distance(m_element_names.begin(), it);
+        auto type = m_element_types[index]->create(nullptr, nullptr);
+        if (type->name() == "Void") {
+            return enum_type;
+        } else {
+            auto function = new Function();
+            function->add_method(new Method(type, enum_type));
+            return function;
+        }
+    }
+}
+
+Type *EnumType::create(compiler::Pass *pass, ast::Node *node) {
+    std::vector<Type *> element_types;
+    for (auto type : m_element_types) {
+        element_types.push_back(type->create(pass, node));
     }
 
-    return new Union(parameters);
+    return new Enum(this, m_element_names, element_types);
 }
 
-UnionType *UnionType::with_parameters(std::vector<TypeType *> parameters) {
-    return new UnionType(parameters);
+EnumType *EnumType::with_parameters(std::vector<TypeType *> parameters) {
+    return new EnumType(m_input_parameters, m_element_names, m_element_types, parameters);
 }
 
-void UnionType::accept(Visitor *visitor) {
+void EnumType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -875,6 +905,14 @@ std::vector<Type *> Record::field_types() const {
     return m_parameters;
 }
 
+bool Record::has_child(std::string name) {
+    return get_field_index(name) != -1;
+}
+
+Type *Record::child_type(std::string name) {
+    return get_field_type(name);
+}
+
 std::string Record::name() const {
     std::stringstream ss;
     ss << "Record{";
@@ -1115,19 +1153,22 @@ void Function::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Union::Union(Type *type1, Type *type2) {
+Enum::Enum(EnumType *type, std::string name1, Type *type1, std::string name2, Type *type2) : m_type(type) {
+    m_element_names.push_back(name1);
     m_parameters.push_back(type1);
+    m_element_names.push_back(name2);
     m_parameters.push_back(type2);
 }
 
-Union::Union(std::vector<Type *> types) {
+Enum::Enum(EnumType *type, std::vector<std::string> names, std::vector<Type *> types) : m_type(type) {
     assert(!types.empty());
+    m_element_names = names;
     m_parameters = types;
 }
 
-std::string Union::name() const {
+std::string Enum::name() const {
     std::stringstream ss;
-    ss << "Union{";
+    ss << "Enum{";
     for (auto type : m_parameters) {
         ss << type->name();
         if (type != m_parameters.back()) {
@@ -1138,7 +1179,7 @@ std::string Union::name() const {
     return ss.str();
 }
 
-std::string Union::mangled_name() const {
+std::string Enum::mangled_name() const {
     std::stringstream ss;
     ss << "u";
     for (auto type : m_parameters) {
@@ -1147,15 +1188,19 @@ std::string Union::mangled_name() const {
     return ss.str();
 }
 
-UnionType *Union::type() const {
-    return new UnionType();
+EnumType *Enum::type() const {
+    return m_type;
 }
 
-std::vector<Type *> Union::types() const {
+std::vector<Type *> Enum::element_types() const {
     return m_parameters;
 }
 
-uint8_t Union::type_index(const Type *type, bool *exists) const {
+std::vector<std::string> Enum::element_names() const {
+    return m_element_names;
+}
+
+uint8_t Enum::type_index(const Type *type, bool *exists) const {
     for (uint8_t i = 0; i < m_parameters.size(); i++) {
         if (m_parameters[i]->is_compatible(type)) {
             *exists = true;
@@ -1167,21 +1212,54 @@ uint8_t Union::type_index(const Type *type, bool *exists) const {
     return 0;
 }
 
-bool Union::is_compatible(const Type *other) const {
-    for (auto type : m_parameters) {
-        if (type->is_compatible(other)) {
-            return true;
+bool Enum::has_child(std::string name) {
+    auto it = std::find(m_element_names.begin(), m_element_names.end(), name);
+    return it != m_element_names.end();
+}
+
+uint8_t Enum::child_index(std::string name, bool *exists) const {
+    for (uint8_t i = 0; i < m_element_names.size(); i++) {
+        if (m_element_names[i] == name) {
+            *exists = true;
+            return i;
         }
     }
 
-    return false;
+    *exists = false;
+    return 0;
 }
 
-Union *Union::with_parameters(std::vector<Type *> parameters) {
-    return new Union(parameters);
+Type *Enum::child_type(std::string name) {
+    bool exists = false;
+    uint8_t index = child_index(name, &exists);
+    if (exists) {
+        return m_parameters[index];
+    } else {
+        return nullptr;
+    }
 }
 
-void Union::accept(Visitor *visitor) {
+bool Enum::is_compatible(const Type *other) const {
+    auto other_enum = dynamic_cast<const Enum *>(other);
+
+    if (element_types().size() == other_enum->element_types().size()) {
+        for (int i = 0; i < element_types().size(); i++) {
+            if (!element_types()[i]->is_compatible(other_enum->element_types()[i])) {
+                return false;
+            }
+        }
+
+        return true;
+    } else {
+        return false;
+    }
+}
+
+Enum *Enum::with_parameters(std::vector<Type *> parameters) {
+    return new Enum(m_type, m_element_names, parameters);
+}
+
+void Enum::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

@@ -555,8 +555,8 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
 
     assert(variable_pointer);
 
-    auto lhs_union_type = dynamic_cast<types::Union *>(expression->lhs->type);
-    auto rhs_union_type = dynamic_cast<types::Union *>(expression->rhs->type);
+    auto lhs_union_type = dynamic_cast<types::Enum *>(expression->lhs->type);
+    auto rhs_union_type = dynamic_cast<types::Enum *>(expression->rhs->type);
 
     if (lhs_union_type && !rhs_union_type) {
         bool ok;
@@ -746,6 +746,10 @@ void ModuleGenerator::visit(ast::TypeDefinition *definition) {
 }
 
 void ModuleGenerator::visit(ast::ProtocolDefinition *definition) {
+    push_value(nullptr);
+}
+
+void ModuleGenerator::visit(ast::EnumDefinition *definition) {
     push_value(nullptr);
 }
 

@@ -48,11 +48,11 @@ let function as Function{Integer, Integer, Integer} = plus
 
 let nothing as Void = Nothing
 
-type Maybe{T} as Union{Void, T}
+type Maybe{T} as Enum{Void, T}
 
 let maybe1 as Maybe{Integer} = 10
 let maybe2 as Maybe{Integer} = Nothing
 
-type Number as Union{Integer, Float, Complex}
+type Number as Enum{Integer, Float, Complex}
 
 let number as Number = 2.5

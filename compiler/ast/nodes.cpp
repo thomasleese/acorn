@@ -353,7 +353,7 @@ std::vector<EnumElement *> EnumDefinition::elements() const {
 }
 
 void EnumDefinition::accept(Visitor *visitor) {
-    // visitor->visit(this);
+    visitor->visit(this);
 }
 
 DefinitionStatement::DefinitionStatement(Definition *definition) : Statement(definition->token) {

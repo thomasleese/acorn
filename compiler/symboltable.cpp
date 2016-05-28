@@ -232,7 +232,6 @@ void Builder::add_builtin_types() {
     add_builtin_symbol("Float128", new types::FloatType(128));
     add_builtin_symbol("UnsafePointer", new types::UnsafePointerType());
     add_builtin_symbol("Function", new types::FunctionType());
-    add_builtin_symbol("Union", new types::UnionType());
     add_builtin_symbol("Tuple", new types::TupleType());
     add_builtin_symbol("Type", new types::TypeDescriptionType());
 }
@@ -498,6 +497,32 @@ void Builder::visit(ast::ProtocolDefinition *definition) {
 
     for (auto method : definition->methods()) {
         method->accept(this);
+    }
+
+    m_scope.pop_back();
+}
+
+void Builder::visit(ast::EnumDefinition *definition) {
+    auto symbol = new Symbol(definition->name->value);
+    m_scope.back()->insert(this, definition, symbol);
+
+    symbol->nameSpace = new Namespace(m_scope.back());
+
+    m_scope.push_back(symbol->nameSpace);
+
+    auto self_symbol = new Symbol("Self");
+    self_symbol->type = new types::ParameterType();
+    m_scope.back()->insert(this, definition, self_symbol);
+
+    for (auto parameter : definition->name->parameters) {
+        Symbol *sym = new Symbol(parameter->value);
+        sym->type = new types::ParameterType();
+        m_scope.back()->insert(this, definition, sym);
+    }
+
+    for (auto element : definition->elements()) {
+        Symbol *sym = new Symbol(element->name()->value);
+        m_scope.back()->insert(this, element, sym);
     }
 
     m_scope.pop_back();
