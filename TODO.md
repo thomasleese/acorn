@@ -1,4 +1,4 @@
-- Enum, pattern matching and (if|while) let
+- Pattern matching and (if|while) let
 - 'loop', break and continue
 - Match on integers, etc
 - Better iterators and iterables

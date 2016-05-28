@@ -5,14 +5,14 @@ enum MaybeInteger
     Nothing
 end
 
-let perhaps_integer = MaybeInteger.Nothing
+let perhaps_integer = MaybeInteger.Some(10)
 
-#match perhaps_integer
-#    where MaybeInteger.Some(let n)
-#        # do something
-#    end
-#
-#    where MaybeInteger.Nothing
-#        # do something else
-#    end
-#end
+match perhaps_integer
+    where MaybeInteger.Some(let n)
+        exit(n)
+    end
+
+    where MaybeInteger.Nothing
+        exit(25)
+    end
+end
