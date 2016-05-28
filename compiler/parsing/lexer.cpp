@@ -60,7 +60,7 @@ void Lexer::loadRules() {
     setKeywordRule(Token::WithKeyword, "with");
     setKeywordRule(Token::YieldKeyword, "yield");
     setKeywordRule(Token::AsyncKeyword, "async");
-    setKeywordRule(Token::DoKeyword, "do");
+    setKeywordRule(Token::RepeatKeyword, "repeat");
     setKeywordRule(Token::UnlessKeyword, "unless");
     setKeywordRule(Token::MutableKeyword, "mutable");
     setKeywordRule(Token::SpawnKeyword, "spawn");
@@ -70,6 +70,8 @@ void Lexer::loadRules() {
     setKeywordRule(Token::InoutKeyword, "inout");
     setKeywordRule(Token::ProtocolKeyword, "protocol");
     setKeywordRule(Token::EnumKeyword, "enum");
+    setKeywordRule(Token::SwitchKeyword, "swift");
+    setKeywordRule(Token::CaseKeyword, "case");
 
     setRule(Token::StringLiteral, "((['\"])((?:.(?!(?<![\\\\])\\2))*.?)\\2)");
     setRule(Token::ImaginaryLiteral, "([0-9]+(\\.[0-9]+)?[ij])");

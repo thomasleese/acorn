@@ -7,12 +7,10 @@ end
 
 let perhaps_integer = MaybeInteger.Some(10)
 
-match perhaps_integer
-    where MaybeInteger.Some(let n)
-        exit(n)
-    end
+switch perhaps_integer
+case MaybeInteger.Some(let n)
+    exit(n)
 
-    where MaybeInteger.Nothing
-        exit(25)
-    end
+case MaybeInteger.None
+    exit(25)
 end

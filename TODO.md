@@ -1,13 +1,14 @@
-- Pattern matching and (if|while) let
+- Pattern matching
+- Remove 'if let'
 - 'loop', break and continue
-- Match on integers, etc
 - Better iterators and iterables
 - Range literals
 
+- Match on integers, etc
 - Modules
 - Characters
 - Strings
-
+- Defer/Guard (see Swift)
 - File I/O
 - Arrays
 - Sets

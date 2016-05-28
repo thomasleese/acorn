@@ -62,8 +62,8 @@ std::string Token::rule_string(Token::Rule rule) {
             return "yield";
         case AsyncKeyword:
             return "async";
-        case DoKeyword:
-            return "do";
+        case RepeatKeyword:
+            return "repeat";
         case UnlessKeyword:
             return "unless";
         case MutableKeyword:
@@ -82,6 +82,10 @@ std::string Token::rule_string(Token::Rule rule) {
             return "protocol";
         case EnumKeyword:
             return "enum";
+        case SwitchKeyword:
+            return "switch";
+        case CaseKeyword:
+            return "case";
         case IntegerLiteral:
             return "integer";
         case FloatLiteral:

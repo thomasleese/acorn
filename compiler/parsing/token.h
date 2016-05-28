@@ -41,7 +41,7 @@ namespace acorn {
             WithKeyword,
             YieldKeyword,
             AsyncKeyword,
-            DoKeyword,
+            RepeatKeyword,
             UnlessKeyword,
             MutableKeyword,
             SpawnKeyword,
@@ -51,6 +51,8 @@ namespace acorn {
             InoutKeyword,
             ProtocolKeyword,
             EnumKeyword,
+            SwitchKeyword,
+            CaseKeyword,
 
             // literals
             StringLiteral,
