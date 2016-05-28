@@ -680,13 +680,14 @@ Expression *Parser::readOperandExpression(bool parse_comma) {
             left = readCast(left);
         } else if (isToken(Token::Dot)) {
             Selector *selector = readSelector(left);
-            if (isToken(Token::OpenParenthesis)) {
+            /*if (isToken(Token::OpenParenthesis)) {
                 auto call = readCall(selector->name);
                 call->arguments.insert(call->arguments.begin(), selector->operand);
                 left = call;
             } else {
                 left = selector;
-            }
+            }*/
+            left = selector;
         } else if (parse_comma && isToken(Token::Comma)) {
             readToken(Token::Comma);
 
