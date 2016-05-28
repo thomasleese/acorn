@@ -77,8 +77,7 @@ void BuiltinGenerator::generate(symboltable::Namespace *table) {
     m_ir_builder->CreateRet(m_ir_builder->CreateSIToFP(m_args[0], f->getReturnType()));
 }
 
-llvm::Function *BuiltinGenerator::generate_function(symboltable::Symbol *function_symbol, symboltable::Symbol *method_symbol, std::string llvm_name) {
-    auto method = dynamic_cast<types::Method *>(method_symbol->type);
+llvm::Function *BuiltinGenerator::generate_function(std::string name, types::Method *method, std::string llvm_name) {
     method->accept(m_type_generator);
 
     auto type = static_cast<llvm::FunctionType *>(m_type_generator->take_type(nullptr));
@@ -89,16 +88,16 @@ llvm::Function *BuiltinGenerator::generate_function(symboltable::Symbol *functio
     auto function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_name, m_module);
     initialise_function(function, method->parameter_types().size());
 
-    if (function_symbol->name == "sizeof") {
+    if (name == "sizeof") {
         generate_sizeof(method, function);
-    } else if (function_symbol->name == "strideof") {
+    } else if (name == "strideof") {
         generate_strideof(method, function);
     } else {
         std::vector<llvm::Value *> index_list;
         index_list.push_back(m_args[1]);
         auto gep = m_ir_builder->CreateInBoundsGEP(m_args[0], index_list);
 
-        if (function_symbol->name == "setindex") {
+        if (name == "setindex") {
             m_ir_builder->CreateStore(m_args[2], gep);
             m_ir_builder->CreateRet(m_ir_builder->getInt1(false));
         } else {

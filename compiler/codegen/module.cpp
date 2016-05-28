@@ -22,6 +22,7 @@
 #include "../typing/types.h"
 #include "builtins.h"
 #include "types.h"
+#include "unit.h"
 
 #include "module.h"
 
@@ -142,7 +143,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     if (definition->code->statements.empty()) {
         m_irBuilder->CreateRet(nothing);
     } else {
-        if (m_llvmValues.empty()) {
+        if (m_units.empty()) {
             m_irBuilder->CreateRet(nothing);
         } else {
             auto value = pop_value();
@@ -171,16 +172,23 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     return function;
 }
 
+void ModuleGenerator::push_unit(Unit unit) {
+    m_units.push_back(unit);
+}
+
+Unit ModuleGenerator::pop_unit() {
+    assert(!m_units.empty());
+    auto unit = m_units.back();
+    m_units.pop_back();
+    return unit;
+}
+
 void ModuleGenerator::push_value(llvm::Value *value) {
-    m_llvmValues.push_back(value);
+    push_unit(Unit(value));
 }
 
 llvm::Value *ModuleGenerator::pop_value() {
-    assert(!m_llvmValues.empty());
-
-    auto value = m_llvmValues.back();
-    m_llvmValues.pop_back();
-    return value;
+    return pop_unit().llvm_value();
 }
 
 void ModuleGenerator::visit(ast::CodeBlock *block) {
@@ -214,8 +222,9 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
         return;
     }
 
-    llvm::Value *value = m_irBuilder->CreateLoad(symbol->value);
-    push_value(value);
+    // FIXME if it's a function, it needs pushing a function
+
+    push_value(symbol->value);
 }
 
 void ModuleGenerator::visit(ast::VariableDeclaration *node) {
@@ -294,10 +303,7 @@ void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
 
     for (auto element : sequence->elements) {
         element->accept(this);
-
-        llvm::Value *value = m_llvmValues.back();
-        m_llvmValues.pop_back();
-        elements.push_back(value);
+        elements.push_back(pop_value());
     }
 
     llvm::StructType *type = static_cast<llvm::StructType *>(generate_type(sequence));
@@ -401,90 +407,86 @@ void ModuleGenerator::visit(ast::TupleLiteral *expression) {
 }
 
 void ModuleGenerator::visit(ast::Call *expression) {
-    ast::Identifier *identifier = dynamic_cast<ast::Identifier *>(expression->operand);
-    if (identifier) {
-        auto symbol = m_scope.back()->lookup(this, identifier);
-        types::Function *functionType = dynamic_cast<types::Function *>(symbol->type);
+    expression->operand->accept(this);
+    auto unit = pop_unit();
 
-        std::vector<types::Type *> argument_types;
-        for (auto arg : expression->arguments) {
-            argument_types.push_back(arg->type);
-        }
+    auto function_type = dynamic_cast<types::Function *>(expression->operand->type);
 
-        auto method = functionType->find_method(expression, argument_types);
-        assert(method);
-
-        std::string method_name = codegen::mangle_method(symbol->name, method);
-        auto method_symbol = symbol->nameSpace->lookup(this, expression, method->mangled_name());
-        auto definition = static_cast<ast::FunctionDefinition *>(method_symbol->node);
-
-        if (method->is_generic()) {
-            std::map<types::ParameterType *, types::Type *> type_parameters = expression->inferred_type_parameters;
-
-            method_name += "_";
-            for (auto entry : type_parameters) {
-                auto t = entry.second;
-                while (auto p = dynamic_cast<types::Parameter *>(t)) {
-                    t = m_type_generator->get_type_parameter(p);
-                    if (t == nullptr) {
-                        push_value(nullptr);
-                        return;
-                    }
-                }
-                method_name += t->mangled_name();
-            }
-
-            if (m_module->getFunction(method_name) == nullptr) {
-                if (definition == nullptr) {
-                    for (auto entry : type_parameters) {
-                        m_type_generator->push_type_parameter(entry.first, entry.second);
-                    }
-
-                    m_builtin_generator->generate_function(symbol, method_symbol, method_name);
-                    //builtins::generate_function(symbol, method_symbol, method, method_name, m_module, m_irBuilder, m_type_generator);
-
-                    for (auto entry : type_parameters) {
-                        m_type_generator->pop_type_parameter(entry.first);
-                    }
-                } else {
-                    generate_function(definition, type_parameters);
-                }
-            }
-        }
-
-        auto function = m_module->getFunction(method_name);
-        if (function == nullptr) {
-            push_error(new errors::InternalError(expression, "No LLVM function created: " + method_name + " (" + method->name() + ")!"));
-            push_value(nullptr);
-            return;
-        }
-
-        std::vector<llvm::Value *> arguments;
-        int i = 0;
-        for (auto argument : expression->arguments) {
-            argument->accept(this);
-
-            auto value = pop_value();
-
-            if (method->is_parameter_inout(method->parameter_types()[i])) {
-                auto load = llvm::dyn_cast<llvm::LoadInst>(value);
-                assert(load);
-
-                value = load->getPointerOperand();
-            }
-
-            arguments.push_back(value);
-            i++;
-        }
-
-        function->dump();
-
-        auto value = m_irBuilder->CreateCall(function, arguments);
-        push_value(value);
-    } else {
-        push_error(new errors::InternalError(expression, "Not an identifier."));
-        push_value(nullptr);
+    std::vector<types::Type *> argument_types;
+    for (auto arg : expression->arguments) {
+        argument_types.push_back(arg->type);
     }
+
+    auto method = function_type->find_method(expression, argument_types);
+    assert(method);
+
+    std::string func_name = unit.function_name();
+    auto definition = unit.function_definition(method);
+
+    std::string method_name = codegen::mangle_method(func_name, method);
+
+    if (method->is_generic()) {
+        std::map<types::ParameterType *, types::Type *> type_parameters = expression->inferred_type_parameters;
+
+        method_name += "_";
+        for (auto entry : type_parameters) {
+            auto t = entry.second;
+            while (auto p = dynamic_cast<types::Parameter *>(t)) {
+                t = m_type_generator->get_type_parameter(p);
+                if (t == nullptr) {
+                    push_value(nullptr);
+                    return;
+                }
+            }
+            method_name += t->mangled_name();
+        }
+
+        if (m_module->getFunction(method_name) == nullptr) {
+            if (definition == nullptr) {
+                for (auto entry : type_parameters) {
+                    m_type_generator->push_type_parameter(entry.first, entry.second);
+                }
+
+                m_builtin_generator->generate_function(func_name, method, method_name);
+
+                for (auto entry : type_parameters) {
+                    m_type_generator->pop_type_parameter(entry.first);
+                }
+            } else {
+                generate_function(definition, type_parameters);
+            }
+        }
+    }
+
+    auto function = m_module->getFunction(method_name);
+    if (function == nullptr) {
+        push_error(new errors::InternalError(expression, "No LLVM function created: " + method_name + " (" + method->name() + ")!"));
+        push_value(nullptr);
+        return;
+    }
+
+    std::vector<llvm::Value *> arguments;
+    int i = 0;
+    for (auto argument : expression->arguments) {
+        argument->accept(this);
+
+        auto value = pop_value();
+
+        if (method->is_parameter_inout(method->parameter_types()[i])) {
+            auto load = llvm::dyn_cast<llvm::LoadInst>(value);
+            assert(load);
+
+            value = load->getPointerOperand();
+        }
+
+        arguments.push_back(value);
+        i++;
+    }
+
+    function->dump();
+
+    auto value = m_irBuilder->CreateCall(function, arguments);
+    push_value(value);
 }
 
 void ModuleGenerator::visit(ast::CCall *ccall) {
@@ -532,53 +534,10 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
     auto rhs_value = pop_value();
     return_if_null(rhs_value);
 
-    llvm::Value *rhs_variable_pointer = nullptr;
-    if (auto load = dynamic_cast<llvm::LoadInst *>(rhs_value)) {
-        rhs_variable_pointer = load->getPointerOperand();
-    } else if (auto alloca = dynamic_cast<llvm::AllocaInst *>(rhs_value)) {
-        rhs_variable_pointer = alloca;
-    } else if (auto gv = dynamic_cast<llvm::GlobalVariable *>(rhs_value)) {
-        rhs_variable_pointer = gv;
-    }
-
     expression->lhs->accept(this);
-    auto lhs_value = pop_value();
+    auto lhs_pointer = pop_value();
 
-    llvm::Value *variable_pointer = nullptr;
-    if (auto load = dynamic_cast<llvm::LoadInst *>(lhs_value)) {
-        variable_pointer = load->getPointerOperand();
-    } else if (auto alloca = dynamic_cast<llvm::AllocaInst *>(lhs_value)) {
-        variable_pointer = alloca;
-    } else if (auto gv = dynamic_cast<llvm::GlobalVariable *>(lhs_value)) {
-        variable_pointer = gv;
-    }
-
-    assert(variable_pointer);
-
-    auto lhs_union_type = dynamic_cast<types::Enum *>(expression->lhs->type);
-    auto rhs_union_type = dynamic_cast<types::Enum *>(expression->rhs->type);
-
-    if (lhs_union_type && !rhs_union_type) {
-        bool ok;
-        uint8_t index = lhs_union_type->type_index(expression->rhs->type, &ok);
-        assert(ok);  // type checker should catch this
-
-        std::vector<llvm::Value *> indexes;
-        indexes.push_back(m_irBuilder->getInt32(0));
-        indexes.push_back(m_irBuilder->getInt32(0));
-
-        auto index_gep = m_irBuilder->CreateInBoundsGEP(variable_pointer, indexes);
-        m_irBuilder->CreateStore(m_irBuilder->getInt8(index), index_gep);
-
-        indexes.clear();
-        indexes.push_back(m_irBuilder->getInt32(0));
-        indexes.push_back(m_irBuilder->getInt32(index + 1));
-
-        auto holder_gep = m_irBuilder->CreateInBoundsGEP(variable_pointer, indexes);
-        m_irBuilder->CreateStore(rhs_value, holder_gep);
-
-        push_value(variable_pointer);
-    } else if (rhs_union_type && !lhs_union_type) {
+    /*} else if (rhs_union_type && !lhs_union_type) {
         bool ok;
         uint8_t index_we_want = rhs_union_type->type_index(expression->lhs->type, &ok);
         assert(ok);  // type checker should catch this
@@ -601,30 +560,123 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
 
         auto icmp = m_irBuilder->CreateICmpEQ(m_irBuilder->getInt8(index_we_want), index_we_have, "check_union_type");
         push_value(icmp);
-    } else {
-        m_irBuilder->CreateStore(rhs_value, variable_pointer);
-        push_value(variable_pointer);
-    }
+    } else {*/
+
+    lhs_pointer->dump();
+    rhs_value->dump();
+
+    m_irBuilder->CreateStore(rhs_value, lhs_pointer);
+    push_value(rhs_value);
 }
 
 void ModuleGenerator::visit(ast::Selector *expression) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
+    auto &context = llvm::getGlobalContext();
 
     expression->operand->accept(this);
+    auto instance = pop_value();
 
-    llvm::LoadInst *load = static_cast<llvm::LoadInst *>(pop_value());
-    auto instance = load->getPointerOperand();
+    auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type);
+    assert(selectable);
 
-    types::Record *recordType = static_cast<types::Record *>(expression->operand->type);
+    // either an enum, or a record
+    auto record = dynamic_cast<types::Record *>(selectable);
+    if (record) {
+        uint64_t index = record->get_field_index(expression->name->value);
 
-    uint64_t index = recordType->get_field_index(expression->name->value);
+        std::vector<llvm::Value *> indexes;
+        indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), 0));
+        indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), index));
 
-    std::vector<llvm::Value *> indexes;
-    indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), 0));
-    indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(context, 32), index));
+        llvm::Value *value = m_irBuilder->CreateInBoundsGEP(instance, indexes);
+        push_value(value);
+    } else {
+        auto enum_type = dynamic_cast<types::EnumType *>(selectable);
+        assert(enum_type);
 
-    llvm::Value *value = m_irBuilder->CreateInBoundsGEP(instance, indexes);
-    push_value(m_irBuilder->CreateLoad(value));
+        // get method
+        auto function_type = dynamic_cast<types::Function *>(expression->type);
+        if (function_type) {
+            auto method = function_type->get_method(0);
+            assert(method);
+
+            auto enum_instance_type = dynamic_cast<types::Enum *>(method->return_type());
+            assert(enum_instance_type);
+
+            bool exists = false;
+            auto index = enum_instance_type->child_index(expression->name->value, &exists);
+            assert(exists);
+
+            // ensure constructor function exists
+            std::string function_name = "enum_" + enum_type->mangled_name();
+            std::string llvm_function_name = codegen::mangle_method(function_name, method);
+
+            if (m_module->getFunction(llvm_function_name) == nullptr) {
+                auto ft = llvm::dyn_cast<llvm::FunctionType>(generate_type(expression, method));
+                auto function = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, llvm_function_name,
+                                                       m_module);
+
+                auto arg0 = &function->getArgumentList().front();
+
+                auto llvm_enum_type = generate_type(expression, enum_instance_type);
+
+                auto old_insert_point = m_irBuilder->saveIP();
+
+                auto basic_block = llvm::BasicBlock::Create(context, "entry", function);
+                m_irBuilder->SetInsertPoint(basic_block);
+
+                auto alloca = m_irBuilder->CreateAlloca(llvm_enum_type);
+
+                std::vector<llvm::Value *> indexes;
+                indexes.push_back(m_irBuilder->getInt32(0));
+                indexes.push_back(m_irBuilder->getInt32(0));
+
+                auto index_gep = m_irBuilder->CreateInBoundsGEP(alloca, indexes);
+                m_irBuilder->CreateStore(m_irBuilder->getInt8(index), index_gep);
+
+                indexes.clear();
+                indexes.push_back(m_irBuilder->getInt32(0));
+                indexes.push_back(m_irBuilder->getInt32(index + 1));
+
+                auto holder_gep = m_irBuilder->CreateInBoundsGEP(alloca, indexes);
+                m_irBuilder->CreateStore(arg0, holder_gep);
+
+                m_irBuilder->CreateRet(m_irBuilder->CreateLoad(alloca));
+
+                m_irBuilder->restoreIP(old_insert_point);
+            }
+
+            // we don't pass any definitions as these are only required for generics
+            push_unit(Unit(function_name, std::map<types::Method *, ast::FunctionDefinition *>()));
+        } else {
+            auto enum_instance_type = dynamic_cast<types::Enum *>(expression->type);
+            assert(enum_instance_type);
+
+            auto llvm_enum_type = generate_type(expression, enum_instance_type);
+
+            bool exists = false;
+            auto index = enum_instance_type->child_index(expression->name->value, &exists);
+            assert(exists);
+
+            auto alloca = m_irBuilder->CreateAlloca(llvm_enum_type);
+
+            std::vector<llvm::Value *> indexes;
+            indexes.push_back(m_irBuilder->getInt32(0));
+            indexes.push_back(m_irBuilder->getInt32(0));
+
+            auto index_gep = m_irBuilder->CreateInBoundsGEP(alloca, indexes);
+            m_irBuilder->CreateStore(m_irBuilder->getInt8(index), index_gep);
+
+            indexes.clear();
+            indexes.push_back(m_irBuilder->getInt32(0));
+            indexes.push_back(m_irBuilder->getInt32(index + 1));
+
+            auto holder_gep = m_irBuilder->CreateInBoundsGEP(alloca, indexes);
+            m_irBuilder->CreateStore(m_irBuilder->getInt1(false), holder_gep);
+
+            // must be a void type
+            push_value(m_irBuilder->CreateLoad(alloca));
+        }
+    }
 }
 
 void ModuleGenerator::visit(ast::While *expression) {
@@ -750,7 +802,13 @@ void ModuleGenerator::visit(ast::ProtocolDefinition *definition) {
 }
 
 void ModuleGenerator::visit(ast::EnumDefinition *definition) {
-    push_value(nullptr);
+    auto symbol = m_scope.back()->lookup(this, definition->name);
+    symbol->value = new llvm::GlobalVariable(*m_module,
+                                             m_irBuilder->getInt1Ty(), false,
+                                             llvm::GlobalValue::InternalLinkage,
+                                             m_irBuilder->getInt1(1),
+                                             definition->name->value);
+    push_value(symbol->value);
 }
 
 void ModuleGenerator::visit(ast::DefinitionStatement *statement) {
@@ -784,7 +842,7 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     m_irBuilder->CreateCall(function);
 
     module->code->accept(this);
-    assert(m_llvmValues.size() == 1);
+    assert(m_units.size() == 1);
 
     m_irBuilder->CreateRet(m_irBuilder->getInt32(0));
 

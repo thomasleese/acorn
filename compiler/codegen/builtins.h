@@ -30,7 +30,7 @@ namespace acorn {
 
             void generate(symboltable::Namespace *table);
 
-            llvm::Function *generate_function(symboltable::Symbol *function_symbol, symboltable::Symbol *method_symbol, std::string llvm_name);
+            llvm::Function *generate_function(std::string name, types::Method *method, std::string llvm_name);
 
         private:
             void generate_sizeof(types::Method *method, llvm::Function *function);
