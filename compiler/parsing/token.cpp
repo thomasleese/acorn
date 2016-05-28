@@ -80,6 +80,8 @@ std::string Token::rule_string(Token::Rule rule) {
             return "inout";
         case ProtocolKeyword:
             return "protocol";
+        case EnumKeyword:
+            return "enum";
         case IntegerLiteral:
             return "integer";
         case FloatLiteral:

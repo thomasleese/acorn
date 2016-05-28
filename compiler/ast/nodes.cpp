@@ -316,6 +316,46 @@ void ProtocolDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+EnumElement::EnumElement(Token *token, Identifier *name, Identifier *type) :
+        Node(token), m_name(name), m_type_name(type)
+{
+
+}
+
+Identifier *EnumElement::name() const {
+    return m_name.get();
+}
+
+Identifier *EnumElement::type_name() const {
+    return m_type_name.get();
+}
+
+void EnumElement::accept(Visitor *visitor) {
+    // do nothing
+}
+
+EnumDefinition::EnumDefinition(Token *token, Identifier *name, std::vector<EnumElement *> elements) :
+        Definition(token)
+{
+    this->name = name;
+
+    for (auto element : elements) {
+        m_elements.push_back(std::unique_ptr<EnumElement>(element));
+    }
+}
+
+std::vector<EnumElement *> EnumDefinition::elements() const {
+    std::vector<EnumElement *> elements;
+    for (auto &e : m_elements) {
+        elements.push_back(e.get());
+    }
+    return elements;
+}
+
+void EnumDefinition::accept(Visitor *visitor) {
+    // visitor->visit(this);
+}
+
 DefinitionStatement::DefinitionStatement(Definition *definition) : Statement(definition->token) {
     this->definition = definition;
 }

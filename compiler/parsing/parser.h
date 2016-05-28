@@ -107,6 +107,7 @@ namespace acorn {
         ast::FunctionDefinition *readFunctionDefinition();
         ast::TypeDefinition *readTypeDefinition();
         ast::ProtocolDefinition *readProtocolDefinition();
+        ast::EnumDefinition *readEnumDefinition();
 
         // statements
         ast::Statement *readStatement();

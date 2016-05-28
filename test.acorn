@@ -7,12 +7,12 @@ end
 
 let perhaps_integer = MaybeInteger.Some(10)
 
-match i
-    where Some(n)
-        # do something
-    end
-
-    where Nothing
-        # do something else
-    end
-end
+#match perhaps_integer
+#    where MaybeInteger.Some(let n)
+#        # do something
+#    end
+#
+#    where MaybeInteger.Nothing
+#        # do something else
+#    end
+#end

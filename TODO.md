@@ -4,6 +4,7 @@
 - Better iterators and iterables
 - Range literals
 
+- Modules
 - Characters
 - Strings
 
@@ -12,7 +13,6 @@
 - Sets
 - Dictionaries
 - Records (change instance structure, remove new keyword)
-- Modules
 - Automatic Memory Management
 - Unit tests
 - Mutability

@@ -319,6 +319,32 @@ namespace acorn {
             std::vector<std::unique_ptr<MethodSignature> > m_methods;
         };
 
+        class EnumElement : public Node {
+        public:
+            EnumElement(Token *token, Identifier *name, Identifier *type);
+
+            Identifier *name() const;
+            Identifier *type_name() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Identifier> m_name;
+            std::unique_ptr<Identifier> m_type_name;
+        };
+
+        class EnumDefinition : public Definition {
+        public:
+            EnumDefinition(Token *token, Identifier *name, std::vector<EnumElement *> elements);
+
+            std::vector<EnumElement *> elements() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::vector<std::unique_ptr<EnumElement> > m_elements;
+        };
+
         // statements
         struct DefinitionStatement : Statement {
             explicit DefinitionStatement(Definition *definition);

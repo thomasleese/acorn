@@ -50,6 +50,7 @@ namespace acorn {
             NewKeyword,
             InoutKeyword,
             ProtocolKeyword,
+            EnumKeyword,
 
             // literals
             StringLiteral,

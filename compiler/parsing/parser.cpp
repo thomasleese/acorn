@@ -861,6 +861,40 @@ ast::ProtocolDefinition *Parser::readProtocolDefinition() {
     return new ProtocolDefinition(token, name, methods);
 }
 
+ast::EnumDefinition *Parser::readEnumDefinition() {
+    auto token = readToken(Token::EnumKeyword);
+    return_if_null(token);
+
+    auto name = readIdentifier(true);
+    return_if_null(name);
+
+    std::vector<EnumElement *> elements;
+
+    readToken(Token::Newline);
+
+    while (!isToken(Token::EndKeyword)) {
+        auto element_name = readIdentifier(false);
+        return_if_null(element_name);
+
+        ast::Identifier *element_type = nullptr;
+
+        if (isToken(Token::AsKeyword)) {
+            readToken(Token::AsKeyword);
+
+            element_type = readIdentifier(true);
+            return_if_null(element_type);
+        }
+
+        return_if_null(readToken(Token::Newline));
+
+        elements.push_back(new EnumElement(element_name->token, element_name, element_type));
+    }
+
+    readToken(Token::EndKeyword);
+
+    return new EnumDefinition(token, name, elements);
+}
+
 Statement *Parser::readStatement() {
     debug("Reading Statement...");
 
@@ -876,6 +910,8 @@ Statement *Parser::readStatement() {
         statement = new DefinitionStatement(readTypeDefinition());
     } else if (isToken(Token::ProtocolKeyword)) {
         statement = new DefinitionStatement(readProtocolDefinition());
+    } else if (isToken(Token::EnumKeyword)) {
+        statement = new DefinitionStatement(readEnumDefinition());
     } else {
         auto expression = readExpression(true);
         return_if_null(expression);
