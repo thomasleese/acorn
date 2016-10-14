@@ -6,8 +6,13 @@
 
 using namespace acorn;
 
-std::string Token::rule_string(Token::Rule rule) {
-    switch (rule) {
+Token::Token(Kind kind, std::string lexeme) :
+    kind(kind), lexeme(lexeme) {
+
+}
+
+std::string Token::rule_string(Token::Kind kind) {
+    switch (kind) {
         case Whitespace:
             return "whitespace";
         case Newline:

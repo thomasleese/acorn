@@ -16,101 +16,101 @@
 using namespace acorn;
 
 Lexer::Lexer() {
-    loadRules();
+    load_rules();
 }
 
-Lexer::~Lexer() {
-
+void Lexer::set_rule(Token::Kind kind, std::string regex) {
+    m_rules[kind] = "^" + regex;
 }
 
-void Lexer::setRule(Token::Rule rule, std::string regex) {
-    m_rules[rule] = "^" + regex;
-}
-
-void Lexer::setKeywordRule(Token::Rule rule, std::string keyword) {
+void Lexer::set_keyword_rule(Token::Kind kind, std::string keyword) {
     std::string regex = "(" + keyword + ")(?:[\n\r ]+)";
-    setRule(rule, regex);
+    set_rule(rule, regex);
 }
 
-void Lexer::loadRules() {
-    setRule(Token::Whitespace, "([\t ]+)");
-    setRule(Token::Newline, "([\r\n]+)");
-    setRule(Token::Comment, "(#[^\r\n]*[\r\n]+)");
+void Lexer::load_rules() {
+    set_rule(Token::Whitespace, "([\t ]+)");
+    set_rule(Token::Newline, "([\r\n]+)");
+    set_rule(Token::Comment, "(#[^\r\n]*[\r\n]+)");
 
-    setKeywordRule(Token::LetKeyword, "let");
-    setKeywordRule(Token::DefKeyword, "def");
-    setKeywordRule(Token::TypeKeyword, "type");
-    setKeywordRule(Token::AsKeyword, "as");
-    setKeywordRule(Token::EndKeyword, "end");
-    setKeywordRule(Token::WhileKeyword, "while");
-    setKeywordRule(Token::ForKeyword, "for");
-    setKeywordRule(Token::InKeyword, "in");
-    setKeywordRule(Token::IfKeyword, "if");
-    setKeywordRule(Token::ElseKeyword, "else");
-    setKeywordRule(Token::ThenKeyword, "then");
-    setKeywordRule(Token::ContinueKeyword, "continue");
-    setKeywordRule(Token::BreakKeyword, "break");
-    setKeywordRule(Token::TryKeyword, "try");
-    setKeywordRule(Token::ExceptKeyword, "except");
-    setKeywordRule(Token::RaiseKeyword, "raise");
-    setKeywordRule(Token::FinallyKeyword, "finally");
-    setKeywordRule(Token::FromKeyword, "from");
-    setKeywordRule(Token::ImportKeyword, "import");
-    setKeywordRule(Token::ReturnKeyword, "return");
-    setKeywordRule(Token::WithKeyword, "with");
-    setKeywordRule(Token::YieldKeyword, "yield");
-    setKeywordRule(Token::AsyncKeyword, "async");
-    setKeywordRule(Token::RepeatKeyword, "repeat");
-    setKeywordRule(Token::UnlessKeyword, "unless");
-    setKeywordRule(Token::MutableKeyword, "mutable");
-    setKeywordRule(Token::SpawnKeyword, "spawn");
-    setKeywordRule(Token::CCallKeyword, "ccall");
-    setKeywordRule(Token::UsingKeyword, "using");
-    setKeywordRule(Token::NewKeyword, "new");
-    setKeywordRule(Token::InoutKeyword, "inout");
-    setKeywordRule(Token::ProtocolKeyword, "protocol");
-    setKeywordRule(Token::EnumKeyword, "enum");
-    setKeywordRule(Token::SwitchKeyword, "switch");
-    setKeywordRule(Token::CaseKeyword, "case");
-    setKeywordRule(Token::DefaultKeyword, "case");
+    set_keyword_rule(Token::LetKeyword, "let");
+    set_keyword_rule(Token::DefKeyword, "def");
+    set_keyword_rule(Token::TypeKeyword, "type");
+    set_keyword_rule(Token::AsKeyword, "as");
+    set_keyword_rule(Token::EndKeyword, "end");
+    set_keyword_rule(Token::WhileKeyword, "while");
+    set_keyword_rule(Token::ForKeyword, "for");
+    set_keyword_rule(Token::InKeyword, "in");
+    set_keyword_rule(Token::IfKeyword, "if");
+    set_keyword_rule(Token::ElseKeyword, "else");
+    set_keyword_rule(Token::ThenKeyword, "then");
+    set_keyword_rule(Token::ContinueKeyword, "continue");
+    set_keyword_rule(Token::BreakKeyword, "break");
+    set_keyword_rule(Token::TryKeyword, "try");
+    set_keyword_rule(Token::ExceptKeyword, "except");
+    set_keyword_rule(Token::RaiseKeyword, "raise");
+    set_keyword_rule(Token::FinallyKeyword, "finally");
+    set_keyword_rule(Token::FromKeyword, "from");
+    set_keyword_rule(Token::ImportKeyword, "import");
+    set_keyword_rule(Token::ReturnKeyword, "return");
+    set_keyword_rule(Token::WithKeyword, "with");
+    set_keyword_rule(Token::YieldKeyword, "yield");
+    set_keyword_rule(Token::AsyncKeyword, "async");
+    set_keyword_rule(Token::RepeatKeyword, "repeat");
+    set_keyword_rule(Token::UnlessKeyword, "unless");
+    set_keyword_rule(Token::MutableKeyword, "mutable");
+    set_keyword_rule(Token::SpawnKeyword, "spawn");
+    set_keyword_rule(Token::CCallKeyword, "ccall");
+    set_keyword_rule(Token::UsingKeyword, "using");
+    set_keyword_rule(Token::NewKeyword, "new");
+    set_keyword_rule(Token::InoutKeyword, "inout");
+    set_keyword_rule(Token::ProtocolKeyword, "protocol");
+    set_keyword_rule(Token::EnumKeyword, "enum");
+    set_keyword_rule(Token::SwitchKeyword, "switch");
+    set_keyword_rule(Token::CaseKeyword, "case");
+    set_keyword_rule(Token::DefaultKeyword, "case");
 
-    setRule(Token::StringLiteral, "((['\"])((?:.(?!(?<![\\\\])\\2))*.?)\\2)");
-    setRule(Token::ImaginaryLiteral, "([0-9]+(\\.[0-9]+)?[ij])");
-    setRule(Token::FloatLiteral, "([0-9]+\\.[0-9]+)");
-    setRule(Token::IntegerLiteral, "([0-9]+)");
+    set_rule(Token::StringLiteral, "((['\"])((?:.(?!(?<![\\\\])\\2))*.?)\\2)");
+    set_rule(Token::ImaginaryLiteral, "([0-9]+(\\.[0-9]+)?[ij])");
+    set_rule(Token::FloatLiteral, "([0-9]+\\.[0-9]+)");
+    set_rule(Token::IntegerLiteral, "([0-9]+)");
 
-    setRule(Token::OpenBracket, "(\\[)");
-    setRule(Token::CloseBracket, "(\\])");
-    setRule(Token::OpenParenthesis, "(\\()");
-    setRule(Token::CloseParenthesis, "(\\))");
-    setRule(Token::OpenBrace, "(\\{)");
-    setRule(Token::CloseBrace, "(\\})");
-    setRule(Token::Comma, "(,)");
-    setRule(Token::Dot, "(\\.)");
-    setRule(Token::Colon, "(:)");
-    setRule(Token::Semicolon, "(;)");
+    set_rule(Token::OpenBracket, "(\\[)");
+    set_rule(Token::CloseBracket, "(\\])");
+    set_rule(Token::OpenParenthesis, "(\\()");
+    set_rule(Token::CloseParenthesis, "(\\))");
+    set_rule(Token::OpenBrace, "(\\{)");
+    set_rule(Token::CloseBrace, "(\\})");
+    set_rule(Token::Comma, "(,)");
+    set_rule(Token::Dot, "(\\.)");
+    set_rule(Token::Colon, "(:)");
+    set_rule(Token::Semicolon, "(;)");
 
-    setRule(Token::Assignment, "(=[^=])");
-    setRule(Token::Operator, "(and|or|not|<-|->|>=|<=|\\+=|!=|==|[\\^\\+\\*\\-[:Sm:]])");
+    set_rule(Token::Assignment, "(=[^=])");
+    set_rule(Token::Operator, "(and|or|not|<-|->|>=|<=|\\+=|!=|==|[\\^\\+\\*\\-[:Sm:]])");
 
     std::string nameInitialRegex = "[:L*:][:Nl:][:Sc:][:So:]√_";
     std::string nameAfterRegex = nameInitialRegex + "![:N*:][:M*:][:Sk:][:Pc:]";
-    setRule(Token::Identifier, "([" + nameInitialRegex + "][" + nameAfterRegex + "]*)");
+    set_rule(Token::Identifier, "([" + nameInitialRegex + "][" + nameAfterRegex + "]*)");
 }
 
-std::vector<Token *> Lexer::tokenise(std::string filename) {
-    std::stringstream bufferStream;
+std::string Lexer::read_file(std::string filename) const {
+    std::stringstream buffer;
 
     std::ifstream in(filename.c_str());
     while (in.good()) {
         std::string line;
         std::getline(in, line);
 
-        bufferStream << line;
-        bufferStream << "\n";
+        buffer << line;
+        buffer << "\n";
     }
 
-    std::string buffer = bufferStream.str();
+    return buffer.str();
+}
+
+std::vector<Token> Lexer::tokenise(std::string filename) {
+    std::string buffer = read_file(filename);
 
     int currentLineNumber = 1;
     int currentColumn = 0;
@@ -123,7 +123,7 @@ std::vector<Token *> Lexer::tokenise(std::string filename) {
 
     boost::smatch matcher;
 
-    std::vector<Token *> tokens;
+    std::vector<Token> tokens;
 
     while (pos < end) {
         std::string substr = buffer.substr(pos, end - pos);
@@ -131,7 +131,7 @@ std::vector<Token *> Lexer::tokenise(std::string filename) {
         bool found = false;
 
         for (auto it = m_rules.begin(); it != m_rules.end(); it++) {
-            Token::Rule rule = it->first;
+            Token::Kind kind = it->first;
             boost::u32regex pattern = boost::make_u32regex(it->second);
 
             if (boost::u32regex_search(substr, matcher, pattern)) {
@@ -139,14 +139,12 @@ std::vector<Token *> Lexer::tokenise(std::string filename) {
 
                 if (substr.substr(0, value.size()) == value) {
                     if (rule != Token::Whitespace && rule != Token::Comment) {
-                        Token *token = new Token();
-                        token->rule = rule;
-                        token->lexeme = value;
+                        Token token(kind, value);
 
-                        token->filename = filename;
-                        token->line = currentLine;
-                        token->column = currentColumn;
-                        token->lineNumber = currentLineNumber;
+                        token.filename = filename;
+                        token.line = currentLine;
+                        token.column = currentColumn;
+                        token.lineNumber = currentLineNumber;
 
                         tokens.push_back(token);
                     }
@@ -181,15 +179,11 @@ std::vector<Token *> Lexer::tokenise(std::string filename) {
         }
     }
 
-    Token *endOfFileToken = new Token();
-    endOfFileToken->rule = Token::EndOfFile;
-    endOfFileToken->lexeme = "";
-
+    Token endOfFileToken(Token::EndOfFile, "");
     endOfFileToken->filename = filename;
     endOfFileToken->line = currentLine;
     endOfFileToken->column = currentColumn;
     endOfFileToken->lineNumber = currentLineNumber;
-
     tokens.push_back(endOfFileToken);
 
     return tokens;

@@ -2,16 +2,18 @@
 // Created by Thomas Leese on 17/03/2016.
 //
 
-#ifndef ACORN_TOKEN_H
-#define ACORN_TOKEN_H
+#pragma once
 
 #include <string>
 
 namespace acorn {
 
+    /**
+     * A token of source code.
+     */
     struct Token {
 
-        enum Rule {
+        enum Kind {
             Whitespace,
             Newline,
             Comment,
@@ -79,18 +81,21 @@ namespace acorn {
             Identifier,
         };
 
-        static std::string rule_string(Rule rule);
+        Token(Kind kind, std::string lexeme);
 
+        /**
+         * Get a human-readable string representation of a kind of token.
+         */
+        static std::string kind_string(Kind kind);
+
+        Kind kind;
         std::string lexeme;
-        Rule rule;
 
         std::string filename;
         std::string line;
-        int lineNumber;
+        int line_number;
         int column;
 
     };
 
 }
-
-#endif // ACORN_TOKEN_H

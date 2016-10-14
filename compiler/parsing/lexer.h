@@ -26,6 +26,8 @@ namespace acorn {
         void set_keyword_rule(Token::Kind kind, std::string keyword);
         void load_rules();
 
+        std::string read_file(std::string filename) const;
+
     public:
         /**
          * Tokenise a file containing source code into a list of tokens.
