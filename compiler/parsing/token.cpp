@@ -6,21 +6,14 @@
 
 using namespace acorn;
 
-Token::Token(Kind kind, std::string lexeme) :
-    kind(kind), lexeme(lexeme) {
-
-}
-
-std::string Token::rule_string(Token::Kind kind) {
+std::string Token::as_string(Token::Kind kind) {
     switch (kind) {
-        case Whitespace:
-            return "whitespace";
         case Newline:
-            return "new line";
-        case Comment:
-            return "comment";
-        case EndOfFile:
-            return "end of file";
+            return "newline";
+        case Indent:
+            return "indent";
+        case Deindent:
+            return "deindent";
         case LetKeyword:
             return "let";
         case DefKeyword:
@@ -29,8 +22,6 @@ std::string Token::rule_string(Token::Kind kind) {
             return "type";
         case AsKeyword:
             return "as";
-        case EndKeyword:
-            return "end";
         case WhileKeyword:
             return "while";
         case ForKeyword:

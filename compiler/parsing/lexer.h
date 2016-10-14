@@ -4,11 +4,9 @@
 
 #pragma once
 
-#include <map>
-#include <string>
+#include <istream>
 #include <vector>
 
-#include "../pass.h"
 #include "token.h"
 
 namespace acorn {
@@ -17,25 +15,41 @@ namespace acorn {
      * Lexical Analysis. Takes source code input and provides a stream of
      * tokens as output.
      */
-    class Lexer : public compiler::Pass {
+    class Lexer {
     public:
-        Lexer();
+        Lexer(std::string filename);
 
-    private:
-        void set_rule(Token::Kind kind, std::string regex);
-        void set_keyword_rule(Token::Kind kind, std::string keyword);
-        void load_rules();
-
-        std::string read_file(std::string filename) const;
-
-    public:
         /**
-         * Tokenise a file containing source code into a list of tokens.
+         * Read the next token.
          */
-        std::vector<Token> tokenise(std::string filename);
+        Token next_token();
 
     private:
-        std::map<Token::Kind, std::string> m_rules;
+        Token make_token(Token::Kind kind = Token::EndOfFile) const;
+
+        unsigned int skip_whitespace();
+        void skip_comment();
+
+        void next_line();
+        void update_indentation();
+
+        bool read_identifier(Token &token);
+        bool read_keyword(Token &token) const;
+        bool read_number(Token &token);
+        bool read_string(Token &token);
+        bool read_operator(Token &token);
+        bool read_delimiter(Token &token);
+        bool read_line_continuation(Token &token);
+
+    private:
+        std::istream m_stream;
+        std::deque<int> m_indentation;
+        std::deque<Token> m_token_buffer;
+
+        std::string m_filename;
+        int m_current_column;
+        int m_current_line_number;
+        std::string m_current_line;
     };
 
 }

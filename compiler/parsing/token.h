@@ -14,23 +14,21 @@ namespace acorn {
     struct Token {
 
         enum Kind {
-            Whitespace,
+            // source code elements
             Newline,
-            Comment,
-            EndOfFile,
+            Indent,
+            Deindent,
 
             // keywords
             LetKeyword,
             DefKeyword,
             TypeKeyword,
             AsKeyword,
-            EndKeyword,
             WhileKeyword,
             ForKeyword,
             InKeyword,
             IfKeyword,
             ElseKeyword,
-            ThenKeyword,
             ContinueKeyword,
             BreakKeyword,
             TryKeyword,
@@ -59,7 +57,6 @@ namespace acorn {
 
             // literals
             StringLiteral,
-            ImaginaryLiteral,
             FloatLiteral,
             IntegerLiteral,
 
@@ -74,19 +71,17 @@ namespace acorn {
             Dot,
             Colon,
             Semicolon,
+            Assignment,
 
             // identifiers
-            Assignment,
             Operator,
-            Identifier,
+            Name,
         };
-
-        Token(Kind kind, std::string lexeme);
 
         /**
          * Get a human-readable string representation of a kind of token.
          */
-        static std::string kind_string(Kind kind);
+        static std::string as_string(Kind kind);
 
         Kind kind;
         std::string lexeme;
