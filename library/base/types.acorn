@@ -1,3 +1,104 @@
-import 'base/types/primitives'
-import 'base/types/array'
-import 'base/types/string'
+# Base types.
+type Int as Int64
+type UInt as UInt64
+type Float as Float64
+
+# Maybe type.
+type Maybe{T} as Enum{Void, T}
+
+# Basic mathematical operators.
+def -(n as Int) as Int:
+    return 0 - n
+
+def +=(inout i as Int, amount as Int) as Int:
+    i = i + amount
+    return i
+
+# Range type.
+type Range:
+    start as Int
+    stop as Int
+
+def range(stop as Int) as Range:
+    return new Range(start: 0, stop: stop)
+
+def start(range as Range) as Int:
+    return 0
+
+def next(range as Range, state as Int) as Tuple{Int, Int}:
+    return (range.start + state), (state + 1)
+
+def done(range as Range, state as Int) as Bool:
+    return state >= (range.stop - range.start)
+
+# Arrays.
+type Array{T}:
+    elements as UnsafePointer{T}
+    length as Int
+    capacity as Int
+
+def create_array{T}(t as Type{T}, capacity as Int) as Array{T}:
+    let elements = malloc(strideof(T) * capacity) as UnsafePointer{T}
+    return new Array{T}(elements: elements, size: 0, capacity: capacity)
+
+def free{T}(inout array as Array{T}):
+    free(array.elements)
+
+def setindex{T}(inout array as Array{T}, key as Int, value as T):
+    array.elements[key] = value
+
+def getindex{T}(array as Array{T}, key as Int) as T:
+    return array.elements[key]
+
+def append{T}(inout array as Array{T}, value as T):
+    array.length = array.length + 1
+    array[array.length - 1] = value
+
+type ArrayIterator{T}:
+    array as Array{T}
+    state as Int
+
+def iterate{T}(array as Array{T}) as ArrayIterator{T}:
+    return new ArrayIterator{T}(array: array, state: 0)
+
+def next{T}(iterator as ArrayIterator{T}) as Maybe{T}:
+    if iterator.state >= iterator.array.length:
+        let result as Maybe{T} = Nothing
+        return result
+    else:
+        iterator.state += 1
+        return iterator.array[iterator.state]
+
+def sum(array as Array{Int}) as Int:
+    let total = 0
+
+    # iterator over values
+    #let iterator = iterate(array)
+    #while let i as Int = iterator.next()
+    #    total += i
+    #end
+
+    return total
+
+# Enumeration types.
+type Enumeration{T}:
+    iterator as ArrayIterator{T}
+    state as Int
+
+def enumerate{T}(array as Array{T}) as Enumeration{T}:
+    return new Enumeration{T}(array: array.iterate(), state: 0)
+
+def next{T}(enumeration as Enumeration{T}) as Maybe{Tuple{Int, T}}:
+    let item = next(enumeration.iterator)
+    if let n as Void = item:
+        return Nothing
+    else:
+        enumeration.state += 1
+        return (item, enumeration.state)
+
+# Strings.
+type UnicodeScalar as UInt32
+
+type Character as Array{UnicodeScalar}
+
+type String as Array{UnicodeScalar}
