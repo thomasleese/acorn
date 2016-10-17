@@ -55,16 +55,17 @@ namespace acorn {
 
         class InternalAstError : public InternalError {
         public:
-            InternalAstError(Token *token);
+            InternalAstError(Token token);
             InternalAstError(ast::Node *node);
         };
 
         class SyntaxError : public CompilerError {
         public:
-            SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got,
+            SyntaxError(std::string filename, int lineNumber, int column,
+                        std::string line, std::string got,
                         std::string expectation);
-            SyntaxError(Token *token, std::string expectation);
-            SyntaxError(Token *token, Token::Rule rule);
+            SyntaxError(Token token, std::string expectation);
+            SyntaxError(Token token, Token::Kind kind);
 
         private:
             void makeMessage(std::string got, std::string expectation);

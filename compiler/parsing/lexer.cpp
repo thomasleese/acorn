@@ -6,18 +6,15 @@
 #include <fstream>
 #include <sstream>
 
-#include <unicode/unistr.h>
-#include <boost/regex/icu.hpp>
-
 #include "../errors.h"
 
 #include "lexer.h"
 
 using namespace acorn;
 
-Lexer::Lexer() :
-    stream(std::ifstream(filename.c_str()))
-{
+Lexer::Lexer(std::string filename) {
+    m_stream.open(filename.c_str());
+
     m_current_column = 0;
     m_current_line_number = 1;
     std::getline(m_stream, m_current_line);
@@ -134,7 +131,7 @@ void Lexer::next_line() {
 
 void Lexer::update_indentation() {
     unsigned int level = skip_whitespace();
-    if (m_indentation.back() == new_level) {
+    if (m_indentation.back() == level) {
         // do nothing
     } else if (level > m_indentation.back()) {
         m_indentation.push_back(level);
@@ -161,7 +158,7 @@ bool Lexer::read_identifier(Token &token) {
     }
 
     while (isalpha(ch) || isdigit(ch)) {
-        token.lexeme.append(ch);
+        token.lexeme.append(1, ch);
         ch = m_stream.get();
         m_current_column++;
     }
@@ -196,7 +193,7 @@ bool Lexer::read_number(Token &token) {
     token.kind = Token::IntegerLiteral;
 
     while (isdigit(ch) || ch == '.') {
-        token.lexeme.append(ch);
+        token.lexeme.append(1, ch);
         ch = m_stream.get();
         m_current_column++;
 
@@ -221,7 +218,7 @@ bool Lexer::read_string(Token &token) {
     token.kind = Token::StringLiteral;
 
     while (ch != '"' && ch != '\'') {
-        token.lexeme.append(ch);
+        token.lexeme.append(1, ch);
         ch = m_stream.get();
         m_current_column++;
     }
@@ -238,8 +235,8 @@ bool Lexer::read_operator(Token &token) {
     // TODO check unicode class
     if (ch == '=' && ch2 == '=') {
         token.kind = Token::Operator;
-        token.lexeme.append(ch);
-        token.lexeme.append(c2);
+        token.lexeme.append(1, ch);
+        token.lexeme.append(1, ch2);
         m_current_column += 2;
     }
 
@@ -252,7 +249,7 @@ bool Lexer::read_operator(Token &token) {
         case '/':
         case '%':
             token.kind = Token::Operator;
-            token.lexeme.append(ch);
+            token.lexeme.append(1, ch);
             m_current_column++;
             return true;
 
@@ -268,7 +265,7 @@ bool Lexer::read_delimiter(Token &token) {
     int ch = m_stream.get();
 
     // the following two lines are reversed in the default case below
-    token.lexeme.append(ch);
+    token.lexeme.append(1, ch);
     m_current_column++;
 
     switch (ch) {

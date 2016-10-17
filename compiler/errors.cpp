@@ -141,7 +141,7 @@ InvalidTypeParameters::InvalidTypeParameters(ast::Node *node, unsigned long give
 }
 
 TypeMismatchError::TypeMismatchError(ast::Node *node1, ast::Node *node2) :
-        TypeMismatchError(node1, node1->type, node2->type)
+        TypeMismatchError(node1, node1->type, node2 ? node2->type : nullptr)
 {
 
 }

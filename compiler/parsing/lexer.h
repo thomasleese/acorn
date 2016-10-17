@@ -4,7 +4,8 @@
 
 #pragma once
 
-#include <istream>
+#include <deque>
+#include <fstream>
 #include <vector>
 
 #include "token.h"
@@ -42,7 +43,7 @@ namespace acorn {
         bool read_line_continuation(Token &token);
 
     private:
-        std::istream m_stream;
+        std::ifstream m_stream;
         std::deque<int> m_indentation;
         std::deque<Token> m_token_buffer;
 

@@ -193,7 +193,11 @@ void Checker::visit(ast::Switch *expression) {
 
     for (auto entry : expression->cases()) {
         entry->condition()->accept(this);
-        entry->assignment()->accept(this);
+
+        if (entry->assignment()) {
+            entry->assignment()->accept(this);
+        }
+
         entry->code()->accept(this);
         check_not_null(entry);
     }

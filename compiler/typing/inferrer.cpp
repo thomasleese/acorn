@@ -414,7 +414,7 @@ void Inferrer::visit(ast::Return *expression) {
     expression->expression->accept(this);
     return_if_null_type(expression->expression)
 
-    if (m_functionStack.back()) {
+    if (!m_functionStack.empty()) {
         ast::FunctionDefinition *def = m_functionStack.back();
         auto method = static_cast<types::Method *>(def->type);
         return_if_null(method);
@@ -437,7 +437,33 @@ void Inferrer::visit(ast::Spawn *expression) {
 }
 
 void Inferrer::visit(ast::Switch *expression) {
-    expression->type = nullptr;
+    expression->expression()->accept(this);
+
+    auto enum_type = dynamic_cast<types::Enum *>(expression->expression()->type);
+    if (enum_type == nullptr) {
+        push_error(new errors::TypeMismatchError(expression->expression(), expression));
+        return;
+    }
+
+    for (auto entry : expression->cases()) {
+        entry->condition()->accept(this);
+
+        if (entry->assignment()) {
+            entry->assignment()->accept(this);
+        }
+
+        entry->code()->accept(this);
+
+        entry->type = entry->code()->type;
+    }
+
+    if (expression->default_block()) {
+        expression->default_block()->accept(this);
+    }
+
+    // TODO ensure all cases are the same type
+
+    expression->type = expression->cases()[0]->type;
 }
 
 void Inferrer::visit(ast::Parameter *parameter) {

@@ -10,7 +10,7 @@
 
 using namespace acorn::ast;
 
-Node::Node(Token *token) : token(token), type(nullptr) {
+Node::Node(Token token) : token(token), type(nullptr) {
 
 }
 
@@ -22,11 +22,11 @@ void CodeBlock::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Identifier::Identifier(Token *token) : Expression(token) {
+Identifier::Identifier(Token token) : Expression(token) {
 
 }
 
-Identifier::Identifier(Token *token, std::string name) : Expression(token) {
+Identifier::Identifier(Token token, std::string name) : Expression(token) {
     this->value = name;
 }
 
@@ -55,7 +55,7 @@ void Identifier::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-VariableDeclaration::VariableDeclaration(Token *token, Identifier *name, Identifier *type) :
+VariableDeclaration::VariableDeclaration(Token token, Identifier *name, Identifier *type) :
         Expression(token), m_name(name), m_given_type(type) {
 
 }
@@ -104,7 +104,7 @@ void RecordLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-TupleLiteral::TupleLiteral(Token *token, std::vector<Expression *> elements) :
+TupleLiteral::TupleLiteral(Token token, std::vector<Expression *> elements) :
         Expression(token)
 {
     for (auto e : elements) {
@@ -124,11 +124,11 @@ void TupleLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Call::Call(Token *token) : Expression(token), operand(nullptr) {
+Call::Call(Token token) : Expression(token), operand(nullptr) {
 
 }
 
-Call::Call(Token *token, std::string name, Expression *arg1, Expression *arg2) : Call(token) {
+Call::Call(Token token, std::string name, Expression *arg1, Expression *arg2) : Call(token) {
     this->operand = new Identifier(token, name);
 
     if (arg1) {
@@ -144,7 +144,7 @@ void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-CCall::CCall(Token *token) : Expression(token) {
+CCall::CCall(Token token) : Expression(token) {
     this->name = nullptr;
     this->returnType = nullptr;
 }
@@ -153,7 +153,7 @@ void CCall::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Cast::Cast(Token *token) : Expression(token) {
+Cast::Cast(Token token) : Expression(token) {
     this->operand = nullptr;
     this->new_type = nullptr;
 }
@@ -162,7 +162,7 @@ void Cast::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Assignment::Assignment(Token *token, Expression *lhs, Expression *rhs) : Expression(token) {
+Assignment::Assignment(Token token, Expression *lhs, Expression *rhs) : Expression(token) {
     this->lhs = lhs;
     this->rhs = rhs;
 }
@@ -171,7 +171,7 @@ void Assignment::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Selector::Selector(Token *token, Expression *operand, Identifier *field) :
+Selector::Selector(Token token, Expression *operand, Identifier *field) :
         Expression(token),
         operand(operand),
         name(field)
@@ -179,7 +179,7 @@ Selector::Selector(Token *token, Expression *operand, Identifier *field) :
 
 }
 
-Selector::Selector(Token *token, Expression *operand, std::string field) :
+Selector::Selector(Token token, Expression *operand, std::string field) :
         Selector(token, operand, new Identifier(token, field))
 {
 
@@ -189,7 +189,7 @@ void Selector::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-While::While(Token *token, Expression *condition, CodeBlock *code) :
+While::While(Token token, Expression *condition, CodeBlock *code) :
         Expression(token),
         m_condition(condition),
         m_code(code)
@@ -217,7 +217,7 @@ void Return::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Spawn::Spawn(Token *token, Call *call) : Expression(token) {
+Spawn::Spawn(Token token, Call *call) : Expression(token) {
     this->call = call;
 }
 
@@ -225,7 +225,7 @@ void Spawn::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Case::Case(Token *token, Expression *condition, Expression *assignment, CodeBlock *code) :
+Case::Case(Token token, Expression *condition, Expression *assignment, CodeBlock *code) :
         Node(token), m_condition(condition), m_assignment(assignment), m_code(code)
 {
 
@@ -247,7 +247,7 @@ void Case::accept(Visitor *visitor) {
     // visitor->visit(this);
 }
 
-Switch::Switch(Token *token, Expression *expression, std::vector<Case *> cases, CodeBlock *default_block) :
+Switch::Switch(Token token, Expression *expression, std::vector<Case *> cases, CodeBlock *default_block) :
         Expression(token), m_expression(expression), m_default_block(default_block)
 {
     for (auto entry : cases) {
@@ -275,7 +275,7 @@ void Switch::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Parameter::Parameter(Token *token) : Node(token), name(nullptr), typeNode(nullptr) {
+Parameter::Parameter(Token token) : Node(token), name(nullptr), typeNode(nullptr) {
 
 }
 
@@ -283,14 +283,14 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-VariableDefinition::VariableDefinition(Token *token) :
+VariableDefinition::VariableDefinition(Token token) :
         Definition(token),
         assignment(nullptr)
 {
     // intentionally empty
 }
 
-VariableDefinition::VariableDefinition(Token *token, std::string name, Expression *value) :
+VariableDefinition::VariableDefinition(Token token, std::string name, Expression *value) :
         VariableDefinition(token)
 {
     this->name = new Identifier(token, name);
@@ -305,7 +305,7 @@ void FunctionDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-TypeDefinition::TypeDefinition(Token *token) : Definition(token) {
+TypeDefinition::TypeDefinition(Token token) : Definition(token) {
     this->alias = nullptr;
     this->name = nullptr;
 }
@@ -314,7 +314,7 @@ void TypeDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-MethodSignature::MethodSignature(Token *token, Identifier *name, std::vector<Identifier *> parameter_types, Identifier *return_type) :
+MethodSignature::MethodSignature(Token token, Identifier *name, std::vector<Identifier *> parameter_types, Identifier *return_type) :
         Node(token),
         m_name(name),
         m_return_type(return_type)
@@ -344,7 +344,7 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-ProtocolDefinition::ProtocolDefinition(Token *token, Identifier *name, std::vector<MethodSignature *> methods) :
+ProtocolDefinition::ProtocolDefinition(Token token, Identifier *name, std::vector<MethodSignature *> methods) :
         Definition(token)
 {
     this->name = name;
@@ -366,7 +366,7 @@ void ProtocolDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-EnumElement::EnumElement(Token *token, Identifier *name, Identifier *type) :
+EnumElement::EnumElement(Token token, Identifier *name, Identifier *type) :
         Node(token), m_name(name), m_type_name(type)
 {
 
@@ -384,7 +384,7 @@ void EnumElement::accept(Visitor *visitor) {
     // do nothing
 }
 
-EnumDefinition::EnumDefinition(Token *token, Identifier *name, std::vector<EnumElement *> elements) :
+EnumDefinition::EnumDefinition(Token token, Identifier *name, std::vector<EnumElement *> elements) :
         Definition(token)
 {
     this->name = name;
@@ -422,7 +422,7 @@ void ExpressionStatement::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-ImportStatement::ImportStatement(Token *token, StringLiteral *path) : Statement(token) {
+ImportStatement::ImportStatement(Token token, StringLiteral *path) : Statement(token) {
     this->path = path;
 }
 
@@ -430,7 +430,7 @@ void ImportStatement::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-SourceFile::SourceFile(Token *token, std::string name) : Node(token) {
+SourceFile::SourceFile(Token token, std::string name) : Node(token) {
     this->name = name;
     this->code = new CodeBlock(token);
 }

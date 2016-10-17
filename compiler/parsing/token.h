@@ -15,6 +15,7 @@ namespace acorn {
 
         enum Kind {
             // source code elements
+            EndOfFile,
             Newline,
             Indent,
             Deindent,

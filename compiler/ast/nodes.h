@@ -10,9 +10,9 @@
 #include <string>
 #include <vector>
 
-namespace acorn {
+#include "../parsing/token.h"
 
-    struct Token;
+namespace acorn {
 
     namespace types {
         class Type;
@@ -24,12 +24,12 @@ namespace acorn {
         class Visitor;
 
         struct Node {
-            explicit Node(Token *token);
+            explicit Node(Token token);
             virtual ~Node();
 
             virtual void accept(Visitor *visitor) = 0;
 
-            Token *token;
+            Token token;
             types::Type *type;
         };
 
@@ -53,8 +53,8 @@ namespace acorn {
 
         // expressions
         struct Identifier : Expression {
-            Identifier(Token *token);
-            Identifier(Token *token, std::string name);
+            Identifier(Token token);
+            Identifier(Token token, std::string name);
 
             bool has_parameters() const;
             std::string collapsed_value() const;
@@ -68,7 +68,7 @@ namespace acorn {
 
         class VariableDeclaration : public Expression {
         public:
-            VariableDeclaration(Token *token, Identifier *name = nullptr, Identifier *type = nullptr);
+            VariableDeclaration(Token token, Identifier *name = nullptr, Identifier *type = nullptr);
 
             Identifier *name() const;
 
@@ -149,7 +149,7 @@ namespace acorn {
 
         class TupleLiteral : public Expression {
         public:
-            TupleLiteral(Token *token, std::vector<Expression *> elements);
+            TupleLiteral(Token token, std::vector<Expression *> elements);
 
             std::vector<Expression *> elements();
 
@@ -160,8 +160,8 @@ namespace acorn {
         };
 
         struct Call : Expression {
-            explicit Call(Token *token);
-            Call(Token *token, std::string name, Expression *arg1 = nullptr, Expression *arg2 = nullptr);
+            explicit Call(Token token);
+            Call(Token token, std::string name, Expression *arg1 = nullptr, Expression *arg2 = nullptr);
 
             Expression *operand;
             std::vector<Expression *> arguments;
@@ -171,7 +171,7 @@ namespace acorn {
         };
 
         struct CCall : Expression {
-            CCall(Token *token);
+            CCall(Token token);
 
             Identifier *name;
             std::vector<Identifier *> parameters;
@@ -182,7 +182,7 @@ namespace acorn {
         };
 
         struct Cast : Expression {
-            Cast(Token *token);
+            Cast(Token token);
 
             Expression *operand;
             Identifier *new_type;
@@ -191,7 +191,7 @@ namespace acorn {
         };
 
         struct Assignment : Expression {
-            explicit Assignment(Token *token, Expression *lhs, Expression *rhs);
+            explicit Assignment(Token token, Expression *lhs, Expression *rhs);
 
             Expression *lhs;
             Expression *rhs;
@@ -200,8 +200,8 @@ namespace acorn {
         };
 
         struct Selector : Expression {
-            Selector(Token *token, Expression *operand, Identifier *field);
-            Selector(Token *token, Expression *operand, std::string field);
+            Selector(Token token, Expression *operand, Identifier *field);
+            Selector(Token token, Expression *operand, std::string field);
 
             Expression *operand;
             Identifier *name;
@@ -211,7 +211,7 @@ namespace acorn {
 
         class While : public Expression {
         public:
-            While(Token *token, Expression *condition, CodeBlock *code);
+            While(Token token, Expression *condition, CodeBlock *code);
 
             Expression *condition() const;
             CodeBlock *code() const;
@@ -242,7 +242,7 @@ namespace acorn {
         };
 
         struct Spawn : Expression {
-            Spawn(Token *token, Call *call);
+            Spawn(Token token, Call *call);
 
             Call *call;
 
@@ -251,7 +251,7 @@ namespace acorn {
 
         class Case : public Node {
         public:
-            Case(Token *token, Expression *condition, Expression *assignment, CodeBlock *code);
+            Case(Token token, Expression *condition, Expression *assignment, CodeBlock *code);
 
             Expression *condition() const;
             Expression *assignment() const;
@@ -267,7 +267,7 @@ namespace acorn {
 
         class Switch : public Expression {
         public:
-            Switch(Token *token, Expression *expression, std::vector<Case *> cases, CodeBlock *default_block = nullptr);
+            Switch(Token token, Expression *expression, std::vector<Case *> cases, CodeBlock *default_block = nullptr);
 
             Expression *expression() const;
             std::vector<Case *> cases() const;
@@ -283,7 +283,7 @@ namespace acorn {
 
         // misc
         struct Parameter : Node {
-            explicit Parameter(Token *token);
+            explicit Parameter(Token token);
 
             bool inout;
             Identifier *name;
@@ -294,8 +294,8 @@ namespace acorn {
 
         // definitions
         struct VariableDefinition : Definition {
-            explicit VariableDefinition(Token *token);
-            VariableDefinition(Token *token, std::string name, Expression *value = nullptr);
+            explicit VariableDefinition(Token token);
+            VariableDefinition(Token token, std::string name, Expression *value = nullptr);
 
             Assignment *assignment;
 
@@ -313,7 +313,7 @@ namespace acorn {
         };
 
         struct TypeDefinition : Definition {
-            TypeDefinition(Token *token);
+            TypeDefinition(Token token);
 
             Identifier *alias;
 
@@ -325,7 +325,7 @@ namespace acorn {
 
         class MethodSignature : public Node {
         public:
-            MethodSignature(Token *token, Identifier *name, std::vector<Identifier *> parameter_types, Identifier *return_type);
+            MethodSignature(Token token, Identifier *name, std::vector<Identifier *> parameter_types, Identifier *return_type);
 
             Identifier *name() const;
             std::vector<Identifier *> parameter_types() const;
@@ -341,7 +341,7 @@ namespace acorn {
 
         class ProtocolDefinition : public Definition {
         public:
-            ProtocolDefinition(Token *token, Identifier *name, std::vector<MethodSignature *> methods);
+            ProtocolDefinition(Token token, Identifier *name, std::vector<MethodSignature *> methods);
 
             std::vector<MethodSignature *> methods() const;
 
@@ -353,7 +353,7 @@ namespace acorn {
 
         class EnumElement : public Node {
         public:
-            EnumElement(Token *token, Identifier *name, Identifier *type);
+            EnumElement(Token token, Identifier *name, Identifier *type);
 
             Identifier *name() const;
             Identifier *type_name() const;
@@ -367,7 +367,7 @@ namespace acorn {
 
         class EnumDefinition : public Definition {
         public:
-            EnumDefinition(Token *token, Identifier *name, std::vector<EnumElement *> elements);
+            EnumDefinition(Token token, Identifier *name, std::vector<EnumElement *> elements);
 
             std::vector<EnumElement *> elements() const;
 
@@ -395,7 +395,7 @@ namespace acorn {
         };
 
         struct ImportStatement : Statement {
-            ImportStatement(Token *token, StringLiteral *path);
+            ImportStatement(Token token, StringLiteral *path);
 
             StringLiteral *path;
 
@@ -404,7 +404,7 @@ namespace acorn {
 
         // source file
         struct SourceFile : Node {
-            SourceFile(Token *token, std::string name);
+            SourceFile(Token token, std::string name);
 
             std::string name;
             CodeBlock *code;

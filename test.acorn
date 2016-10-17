@@ -7,10 +7,12 @@ end
 
 let perhaps_integer = MaybeInteger.Some(10)
 
-switch perhaps_integer
-case MaybeInteger.Some using let n
-    exit(n)
+let a = 0
 
-case MaybeInteger.None
-    exit(25)
+switch perhaps_integer
+case MaybeInteger.Some using let n as Integer
+    a = n
+
+case MaybeInteger.Nothing
+    a = 25
 end

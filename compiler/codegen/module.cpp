@@ -191,6 +191,12 @@ llvm::Value *ModuleGenerator::pop_value() {
     return pop_unit().llvm_value();
 }
 
+llvm::BasicBlock *ModuleGenerator::create_basic_block(std::string name) const {
+    auto &context = llvm::getGlobalContext();
+    auto parent = m_irBuilder->GetInsertBlock()->getParent();
+    return llvm::BasicBlock::Create(context, name, parent);
+}
+
 void ModuleGenerator::visit(ast::CodeBlock *block) {
     llvm::Value *last_value = nullptr;
 
@@ -769,6 +775,27 @@ void ModuleGenerator::visit(ast::Spawn *expression) {
 }
 
 void ModuleGenerator::visit(ast::Switch *expression) {
+    /*auto entry_block = create_basic_block("switch_entry");
+    m_irBuilder->CreateBr(entry_block);
+
+    m_irBuilder->SetInsertPoint(entry_block);
+    expression->expression()->accept(this);
+    auto condition = pop_value();
+
+    int case_no = 0;
+    for (auto case_ : expression->cases()) {
+        std::stringstream ss;
+        ss << "case_" << case_no;
+
+        auto code_block = create_basic_block(ss.str());
+        m_irBuilder->SetInsertPoint(code_block);
+
+        case_no++;
+    }
+
+    auto exit_block = create_basic_block("switch_exit");
+    m_irBuilder->SetInsertPoint(entry_block);*/
+
     push_error(new errors::InternalError(expression, "N/A"));
     push_value(nullptr);
 }
@@ -779,9 +806,6 @@ void ModuleGenerator::visit(ast::Parameter *parameter) {
 
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
     definition->assignment->accept(this);
-    pop_value();
-
-    push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {

@@ -55,7 +55,7 @@ namespace acorn {
     class Parser : public compiler::Pass {
 
     public:
-        explicit Parser(std::vector<Token *> tokens);
+        explicit Parser(Lexer &lexer);
         ~Parser();
 
         ast::SourceFile *parse(std::string name);
@@ -63,9 +63,10 @@ namespace acorn {
     private:
         void debug(std::string line);
 
-        Token *readToken(Token::Rule rule);
-        Token *skipToken(Token::Rule rule);
-        bool isToken(Token::Rule rule) const;
+        void next_token();
+        bool read_token(Token::Kind kind, Token &token);
+        bool skip_token(Token::Kind kind);
+        bool is_token(Token::Kind kind);
 
         // misc
         ast::CodeBlock *readCodeBlock(bool in_switch = false);
@@ -77,7 +78,6 @@ namespace acorn {
         ast::VariableDeclaration *readVariableDeclaration();
         ast::IntegerLiteral *readIntegerLiteral();
         ast::FloatLiteral *readFloatLiteral();
-        ast::ImaginaryLiteral *readImaginaryLiteral();
         ast::StringLiteral *readStringLiteral();
         ast::SequenceLiteral *readSequenceLiteral();
         ast::MappingLiteral *readMappingLiteral();
@@ -114,7 +114,8 @@ namespace acorn {
         ast::ImportStatement *readImportStatement();
 
     private:
-        std::deque<Token *> m_tokens;
+        Lexer &m_lexer;
+        std::deque<Token> m_tokens;
         std::map<std::string, int> m_operatorPrecendence;
 
     };

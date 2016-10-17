@@ -58,6 +58,8 @@ namespace acorn {
             void push_value(llvm::Value *value);
             llvm::Value *pop_value();
 
+            llvm::BasicBlock *create_basic_block(std::string name) const;
+
             void visit(ast::CodeBlock *block);
 
             void visit(ast::Identifier *expression);
