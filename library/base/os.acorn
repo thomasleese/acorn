@@ -1,15 +1,20 @@
 import 'base/types'
 
-def exit(code as Integer) as Void
-    ccall exit(Integer) as Void using code
-end
+## Exit the program.
+##
+## - Parameters
+##   - code: The exit code.
+def exit(code as Int):
+    ccall exit(Int) as Void using code
 
-def abort() as Void
+
+## Abort the program.
+def abort():
     ccall abort() as Void
-end
 
-def swap{T}(inout a as T, inout b as T) as Void
+
+## Swap the value of two variables.
+def swap{T}(inout a as T, inout b as T):
     let old_a = a
     a = b
     b = old_a
-end

@@ -6,6 +6,8 @@ type Float as Float64
 # Maybe type.
 type Maybe{T} as Enum{Void, T}
 
+import 'base/memory'
+
 # Basic mathematical operators.
 def -(n as Int) as Int:
     return 0 - n

@@ -1,9 +1,18 @@
-def malloc(size as Integer) as UnsafePointer{Integer8}
-    let pointer = ccall malloc(Integer) as UnsafePointer{Integer8} using size
-    return pointer
-end
+## Allocate some memory.
+##
+## - Parameters:
+##   - size: The number of bytes to allocate.
+##
+## - Returns:
+##   A pointer to the newly allocated memory.
+def malloc(size as Int) as UnsafePointer{Int8}:
+    return ccall malloc(Int) as UnsafePointer{Int8} using size
 
-def free{T}(pointer as UnsafePointer{T}) as Void
-    let raw_pointer = pointer as UnsafePointer{Integer8}
-    ccall free(UnsafePointer{Integer8}) as Void using raw_pointer
-end
+
+## Free previously allocated memory.
+##
+## - Parameters:
+##   - pointer: The pointer to free.
+def free{T}(pointer as UnsafePointer{T}):
+    let raw_pointer = pointer as UnsafePointer{Int8}
+    ccall free(UnsafePointer{Int8}) as Void using raw_pointer
