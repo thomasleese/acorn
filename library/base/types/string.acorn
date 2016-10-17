@@ -1,5 +1,0 @@
-type UnicodeScalar as UnsignedInteger32
-
-type Character as Array{UnicodeScalar}
-
-type String as Array{UnicodeScalar}
