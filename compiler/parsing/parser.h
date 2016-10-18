@@ -9,7 +9,6 @@
 #include <map>
 #include <string>
 
-#include "../pass.h"
 #include "token.h"
 
 namespace acorn {
@@ -52,10 +51,10 @@ namespace acorn {
         struct SourceFile;
     }
 
-    class Parser : public compiler::Pass {
+    class Parser {
 
     public:
-        explicit Parser(Lexer &lexer);
+        Parser(diagnostics::Diagnostics *diagnostics, Lexer &lexer);
         ~Parser();
 
         ast::SourceFile *parse(std::string name);
@@ -63,7 +62,7 @@ namespace acorn {
     private:
         void debug(std::string line);
 
-        void next_token();
+        bool next_token();
         bool read_token(Token::Kind kind, Token &token);
         bool skip_token(Token::Kind kind);
         bool is_token(Token::Kind kind);
@@ -114,6 +113,7 @@ namespace acorn {
         ast::ImportStatement *readImportStatement();
 
     private:
+        diagnostics::Diagnostics *m_diagnostics;
         Lexer &m_lexer;
         std::deque<Token> m_tokens;
         std::map<std::string, int> m_operatorPrecendence;

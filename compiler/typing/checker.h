@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "../ast/visitor.h"
-#include "../pass.h"
 
 namespace acorn {
 
@@ -28,10 +27,10 @@ namespace acorn {
 
     namespace typing {
 
-        class Checker : public compiler::Pass, public ast::Visitor {
+        class Checker : public ast::Visitor {
 
         public:
-            explicit Checker(symboltable::Namespace *rootNamespace);
+            Checker(diagnostics::Diagnostics *diagnostics, symboltable::Namespace *rootNamespace);
             ~Checker();
 
         private:
@@ -74,6 +73,7 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         private:
+            diagnostics::Diagnostics *m_diagnostics;
             symboltable::Namespace *m_namespace;
 
         };

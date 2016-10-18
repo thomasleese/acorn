@@ -6,13 +6,14 @@
 #include <fstream>
 #include <sstream>
 
-#include "../errors.h"
+#include "../diagnostics.h"
 
 #include "lexer.h"
 
 using namespace acorn;
+using namespace acorn::diagnostics;
 
-Lexer::Lexer(std::string filename) {
+Lexer::Lexer(Diagnostics *diagnostics, std::string filename) : m_diagnostics(diagnostics) {
     m_stream.open(filename.c_str());
 
     m_current_column = 0;
@@ -20,21 +21,23 @@ Lexer::Lexer(std::string filename) {
     std::getline(m_stream, m_current_line);
 
     m_indentation.push_back(0);
-    update_indentation();
+
+    Token token;
+    update_indentation(token);
 }
 
-Token Lexer::next_token() {
+bool Lexer::next_token(Token &token) {
     if (m_token_buffer.size()) {
-        auto token = m_token_buffer.front();
+        token = m_token_buffer.front();
         m_token_buffer.pop_front();
-        return token;
+        return true;
     }
 
-    Token token = make_token();
+    token = make_token();
 
     if (!m_stream.good()) {
         token.kind = Token::EndOfFile;
-        return token;
+        return true;
     }
 
     while (true) {
@@ -49,7 +52,7 @@ Token Lexer::next_token() {
 
             int ch2 = m_stream.get();
             if (ch2 != '\n') {
-                throw false;
+                return false;
             }
 
             next_line();
@@ -70,10 +73,11 @@ Token Lexer::next_token() {
     } else if (read_delimiter(token)) {
         // do nothing :)
     } else {
-        throw false;
+        m_diagnostics->handle(SyntaxError(token, "code"));
+        return false;
     }
 
-    return token;
+    return true;
 }
 
 Token Lexer::make_token(Token::Kind kind) const {
@@ -129,7 +133,7 @@ void Lexer::next_line() {
     std::getline(m_stream, m_current_line);
 }
 
-void Lexer::update_indentation() {
+void Lexer::update_indentation(Token &token) {
     unsigned int level = skip_whitespace();
     if (m_indentation.back() == level) {
         // do nothing
@@ -139,7 +143,7 @@ void Lexer::update_indentation() {
     } else {
         auto it = std::find(m_indentation.begin(), m_indentation.end(), level);
         if (it == m_indentation.end()) {
-            throw false;
+            m_diagnostics->handle(SyntaxError(token, "indentation"));
         } else {
             while (m_indentation.back() > level) {
                 m_indentation.pop_back();
@@ -276,7 +280,7 @@ bool Lexer::read_delimiter(Token &token) {
         case '\n':
             token.kind = Token::Newline;
             next_line();
-            update_indentation();
+            update_indentation(token);
             return true;
 
         // delimiters

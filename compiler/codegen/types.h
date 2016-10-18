@@ -5,7 +5,6 @@
 #ifndef ACORN_CODEGEN_TYPES_H
 #define ACORN_CODEGEN_TYPES_H
 
-#include "../pass.h"
 #include "../typing/types.h"
 
 namespace llvm {
@@ -21,8 +20,10 @@ namespace acorn {
 
     namespace codegen {
 
-        class TypeGenerator : public compiler::Pass, public types::Visitor {
+        class TypeGenerator : public types::Visitor {
         public:
+            explicit TypeGenerator(diagnostics::Diagnostics *diagnostics);
+
             llvm::Type *take_type(ast::Node *node);
             llvm::Constant *take_initialiser(ast::Node *node);
 
@@ -67,6 +68,8 @@ namespace acorn {
             std::vector<llvm::Constant *> m_initialiser_stack;
 
             std::map<types::ParameterType *, types::Type *> m_type_parameters;
+
+            diagnostics::Diagnostics *m_diagnostics;
         };
 
     }

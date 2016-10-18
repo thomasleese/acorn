@@ -9,18 +9,21 @@
 #include "parsing/lexer.h"
 #include "typing/types.h"
 
-#include "errors.h"
+#include "diagnostics.h"
 
 using namespace acorn;
-using namespace acorn::errors;
+using namespace acorn::diagnostics;
 
 CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) :
         m_filename(filename), m_lineNumber(lineNumber), m_column(column), m_line(line) {
 
 }
 
-CompilerError::CompilerError(Token *token) :
-        CompilerError(token->filename, token->lineNumber, token->column, token->line) {
+CompilerError::CompilerError(const Token &token) :
+        CompilerError(token.filename,
+                      token.line_number,
+                      token.column,
+                      token.line) {
 
 }
 
@@ -45,7 +48,7 @@ void CompilerError::print() const {
     std::cout << m_message << std::endl;
 }
 
-FileNotFoundError::FileNotFoundError(Token *token) : CompilerError(token) {
+FileNotFoundError::FileNotFoundError(const Token &token) : CompilerError(token) {
     m_prefix = "File not found";
 }
 
@@ -53,7 +56,7 @@ FileNotFoundError::FileNotFoundError(ast::Node *node) : CompilerError(node) {
     m_prefix = "File not found";
 }
 
-InternalError::InternalError(Token *token, std::string message) :
+InternalError::InternalError(const Token &token, std::string message) :
         CompilerError(token) {
     m_prefix = "Internal error";
     m_message = message + "\nNote: You have probably encountered a bug in Acorn, not your code.";
@@ -65,7 +68,7 @@ InternalError::InternalError(ast::Node *node, std::string message) :
     m_message = message + "\nNote: You have probably encountered a bug in Acorn, not your code.";
 }
 
-InternalAstError::InternalAstError(Token *token) :
+InternalAstError::InternalAstError(const Token &token) :
         InternalError(token, "Should not be in lowered AST.") {
 
 }
@@ -82,21 +85,21 @@ SyntaxError::SyntaxError(std::string filename, int lineNumber, int column, std::
     m_message = "Got: " + got + "\nExpected: " + expectation;
 }
 
-SyntaxError::SyntaxError(Token *token, std::string expectation) :
+SyntaxError::SyntaxError(const Token &token, std::string expectation) :
         CompilerError(token) {
     m_prefix = "Invalid syntax";
 
-    std::string got = token->lexeme;
+    std::string got = token.lexeme;
 
     if (got.empty()) {
-        got = "(" + Token::rule_string(token->rule) + ")";
+        got = "(" + Token::as_string(token.kind) + ")";
     }
 
     makeMessage(got, expectation);
 }
 
-SyntaxError::SyntaxError(Token *token, Token::Rule rule) :
-        SyntaxError(token, Token::rule_string(rule)) {
+SyntaxError::SyntaxError(const Token &token, Token::Kind kind) :
+        SyntaxError(token, Token::as_string(kind)) {
 
 }
 
@@ -174,4 +177,17 @@ ConstantAssignmentError::ConstantAssignmentError(ast::Node *node) :
         CompilerError(node) {
     m_prefix = "Assignment to constant";
     m_message = "Variable is not mutable.";
+}
+
+Diagnostics::Diagnostics() : m_has_errors(false) {
+
+}
+
+void Diagnostics::handle(const CompilerError &error) {
+    error.print();
+    m_has_errors = true;
+}
+
+bool Diagnostics::has_errors() const {
+    return m_has_errors;
 }

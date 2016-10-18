@@ -8,19 +8,21 @@
 #include <sstream>
 
 #include "../ast/nodes.h"
-#include "../errors.h"
+#include "../diagnostics.h"
 #include "../symboltable.h"
 #include "types.h"
 
 #include "checker.h"
 
 using namespace acorn;
+using namespace acorn::diagnostics;
 using namespace acorn::typing;
 
 #define return_if_null(thing) if (thing == nullptr) return;
 #define return_if_null_type(node) return_if_null(node->type)
 
-Checker::Checker(symboltable::Namespace *rootNamespace) {
+Checker::Checker(diagnostics::Diagnostics *diagnostics, symboltable::Namespace *rootNamespace) {
+    m_diagnostics = diagnostics;
     m_namespace = rootNamespace;
 }
 
@@ -34,13 +36,13 @@ void Checker::check_types(ast::Node *lhs, ast::Node *rhs) {
 
     bool compatible = lhs->type->is_compatible(rhs->type);
     if (!compatible) {
-        push_error(new errors::TypeMismatchError(rhs, lhs));
+        m_diagnostics->handle(TypeMismatchError(rhs, lhs));
     }
 }
 
 void Checker::check_not_null(ast::Node *node) {
     if (!node->type) {
-        push_error(new errors::InternalError(node, "No type given for: " + Token::rule_string(node->token->rule)));
+        m_diagnostics->handle(InternalError(node, "No type given for: " + Token::as_string(node->token.kind)));
     }
 }
 
@@ -227,11 +229,11 @@ void Checker::visit(ast::VariableDefinition *definition) {
 void Checker::visit(ast::FunctionDefinition *definition) {
     check_not_null(definition);
 
-    auto functionSymbol = m_namespace->lookup(this, definition->name);
+    auto functionSymbol = m_namespace->lookup(m_diagnostics, definition->name);
 
     types::Method *method = static_cast<types::Method *>(definition->type);
 
-    auto symbol = functionSymbol->nameSpace->lookup(this, definition, method->mangled_name());
+    auto symbol = functionSymbol->nameSpace->lookup(m_diagnostics, definition, method->mangled_name());
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -258,7 +260,7 @@ void Checker::visit(ast::TypeDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     //definition->name->accept(this);
 
-    auto symbol = m_namespace->lookup(this, definition->name);
+    auto symbol = m_namespace->lookup(m_diagnostics, definition->name);
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;

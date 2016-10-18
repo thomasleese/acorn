@@ -8,13 +8,18 @@
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Module.h>
 
-#include "../Errors.h"
+#include "../diagnostics.h"
 
 #include "types.h"
 #include "../ast/nodes.h"
 
 using namespace acorn;
 using namespace acorn::codegen;
+using namespace acorn::diagnostics;
+
+TypeGenerator::TypeGenerator(Diagnostics *diagnostics) : m_diagnostics(diagnostics) {
+    
+}
 
 llvm::Type *TypeGenerator::take_type(ast::Node *node) {
     if (m_type_stack.size() >= 1) {
@@ -22,13 +27,13 @@ llvm::Type *TypeGenerator::take_type(ast::Node *node) {
         m_type_stack.pop_back();
 
         if (node && result == nullptr) {
-            push_error(new errors::InternalError(node, "Invalid LLVM type generated. (" + node->type->name() + ")"));
+            m_diagnostics->handle(InternalError(node, "Invalid LLVM type generated. (" + node->type->name() + ")"));
             return nullptr;
         }
 
         return result;
     } else {
-        push_error(new errors::InternalError(node, "No LLVM type generated."));
+        m_diagnostics->handle(InternalError(node, "No LLVM type generated."));
         return nullptr;
     }
 }
@@ -39,13 +44,13 @@ llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
         m_initialiser_stack.pop_back();
 
         if (node && result == nullptr) {
-            push_error(new errors::InternalError(node, "Invalid LLVM initialiser generated."));
+            m_diagnostics->handle(InternalError(node, "Invalid LLVM initialiser generated."));
             return nullptr;
         }
 
         return result;
     } else {
-        push_error(new errors::InternalError(node, "No LLVM initialiser generated."));
+        m_diagnostics->handle(InternalError(node, "No LLVM initialiser generated."));
         return nullptr;
     }
 }

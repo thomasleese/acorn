@@ -14,6 +14,7 @@
 #include "types.h"
 
 using namespace acorn;
+using namespace acorn::diagnostics;
 using namespace acorn::types;
 
 Type::Type() {
@@ -85,7 +86,7 @@ Type *ParameterType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Parameter(this);
     } else {
-        pass->push_error(new errors::InvalidTypeConstructor(node));
+        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -110,7 +111,7 @@ Type *VoidType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Void();
     } else {
-        pass->push_error(new errors::InvalidTypeConstructor(node));
+        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -135,7 +136,7 @@ Type *BooleanType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Boolean();
     } else {
-        pass->push_error(new errors::InvalidTypeConstructor(node));
+        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -166,7 +167,7 @@ Type *IntegerType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Integer(m_size);
     } else {
-        pass->push_error(new errors::InvalidTypeConstructor(node));
+        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -197,7 +198,7 @@ Type *UnsignedIntegerType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.empty()) {
         return new UnsignedInteger(m_size);
     } else {
-        pass->push_error(new errors::InvalidTypeConstructor(node));
+        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -224,7 +225,7 @@ Type *FloatType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Float(m_size);
     } else {
-        pass->push_error(new errors::InvalidTypeConstructor(node));
+        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -269,7 +270,7 @@ Type *UnsafePointerType::create(compiler::Pass *pass, ast::Node *node) {
     if (has_element_type()) {
         return new UnsafePointer(element_type()->create(pass, node));
     } else {
-        pass->push_error(new errors::InvalidTypeParameters(node, m_parameters.size(), 1));
+        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), 1));
         return nullptr;
     }
 }
@@ -298,7 +299,7 @@ Type *FunctionType::create(compiler::Pass *pass, ast::Node *node) {
     for (auto parameter : m_parameters) {
         Method *method = dynamic_cast<Method *>(parameter);
         if (method == nullptr) {
-            pass->push_error(new errors::InvalidTypeParameters(node, 0, 0));
+            pass->m_diagnostics->handle(InvalidTypeParameters(node, 0, 0));
             continue;
         }
 
@@ -393,7 +394,7 @@ Type *RecordType::create(compiler::Pass *pass, ast::Node *node) {
 
         return new Record(m_field_names, field_types);
     } else {
-        pass->push_error(new errors::InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
+        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
         return nullptr;
     }
 }
@@ -477,7 +478,7 @@ std::string TupleType::name() const {
 
 Type *TupleType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.empty()) {
-        pass->push_error(new errors::InvalidTypeParameters(node, m_parameters.size(), 1));
+        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), 1));
         return nullptr;
     } else {
         std::vector<Type *> parameters;
@@ -536,7 +537,7 @@ Type *AliasType::create(compiler::Pass *pass, ast::Node *node) {
         auto alias = replace_parameters(m_alias, parameter_mapping);
         return alias->create(pass, node);
     } else {
-        pass->push_error(new errors::InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
+        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
         return nullptr;
     }
 }
@@ -574,7 +575,7 @@ Type *ProtocolType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.size() == m_input_parameters.size()) {
         return new Protocol(m_methods, this);
     } else {
-        pass->push_error(new errors::InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
+        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
         return nullptr;
     }
 }
@@ -613,7 +614,7 @@ Type *TypeDescriptionType::create(compiler::Pass *pass, ast::Node *node) {
     if (m_parameters.size() == 1) {
         return m_parameters[0];
     } else {
-        pass->push_error(new errors::InvalidTypeParameters(node, m_parameters.size(), 1));
+        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), 1));
         return nullptr;
     }
 }

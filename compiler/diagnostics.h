@@ -2,8 +2,7 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
-#ifndef ACORN_ERRORS_H
-#define ACORN_ERRORS_H
+#pragma once
 
 #include <exception>
 #include <string>
@@ -20,12 +19,12 @@ namespace acorn {
         class Type;
     }
 
-    namespace errors {
+    namespace diagnostics {
 
         class CompilerError : public std::exception {
         public:
             explicit CompilerError(std::string filename, int lineNumber, int column, std::string line);
-            CompilerError(Token *token);
+            CompilerError(const Token &token);
             CompilerError(ast::Node *node);
 
             void print() const;
@@ -43,19 +42,19 @@ namespace acorn {
 
         class FileNotFoundError : public CompilerError {
         public:
-            FileNotFoundError(Token *token);
+            FileNotFoundError(const Token &token);
             FileNotFoundError(ast::Node *node);
         };
 
         class InternalError : public CompilerError {
         public:
-            InternalError(Token *token, std::string message);
+            InternalError(const Token &token, std::string message);
             InternalError(ast::Node *node, std::string message);
         };
 
         class InternalAstError : public InternalError {
         public:
-            InternalAstError(Token token);
+            InternalAstError(const Token &token);
             InternalAstError(ast::Node *node);
         };
 
@@ -64,8 +63,8 @@ namespace acorn {
             SyntaxError(std::string filename, int lineNumber, int column,
                         std::string line, std::string got,
                         std::string expectation);
-            SyntaxError(Token token, std::string expectation);
-            SyntaxError(Token token, Token::Kind kind);
+            SyntaxError(const Token &token, std::string expectation);
+            SyntaxError(const Token &token, Token::Kind kind);
 
         private:
             void makeMessage(std::string got, std::string expectation);
@@ -112,8 +111,20 @@ namespace acorn {
             ConstantAssignmentError(ast::Node *node);
         };
 
+        class Diagnostics {
+
+        public:
+            Diagnostics();
+
+            void handle(const CompilerError &error);
+
+            bool has_errors() const;
+
+        private:
+            bool m_has_errors;
+
+        };
+
     }
 
 }
-
-#endif // ACORN_ERRORS_H

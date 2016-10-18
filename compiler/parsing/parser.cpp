@@ -7,22 +7,22 @@
 #include <sstream>
 
 #include "../ast/nodes.h"
-#include "../errors.h"
+#include "../diagnostics.h"
 #include "lexer.h"
 
 #include "parser.h"
 
 using namespace acorn;
+using namespace acorn::diagnostics;
 using namespace acorn::ast;
 
 #define return_if_null(thing) if (thing == nullptr) return nullptr;
 #define return_if_false(thing) if (thing == false) return nullptr;
-#define return_eof_token(token) if (token.kind == Token::EndOfFile) return nullptr;
 
 // useful variable for storing the current token
 static Token token;
 
-Parser::Parser(Lexer &lexer) : m_lexer(lexer) {
+Parser::Parser(Diagnostics *diagnostics, Lexer &lexer) : m_diagnostics(diagnostics), m_lexer(lexer) {
     m_operatorPrecendence["="] = 0;
 
     m_operatorPrecendence["+"] = 1;
@@ -45,18 +45,12 @@ SourceFile *Parser::parse(std::string name) {
     for (auto import : module->imports) {
         std::string filename = "library/" + import->path->value + ".acorn";
 
-        Lexer lexer(filename);
-        Parser parser(lexer);
+        Lexer lexer(m_diagnostics, filename);
+        Parser parser(m_diagnostics, lexer);
         auto module2 = parser.parse(filename);
 
-        if (parser.has_errors()) {
-            while (parser.has_errors()) {
-                push_error(parser.next_error());
-            }
-        } else {
-            for (auto statement : module2->code->statements) {
-                module->code->statements.push_back(statement);
-            }
+        for (auto statement : module2->code->statements) {
+            module->code->statements.push_back(statement);
         }
 
         delete module2;
@@ -77,21 +71,28 @@ void Parser::debug(std::string line) {
     //std::cerr << line << std::endl;
 }
 
-void Parser::next_token() {
-    auto token = m_lexer.next_token();
-    m_tokens.push_back(token);
+bool Parser::next_token() {
+    Token token;
+    if (m_lexer.next_token(token)) {
+        m_tokens.push_back(token);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 bool Parser::read_token(Token::Kind kind, Token &token) {
     if (m_tokens.empty()) {
-        next_token();
+        if (!next_token()) {
+            return false;
+        }
     }
 
     auto next_token = m_tokens.front();
     m_tokens.pop_front();
 
     if (next_token.kind != kind) {
-        push_error(new errors::SyntaxError(token, kind));
+        m_diagnostics->handle(SyntaxError(token, kind));
         return false;
     }
 
@@ -106,7 +107,9 @@ bool Parser::skip_token(Token::Kind kind) {
 
 bool Parser::is_token(Token::Kind kind) {
     if (m_tokens.empty()) {
-        next_token();
+        if (!next_token()) {
+            return false;
+        }
     }
 
     auto token = m_tokens.front();
@@ -132,7 +135,7 @@ CodeBlock *Parser::readCodeBlock(bool in_switch) {
             assert(false);
         }
     } else {
-        read_token(Token::Deindent, token);
+        skip_token(Token::Deindent);
     }
 
     return code;
@@ -176,39 +179,38 @@ Identifier *Parser::readIdentifier(bool accept_parameters) {
 }
 
 Identifier *Parser::readOperator(bool accept_parameters) {
-    auto token = read_token(Token::Operator);
+    return_if_false(read_token(Token::Operator, token));
 
     auto identifier = new Identifier(token, token.lexeme);
 
     if (accept_parameters && is_token(Token::OpenBrace)) {
-        read_token(Token::OpenBrace);
+        skip_token(Token::OpenBrace);
 
         while (!is_token(Token::CloseBrace)) {
             identifier->parameters.push_back(readIdentifier(true));
 
             if (is_token(Token::Comma)) {
-                read_token(Token::Comma);
+                skip_token(Token::Comma);
             } else {
                 break;
             }
         }
 
-        read_token(Token::CloseBrace);
+        skip_token(Token::CloseBrace);
     }
 
     return identifier;
 }
 
 ast::VariableDeclaration *Parser::readVariableDeclaration() {
-    auto token = read_token(Token::LetKeyword);
-    return_eof_token(token);
+    return_if_false(read_token(Token::LetKeyword, token));
 
     auto name = readIdentifier(false);
     return_if_null(name);
 
     ast::Identifier *type = nullptr;
     if (is_token(Token::AsKeyword)) {
-        read_token(Token::AsKeyword);
+        skip_token(Token::AsKeyword);
 
         type = readIdentifier(true);
         return_if_null(type);
@@ -218,7 +220,7 @@ ast::VariableDeclaration *Parser::readVariableDeclaration() {
 }
 
 IntegerLiteral *Parser::readIntegerLiteral() {
-    auto token = read_token(Token::IntegerLiteral);
+    return_if_false(read_token(Token::IntegerLiteral, token));
 
     IntegerLiteral *literal = new IntegerLiteral(token);
 
@@ -230,7 +232,7 @@ IntegerLiteral *Parser::readIntegerLiteral() {
 }
 
 FloatLiteral *Parser::readFloatLiteral() {
-    auto token = read_token(Token::FloatLiteral);
+    return_if_false(read_token(Token::FloatLiteral, token));
 
     FloatLiteral *literal = new FloatLiteral(token);
     literal->value = token.lexeme;
@@ -239,7 +241,7 @@ FloatLiteral *Parser::readFloatLiteral() {
 }
 
 StringLiteral *Parser::readStringLiteral() {
-    auto token = read_token(Token::StringLiteral);
+    return_if_false(read_token(Token::StringLiteral, token));
 
     StringLiteral *literal = new StringLiteral(token);
     literal->value = token.lexeme.substr(1, token.lexeme.length() - 2);
@@ -248,7 +250,7 @@ StringLiteral *Parser::readStringLiteral() {
 }
 
 SequenceLiteral *Parser::readSequenceLiteral() {
-    auto token = read_token(Token::OpenBracket);
+    return_if_false(read_token(Token::OpenBracket, token));
 
     SequenceLiteral *literal = new SequenceLiteral(token);
 
@@ -256,70 +258,70 @@ SequenceLiteral *Parser::readSequenceLiteral() {
         literal->elements.push_back(readExpression(false));
 
         if (is_token(Token::Comma)) {
-            read_token(Token::Comma);
+            skip_token(Token::Comma);
         } else {
             break;
         }
     }
 
-    read_token(Token::CloseBracket);
+    skip_token(Token::CloseBracket);
 
     return literal;
 }
 
 MappingLiteral *Parser::readMappingLiteral() {
-    auto token = read_token(Token::OpenBrace);
+    return_if_false(read_token(Token::OpenBrace, token));
 
     MappingLiteral *literal = new MappingLiteral(token);
 
     while (!is_token(Token::CloseBrace)) {
         Expression *key = readExpression(false);
-        read_token(Token::Colon);
+        skip_token(Token::Colon);
         Expression *value = readExpression(false);
 
         literal->keys.push_back(key);
         literal->values.push_back(value);
 
         if (is_token(Token::Comma)) {
-            read_token(Token::Comma);
+            skip_token(Token::Comma);
         } else {
             break;
         }
     }
 
-    read_token(Token::CloseBrace);
+    skip_token(Token::CloseBrace);
 
     return literal;
 }
 
 RecordLiteral *Parser::readRecordLiteral() {
-    auto token = read_token(Token::NewKeyword);
+    return_if_false(read_token(Token::NewKeyword, token));
 
     auto literal = new RecordLiteral(token);
 
     literal->name = readIdentifier(true);
 
-    read_token(Token::OpenParenthesis);
+    skip_token(Token::OpenParenthesis);
 
     while (!is_token(Token::CloseParenthesis)) {
         literal->field_names.push_back(readIdentifier(false));
-        read_token(Token::Colon);
+        skip_token(Token::Colon);
         literal->field_values.push_back(readExpression(false));
 
         if (is_token(Token::Comma)) {
-            read_token(Token::Comma);
+            skip_token(Token::Comma);
         } else {
             break;
         }
     }
 
-    read_token(Token::CloseParenthesis);
+    skip_token(Token::CloseParenthesis);
 
     return literal;
 }
 
 Call *Parser::readCall(Expression *operand) {
-    auto token = read_token(Token::OpenParenthesis);
+    return_if_false(read_token(Token::OpenParenthesis, token));
 
     Call *call = new Call(token);
     call->operand = operand;
@@ -328,48 +330,48 @@ Call *Parser::readCall(Expression *operand) {
         call->arguments.push_back(readExpression(false));
 
         if (is_token(Token::Comma)) {
-            read_token(Token::Comma);
+            skip_token(Token::Comma);
         } else {
             break;
         }
     }
 
-    read_token(Token::CloseParenthesis);
+    skip_token(Token::CloseParenthesis);
 
     return call;
 }
 
 CCall *Parser::readCCall() {
-    auto token = read_token(Token::CCallKeyword);
+    return_if_false(read_token(Token::CCallKeyword, token));
 
     CCall *ccall = new CCall(token);
     ccall->name = readIdentifier(false);
 
-    read_token(Token::OpenParenthesis);
+    return_if_false(skip_token(Token::OpenParenthesis));
 
     while (!is_token(Token::CloseParenthesis)) {
         ccall->parameters.push_back(readIdentifier(true));
 
         if (is_token(Token::Comma)) {
-            read_token(Token::Comma);
+            skip_token(Token::Comma);
         } else {
             break;
         }
     }
 
-    read_token(Token::CloseParenthesis);
+    skip_token(Token::CloseParenthesis);
 
-    read_token(Token::AsKeyword);
+    return_if_false(skip_token(Token::AsKeyword));
     ccall->returnType = readIdentifier(true);
 
     if (is_token(Token::UsingKeyword)) {
-        read_token(Token::UsingKeyword);
+        skip_token(Token::UsingKeyword);
 
         while (true) {
             ccall->arguments.push_back(readExpression(false));
 
             if (is_token(Token::Comma)) {
-                read_token(Token::Comma);
+                skip_token(Token::Comma);
             } else {
                 break;
             }
@@ -380,7 +382,7 @@ CCall *Parser::readCCall() {
 }
 
 Cast *Parser::readCast(Expression *operand) {
-    auto token = read_token(Token::AsKeyword);
+    return_if_false(read_token(Token::AsKeyword, token));
 
     Cast *cast = new Cast(token);
     cast->operand = operand;
@@ -389,8 +391,7 @@ Cast *Parser::readCast(Expression *operand) {
 }
 
 Selector *Parser::readSelector(Expression *operand) {
-    auto token = read_token(Token::Dot);
-    return_eof_token(token);
+    return_if_false(read_token(Token::Dot, token));
 
     Identifier *name = nullptr;
 
@@ -408,16 +409,16 @@ Selector *Parser::readSelector(Expression *operand) {
 }
 
 Call *Parser::readIndex(Expression *operand) {
-    auto token = read_token(Token::OpenBracket);
+    return_if_false(read_token(Token::OpenBracket, token));
 
     auto call = new Call(token);
     call->arguments.push_back(operand);
     call->arguments.push_back(readExpression(true));
 
-    read_token(Token::CloseBracket);
+    skip_token(Token::CloseBracket);
 
     if (is_token(Token::Assignment)) {
-        read_token(Token::Assignment);
+        skip_token(Token::Assignment);
         call->arguments.push_back(readExpression(true));
         call->operand = new Identifier(token, "setindex");
     } else {
@@ -428,13 +429,12 @@ Call *Parser::readIndex(Expression *operand) {
 }
 
 While *Parser::readWhile() {
-    auto token = read_token(Token::WhileKeyword);
-    return_eof_token(token);
+    return_if_false(read_token(Token::WhileKeyword, token));
 
     auto condition = readExpression(true);
     return_if_null(condition);
 
-    read_token(Token::Newline);
+    return_if_false(skip_token(Token::Newline));
 
     auto code = readCodeBlock();
     return_if_null(code);
@@ -455,25 +455,24 @@ CodeBlock *Parser::readFor() {
      *         break
      */
 
-    auto token = read_token(Token::ForKeyword);
-    return_eof_token(token);
+    return_if_false(read_token(Token::ForKeyword, token));
 
     auto variable = readIdentifier(false);
     return_if_null(variable);
 
-    return_eof_token(read_token(Token::InKeyword));
+    return_if_false(skip_token(Token::InKeyword));
 
     auto iterator = readExpression(true);
     return_if_null(iterator);
 
-    return_eof_token(read_token(Token::Newline));
+    return_if_false(skip_token(Token::Newline));
 
     auto loop_code = readCodeBlock();
     return_if_null(loop_code);
 
     std::string for_id;
     std::stringstream ss;
-    ss << token;
+    ss << &token;
     ss >> for_id;
 
     std::string state_variable_name = "state_" + for_id;
@@ -498,7 +497,7 @@ CodeBlock *Parser::readFor() {
 }
 
 If *Parser::readIf() {
-    auto token = read_token(Token::IfKeyword);
+    return_if_false(read_token(Token::IfKeyword, token));
 
     If *expression = new If(token);
 
@@ -506,8 +505,8 @@ If *Parser::readIf() {
         auto lhs = readVariableDeclaration();
         return_if_null(lhs);
 
-        auto assignment_token = read_token(Token::Assignment);
-        return_eof_token(assignment_token);
+        Token assignment_token;
+        return_if_false(read_token(Token::Assignment, assignment_token));
 
         auto rhs = readExpression(true);
         return_if_null(rhs);
@@ -518,7 +517,7 @@ If *Parser::readIf() {
         return_if_null(expression->condition);
     }
 
-    return_eof_token(read_token(Token::Newline));
+    return_if_false(skip_token(Token::Newline));
 
     expression->trueCode = new CodeBlock(m_tokens.front());
     expression->falseCode = nullptr;
@@ -533,25 +532,25 @@ If *Parser::readIf() {
     }
 
     if (is_token(Token::ElseKeyword)) {
-        read_token(Token::ElseKeyword);
+        skip_token(Token::ElseKeyword);
 
         if (is_token(Token::IfKeyword)) {
             expression->falseCode = new CodeBlock(m_tokens.front());
             If *if_expr = readIf();
             expression->falseCode->statements.push_back(new ExpressionStatement(if_expr));
         } else {
-            read_token(Token::Newline);
+            return_if_false(skip_token(Token::Newline));
             expression->falseCode = readCodeBlock();
         }
     } else {
-        read_token(Token::Deindent);
+        skip_token(Token::Deindent);
     }
 
     return expression;
 }
 
 Return *Parser::readReturn() {
-    auto token = read_token(Token::ReturnKeyword);
+    return_if_false(read_token(Token::ReturnKeyword, token));
 
     Return *r = new Return(token);
     r->expression = readExpression(true);
@@ -559,28 +558,27 @@ Return *Parser::readReturn() {
 }
 
 Spawn *Parser::readSpawn() {
-    auto token = read_token(Token::SpawnKeyword);
+    return_if_false(read_token(Token::SpawnKeyword, token));
 
     Expression *expr = readExpression(true);
     Call *call = dynamic_cast<Call *>(expr);
     if (call) {
         return new Spawn(token, call);
     } else {
-        push_error(new errors::SyntaxError(expr->token, "function call"));
+        m_diagnostics->handle(SyntaxError(expr->token, "function call"));
         return nullptr;
     }
 }
 
 Case *Parser::readCase() {
-    auto token = read_token(Token::CaseKeyword);
-    return_eof_token(token);
+    return_if_false(read_token(Token::CaseKeyword, token));
 
     auto condition = readExpression(true);
     return_if_null(condition);
 
     Expression *assignment = nullptr;
     if (is_token(Token::UsingKeyword)) {
-        read_token(Token::UsingKeyword);
+        skip_token(Token::UsingKeyword);
 
         if (is_token(Token::LetKeyword)) {
             assignment = readVariableDeclaration();
@@ -589,7 +587,7 @@ Case *Parser::readCase() {
         }
     }
 
-    return_eof_token(read_token(Token::Newline));
+    return_if_false(skip_token(Token::Newline));
 
     auto code = readCodeBlock(true);
     return_if_null(code);
@@ -598,13 +596,12 @@ Case *Parser::readCase() {
 }
 
 Switch *Parser::readSwitch() {
-    auto token = read_token(Token::SwitchKeyword);
-    return_eof_token(token);
+    return_if_false(read_token(Token::SwitchKeyword, token));
 
     auto expression = readExpression(true);
     return_if_null(expression);
 
-    return_eof_token(read_token(Token::Newline));
+    return_if_false(skip_token(Token::Newline));
 
     std::vector<Case *> cases;
     while (is_token(Token::CaseKeyword)) {
@@ -618,7 +615,7 @@ Switch *Parser::readSwitch() {
         default_block = readCodeBlock(true);
     }
 
-    return_eof_token(read_token(Token::Deindent));
+    return_if_false(skip_token(Token::Deindent));
 
     return new Switch(token, expression, cases, default_block);
 }
@@ -646,7 +643,7 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
             op = readOperator(true);
             opName = op->value;
         } else {
-            read_token(Token::Assignment);
+            skip_token(Token::Assignment);
         }
 
         Expression *rhs = readOperandExpression(true);
@@ -672,9 +669,9 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
 
 Expression *Parser::readPrimaryExpression() {
     if (is_token(Token::OpenParenthesis)) {
-        read_token(Token::OpenParenthesis);
+        skip_token(Token::OpenParenthesis);
         Expression *expr = readExpression(true);
-        read_token(Token::CloseParenthesis);
+        return_if_false(skip_token(Token::CloseParenthesis));
         return expr;
     } else if (is_token(Token::IntegerLiteral)) {
         return readIntegerLiteral();
@@ -705,7 +702,7 @@ Expression *Parser::readPrimaryExpression() {
     } else if (is_token(Token::Name)) {
         return readIdentifier(true);
     } else if (!m_tokens.empty()) {  // FIXME refactor into function
-        push_error(new errors::SyntaxError(m_tokens.front(), "primary expression"));
+        m_diagnostics->handle(SyntaxError(m_tokens.front(), "primary expression"));
         return nullptr;
     } else {
         return nullptr;
@@ -728,7 +725,7 @@ Expression *Parser::readOperandExpression(bool parse_comma) {
         } else if (is_token(Token::Dot)) {
             left = readSelector(left);
         } else if (parse_comma && is_token(Token::Comma)) {
-            read_token(Token::Comma);
+            skip_token(Token::Comma);
 
             auto rhs = readExpression(true);
             std::vector<Expression *> elements;
@@ -756,7 +753,7 @@ Parameter *Parser::readParameter() {
     auto parameter = new Parameter(m_tokens.front());
 
     if (is_token(Token::InoutKeyword)) {
-        read_token(Token::InoutKeyword);
+        skip_token(Token::InoutKeyword);
         parameter->inout = true;
     } else {
         parameter->inout = false;
@@ -764,7 +761,8 @@ Parameter *Parser::readParameter() {
 
     parameter->name = readIdentifier(false);
 
-    read_token(Token::AsKeyword);
+    return_if_false(skip_token(Token::AsKeyword));
+
     parameter->typeNode = readIdentifier(true);
 
     return parameter;
@@ -774,8 +772,7 @@ VariableDefinition *Parser::readVariableDefinition() {
     auto lhs = readVariableDeclaration();
     return_if_null(lhs);
 
-    auto token = read_token(Token::Assignment);
-    return_eof_token(token);
+    return_if_false(read_token(Token::Assignment, token));
 
     auto rhs = readExpression(true);
     return_if_null(rhs);
@@ -789,7 +786,7 @@ VariableDefinition *Parser::readVariableDefinition() {
 FunctionDefinition *Parser::readFunctionDefinition() {
     debug("Reading FunctionDefinition...");
 
-    auto token = read_token(Token::DefKeyword);
+    return_if_false(read_token(Token::DefKeyword, token));
 
     FunctionDefinition *definition = new FunctionDefinition(token);
 
@@ -798,30 +795,31 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     } else if (is_token(Token::Operator)) {
         definition->name = readOperator(true);
     } else {
-        push_error(new errors::SyntaxError(m_tokens.front(), "identifier or operator"));
+        m_diagnostics->handle(SyntaxError(m_tokens.front(), "identifier or operator"));
         return nullptr;
     }
 
     debug("Name: " + definition->name->value);
 
-    read_token(Token::OpenParenthesis);
+    skip_token(Token::OpenParenthesis);
 
     while (!is_token(Token::CloseParenthesis)) {
         definition->parameters.push_back(readParameter());
 
         if (is_token(Token::Comma)) {
-            read_token(Token::Comma);
+            skip_token(Token::Comma);
         } else {
             break;  // no more parameters, apparently
         }
     }
 
-    read_token(Token::CloseParenthesis);
+    skip_token(Token::CloseParenthesis);
 
-    read_token(Token::AsKeyword);
+    skip_token(Token::AsKeyword);
+
     definition->returnType = readIdentifier(true);
 
-    read_token(Token::Newline);
+    return_if_false(skip_token(Token::Newline));
 
     definition->code = readCodeBlock();
 
@@ -831,85 +829,85 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 }
 
 TypeDefinition *Parser::readTypeDefinition() {
-    auto token = read_token(Token::TypeKeyword);
+    return_if_false(read_token(Token::TypeKeyword, token));
 
     TypeDefinition *definition = new TypeDefinition(token);
 
     definition->name = readIdentifier(true);
 
     if (is_token(Token::AsKeyword)) {
-        read_token(Token::AsKeyword);
+        skip_token(Token::AsKeyword);
         definition->alias = readIdentifier(true);
     } else {
-        read_token(Token::Newline);
+        return_if_false(skip_token(Token::Newline));
 
         while (!is_token(Token::Deindent)) {
             definition->field_names.push_back(readIdentifier(false));
-            read_token(Token::AsKeyword);
+            skip_token(Token::AsKeyword);
             definition->field_types.push_back(readIdentifier(true));
-            read_token(Token::Newline);
+            return_if_false(skip_token(Token::Newline));
         }
 
-        read_token(Token::Deindent);
+        skip_token(Token::Deindent);
     }
 
     return definition;
 }
 
 ast::ProtocolDefinition *Parser::readProtocolDefinition() {
-    auto token = read_token(Token::ProtocolKeyword);
+    return_if_false(read_token(Token::ProtocolKeyword, token));
 
     auto name = readIdentifier(true);
     std::vector<MethodSignature *> methods;
 
-    read_token(Token::Newline);
+    return_if_false(skip_token(Token::Newline));
 
     while (!is_token(Token::Deindent)) {
-        auto method_token = read_token(Token::DefKeyword);
-        return_eof_token(method_token);
+        Token method_token;
+        return_if_false(read_token(Token::DefKeyword, token));
 
         auto method_name = readIdentifier(false);
         return_if_null(method_name);
 
         std::vector<Identifier *> parameter_types;
 
-        return_eof_token(read_token(Token::OpenParenthesis));
+        return_if_false(skip_token(Token::OpenParenthesis));
         while (!is_token(Token::CloseParenthesis)) {
             parameter_types.push_back(readIdentifier(true));
 
             if (is_token(Token::Comma)) {
-                read_token(Token::Comma);
+                skip_token(Token::Comma);
             } else {
                 break;  // no more parameters, apparently
             }
         }
 
-        read_token(Token::CloseParenthesis);
+        skip_token(Token::CloseParenthesis);
 
-        read_token(Token::AsKeyword);
+        return_if_false(skip_token(Token::AsKeyword));
+
         auto return_type = readIdentifier(true);
         return_if_null(return_type);
 
-        return_eof_token(read_token(Token::Newline));
+        return_if_false(skip_token(Token::Newline));
 
         methods.push_back(new MethodSignature(method_token, method_name, parameter_types, return_type));
     }
 
-    read_token(Token::Deindent);
+    skip_token(Token::Deindent);
 
     return new ProtocolDefinition(token, name, methods);
 }
 
 ast::EnumDefinition *Parser::readEnumDefinition() {
-    auto token = read_token(Token::EnumKeyword);
-    return_eof_token(token);
+    return_if_false(read_token(Token::EnumKeyword, token));
 
     auto name = readIdentifier(true);
     return_if_null(name);
 
     std::vector<EnumElement *> elements;
 
-    read_token(Token::Newline);
+    return_if_false(skip_token(Token::Newline));
 
     while (!is_token(Token::Deindent)) {
         auto element_name = readIdentifier(false);
@@ -918,18 +916,18 @@ ast::EnumDefinition *Parser::readEnumDefinition() {
         ast::Identifier *element_type = nullptr;
 
         if (is_token(Token::AsKeyword)) {
-            read_token(Token::AsKeyword);
+            skip_token(Token::AsKeyword);
 
             element_type = readIdentifier(true);
             return_if_null(element_type);
         }
 
-        return_eof_token(read_token(Token::Newline));
+        return_if_false(skip_token(Token::Newline));
 
         elements.push_back(new EnumElement(element_name->token, element_name, element_type));
     }
 
-    read_token(Token::Deindent);
+    skip_token(Token::Deindent);
 
     return new EnumDefinition(token, name, elements);
 }
@@ -958,15 +956,15 @@ Statement *Parser::readStatement() {
         statement = new ExpressionStatement(expression);
     }
 
-    return_eof_token(read_token(Token::Newline));
+    return_if_false(skip_token(Token::Newline));
 
     return statement;
 }
 
 ImportStatement *Parser::readImportStatement() {
-    auto token = read_token(Token::ImportKeyword);
+    return_if_false(read_token(Token::ImportKeyword, token));
     StringLiteral *path = readStringLiteral();
-    read_token(Token::Newline);
+    return_if_false(skip_token(Token::Newline));
 
     return new ImportStatement(token, path);
 }

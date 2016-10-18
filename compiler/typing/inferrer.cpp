@@ -8,13 +8,14 @@
 #include <sstream>
 
 #include "../ast/nodes.h"
-#include "../errors.h"
+#include "../diagnostics.h"
 #include "../symboltable.h"
 #include "types.h"
 
 #include "inferrer.h"
 
 using namespace acorn;
+using namespace acorn::diagnostics;
 using namespace acorn::typing;
 
 #define return_if_null(thing) if (thing == nullptr) return;
@@ -58,7 +59,7 @@ types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vec
     if (typeConstructor != nullptr) {
         return typeConstructor->with_parameters(parameterTypes);
     } else {
-        push_error(new errors::InvalidTypeConstructor(node));
+        m_diagnostics->handle(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -97,7 +98,7 @@ bool Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Ty
         if (dt) {
             auto it = call->inferred_type_parameters.find(dt->type());
             if (it != call->inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
-                push_error(new errors::TypeMismatchError(call, argument_types[i], it->second));
+                m_diagnostics->handle(TypeMismatchError(call, argument_types[i], it->second));
                 return false;
             } else {
                 call->inferred_type_parameters[dt->type()] = argument_types[i];
@@ -110,7 +111,7 @@ bool Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Ty
 
                 auto it = call->inferred_type_parameters.find(dt2);
                 if (it != call->inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
-                    push_error(new errors::TypeMismatchError(call, argument_types[i], it->second));
+                    m_diagnostics->handle(TypeMismatchError(call, argument_types[i], it->second));
                     return false;
                 } else {
                     call->inferred_type_parameters[dt2] = arg->create(this, call);
@@ -242,7 +243,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
 }
 
 void Inferrer::visit(ast::MappingLiteral *mapping) {
-    push_error(new errors::TypeInferenceError(mapping));
+    m_diagnostics->handle(TypeInferenceError(mapping));
 }
 
 void Inferrer::visit(ast::RecordLiteral *expression) {
@@ -285,7 +286,7 @@ void Inferrer::visit(ast::Call *expression) {
     types::Function *function = dynamic_cast<types::Function *>(expression->operand->type);
     if (function == nullptr) {
         expression->type = new types::Function();
-        push_error(new errors::TypeMismatchError(expression->operand, expression));
+        m_diagnostics->handle(TypeMismatchError(expression->operand, expression));
         delete expression->type;
         expression->type = nullptr;
         // FIXME make the construct accept a type directly
@@ -302,12 +303,12 @@ void Inferrer::visit(ast::Call *expression) {
             }
         }
 
-        push_error(new errors::UndefinedError(expression, "Method with " + ss.str() + " types"));
+        m_diagnostics->handle(UndefinedError(expression, "Method with " + ss.str() + " types"));
         return;
     }
 
     if (!infer_call_type_parameters(expression, method->parameter_types(), argument_types)) {
-        push_error(new errors::InternalError(expression, "Could not infer type parameters."));
+        m_diagnostics->handle(InternalError(expression, "Could not infer type parameters."));
         return;
     }
 
@@ -365,7 +366,7 @@ void Inferrer::visit(ast::Assignment *expression) {
     }
 
     if (!holder->type->is_compatible(holdee->type)) {
-        push_error(new errors::TypeMismatchError(holdee, holder));
+        m_diagnostics->handle(TypeMismatchError(holdee, holder));
     } else {
         expression->type = expression->lhs->type;
     }
@@ -377,13 +378,13 @@ void Inferrer::visit(ast::Selector *expression) {
 
     auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type);
     if (selectable == nullptr) {
-        push_error(new errors::TypeMismatchError(expression->operand, expression));
+        m_diagnostics->handle(TypeMismatchError(expression->operand, expression));
         return;
     }
 
     auto field_type = selectable->child_type(expression->name->value);
     if (field_type == nullptr) {
-        push_error(new errors::UndefinedError(expression->name, expression->name->value));
+        m_diagnostics->handle(UndefinedError(expression->name, expression->name->value));
         return;
     }
 
@@ -420,11 +421,11 @@ void Inferrer::visit(ast::Return *expression) {
         return_if_null(method);
 
         if (!method->return_type()->is_compatible(expression->expression->type)) {
-            push_error(new errors::TypeMismatchError(expression->expression, def->returnType));
+            m_diagnostics->handle(TypeMismatchError(expression->expression, def->returnType));
             return;
         }
     } else {
-        push_error(new errors::TypeMismatchError(expression, nullptr));
+        m_diagnostics->handle(TypeMismatchError(expression, nullptr));
         return;
     }
 
@@ -441,7 +442,7 @@ void Inferrer::visit(ast::Switch *expression) {
 
     auto enum_type = dynamic_cast<types::Enum *>(expression->expression()->type);
     if (enum_type == nullptr) {
-        push_error(new errors::TypeMismatchError(expression->expression(), expression));
+        m_diagnostics->handle(TypeMismatchError(expression->expression(), expression));
         return;
     }
 

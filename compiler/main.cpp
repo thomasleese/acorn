@@ -2,9 +2,9 @@
 
 using namespace acorn;
 
-int main() {
+int main(int argc, char *argv[]) {
     compiler::Compiler compiler;
-    if (compiler.compile("test.acorn")) {
+    if (compiler.compile("../test.acorn")) {
         return 0;
     } else {
         return 1;

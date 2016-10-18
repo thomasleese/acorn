@@ -8,6 +8,8 @@ using namespace acorn;
 
 std::string Token::as_string(Token::Kind kind) {
     switch (kind) {
+        case EndOfFile:
+            return "EOF";
         case Newline:
             return "newline";
         case Indent:
@@ -30,8 +32,6 @@ std::string Token::as_string(Token::Kind kind) {
             return "in";
         case IfKeyword:
             return "if";
-        case ThenKeyword:
-            return "then";
         case ElseKeyword:
             return "else";
         case ContinueKeyword:
@@ -90,11 +90,9 @@ std::string Token::as_string(Token::Kind kind) {
             return "float";
         case StringLiteral:
             return "string";
-        case ImaginaryLiteral:
-            return "imaginary";
         case Assignment:
             return "assignment";
-        case Identifier:
+        case Name:
             return "name";
         case Operator:
             return "operator";

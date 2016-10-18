@@ -24,7 +24,7 @@
 #include "parsing/parser.h"
 #include "prettyprinter.h"
 #include "symboltable.h"
-#include "errors.h"
+#include "diagnostics.h"
 #include "typing/checker.h"
 #include "typing/inferrer.h"
 
@@ -32,8 +32,9 @@
 
 using namespace acorn;
 using namespace acorn::compiler;
+using namespace acorn::diagnostics;
 
-Compiler::Compiler() {
+Compiler::Compiler() : m_diagnostics(new Diagnostics()) {
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -53,20 +54,6 @@ Compiler::~Compiler() {
 
 }
 
-bool Compiler::check_pass(Pass *pass) const {
-    if (pass->has_errors()) {
-        while (pass->has_errors()) {
-            auto error = pass->next_error();
-            error->print();
-            delete error;
-        }
-
-        return false;
-    } else {
-        return true;
-    }
-}
-
 void Compiler::debug(std::string line) const {
     std::cerr << line << std::endl;
 }
@@ -75,19 +62,19 @@ bool Compiler::compile(std::string filename) {
     std::string outputName = filename + ".o";
     std::string moduleName = filename.substr(0, filename.find_last_of("."));
 
-    debug("Lexing...");
+    Lexer lexer(filename);
 
-    auto lexer = new Lexer();
-    std::vector<Token *> tokens = lexer->tokenise(filename);
-    if (!check_pass(lexer)) {
-        return false;
+    Token token;
+    while ((token = lexer.next_token()).kind != Token::EndOfFile) {
+        std::cout << Token::as_string(token.kind) << std::endl;
     }
 
     debug("Parsing...");
 
-    auto parser = new Parser(tokens);
+    auto parser = new Parser(lexer);
     auto module = parser->parse(filename);
-    if (!check_pass(parser)) {
+
+    if (m_error_handler->has_errors()) {
         return false;
     }
 
@@ -97,7 +84,7 @@ bool Compiler::compile(std::string filename) {
     module->accept(symbolTableBuilder);
     assert(symbolTableBuilder->isAtRoot());
 
-    if (!check_pass(symbolTableBuilder)) {
+    if (m_error_handler->has_errors()) {
         return false;
     }
 
@@ -114,7 +101,7 @@ bool Compiler::compile(std::string filename) {
     auto typeInferrer = new typing::Inferrer(rootNamespace);
     module->accept(typeInferrer);
 
-    if (!check_pass(typeInferrer)) {
+    if (m_error_handler->has_errors()) {
         return false;
     }
 
@@ -125,7 +112,7 @@ bool Compiler::compile(std::string filename) {
     auto typeChecker = new typing::Checker(rootNamespace);
     module->accept(typeChecker);
 
-    if (!check_pass(typeChecker)) {
+    if (m_error_handler->has_errors()) {
         return false;
     }
 
@@ -175,7 +162,7 @@ bool Compiler::compile(std::string filename) {
     auto generator = new codegen::ModuleGenerator(rootNamespace, &data_layout);
     module->accept(generator);
 
-    if (!check_pass(generator)) {
+    if (m_error_handler->has_errors()) {
         return false;
     }
 

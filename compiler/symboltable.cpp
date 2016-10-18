@@ -7,13 +7,14 @@
 #include <sstream>
 
 #include "ast/nodes.h"
-#include "errors.h"
+#include "diagnostics.h"
 #include "parsing/lexer.h"
 #include "typing/types.h"
 
-#include "SymbolTable.h"
+#include "symboltable.h"
 
 using namespace acorn;
+using namespace acorn::diagnostics;
 using namespace acorn::symboltable;
 
 Namespace::Namespace(Namespace *parent) : m_parent(parent) {
@@ -37,13 +38,13 @@ bool Namespace::has(std::string name, bool follow_parents) const {
     }
 }
 
-Symbol *Namespace::lookup(compiler::Pass *pass, ast::Node *currentNode, std::string name) const {
+Symbol *Namespace::lookup(Diagnostics *diagnostics, ast::Node *currentNode, std::string name) const {
     auto it = m_symbols.find(name);
     if (it == m_symbols.end()) {
         if (m_parent) {
-            return m_parent->lookup(pass, currentNode, name);
+            return m_parent->lookup(diagnostics, currentNode, name);
         } else {
-            pass->push_error(new errors::UndefinedError(currentNode, name));
+            diagnostics->handle(UndefinedError(currentNode, name));
             return nullptr;
         }
     }
@@ -51,11 +52,11 @@ Symbol *Namespace::lookup(compiler::Pass *pass, ast::Node *currentNode, std::str
     return it->second;
 }
 
-Symbol *Namespace::lookup(compiler::Pass *pass, ast::Identifier *identifier) const {
-    return lookup(pass, identifier, identifier->value);
+Symbol *Namespace::lookup(Diagnostics *diagnostics, ast::Identifier *identifier) const {
+    return lookup(diagnostics, identifier, identifier->value);
 }
 
-Symbol *Namespace::lookup_by_node(compiler::Pass *pass, ast::Node *node) const {
+Symbol *Namespace::lookup_by_node(Diagnostics *diagnostics, ast::Node *node) const {
     for (auto entry : m_symbols) {
         if (entry.second->node == node) {
             return entry.second;
@@ -65,29 +66,29 @@ Symbol *Namespace::lookup_by_node(compiler::Pass *pass, ast::Node *node) const {
     if (m_parent) {
         return m_parent->lookup_by_node(pass, node);
     } else {
-        pass->push_error(new errors::UndefinedError(node, node->token->lexeme));
+        diagnostics->handle(UndefinedError(node, node->token.lexeme));
         return nullptr;
     }
 }
 
-void Namespace::insert(compiler::Pass *pass, ast::Node *currentNode, Symbol *symbol) {
+void Namespace::insert(Diagnostics *diagnostics, ast::Node *currentNode, Symbol *symbol) {
     symbol->node = currentNode;
 
     auto it = m_symbols.find(symbol->name);
     if (it != m_symbols.end()) {
-        pass->push_error(new errors::RedefinedError(currentNode, symbol->name));
+        diagnostics->handle(RedefinedError(currentNode, symbol->name));
     }
 
     m_symbols[symbol->name] = symbol;
 }
 
-void Namespace::rename(compiler::Pass *pass, Symbol *symbol, std::string new_name) {
+void Namespace::rename(Diagnostics *diagnostics, Symbol *symbol, std::string new_name) {
     auto it = m_symbols.find(symbol->name);
     assert(it != m_symbols.end());
 
     m_symbols.erase(it);
     symbol->name = new_name;
-    insert(pass, symbol->node, symbol);
+    insert(diagnostics, symbol->node, symbol);
 }
 
 unsigned long Namespace::size() const {
@@ -172,7 +173,7 @@ Symbol* Symbol::clone() const {
     return new_symbol;
 }
 
-Builder::Builder() {
+Builder::Builder(Diagnostics *diagnostics) : m_diagnostics(diagnostics) {
     m_root = new Namespace(nullptr);
     m_scope.push_back(m_root);
 

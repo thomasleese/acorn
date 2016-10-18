@@ -11,12 +11,15 @@
 #include <llvm/IR/LegacyPassManager.h>
 
 #include "../ast/visitor.h"
-#include "../pass.h"
 
 namespace acorn {
 
     namespace ast {
         struct Node;
+    }
+
+    namespace diagnostics {
+        class Diagnostics;
     }
 
     namespace symboltable {
@@ -38,10 +41,10 @@ namespace acorn {
 
         std::string mangle_method(std::string name, types::Method *type);
 
-        class ModuleGenerator : public compiler::Pass, public ast::Visitor {
+        class ModuleGenerator : public ast::Visitor {
 
         public:
-            explicit ModuleGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout);
+            ModuleGenerator(diagnostics::Diagnostics *diagnostics, symboltable::Namespace *scope, llvm::DataLayout *data_layout);
             ~ModuleGenerator();
 
             llvm::Module *module() const;
@@ -108,6 +111,8 @@ namespace acorn {
 
             BuiltinGenerator *m_builtin_generator;
             TypeGenerator *m_type_generator;
+
+            diagnostics::Diagnostics *m_diagnostics;
         };
 
     }

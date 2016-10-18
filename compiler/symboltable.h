@@ -10,7 +10,6 @@
 #include <vector>
 
 #include "ast/visitor.h"
-#include "pass.h"
 
 namespace llvm {
     class Value;
@@ -22,13 +21,13 @@ namespace acorn {
         struct Node;
     }
 
+    namespace diagnostics {
+        class Diagnostics;
+    }
+
     namespace types {
         class Type;
         class Method;
-    }
-
-    namespace compiler {
-        class Pass;
     }
 
     namespace symboltable {
@@ -41,11 +40,11 @@ namespace acorn {
             ~Namespace();
 
             bool has(std::string name, bool follow_parents = true) const;
-            Symbol *lookup(compiler::Pass *pass, ast::Node *currentNode, std::string name) const;
-            Symbol *lookup(compiler::Pass *pass, ast::Identifier *identifier) const;
-            Symbol *lookup_by_node(compiler::Pass *pass, ast::Node *node) const;
-            void insert(compiler::Pass *pass, ast::Node *currentNode, Symbol *symbol);
-            void rename(compiler::Pass *pass, Symbol *symbol, std::string new_name);
+            Symbol *lookup(diagnostics::Diagnostics *diagnostics, ast::Node *currentNode, std::string name) const;
+            Symbol *lookup(diagnostics::Diagnostics *diagnostics, ast::Identifier *identifier) const;
+            Symbol *lookup_by_node(diagnostics::Diagnostics *diagnostics, ast::Node *node) const;
+            void insert(diagnostics::Diagnostics *diagnostics, ast::Node *currentNode, Symbol *symbol);
+            void rename(diagnostics::Diagnostics *diagnostics, Symbol *symbol, std::string new_name);
             unsigned long size() const;
             std::vector<Symbol *> symbols() const;
             bool is_root() const;
@@ -78,9 +77,9 @@ namespace acorn {
             Symbol *clone() const;
         };
 
-        class Builder : public compiler::Pass, public ast::Visitor {
+        class Builder : public ast::Visitor {
         public:
-            explicit Builder();
+            explicit Builder(diagnostics::Diagnostics *diagnostics);
 
             bool isAtRoot() const;
             Namespace *rootNamespace();
@@ -132,6 +131,7 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         private:
+            diagnostics::Diagnostics *diagnostics;
             Namespace *m_root;
             std::vector<Namespace *> m_scope;
         };

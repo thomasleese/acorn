@@ -134,7 +134,7 @@ llvm::Function *BuiltinGenerator::create_llvm_function(symboltable::Namespace *t
 
     std::string mangled_name = codegen::mangle_method(name, methodType);
 
-    auto type_generator = new codegen::TypeGenerator();
+    auto type_generator = new codegen::TypeGenerator(nullptr);
     methodType->accept(type_generator);
 
     llvm::FunctionType *type = static_cast<llvm::FunctionType *>(type_generator->take_type(nullptr));
