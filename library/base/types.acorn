@@ -4,34 +4,40 @@ type UInt as UInt64
 type Float as Float64
 
 # Maybe type.
-type Maybe{T} as Enum{Void, T}
+type Maybe{T} as enum:
+    Nothing
+    Some(T)
 
 import 'base/memory'
 
 # Basic mathematical operators.
-def -(n as Int) as Int:
+func -(n as Int) as Int:
     return 0 - n
 
-def +=(inout i as Int, amount as Int) as Int:
+func +=(inout i as Int, amount as Int) as Int:
     i = i + amount
     return i
 
 # Range type.
-type Range:
+type Range as object:
     start as Int
     stop as Int
 
-def range(stop as Int) as Range:
-    return new Range(start: 0, stop: stop)
+func range(stop as Int) as Range:
+    return Range(start=0, stop=stop)
 
-def start(range as Range) as Int:
-    return 0
+type RangeIterator:
+    range as Range
+    index as Int
 
-def next(range as Range, state as Int) as Tuple{Int, Int}:
-    return (range.start + state), (state + 1)
+func iterate(range as Range) as RangeIterator:
+    return RangeIterator(range=range, index=0)
 
-def done(range as Range, state as Int) as Bool:
-    return state >= (range.stop - range.start)
+func next(iterator as RangeIterator) as Maybe{Int}:
+    if range.index >= range.stop:
+        return Maybe{Int}.Nothing
+    else:
+        return Maybe{Int}.Some(range.index)
 
 # Arrays.
 type Array{T}:
@@ -39,31 +45,31 @@ type Array{T}:
     length as Int
     capacity as Int
 
-def create_array{T}(t as Type{T}, capacity as Int) as Array{T}:
+func array{T}(t as Type{T}, capacity as Int) as Array{T}:
     let elements = malloc(strideof(T) * capacity) as UnsafePointer{T}
-    return new Array{T}(elements: elements, size: 0, capacity: capacity)
+    return Array{T}(elements=elements, size=0, capacity=capacity)
 
-def free{T}(inout array as Array{T}):
+func free{T}(inout array as Array{T}):
     free(array.elements)
 
-def setindex{T}(inout array as Array{T}, key as Int, value as T):
+func setindex{T}(inout array as Array{T}, key as Int, value as T):
     array.elements[key] = value
 
-def getindex{T}(array as Array{T}, key as Int) as T:
+func getindex{T}(array as Array{T}, key as Int) as T:
     return array.elements[key]
 
-def append{T}(inout array as Array{T}, value as T):
+func append{T}(inout array as Array{T}, value as T):
     array.length = array.length + 1
     array[array.length - 1] = value
 
-type ArrayIterator{T}:
+type ArrayIterator{T} as object:
     array as Array{T}
     state as Int
 
-def iterate{T}(array as Array{T}) as ArrayIterator{T}:
-    return new ArrayIterator{T}(array: array, state: 0)
+func iterate{T}(array as Array{T}) as ArrayIterator{T}:
+    return ArrayIterator{T}(array=array, state=0)
 
-def next{T}(iterator as ArrayIterator{T}) as Maybe{T}:
+func next{T}(iterator as ArrayIterator{T}) as Maybe{T}:
     if iterator.state >= iterator.array.length:
         let result as Maybe{T} = Nothing
         return result
@@ -71,7 +77,7 @@ def next{T}(iterator as ArrayIterator{T}) as Maybe{T}:
         iterator.state += 1
         return iterator.array[iterator.state]
 
-def sum(array as Array{Int}) as Int:
+func sum(array as Array{Int}) as Int:
     let total = 0
 
     # iterator over values
@@ -87,10 +93,10 @@ type Enumeration{T}:
     iterator as ArrayIterator{T}
     state as Int
 
-def enumerate{T}(array as Array{T}) as Enumeration{T}:
-    return new Enumeration{T}(array: array.iterate(), state: 0)
+func enumerate{T}(array as Array{T}) as Enumeration{T}:
+    return Enumeration{T}(array=iterate(array), state=0)
 
-def next{T}(enumeration as Enumeration{T}) as Maybe{Tuple{Int, T}}:
+func next{T}(enumeration as Enumeration{T}) as Maybe{Tuple{Int, T}}:
     let item = next(enumeration.iterator)
     if let n as Void = item:
         return Nothing
