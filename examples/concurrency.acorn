@@ -1,12 +1,11 @@
-import time
+import 'time'
 
-let channel as Channel{String} = Channel()
+let channel = channel(String)
 
-def sleep_then(n as Integer) as Void
+func sleep_then(n as Int):
     sleep(n)
-    channel.write("hello!")
-end
+    write(channel, "hello!")
 
 spawn sleep_then(10)
 
-print(channel.read())
+print(read(channel))
