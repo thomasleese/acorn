@@ -1,0 +1,28 @@
+type Additor as interface:
+    func +(a as Self, b as Self) as Self
+
+type Divisor as interface:
+    func /(a as Self, b as Self) as Self
+
+type Vector2{T} as object:
+    x as T
+    y as T
+
+type Vector2i as Vector2{Int}
+type Vector2f as Vector2{Float}
+
+func print{T}(v as Vector2{T}):
+    print(v.x)
+    print(v.y)
+
+func +{T as Additor}(a as Vector2{T}, b as Vector2{T}) as Vector2{T}:
+    return Vector2{T}(x=a.x + b.x, a.y + b.y)
+
+func /{T as Divisor}(a as Vector2{T}, b as Vector2{T}) as Vector2{T}:
+    return Vector2{T}(x=a.x / b.x, a.y / b.y)
+
+func main():
+    let a = Vector2i(x=10, y=20)
+    let b = Vector2i(x=20, y=10)
+    let c = a + b
+    print(c)
