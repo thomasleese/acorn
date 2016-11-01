@@ -8,12 +8,15 @@
 #include <vector>
 
 #include "../ast/visitor.h"
-#include "../pass.h"
 
 namespace acorn {
 
     namespace ast {
         struct Node;
+    }
+
+    namespace diagnostics {
+        class Diagnostics;
     }
 
     namespace symboltable {
@@ -28,11 +31,11 @@ namespace acorn {
 
     namespace typing {
 
-        class Inferrer : public compiler::Pass, public ast::Visitor {
+        class Inferrer : public ast::Visitor {
 
         public:
-            explicit Inferrer(symboltable::Namespace *rootNamespace);
-
+            Inferrer(diagnostics::Diagnostics *diagnostics,
+                     symboltable::Namespace *root_namespace);
             ~Inferrer();
 
         private:
@@ -88,6 +91,7 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         private:
+            diagnostics::Diagnostics *m_diagnostics;
             symboltable::Namespace *m_namespace;
             std::vector<ast::FunctionDefinition *> m_functionStack;
             bool m_in_if;

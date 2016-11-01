@@ -21,8 +21,10 @@ using namespace acorn::typing;
 #define return_if_null(thing) if (thing == nullptr) return;
 #define return_if_null_type(node) return_if_null(node->type)
 
-Inferrer::Inferrer(symboltable::Namespace *rootNamespace) :
-        m_namespace(rootNamespace),
+Inferrer::Inferrer(Diagnostics *diagnostics,
+                   symboltable::Namespace *root_namespace) :
+        m_diagnostics(diagnostics),
+        m_namespace(root_namespace),
         m_in_if(false),
         m_as_type(false)
 {
@@ -468,7 +470,9 @@ void Inferrer::visit(ast::Switch *expression) {
 }
 
 void Inferrer::visit(ast::Parameter *parameter) {
-    auto symbol = m_namespace->lookup(this, parameter, parameter->name->value);
+    auto symbol = m_namespace->lookup(m_diagnostics, parameter,
+                                      parameter->name->value);
+
     if (symbol == nullptr) {
         return;
     }
@@ -482,7 +486,9 @@ void Inferrer::visit(ast::Parameter *parameter) {
 }
 
 void Inferrer::visit(ast::VariableDefinition *definition) {
-    auto symbol = m_namespace->lookup(this, definition, definition->name->value);
+    auto symbol = m_namespace->lookup(m_diagnostics, definition,
+                                      definition->name->value);
+
     if (symbol == nullptr) {
         return;
     }
@@ -494,10 +500,11 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
-    auto functionSymbol = m_namespace->lookup(this, definition->name);
-    types::Function *function = static_cast<types::Function *>(functionSymbol->type);
+    auto functionSymbol = m_namespace->lookup(m_diagnostics, definition->name);
+    auto function = static_cast<types::Function *>(functionSymbol->type);
 
-    auto symbol = functionSymbol->nameSpace->lookup_by_node(this, definition);
+    auto symbol = functionSymbol->nameSpace->lookup_by_node(m_diagnostics,
+                                                            definition);
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -540,7 +547,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     method->set_is_generic(!definition->name->parameters.empty());
     function->add_method(method);
 
-    functionSymbol->nameSpace->rename(this, symbol, method->mangled_name());
+    functionSymbol->nameSpace->rename(m_diagnostics, symbol, method->mangled_name());
 
     symbol->type = method;
     definition->type = method;
@@ -556,7 +563,8 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 }
 
 void Inferrer::visit(ast::TypeDefinition *definition) {
-    auto symbol = m_namespace->lookup(this, definition, definition->name->value);
+    auto symbol = m_namespace->lookup(m_diagnostics, definition,
+                                      definition->name->value);
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -609,7 +617,8 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
 }
 
 void Inferrer::visit(ast::ProtocolDefinition *definition) {
-    auto symbol = m_namespace->lookup(this, definition, definition->name->value);
+    auto symbol = m_namespace->lookup(m_diagnostics, definition,
+                                      definition->name->value);
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -650,7 +659,8 @@ void Inferrer::visit(ast::ProtocolDefinition *definition) {
 }
 
 void Inferrer::visit(ast::EnumDefinition *definition) {
-    auto symbol = m_namespace->lookup(this, definition, definition->name->value);
+    auto symbol = m_namespace->lookup(m_diagnostics, definition,
+                                      definition->name->value);
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;

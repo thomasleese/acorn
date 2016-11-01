@@ -8,7 +8,7 @@
 #include <iostream>
 
 #include "../ast/nodes.h"
-#include "../pass.h"
+#include "../diagnostics.h"
 #include "../errors.h"
 
 #include "types.h"
@@ -82,7 +82,7 @@ bool ParameterType::is_compatible(const Type *other) const {
     return (bool) dynamic_cast<const types::TypeType *>(other);
 }
 
-Type *ParameterType::create(compiler::Pass *pass, ast::Node *node) {
+Type *ParameterType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Parameter(this);
     } else {
@@ -107,7 +107,7 @@ std::string VoidType::name() const {
     return "VoidType";
 }
 
-Type *VoidType::create(compiler::Pass *pass, ast::Node *node) {
+Type *VoidType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Void();
     } else {
@@ -132,7 +132,7 @@ std::string BooleanType::name() const {
     return "BooleanType";
 }
 
-Type *BooleanType::create(compiler::Pass *pass, ast::Node *node) {
+Type *BooleanType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Boolean();
     } else {
@@ -163,7 +163,7 @@ std::string IntegerType::name() const {
     return ss.str();
 }
 
-Type *IntegerType::create(compiler::Pass *pass, ast::Node *node) {
+Type *IntegerType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Integer(m_size);
     } else {
@@ -194,7 +194,7 @@ std::string UnsignedIntegerType::name() const {
     return ss.str();
 }
 
-Type *UnsignedIntegerType::create(compiler::Pass *pass, ast::Node *node) {
+Type *UnsignedIntegerType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new UnsignedInteger(m_size);
     } else {
@@ -221,7 +221,7 @@ std::string FloatType::name() const {
     return ss.str();
 }
 
-Type *FloatType::create(compiler::Pass *pass, ast::Node *node) {
+Type *FloatType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Float(m_size);
     } else {
@@ -266,7 +266,7 @@ TypeType *UnsafePointerType::element_type() const {
     return t;
 }
 
-Type *UnsafePointerType::create(compiler::Pass *pass, ast::Node *node) {
+Type *UnsafePointerType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (has_element_type()) {
         return new UnsafePointer(element_type()->create(pass, node));
     } else {
@@ -293,7 +293,7 @@ std::string FunctionType::name() const {
     return "FunctionType";
 }
 
-Type *FunctionType::create(compiler::Pass *pass, ast::Node *node) {
+Type *FunctionType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     Function *function = new Function();
 
     for (auto parameter : m_parameters) {
@@ -371,7 +371,7 @@ TypeType *replace_parameters(TypeType *type, std::map<ParameterType *, TypeType 
     return type->with_parameters(parameters);
 }
 
-Type *RecordType::create(compiler::Pass *pass, ast::Node *node) {
+Type *RecordType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.size() == m_input_parameters.size()) {
         std::map<ParameterType *, TypeType *> parameter_mapping;
         for (int i = 0; i < m_input_parameters.size(); i++) {
@@ -447,7 +447,7 @@ Type *EnumType::child_type(std::string name) {
     }
 }
 
-Type *EnumType::create(compiler::Pass *pass, ast::Node *node) {
+Type *EnumType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     std::vector<Type *> element_types;
     for (auto type : m_element_types) {
         element_types.push_back(type->create(pass, node));
@@ -476,7 +476,7 @@ std::string TupleType::name() const {
     return "TupleType";
 }
 
-Type *TupleType::create(compiler::Pass *pass, ast::Node *node) {
+Type *TupleType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), 1));
         return nullptr;
@@ -520,7 +520,7 @@ std::string AliasType::name() const {
     return m_alias->name();
 }
 
-Type *AliasType::create(compiler::Pass *pass, ast::Node *node) {
+Type *AliasType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.size() == m_input_parameters.size()) {
         // early escape
         if (m_input_parameters.empty()) {
@@ -571,7 +571,7 @@ bool ProtocolType::is_compatible(const Type *other) const {
     return false;
 }
 
-Type *ProtocolType::create(compiler::Pass *pass, ast::Node *node) {
+Type *ProtocolType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.size() == m_input_parameters.size()) {
         return new Protocol(m_methods, this);
     } else {
@@ -610,7 +610,7 @@ bool TypeDescriptionType::is_compatible(const Type *other) const {
     }
 }
 
-Type *TypeDescriptionType::create(compiler::Pass *pass, ast::Node *node) {
+Type *TypeDescriptionType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
     if (m_parameters.size() == 1) {
         return m_parameters[0];
     } else {
