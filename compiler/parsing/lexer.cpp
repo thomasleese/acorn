@@ -82,7 +82,7 @@ void Lexer::debug() {
 
     Token token;
     while (next_token(token) && token.kind != Token::EndOfFile) {
-        std::cout << Token::as_string(token.kind) << std::endl;
+        std::cout << Token::as_string(token.kind) << " " << token.line_number << ":" << token.column << std::endl;
     }
 
     std::cout << "END DEBUG TOKENS" << std::endl;
@@ -99,9 +99,9 @@ Token Lexer::make_token(Token::Kind kind) const {
 }
 
 unsigned int Lexer::skip_whitespace() {
-    unsigned int count = 0;
+    unsigned int count = 1;
 
-    int c = ' ';
+    int c = m_stream.get();
     while (c == ' ' || c == '\t' || c == '\f') {
         c = m_stream.get();
         count++;
@@ -110,7 +110,10 @@ unsigned int Lexer::skip_whitespace() {
     m_stream.unget();
     count--;
 
+    std::cout << "skipped " << count << std::endl;
+
     m_current_column += count;
+    std::cout << "new col " << m_current_column << std::endl;
 
     return count;
 }
@@ -139,7 +142,7 @@ void Lexer::skip_comment() {
 
 void Lexer::next_line() {
     m_current_line_number++;
-    m_current_column = 0;
+    m_current_column = 1;
     update_current_line();
 }
 
@@ -183,6 +186,8 @@ bool Lexer::read_identifier(Token &token) {
     }
 
     m_stream.unget();
+
+    std::cout << "name size " << token.lexeme.size() << std::endl;
 
     m_current_column += token.lexeme.size();
 

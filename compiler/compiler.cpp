@@ -64,7 +64,7 @@ bool Compiler::compile(std::string filename) {
 
     Lexer lexer(filename);
 
-    // lexer.debug();
+    lexer.debug();
 
     debug("Parsing...");
 
@@ -87,15 +87,15 @@ bool Compiler::compile(std::string filename) {
 
     auto rootNamespace = symbol_table_builder.rootNamespace();
 
-    auto printer = new PrettyPrinter();
-    module->accept(printer);
-    printer->print();
-    delete printer;
-
     debug("Inferring types...");
 
     auto typeInferrer = new typing::Inferrer(m_diagnostics, rootNamespace);
     module->accept(typeInferrer);
+
+    auto printer = new PrettyPrinter();
+    module->accept(printer);
+    printer->print();
+    delete printer;
 
     if (m_diagnostics->has_errors()) {
         return false;

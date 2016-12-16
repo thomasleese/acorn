@@ -5,6 +5,7 @@
 #include <iostream>
 
 #include "ast/nodes.h"
+#include "typing/types.h"
 
 #include "prettyprinter.h"
 
@@ -14,8 +15,16 @@ PrettyPrinter::PrettyPrinter() {
     indent = 0;
 }
 
+std::string type_of(ast::Node *node) {
+    if (node->type) {
+        return node->type->name();
+    } else {
+        return "null";
+    }
+}
+
 void PrettyPrinter::visit(ast::CodeBlock *codeBlock) {
-    ss << indentation() << "(CodeBlock\n";
+    ss << indentation() << "(CodeBlock [" << type_of(codeBlock) << "]\n";
     indent++;
 
     for (auto statement : codeBlock->statements) {
@@ -28,7 +37,7 @@ void PrettyPrinter::visit(ast::CodeBlock *codeBlock) {
 
 void PrettyPrinter::visit(ast::Identifier *identifier) {
     if (identifier->has_parameters()) {
-        ss << indentation() << "(Identifier " << identifier->value << "\n";
+        ss << indentation() << "(Identifier " << identifier->value << " [" << type_of(identifier) << "]\n";
         indent++;
 
         for (auto parameter : identifier->parameters) {
@@ -38,7 +47,7 @@ void PrettyPrinter::visit(ast::Identifier *identifier) {
         indent--;
         ss << indentation() << ")\n";
     } else {
-        ss << indentation() << "(Identifier " << identifier->value << ")\n";
+        ss << indentation() << "(Identifier " << identifier->value << " [" << type_of(identifier) << "])\n";
     }
 }
 
@@ -125,7 +134,7 @@ void PrettyPrinter::visit(ast::TupleLiteral *expression) {
 }
 
 void PrettyPrinter::visit(ast::Call *expression) {
-    ss << indentation() << "(Call\n";
+    ss << indentation() << "(Call [" << type_of(expression) << "]\n";
     indent++;
 
     expression->operand->accept(this);
@@ -218,7 +227,7 @@ void PrettyPrinter::visit(ast::If *expression) {
 }
 
 void PrettyPrinter::visit(ast::Return *expression) {
-    ss << indentation() << "(Return\n";
+    ss << indentation() << "(Return [" << type_of(expression) << "]\n";
     indent++;
 
     expression->expression->accept(this);
@@ -357,7 +366,7 @@ void PrettyPrinter::visit(ast::DefinitionStatement *statement) {
 }
 
 void PrettyPrinter::visit(ast::ExpressionStatement *statement) {
-    ss << indentation() << "(ExpressionStatement\n";
+    ss << indentation() << "(ExpressionStatement [" << type_of(statement) << "]\n";
     indent++;
 
     statement->expression->accept(this);
