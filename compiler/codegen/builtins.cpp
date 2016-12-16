@@ -129,7 +129,9 @@ void BuiltinGenerator::generate_strideof(types::Method *method, llvm::Function *
 }
 
 llvm::Function *BuiltinGenerator::create_llvm_function(symboltable::Namespace *table, std::string name, int index) {
-    types::Function *functionType = static_cast<types::Function *>(table->lookup(nullptr, nullptr, name)->type);
+    auto symbol = table->lookup(nullptr, nullptr, name);
+
+    types::Function *functionType = static_cast<types::Function *>(symbol->type);
     types::Method *methodType = functionType->get_method(index);
 
     std::string mangled_name = codegen::mangle_method(name, methodType);
@@ -146,6 +148,8 @@ llvm::Function *BuiltinGenerator::create_llvm_function(symboltable::Namespace *t
     f->addFnAttr(llvm::Attribute::AlwaysInline);
 
     initialise_function(f, methodType->parameter_types().size());
+
+    symbol->value = f;
 
     return f;
 }

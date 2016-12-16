@@ -30,9 +30,8 @@ bool Lexer::next_token(Token &token) {
         return true;
     }
 
-    token = make_token();
-
     if (!m_stream.good()) {
+        token = make_token();
         token.kind = Token::EndOfFile;
         return true;
     }
@@ -58,6 +57,9 @@ bool Lexer::next_token(Token &token) {
             break;
         }
     }
+
+    // update line and column details
+    token = make_token();
 
     if (read_identifier(token)) {
         // do nothing :)
@@ -110,10 +112,7 @@ unsigned int Lexer::skip_whitespace() {
     m_stream.unget();
     count--;
 
-    std::cout << "skipped " << count << std::endl;
-
     m_current_column += count;
-    std::cout << "new col " << m_current_column << std::endl;
 
     return count;
 }
@@ -186,8 +185,6 @@ bool Lexer::read_identifier(Token &token) {
     }
 
     m_stream.unget();
-
-    std::cout << "name size " << token.lexeme.size() << std::endl;
 
     m_current_column += token.lexeme.size();
 

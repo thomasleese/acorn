@@ -64,7 +64,7 @@ bool Compiler::compile(std::string filename) {
 
     Lexer lexer(filename);
 
-    lexer.debug();
+    //lexer.debug();
 
     debug("Parsing...");
 
@@ -86,6 +86,8 @@ bool Compiler::compile(std::string filename) {
     }
 
     auto rootNamespace = symbol_table_builder.rootNamespace();
+
+    std::cout << rootNamespace->to_string() << std::endl;
 
     debug("Inferring types...");
 

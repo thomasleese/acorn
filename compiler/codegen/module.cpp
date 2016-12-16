@@ -464,7 +464,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
 
     auto function = m_module->getFunction(method_name);
     if (function == nullptr) {
-        m_diagnostics->report(InternalError(expression, "No LLVM function created: " + method_name + " (" + method->name() + ")!"));
+        m_diagnostics->report(InternalError(expression, "No LLVM function was created for " + method_name + " (" + method->name() + ")!"));
         push_value(nullptr);
         return;
     }

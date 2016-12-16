@@ -39,7 +39,7 @@ void CompilerError::print() const {
     std::cout << "    " << m_line << std::endl;
 
     std::cout << "    ";
-    for (int i = 0; i < m_column; i++) {
+    for (int i = 1; i < m_column; i++) {
         std::cout << " ";
     }
     std::cout << "^" << std::endl;
