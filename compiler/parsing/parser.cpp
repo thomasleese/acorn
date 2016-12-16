@@ -22,7 +22,7 @@ using namespace acorn::ast;
 // useful variable for storing the current token
 static Token token;
 
-Parser::Parser(Diagnostics *diagnostics, Lexer &lexer) : m_diagnostics(diagnostics), m_lexer(lexer) {
+Parser::Parser(Reporter *diagnostics, Lexer &lexer) : m_diagnostics(diagnostics), m_lexer(lexer) {
     m_operatorPrecendence["="] = 0;
 
     m_operatorPrecendence["+"] = 1;
@@ -45,7 +45,7 @@ SourceFile *Parser::parse(std::string name) {
     for (auto import : module->imports) {
         std::string filename = "library/" + import->path->value + ".acorn";
 
-        Lexer lexer(m_diagnostics, filename);
+        Lexer lexer(filename);
         Parser parser(m_diagnostics, lexer);
         auto module2 = parser.parse(filename);
 
@@ -92,7 +92,7 @@ bool Parser::read_token(Token::Kind kind, Token &token) {
     m_tokens.pop_front();
 
     if (next_token.kind != kind) {
-        m_diagnostics->handle(SyntaxError(token, kind));
+        m_diagnostics->report(SyntaxError(token, kind));
         return false;
     }
 
@@ -565,7 +565,7 @@ Spawn *Parser::readSpawn() {
     if (call) {
         return new Spawn(token, call);
     } else {
-        m_diagnostics->handle(SyntaxError(expr->token, "function call"));
+        m_diagnostics->report(SyntaxError(expr->token, "function call"));
         return nullptr;
     }
 }
@@ -702,7 +702,7 @@ Expression *Parser::readPrimaryExpression() {
     } else if (is_token(Token::Name)) {
         return readIdentifier(true);
     } else if (!m_tokens.empty()) {  // FIXME refactor into function
-        m_diagnostics->handle(SyntaxError(m_tokens.front(), "primary expression"));
+        m_diagnostics->report(SyntaxError(m_tokens.front(), "primary expression"));
         return nullptr;
     } else {
         return nullptr;
@@ -795,7 +795,7 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     } else if (is_token(Token::Operator)) {
         definition->name = readOperator(true);
     } else {
-        m_diagnostics->handle(SyntaxError(m_tokens.front(), "identifier or operator"));
+        m_diagnostics->report(SyntaxError(m_tokens.front(), "identifier or operator"));
         return nullptr;
     }
 

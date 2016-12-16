@@ -22,7 +22,7 @@ namespace acorn {
 
         class TypeGenerator : public types::Visitor {
         public:
-            explicit TypeGenerator(diagnostics::Diagnostics *diagnostics);
+            explicit TypeGenerator(diagnostics::Reporter *diagnostics);
 
             llvm::Type *take_type(ast::Node *node);
             llvm::Constant *take_initialiser(ast::Node *node);
@@ -69,7 +69,7 @@ namespace acorn {
 
             std::map<types::ParameterType *, types::Type *> m_type_parameters;
 
-            diagnostics::Diagnostics *m_diagnostics;
+            diagnostics::Reporter *m_diagnostics;
         };
 
     }

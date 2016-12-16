@@ -10,7 +10,7 @@
 namespace acorn {
 
     namespace diagnostics {
-        class Diagnostics;
+        class Reporter;
     }
 
     namespace compiler {
@@ -27,7 +27,7 @@ namespace acorn {
             bool compile(std::string filename);
 
         private:
-            Diagnostics *m_diagnostics;
+            diagnostics::Reporter *m_diagnostics;
 
         };
     }

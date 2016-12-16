@@ -17,8 +17,10 @@ using namespace acorn;
 using namespace acorn::codegen;
 using namespace acorn::diagnostics;
 
-TypeGenerator::TypeGenerator(Diagnostics *diagnostics) : m_diagnostics(diagnostics) {
-    
+static llvm::LLVMContext context;
+
+TypeGenerator::TypeGenerator(Reporter *diagnostics) : m_diagnostics(diagnostics) {
+
 }
 
 llvm::Type *TypeGenerator::take_type(ast::Node *node) {
@@ -27,13 +29,13 @@ llvm::Type *TypeGenerator::take_type(ast::Node *node) {
         m_type_stack.pop_back();
 
         if (node && result == nullptr) {
-            m_diagnostics->handle(InternalError(node, "Invalid LLVM type generated. (" + node->type->name() + ")"));
+            m_diagnostics->report(InternalError(node, "Invalid LLVM type generated. (" + node->type->name() + ")"));
             return nullptr;
         }
 
         return result;
     } else {
-        m_diagnostics->handle(InternalError(node, "No LLVM type generated."));
+        m_diagnostics->report(InternalError(node, "No LLVM type generated."));
         return nullptr;
     }
 }
@@ -44,13 +46,13 @@ llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
         m_initialiser_stack.pop_back();
 
         if (node && result == nullptr) {
-            m_diagnostics->handle(InternalError(node, "Invalid LLVM initialiser generated."));
+            m_diagnostics->report(InternalError(node, "Invalid LLVM initialiser generated."));
             return nullptr;
         }
 
         return result;
     } else {
-        m_diagnostics->handle(InternalError(node, "No LLVM initialiser generated."));
+        m_diagnostics->report(InternalError(node, "No LLVM initialiser generated."));
         return nullptr;
     }
 }
@@ -72,8 +74,6 @@ types::Type *TypeGenerator::get_type_parameter(types::Parameter *key) {
 }
 
 void TypeGenerator::visit_constructor(types::TypeType *type) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
 
     m_type_stack.push_back(llvm_type);
@@ -147,8 +147,6 @@ void TypeGenerator::visit(types::Parameter *type) {
 }
 
 void TypeGenerator::visit(types::Void *type) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
 
     m_type_stack.push_back(llvm_type);
@@ -156,8 +154,6 @@ void TypeGenerator::visit(types::Void *type) {
 }
 
 void TypeGenerator::visit(types::Boolean *type) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
 
     m_type_stack.push_back(llvm_type);
@@ -165,8 +161,6 @@ void TypeGenerator::visit(types::Boolean *type) {
 }
 
 void TypeGenerator::visit(types::Integer *type) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     const unsigned int size = type->size();
     llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(context, size);
 
@@ -175,8 +169,6 @@ void TypeGenerator::visit(types::Integer *type) {
 }
 
 void TypeGenerator::visit(types::UnsignedInteger *type) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     const unsigned int size = type->size();
     llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(context, size);
 
@@ -185,8 +177,6 @@ void TypeGenerator::visit(types::UnsignedInteger *type) {
 }
 
 void TypeGenerator::visit(types::Float *type) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     const unsigned int size = type->size();
     llvm::Type *llvm_type = nullptr;
 
@@ -223,8 +213,6 @@ void TypeGenerator::visit(types::UnsafePointer *type) {
 }
 
 void TypeGenerator::visit(types::Record *type) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     std::vector<llvm::Type *> llvm_types;
     std::vector<llvm::Constant *> llvm_initialisers;
 
@@ -296,8 +284,6 @@ void TypeGenerator::visit(types::Function *type) {
 }
 
 void TypeGenerator::visit(types::Enum *type) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
-
     std::vector<llvm::Type *> llvm_types;
     std::vector<llvm::Constant *> llvm_initialisers;
 

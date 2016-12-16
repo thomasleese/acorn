@@ -30,7 +30,7 @@ namespace acorn {
         class Checker : public ast::Visitor {
 
         public:
-            Checker(diagnostics::Diagnostics *diagnostics, symboltable::Namespace *rootNamespace);
+            Checker(diagnostics::Reporter *diagnostics, symboltable::Namespace *rootNamespace);
             ~Checker();
 
         private:
@@ -73,7 +73,7 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         private:
-            diagnostics::Diagnostics *m_diagnostics;
+            diagnostics::Reporter *m_diagnostics;
             symboltable::Namespace *m_namespace;
 
         };

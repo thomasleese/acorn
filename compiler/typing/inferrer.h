@@ -16,7 +16,7 @@ namespace acorn {
     }
 
     namespace diagnostics {
-        class Diagnostics;
+        class Reporter;
     }
 
     namespace symboltable {
@@ -34,7 +34,7 @@ namespace acorn {
         class Inferrer : public ast::Visitor {
 
         public:
-            Inferrer(diagnostics::Diagnostics *diagnostics,
+            Inferrer(diagnostics::Reporter *diagnostics,
                      symboltable::Namespace *root_namespace);
             ~Inferrer();
 
@@ -91,7 +91,7 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         private:
-            diagnostics::Diagnostics *m_diagnostics;
+            diagnostics::Reporter *m_diagnostics;
             symboltable::Namespace *m_namespace;
             std::vector<ast::FunctionDefinition *> m_functionStack;
             bool m_in_if;

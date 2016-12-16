@@ -90,12 +90,6 @@ std::string Token::as_string(Token::Kind kind) {
             return "float";
         case StringLiteral:
             return "string";
-        case Assignment:
-            return "assignment";
-        case Name:
-            return "name";
-        case Operator:
-            return "operator";
         case OpenBracket:
             return "[";
         case CloseBracket:
@@ -116,5 +110,13 @@ std::string Token::as_string(Token::Kind kind) {
             return ":";
         case Semicolon:
             return ";";
+        case Arrow:
+            return "->";
+        case Assignment:
+            return "=";
+        case Name:
+            return "name";
+        case Operator:
+            return "operator";
     }
 }

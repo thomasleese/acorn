@@ -32,16 +32,18 @@ using namespace acorn::diagnostics;
 
 #define return_if_null(thing) if (thing == nullptr) return;
 
+static llvm::LLVMContext context;
+
 std::string codegen::mangle_method(std::string name, types::Method *type) {
     return "_A_" + name + "_" + type->mangled_name();
 }
 
-ModuleGenerator::ModuleGenerator(Diagnostics *diagnostics, symboltable::Namespace *scope, llvm::DataLayout *data_layout) :
+ModuleGenerator::ModuleGenerator(Reporter *diagnostics, symboltable::Namespace *scope, llvm::DataLayout *data_layout) :
         m_type_generator(new TypeGenerator(diagnostics)), m_diagnostics(diagnostics) {
     m_scope.push_back(scope);
 
-    m_irBuilder = new llvm::IRBuilder<>(llvm::getGlobalContext());
-    m_mdBuilder = new llvm::MDBuilder(llvm::getGlobalContext());
+    m_irBuilder = new llvm::IRBuilder<>(context);
+    m_mdBuilder = new llvm::MDBuilder(context);
     m_data_layout = data_layout;
 }
 
@@ -105,7 +107,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 
     auto old_insert_point = m_irBuilder->saveIP();
 
-    llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);
+    llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", function);
     m_irBuilder->SetInsertPoint(basicBlock);
 
     for (ast::Identifier *param : definition->name->parameters) {
@@ -155,7 +157,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
         function->dump();
-        m_diagnostics->handle(InternalError(definition, stream.str()));
+        m_diagnostics->report(InternalError(definition, stream.str()));
     }
 
     m_scope.pop_back();
@@ -189,7 +191,7 @@ llvm::Value *ModuleGenerator::pop_value() {
 }
 
 llvm::BasicBlock *ModuleGenerator::create_basic_block(std::string name) const {
-    auto &context = llvm::getGlobalContext();
+
     auto parent = m_irBuilder->GetInsertBlock()->getParent();
     return llvm::BasicBlock::Create(context, name, parent);
 }
@@ -213,14 +215,14 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
     }
 
     if (!symbol->value) {
-        m_diagnostics->handle(InternalError(identifier, "should not be nullptr"));
+        m_diagnostics->report(InternalError(identifier, "should not be nullptr"));
         push_value(nullptr);
         return;
     }
 
     auto tt = dynamic_cast<types::TypeType *>(symbol->type);
     if (!tt && identifier->has_parameters()) {
-        m_diagnostics->handle(InternalError(identifier, "should not have parameters"));
+        m_diagnostics->report(InternalError(identifier, "should not have parameters"));
         push_value(nullptr);
         return;
     }
@@ -289,17 +291,17 @@ void ModuleGenerator::visit(ast::FloatLiteral *expression) {
 }
 
 void ModuleGenerator::visit(ast::ImaginaryLiteral *imaginary) {
-    m_diagnostics->handle(InternalError(imaginary, "N/A"));
+    m_diagnostics->report(InternalError(imaginary, "N/A"));
     push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::StringLiteral *expression) {
-    m_diagnostics->handle(InternalError(expression, "N/A"));
+    m_diagnostics->report(InternalError(expression, "N/A"));
     push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
+
 
     std::vector<llvm::Value *> elements;
 
@@ -332,7 +334,7 @@ void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
     auto elements_value = m_irBuilder->CreateInBoundsGEP(instance, elements_index, "elements");
     auto elements_instance = m_irBuilder->CreateAlloca(element_type, llvm::ConstantInt::get(i32, elements.size()));
 
-    for (int i = 0; i < elements.size(); i++) {
+    for (size_t i = 0; i < elements.size(); i++) {
         std::vector<llvm::Value *> index;
         index.push_back(llvm::ConstantInt::get(i32, i));
         auto place = m_irBuilder->CreateInBoundsGEP(elements_instance, index);
@@ -345,12 +347,12 @@ void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
 }
 
 void ModuleGenerator::visit(ast::MappingLiteral *mapping) {
-    m_diagnostics->handle(InternalError(mapping, "N/A"));
+    m_diagnostics->report(InternalError(mapping, "N/A"));
     push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::RecordLiteral *expression) {
-    llvm::LLVMContext &context = llvm::getGlobalContext();
+
 
     //auto record = dynamic_cast<types::Record *>(expression->type);
 
@@ -364,7 +366,7 @@ void ModuleGenerator::visit(ast::RecordLiteral *expression) {
 
     auto i32 = llvm::IntegerType::get(context, 32);
     auto index0 = llvm::ConstantInt::get(i32, 0);
-    for (int i = 0; i < expression->field_names.size(); i++) {
+    for (size_t i = 0; i < expression->field_names.size(); i++) {
         auto index = llvm::ConstantInt::get(i32, i);
 
         expression->field_values[i]->accept(this);
@@ -383,7 +385,7 @@ void ModuleGenerator::visit(ast::RecordLiteral *expression) {
 }
 
 void ModuleGenerator::visit(ast::TupleLiteral *expression) {
-    auto &context = llvm::getGlobalContext();
+
 
     auto llvm_type = generate_type(expression);
 
@@ -393,7 +395,7 @@ void ModuleGenerator::visit(ast::TupleLiteral *expression) {
     auto index0 = llvm::ConstantInt::get(i32, 0);
 
     auto elements = expression->elements();
-    for (int i = 0; i < elements.size(); i++) {
+    for (size_t i = 0; i < elements.size(); i++) {
         elements[i]->accept(this);
         auto value = pop_value();
 
@@ -462,7 +464,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
 
     auto function = m_module->getFunction(method_name);
     if (function == nullptr) {
-        m_diagnostics->handle(InternalError(expression, "No LLVM function created: " + method_name + " (" + method->name() + ")!"));
+        m_diagnostics->report(InternalError(expression, "No LLVM function created: " + method_name + " (" + method->name() + ")!"));
         push_value(nullptr);
         return;
     }
@@ -572,7 +574,7 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
 }
 
 void ModuleGenerator::visit(ast::Selector *expression) {
-    auto &context = llvm::getGlobalContext();
+
 
     expression->operand->accept(this);
     auto instance = pop_value();
@@ -682,7 +684,7 @@ void ModuleGenerator::visit(ast::Selector *expression) {
 }
 
 void ModuleGenerator::visit(ast::While *expression) {
-    auto &context = llvm::getGlobalContext();
+
 
     auto function = m_irBuilder->GetInsertBlock()->getParent();
 
@@ -711,7 +713,7 @@ void ModuleGenerator::visit(ast::If *expression) {
     expression->condition->accept(this);
     auto condition = pop_value();
 
-    llvm::LLVMContext &context = llvm::getGlobalContext();
+
 
     condition = m_irBuilder->CreateICmpEQ(condition, llvm::ConstantInt::get(llvm::Type::getInt1Ty(context), 1), "ifcond");
 
@@ -766,7 +768,7 @@ void ModuleGenerator::visit(ast::Return *expression) {
 }
 
 void ModuleGenerator::visit(ast::Spawn *expression) {
-    m_diagnostics->handle(InternalError(expression, "N/A"));
+    m_diagnostics->report(InternalError(expression, "N/A"));
     push_value(nullptr);
 }
 
@@ -792,12 +794,12 @@ void ModuleGenerator::visit(ast::Switch *expression) {
     auto exit_block = create_basic_block("switch_exit");
     m_irBuilder->SetInsertPoint(entry_block);*/
 
-    m_diagnostics->handle(InternalError(expression, "N/A"));
+    m_diagnostics->report(InternalError(expression, "N/A"));
     push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::Parameter *parameter) {
-    m_diagnostics->handle(InternalError(parameter, "N/A"));
+    m_diagnostics->report(InternalError(parameter, "N/A"));
 }
 
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
@@ -846,22 +848,22 @@ void ModuleGenerator::visit(ast::ExpressionStatement *statement) {
 }
 
 void ModuleGenerator::visit(ast::ImportStatement *statement) {
-    m_diagnostics->handle(InternalError(statement, "N/A"));
+    m_diagnostics->report(InternalError(statement, "N/A"));
 }
 
 void ModuleGenerator::visit(ast::SourceFile *module) {
-    m_module = new llvm::Module(module->name, llvm::getGlobalContext());
+    m_module = new llvm::Module(module->name, context);
 
     m_builtin_generator = new BuiltinGenerator(m_module, m_irBuilder, m_data_layout, m_type_generator);
     m_builtin_generator->generate(m_scope.back());
 
-    llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()), false);
+    llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(context), false);
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);
-    llvm::BasicBlock *bb1 = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", function);
+    llvm::BasicBlock *bb1 = llvm::BasicBlock::Create(context, "entry", function);
 
-    fType = llvm::FunctionType::get(llvm::Type::getInt32Ty(llvm::getGlobalContext()), false);
+    fType = llvm::FunctionType::get(llvm::Type::getInt32Ty(context), false);
     llvm::Function *mainFunction = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "main", m_module);
-    llvm::BasicBlock *main_bb = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", mainFunction);
+    llvm::BasicBlock *main_bb = llvm::BasicBlock::Create(context, "entry", mainFunction);
 
     m_irBuilder->SetInsertPoint(main_bb);
     m_irBuilder->CreateCall(function);
@@ -878,6 +880,6 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyModule(*m_module, &stream)) {
         m_module->dump();
-        m_diagnostics->handle(InternalError(module, stream.str()));
+        m_diagnostics->report(InternalError(module, stream.str()));
     }
 }

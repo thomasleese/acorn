@@ -19,7 +19,7 @@ namespace acorn {
     }
 
     namespace diagnostics {
-        class Diagnostics;
+        class Reporter;
     }
 
     namespace symboltable {
@@ -44,7 +44,7 @@ namespace acorn {
         class ModuleGenerator : public ast::Visitor {
 
         public:
-            ModuleGenerator(diagnostics::Diagnostics *diagnostics, symboltable::Namespace *scope, llvm::DataLayout *data_layout);
+            ModuleGenerator(diagnostics::Reporter *diagnostics, symboltable::Namespace *scope, llvm::DataLayout *data_layout);
             ~ModuleGenerator();
 
             llvm::Module *module() const;
@@ -112,7 +112,7 @@ namespace acorn {
             BuiltinGenerator *m_builtin_generator;
             TypeGenerator *m_type_generator;
 
-            diagnostics::Diagnostics *m_diagnostics;
+            diagnostics::Reporter *m_diagnostics;
         };
 
     }

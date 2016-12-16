@@ -8,21 +8,18 @@
 #include <fstream>
 #include <vector>
 
+#include "../diagnostics.h"
 #include "token.h"
 
 namespace acorn {
-
-    namespace diagnostics {
-        class Diagnostics;
-    }
 
     /**
      * Lexical Analysis. Takes source code input and provides a stream of
      * tokens as output.
      */
-    class Lexer {
+    class Lexer : public diagnostics::Reporter {
     public:
-        Lexer(diagnostics::Diagnostics *diagnostics, std::string filename);
+        Lexer(std::string filename);
 
         /**
          * Read the next token.
@@ -36,19 +33,18 @@ namespace acorn {
         void skip_comment();
 
         void next_line();
+        void update_current_line();
+
         void update_indentation(Token &token);
 
         bool read_identifier(Token &token);
         bool read_keyword(Token &token) const;
         bool read_number(Token &token);
         bool read_string(Token &token);
-        bool read_operator(Token &token);
         bool read_delimiter(Token &token);
-        bool read_line_continuation(Token &token);
+        bool read_operator(Token &token);
 
     private:
-        diagnostics::Diagnostics *m_diagnostics;
-
         std::ifstream m_stream;
         std::deque<int> m_indentation;
         std::deque<Token> m_token_buffer;

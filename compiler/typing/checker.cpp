@@ -21,7 +21,7 @@ using namespace acorn::typing;
 #define return_if_null(thing) if (thing == nullptr) return;
 #define return_if_null_type(node) return_if_null(node->type)
 
-Checker::Checker(diagnostics::Diagnostics *diagnostics, symboltable::Namespace *rootNamespace) {
+Checker::Checker(diagnostics::Reporter *diagnostics, symboltable::Namespace *rootNamespace) {
     m_diagnostics = diagnostics;
     m_namespace = rootNamespace;
 }
@@ -36,13 +36,13 @@ void Checker::check_types(ast::Node *lhs, ast::Node *rhs) {
 
     bool compatible = lhs->type->is_compatible(rhs->type);
     if (!compatible) {
-        m_diagnostics->handle(TypeMismatchError(rhs, lhs));
+        m_diagnostics->report(TypeMismatchError(rhs, lhs));
     }
 }
 
 void Checker::check_not_null(ast::Node *node) {
     if (!node->type) {
-        m_diagnostics->handle(InternalError(node, "No type given for: " + Token::as_string(node->token.kind)));
+        m_diagnostics->report(InternalError(node, "No type given for: " + Token::as_string(node->token.kind)));
     }
 }
 

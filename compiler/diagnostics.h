@@ -111,12 +111,12 @@ namespace acorn {
             ConstantAssignmentError(ast::Node *node);
         };
 
-        class Diagnostics {
+        class Reporter {
 
         public:
-            Diagnostics();
+            Reporter();
 
-            void handle(const CompilerError &error);
+            void report(const CompilerError &error);
 
             bool has_errors() const;
 

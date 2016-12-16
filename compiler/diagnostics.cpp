@@ -179,15 +179,15 @@ ConstantAssignmentError::ConstantAssignmentError(ast::Node *node) :
     m_message = "Variable is not mutable.";
 }
 
-Diagnostics::Diagnostics() : m_has_errors(false) {
+Reporter::Reporter() : m_has_errors(false) {
 
 }
 
-void Diagnostics::handle(const CompilerError &error) {
+void Reporter::report(const CompilerError &error) {
     error.print();
     m_has_errors = true;
 }
 
-bool Diagnostics::has_errors() const {
+bool Reporter::has_errors() const {
     return m_has_errors;
 }

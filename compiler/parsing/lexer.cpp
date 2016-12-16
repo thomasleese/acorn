@@ -6,19 +6,16 @@
 #include <fstream>
 #include <sstream>
 
-#include "../diagnostics.h"
-
 #include "lexer.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;
 
-Lexer::Lexer(Diagnostics *diagnostics, std::string filename) : m_diagnostics(diagnostics) {
+Lexer::Lexer(std::string filename) {
     m_stream.open(filename.c_str());
 
-    m_current_column = 0;
-    m_current_line_number = 1;
-    std::getline(m_stream, m_current_line);
+    m_current_line_number = 0;
+    next_line();
 
     m_indentation.push_back(0);
 
@@ -68,12 +65,12 @@ bool Lexer::next_token(Token &token) {
         // do nothing :)
     } else if (read_string(token)) {
         // do nothing :)
-    } else if (read_operator(token)) {
-        // do nothing :)
     } else if (read_delimiter(token)) {
         // do nothing :)
+    } else if (read_operator(token)) {
+        // do nothing :)
     } else {
-        m_diagnostics->handle(SyntaxError(token, "code"));
+        report(SyntaxError(token, "code"));
         return false;
     }
 
@@ -94,7 +91,7 @@ unsigned int Lexer::skip_whitespace() {
     unsigned int count = 0;
 
     int c = ' ';
-    while (c == ' ' || c == '\t' || c == '\f' || c == EOF) {
+    while (c == ' ' || c == '\t' || c == '\f') {
         c = m_stream.get();
         count++;
     }
@@ -130,7 +127,13 @@ void Lexer::skip_comment() {
 void Lexer::next_line() {
     m_current_line_number++;
     m_current_column = 0;
+    update_current_line();
+}
+
+void Lexer::update_current_line() {
+    int pos = m_stream.tellg();
     std::getline(m_stream, m_current_line);
+    m_stream.seekg(pos);
 }
 
 void Lexer::update_indentation(Token &token) {
@@ -143,7 +146,7 @@ void Lexer::update_indentation(Token &token) {
     } else {
         auto it = std::find(m_indentation.begin(), m_indentation.end(), level);
         if (it == m_indentation.end()) {
-            m_diagnostics->handle(SyntaxError(token, "indentation"));
+            report(SyntaxError(token, "indentation"));
         } else {
             while (m_indentation.back() > level) {
                 m_indentation.pop_back();
@@ -179,6 +182,8 @@ bool Lexer::read_identifier(Token &token) {
 bool Lexer::read_keyword(Token &token) const {
     if (token.lexeme == "let") {
         token.kind = Token::LetKeyword;
+    } else if (token.lexeme == "def") {
+        token.kind = Token::DefKeyword;
     } else {
         return false;
     }
@@ -232,41 +237,18 @@ bool Lexer::read_string(Token &token) {
     return true;
 }
 
-bool Lexer::read_operator(Token &token) {
+bool Lexer::read_delimiter(Token &token) {
     int ch = m_stream.get();
     int ch2 = m_stream.get();
 
-    // TODO check unicode class
-    if (ch == '=' && ch2 == '=') {
-        token.kind = Token::Operator;
-        token.lexeme.append(1, ch);
-        token.lexeme.append(1, ch2);
+    if (ch == '-' && ch2 == '>') {
+        token.kind = Token::Arrow;
+        token.lexeme = "->";
         m_current_column += 2;
+        return true;
+    } else {
+        m_stream.unget();
     }
-
-    switch (ch) {
-        case '>':
-        case '<':
-        case '+':
-        case '-':
-        case '*':
-        case '/':
-        case '%':
-            token.kind = Token::Operator;
-            token.lexeme.append(1, ch);
-            m_current_column++;
-            return true;
-
-        default:
-            break;
-    }
-
-    m_stream.unget();
-    return false;
-}
-
-bool Lexer::read_delimiter(Token &token) {
-    int ch = m_stream.get();
 
     // the following two lines are reversed in the default case below
     token.lexeme.append(1, ch);
@@ -334,4 +316,48 @@ bool Lexer::read_delimiter(Token &token) {
             m_current_column--;
             return false;
     }
+}
+
+bool is_two_char_operator(char c1, char c2) {
+    if (c1 == '=' && c2 == '=') {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool Lexer::read_operator(Token &token) {
+    int ch = m_stream.get();
+    int ch2 = m_stream.get();
+
+    if (is_two_char_operator(ch, ch2)) {
+        token.kind = Token::Operator;
+        token.lexeme.append(1, ch);
+        token.lexeme.append(1, ch2);
+        m_current_column += 2;
+    } else {
+        m_stream.unget();
+    }
+
+    // TODO check unicode class
+
+    switch (ch) {
+        case '>':
+        case '<':
+        case '+':
+        case '-':
+        case '*':
+        case '/':
+        case '%':
+            token.kind = Token::Operator;
+            token.lexeme.append(1, ch);
+            m_current_column++;
+            return true;
+
+        default:
+            break;
+    }
+
+    m_stream.unget();
+    return false;
 }

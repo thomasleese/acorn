@@ -162,7 +162,7 @@ void BuiltinGenerator::initialise_function(llvm::Function *function, int no_argu
 
     if (!function->arg_empty()) {
         m_args.push_back(&function->getArgumentList().front());
-        for (int i = 1; i < function->arg_size(); i++) {
+        for (size_t i = 1; i < function->arg_size(); i++) {
             m_args.push_back(function->getArgumentList().getNext(m_args[i - 1]));
         }
     }

@@ -9,7 +9,6 @@
 
 #include "../ast/nodes.h"
 #include "../diagnostics.h"
-#include "../errors.h"
 
 #include "types.h"
 
@@ -82,11 +81,11 @@ bool ParameterType::is_compatible(const Type *other) const {
     return (bool) dynamic_cast<const types::TypeType *>(other);
 }
 
-Type *ParameterType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *ParameterType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Parameter(this);
     } else {
-        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
+        diagnostics->report(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -107,11 +106,11 @@ std::string VoidType::name() const {
     return "VoidType";
 }
 
-Type *VoidType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *VoidType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Void();
     } else {
-        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
+        diagnostics->report(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -132,11 +131,11 @@ std::string BooleanType::name() const {
     return "BooleanType";
 }
 
-Type *BooleanType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *BooleanType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Boolean();
     } else {
-        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
+        diagnostics->report(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -163,11 +162,11 @@ std::string IntegerType::name() const {
     return ss.str();
 }
 
-Type *IntegerType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *IntegerType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Integer(m_size);
     } else {
-        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
+        diagnostics->report(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -194,11 +193,11 @@ std::string UnsignedIntegerType::name() const {
     return ss.str();
 }
 
-Type *UnsignedIntegerType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *UnsignedIntegerType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new UnsignedInteger(m_size);
     } else {
-        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
+        diagnostics->report(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -221,11 +220,11 @@ std::string FloatType::name() const {
     return ss.str();
 }
 
-Type *FloatType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *FloatType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
         return new Float(m_size);
     } else {
-        pass->m_diagnostics->handle(InvalidTypeConstructor(node));
+        diagnostics->report(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -266,11 +265,11 @@ TypeType *UnsafePointerType::element_type() const {
     return t;
 }
 
-Type *UnsafePointerType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *UnsafePointerType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (has_element_type()) {
-        return new UnsafePointer(element_type()->create(pass, node));
+        return new UnsafePointer(element_type()->create(diagnostics, node));
     } else {
-        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), 1));
+        diagnostics->report(InvalidTypeParameters(node, m_parameters.size(), 1));
         return nullptr;
     }
 }
@@ -293,13 +292,13 @@ std::string FunctionType::name() const {
     return "FunctionType";
 }
 
-Type *FunctionType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *FunctionType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     Function *function = new Function();
 
     for (auto parameter : m_parameters) {
         Method *method = dynamic_cast<Method *>(parameter);
         if (method == nullptr) {
-            pass->m_diagnostics->handle(InvalidTypeParameters(node, 0, 0));
+            diagnostics->report(InvalidTypeParameters(node, 0, 0));
             continue;
         }
 
@@ -371,7 +370,7 @@ TypeType *replace_parameters(TypeType *type, std::map<ParameterType *, TypeType 
     return type->with_parameters(parameters);
 }
 
-Type *RecordType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *RecordType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.size() == m_input_parameters.size()) {
         std::map<ParameterType *, TypeType *> parameter_mapping;
         for (int i = 0; i < m_input_parameters.size(); i++) {
@@ -385,7 +384,7 @@ Type *RecordType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node)
         for (int i = 0; i < m_field_types.size(); i++) {
             auto type = replace_parameters(m_field_types[i], parameter_mapping);
 
-            auto result = type->create(pass, node);
+            auto result = type->create(diagnostics, node);
             if (result == nullptr) {
                 return nullptr;
             }
@@ -394,7 +393,7 @@ Type *RecordType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node)
 
         return new Record(m_field_names, field_types);
     } else {
-        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
+        diagnostics->report(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
         return nullptr;
     }
 }
@@ -447,10 +446,10 @@ Type *EnumType::child_type(std::string name) {
     }
 }
 
-Type *EnumType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *EnumType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     std::vector<Type *> element_types;
     for (auto type : m_element_types) {
-        element_types.push_back(type->create(pass, node));
+        element_types.push_back(type->create(diagnostics, node));
     }
 
     return new Enum(this, m_element_names, element_types);
@@ -476,9 +475,9 @@ std::string TupleType::name() const {
     return "TupleType";
 }
 
-Type *TupleType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *TupleType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.empty()) {
-        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), 1));
+        diagnostics->report(InvalidTypeParameters(node, m_parameters.size(), 1));
         return nullptr;
     } else {
         std::vector<Type *> parameters;
@@ -486,7 +485,7 @@ Type *TupleType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) 
         for (auto p : m_parameters) {
             auto tt = dynamic_cast<TypeType *>(p);
             assert(tt);
-            parameters.push_back(tt->create(pass, node));
+            parameters.push_back(tt->create(diagnostics, node));
         }
 
         return new Tuple(parameters);
@@ -520,11 +519,11 @@ std::string AliasType::name() const {
     return m_alias->name();
 }
 
-Type *AliasType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *AliasType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.size() == m_input_parameters.size()) {
         // early escape
         if (m_input_parameters.empty()) {
-            return m_alias->create(pass, node);
+            return m_alias->create(diagnostics, node);
         }
 
         std::map<ParameterType *, TypeType *> parameter_mapping;
@@ -535,9 +534,9 @@ Type *AliasType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) 
         }
 
         auto alias = replace_parameters(m_alias, parameter_mapping);
-        return alias->create(pass, node);
+        return alias->create(diagnostics, node);
     } else {
-        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
+        diagnostics->report(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
         return nullptr;
     }
 }
@@ -571,11 +570,11 @@ bool ProtocolType::is_compatible(const Type *other) const {
     return false;
 }
 
-Type *ProtocolType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *ProtocolType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.size() == m_input_parameters.size()) {
         return new Protocol(m_methods, this);
     } else {
-        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
+        diagnostics->report(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
         return nullptr;
     }
 }
@@ -610,11 +609,11 @@ bool TypeDescriptionType::is_compatible(const Type *other) const {
     }
 }
 
-Type *TypeDescriptionType::create(diagnostics::Diagnostics *diagnostics, ast::Node *node) {
+Type *TypeDescriptionType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.size() == 1) {
         return m_parameters[0];
     } else {
-        pass->m_diagnostics->handle(InvalidTypeParameters(node, m_parameters.size(), 1));
+        diagnostics->report(InvalidTypeParameters(node, m_parameters.size(), 1));
         return nullptr;
     }
 }

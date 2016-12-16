@@ -73,6 +73,7 @@ namespace acorn {
             Colon,
             Semicolon,
             Assignment,
+            Arrow,
 
             // identifiers
             Operator,

@@ -1,18 +1,2 @@
-type Integer as Integer64
-
-enum MaybeInteger
-    Some as Integer
-    Nothing
-end
-
-let perhaps_integer = MaybeInteger.Some(10)
-
-let a = 0
-
-switch perhaps_integer
-case MaybeInteger.Some using let n as Integer
-    a = n
-
-case MaybeInteger.Nothing
-    a = 25
-end
+def add(x: Int64, y: Int64) -> Int64:
+  return x + y

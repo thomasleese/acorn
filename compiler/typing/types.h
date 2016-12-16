@@ -21,6 +21,10 @@ namespace acorn {
         class Pass;
     }
 
+    namespace diagnostics {
+        class Reporter;
+    }
+
     namespace types {
 
         class Visitor;
@@ -68,7 +72,7 @@ namespace acorn {
         public:
             explicit TypeType();
             explicit TypeType(std::vector<TypeType *> parameters);
-            virtual Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node) = 0;
+            virtual Type *create(diagnostics::Reporter *diagnostics, ast::Node *node) = 0;
 
             std::string mangled_name() const;
 
@@ -84,7 +88,7 @@ namespace acorn {
 
             bool is_compatible(const Type *other) const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             ParameterType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -95,7 +99,7 @@ namespace acorn {
         public:
             std::string name() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             VoidType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -106,7 +110,7 @@ namespace acorn {
         public:
             std::string name() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             BooleanType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -119,7 +123,7 @@ namespace acorn {
 
             std::string name() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             IntegerType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -135,7 +139,7 @@ namespace acorn {
 
             std::string name() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             UnsignedIntegerType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -151,7 +155,7 @@ namespace acorn {
 
             std::string name() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             FloatType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -170,7 +174,7 @@ namespace acorn {
             bool has_element_type() const;
             TypeType *element_type() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             UnsafePointerType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -181,7 +185,7 @@ namespace acorn {
         public:
             std::string name() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             FunctionType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -202,7 +206,7 @@ namespace acorn {
 
             std::string name() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             RecordType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -230,7 +234,7 @@ namespace acorn {
             bool has_child(std::string name);
             Type *child_type(std::string name);
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             EnumType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -249,7 +253,7 @@ namespace acorn {
 
             std::string name() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             TupleType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -264,7 +268,7 @@ namespace acorn {
 
             std::string name() const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             AliasType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -289,7 +293,7 @@ namespace acorn {
 
             bool is_compatible(const Type *other) const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             ProtocolType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -308,7 +312,7 @@ namespace acorn {
 
             bool is_compatible(const Type *other) const;
 
-            Type *create(diagnostics::Diagnostics *diagnostics, ast::Node *node);
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             TypeDescriptionType *with_parameters(std::vector<TypeType *> parameters);
 

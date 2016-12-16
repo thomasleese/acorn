@@ -34,7 +34,7 @@ using namespace acorn;
 using namespace acorn::compiler;
 using namespace acorn::diagnostics;
 
-Compiler::Compiler() : m_diagnostics(new Diagnostics()) {
+Compiler::Compiler() : m_diagnostics(new Reporter()) {
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -45,7 +45,7 @@ Compiler::Compiler() : m_diagnostics(new Diagnostics()) {
     llvm::initializeCodeGen(*registry);
     llvm::initializeLoopStrengthReducePass(*registry);
     llvm::initializeLowerIntrinsicsPass(*registry);
-    llvm::initializeUnreachableBlockElimPass(*registry);
+    //llvm::initializeUnreachableBlockElimPass(*registry);
 
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 }
@@ -64,32 +64,37 @@ bool Compiler::compile(std::string filename) {
 
     Lexer lexer(filename);
 
+    std::cout << "Tokens" << std::endl;
     Token token;
-    while ((token = lexer.next_token()).kind != Token::EndOfFile) {
+    while (lexer.next_token(token) && token.kind != Token::EndOfFile) {
         std::cout << Token::as_string(token.kind) << std::endl;
+    }
+    std::cout << "END" << std::endl;
+
+    if (lexer.has_errors()) {
+        return false;
     }
 
     debug("Parsing...");
 
-    auto parser = new Parser(lexer);
+    auto parser = new Parser(m_diagnostics, lexer);
     auto module = parser->parse(filename);
 
-    if (m_error_handler->has_errors()) {
+    if (m_diagnostics->has_errors()) {
         return false;
     }
 
     debug("Building the Symbol Table...");
 
-    auto symbolTableBuilder = new symboltable::Builder();
-    module->accept(symbolTableBuilder);
-    assert(symbolTableBuilder->isAtRoot());
+    symboltable::Builder symbol_table_builder;
+    module->accept(&symbol_table_builder);
+    assert(symbolTableBuilder.isAtRoot());
 
-    if (m_error_handler->has_errors()) {
+    if (symbol_table_builder.has_errors()) {
         return false;
     }
 
-    auto rootNamespace = symbolTableBuilder->rootNamespace();
-    delete symbolTableBuilder;
+    auto rootNamespace = symbol_table_builder.rootNamespace();
 
     auto printer = new PrettyPrinter();
     module->accept(printer);
@@ -98,10 +103,10 @@ bool Compiler::compile(std::string filename) {
 
     debug("Inferring types...");
 
-    auto typeInferrer = new typing::Inferrer(rootNamespace);
+    auto typeInferrer = new typing::Inferrer(m_diagnostics, rootNamespace);
     module->accept(typeInferrer);
 
-    if (m_error_handler->has_errors()) {
+    if (m_diagnostics->has_errors()) {
         return false;
     }
 
@@ -109,10 +114,10 @@ bool Compiler::compile(std::string filename) {
 
     debug("Checking types...");
 
-    auto typeChecker = new typing::Checker(rootNamespace);
+    auto typeChecker = new typing::Checker(m_diagnostics, rootNamespace);
     module->accept(typeChecker);
 
-    if (m_error_handler->has_errors()) {
+    if (m_diagnostics->has_errors()) {
         return false;
     }
 
@@ -159,10 +164,10 @@ bool Compiler::compile(std::string filename) {
 
     auto data_layout = target_machine->createDataLayout();
 
-    auto generator = new codegen::ModuleGenerator(rootNamespace, &data_layout);
+    auto generator = new codegen::ModuleGenerator(m_diagnostics, rootNamespace, &data_layout);
     module->accept(generator);
 
-    if (m_error_handler->has_errors()) {
+    if (m_diagnostics->has_errors()) {
         return false;
     }
 

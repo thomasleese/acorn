@@ -54,7 +54,7 @@ namespace acorn {
     class Parser {
 
     public:
-        Parser(diagnostics::Diagnostics *diagnostics, Lexer &lexer);
+        Parser(diagnostics::Reporter *diagnostics, Lexer &lexer);
         ~Parser();
 
         ast::SourceFile *parse(std::string name);
@@ -113,7 +113,7 @@ namespace acorn {
         ast::ImportStatement *readImportStatement();
 
     private:
-        diagnostics::Diagnostics *m_diagnostics;
+        diagnostics::Reporter *m_diagnostics;
         Lexer &m_lexer;
         std::deque<Token> m_tokens;
         std::map<std::string, int> m_operatorPrecendence;
