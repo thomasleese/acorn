@@ -21,7 +21,6 @@ set(SOURCE_FILES compiler/ast/nodes.cpp
                  compiler/typing/checker.cpp
                  compiler/typing/inferrer.cpp
                  compiler/typing/types.cpp
-                 compiler/typing/visitor.cpp
                  compiler/compiler.cpp
                  compiler/diagnostics.cpp
                  compiler/main.cpp

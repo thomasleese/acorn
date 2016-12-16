@@ -22,7 +22,7 @@ namespace acorn {
 
         class TypeGenerator : public types::Visitor {
         public:
-            explicit TypeGenerator(diagnostics::Reporter *diagnostics);
+            explicit TypeGenerator(diagnostics::Reporter *diagnostics, llvm::LLVMContext &context);
 
             llvm::Type *take_type(ast::Node *node);
             llvm::Constant *take_initialiser(ast::Node *node);
@@ -64,6 +64,7 @@ namespace acorn {
             void visit(types::Protocol *type);
 
         private:
+            llvm::LLVMContext &m_context;
             std::vector<llvm::Type *> m_type_stack;
             std::vector<llvm::Constant *> m_initialiser_stack;
 

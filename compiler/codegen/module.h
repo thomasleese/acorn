@@ -5,10 +5,11 @@
 #ifndef ACORN_CODEGENERATOR_H
 #define ACORN_CODEGENERATOR_H
 
-#include <llvm/IR/MDBuilder.h>
 #include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/Module.h>
 #include <llvm/IR/LegacyPassManager.h>
+#include <llvm/IR/LLVMContext.h>
+#include <llvm/IR/MDBuilder.h>
+#include <llvm/IR/Module.h>
 
 #include "../ast/visitor.h"
 
@@ -44,7 +45,7 @@ namespace acorn {
         class ModuleGenerator : public ast::Visitor {
 
         public:
-            ModuleGenerator(diagnostics::Reporter *diagnostics, symboltable::Namespace *scope, llvm::DataLayout *data_layout);
+            ModuleGenerator(diagnostics::Reporter *diagnostics, symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
             ~ModuleGenerator();
 
             llvm::Module *module() const;
@@ -102,6 +103,7 @@ namespace acorn {
 
         private:
             std::vector<symboltable::Namespace *> m_scope;
+            llvm::LLVMContext &m_context;
             llvm::Module *m_module;
             llvm::IRBuilder<> *m_irBuilder;
             llvm::MDBuilder *m_mdBuilder;

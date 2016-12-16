@@ -63,6 +63,7 @@ namespace acorn {
         void debug(std::string line);
 
         bool next_token();
+        bool fill_token();
         bool read_token(Token::Kind kind, Token &token);
         bool skip_token(Token::Kind kind);
         bool is_token(Token::Kind kind);

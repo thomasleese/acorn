@@ -7,6 +7,8 @@
 #include <string>
 #include <vector>
 
+#include <llvm/IR/LLVMContext.h>
+
 namespace acorn {
 
     namespace diagnostics {
@@ -27,6 +29,7 @@ namespace acorn {
             bool compile(std::string filename);
 
         private:
+            llvm::LLVMContext m_context;
             diagnostics::Reporter *m_diagnostics;
 
         };

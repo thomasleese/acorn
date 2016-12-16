@@ -77,6 +77,17 @@ bool Lexer::next_token(Token &token) {
     return true;
 }
 
+void Lexer::debug() {
+    std::cout << "DEBUG TOKENS" << std::endl;
+
+    Token token;
+    while (next_token(token) && token.kind != Token::EndOfFile) {
+        std::cout << Token::as_string(token.kind) << std::endl;
+    }
+
+    std::cout << "END DEBUG TOKENS" << std::endl;
+}
+
 Token Lexer::make_token(Token::Kind kind) const {
     Token token;
     token.kind = kind;
@@ -98,6 +109,8 @@ unsigned int Lexer::skip_whitespace() {
 
     m_stream.unget();
     count--;
+
+    m_current_column += count;
 
     return count;
 }
@@ -167,10 +180,11 @@ bool Lexer::read_identifier(Token &token) {
     while (isalpha(ch) || isdigit(ch)) {
         token.lexeme.append(1, ch);
         ch = m_stream.get();
-        m_current_column++;
     }
 
     m_stream.unget();
+
+    m_current_column += token.lexeme.size();
 
     if (!read_keyword(token)) {
         token.kind = Token::Name;
@@ -184,6 +198,8 @@ bool Lexer::read_keyword(Token &token) const {
         token.kind = Token::LetKeyword;
     } else if (token.lexeme == "def") {
         token.kind = Token::DefKeyword;
+    } else if (token.lexeme == "return") {
+        token.kind = Token::ReturnKeyword;
     } else {
         return false;
     }
@@ -335,6 +351,7 @@ bool Lexer::read_operator(Token &token) {
         token.lexeme.append(1, ch);
         token.lexeme.append(1, ch2);
         m_current_column += 2;
+        return true;
     } else {
         m_stream.unget();
     }

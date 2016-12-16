@@ -26,6 +26,11 @@ namespace acorn {
          */
         bool next_token(Token &token);
 
+        /**
+         * Debug the lexer by printing all the tokens.
+         */
+        void debug();
+
     private:
         Token make_token(Token::Kind kind = Token::EndOfFile) const;
 

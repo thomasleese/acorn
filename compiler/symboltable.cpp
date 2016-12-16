@@ -216,17 +216,17 @@ Symbol *Builder::add_builtin_method(symboltable::Symbol *function, types::Method
 
 void Builder::add_builtin_types() {
     add_builtin_symbol("Void", new types::VoidType());
-    add_builtin_symbol("Boolean", new types::BooleanType());
-    add_builtin_symbol("Integer8", new types::IntegerType(8));
-    add_builtin_symbol("Integer16", new types::IntegerType(16));
-    add_builtin_symbol("Integer32", new types::IntegerType(32));
-    add_builtin_symbol("Integer64", new types::IntegerType(64));
-    add_builtin_symbol("Integer128", new types::IntegerType(128));
-    add_builtin_symbol("UnsignedInteger8", new types::UnsignedIntegerType(8));
-    add_builtin_symbol("UnsignedInteger16", new types::UnsignedIntegerType(16));
-    add_builtin_symbol("UnsignedInteger32", new types::UnsignedIntegerType(32));
-    add_builtin_symbol("UnsignedInteger64", new types::UnsignedIntegerType(64));
-    add_builtin_symbol("UnsignedInteger128", new types::UnsignedIntegerType(128));
+    add_builtin_symbol("Bool", new types::BooleanType());
+    add_builtin_symbol("Int8", new types::IntegerType(8));
+    add_builtin_symbol("Int16", new types::IntegerType(16));
+    add_builtin_symbol("Int32", new types::IntegerType(32));
+    add_builtin_symbol("Int64", new types::IntegerType(64));
+    add_builtin_symbol("Int128", new types::IntegerType(128));
+    add_builtin_symbol("UInt8", new types::UnsignedIntegerType(8));
+    add_builtin_symbol("UInt16", new types::UnsignedIntegerType(16));
+    add_builtin_symbol("UInt32", new types::UnsignedIntegerType(32));
+    add_builtin_symbol("UInt64", new types::UnsignedIntegerType(64));
+    add_builtin_symbol("UInt128", new types::UnsignedIntegerType(128));
     add_builtin_symbol("Float16", new types::FloatType(16));
     add_builtin_symbol("Float32", new types::FloatType(32));
     add_builtin_symbol("Float64", new types::FloatType(64));

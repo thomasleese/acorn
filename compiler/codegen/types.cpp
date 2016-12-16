@@ -17,9 +17,7 @@ using namespace acorn;
 using namespace acorn::codegen;
 using namespace acorn::diagnostics;
 
-static llvm::LLVMContext context;
-
-TypeGenerator::TypeGenerator(Reporter *diagnostics) : m_diagnostics(diagnostics) {
+TypeGenerator::TypeGenerator(Reporter *diagnostics, llvm::LLVMContext &context) : m_diagnostics(diagnostics), m_context(context) {
 
 }
 
@@ -74,7 +72,7 @@ types::Type *TypeGenerator::get_type_parameter(types::Parameter *key) {
 }
 
 void TypeGenerator::visit_constructor(types::TypeType *type) {
-    llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
+    llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
 
     m_type_stack.push_back(llvm_type);
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
@@ -147,14 +145,14 @@ void TypeGenerator::visit(types::Parameter *type) {
 }
 
 void TypeGenerator::visit(types::Void *type) {
-    llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
+    llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
 
     m_type_stack.push_back(llvm_type);
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
 void TypeGenerator::visit(types::Boolean *type) {
-    llvm::Type *llvm_type = llvm::Type::getInt1Ty(context);
+    llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
 
     m_type_stack.push_back(llvm_type);
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
@@ -162,7 +160,7 @@ void TypeGenerator::visit(types::Boolean *type) {
 
 void TypeGenerator::visit(types::Integer *type) {
     const unsigned int size = type->size();
-    llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(context, size);
+    llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(m_context, size);
 
     m_type_stack.push_back(llvm_type);
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
@@ -170,7 +168,7 @@ void TypeGenerator::visit(types::Integer *type) {
 
 void TypeGenerator::visit(types::UnsignedInteger *type) {
     const unsigned int size = type->size();
-    llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(context, size);
+    llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(m_context, size);
 
     m_type_stack.push_back(llvm_type);
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
@@ -182,13 +180,13 @@ void TypeGenerator::visit(types::Float *type) {
 
     switch (size) {
         case 64:
-            llvm_type = llvm::Type::getDoubleTy(context);
+            llvm_type = llvm::Type::getDoubleTy(m_context);
             break;
         case 32:
-            llvm_type = llvm::Type::getFloatTy(context);
+            llvm_type = llvm::Type::getFloatTy(m_context);
             break;
         case 16:
-            llvm_type = llvm::Type::getHalfTy(context);
+            llvm_type = llvm::Type::getHalfTy(m_context);
             break;
         default:
             break;
@@ -232,7 +230,7 @@ void TypeGenerator::visit(types::Record *type) {
         llvm_initialisers.push_back(llvm_field_initialiser);
     }
 
-    auto struct_type = llvm::StructType::get(context, llvm_types);
+    auto struct_type = llvm::StructType::get(m_context, llvm_types);
     auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
 
     m_type_stack.push_back(struct_type);
@@ -287,7 +285,7 @@ void TypeGenerator::visit(types::Enum *type) {
     std::vector<llvm::Type *> llvm_types;
     std::vector<llvm::Constant *> llvm_initialisers;
 
-    auto i8 = llvm::IntegerType::getInt8Ty(context);
+    auto i8 = llvm::IntegerType::getInt8Ty(m_context);
 
     llvm_types.push_back(i8);
     llvm_initialisers.push_back(llvm::ConstantInt::get(i8, 0));
@@ -308,7 +306,7 @@ void TypeGenerator::visit(types::Enum *type) {
         llvm_initialisers.push_back(llvm_field_initialiser);
     }
 
-    auto struct_type = llvm::StructType::get(context, llvm_types);
+    auto struct_type = llvm::StructType::get(m_context, llvm_types);
     auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
 
     m_type_stack.push_back(struct_type);

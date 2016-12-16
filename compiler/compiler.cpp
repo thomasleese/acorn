@@ -64,16 +64,7 @@ bool Compiler::compile(std::string filename) {
 
     Lexer lexer(filename);
 
-    std::cout << "Tokens" << std::endl;
-    Token token;
-    while (lexer.next_token(token) && token.kind != Token::EndOfFile) {
-        std::cout << Token::as_string(token.kind) << std::endl;
-    }
-    std::cout << "END" << std::endl;
-
-    if (lexer.has_errors()) {
-        return false;
-    }
+    // lexer.debug();
 
     debug("Parsing...");
 
@@ -164,7 +155,7 @@ bool Compiler::compile(std::string filename) {
 
     auto data_layout = target_machine->createDataLayout();
 
-    auto generator = new codegen::ModuleGenerator(m_diagnostics, rootNamespace, &data_layout);
+    auto generator = new codegen::ModuleGenerator(m_diagnostics, rootNamespace, m_context, &data_layout);
     module->accept(generator);
 
     if (m_diagnostics->has_errors()) {

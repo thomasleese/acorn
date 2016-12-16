@@ -24,8 +24,8 @@ void BuiltinGenerator::generate(symboltable::Namespace *table) {
     initialise_boolean_variable(table, "Nothing", false);
     initialise_boolean_variable(table, "True", true);
     initialise_boolean_variable(table, "False", false);
-    initialise_boolean_variable(table, "Integer32", false);
-    initialise_boolean_variable(table, "Integer64", false);
+    initialise_boolean_variable(table, "Int32", false);
+    initialise_boolean_variable(table, "Int64", false);
     initialise_boolean_variable(table, "UnsafePointer", false);
 
     // not
@@ -72,7 +72,7 @@ void BuiltinGenerator::generate(symboltable::Namespace *table) {
     f = create_llvm_function(table, "to_integer", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateFPToSI(m_args[0], f->getReturnType()));
 
-    // to integer
+    // to float
     f = create_llvm_function(table, "to_float", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateSIToFP(m_args[0], f->getReturnType()));
 }
@@ -134,7 +134,7 @@ llvm::Function *BuiltinGenerator::create_llvm_function(symboltable::Namespace *t
 
     std::string mangled_name = codegen::mangle_method(name, methodType);
 
-    auto type_generator = new codegen::TypeGenerator(nullptr);
+    auto type_generator = new codegen::TypeGenerator(nullptr, m_module->getContext());
     methodType->accept(type_generator);
 
     llvm::FunctionType *type = static_cast<llvm::FunctionType *>(type_generator->take_type(nullptr));

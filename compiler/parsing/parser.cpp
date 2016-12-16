@@ -34,7 +34,9 @@ Parser::~Parser() {
 }
 
 SourceFile *Parser::parse(std::string name) {
-    SourceFile *module = new SourceFile(m_tokens.front(), name);
+    return_if_false(fill_token())
+
+    auto module = new SourceFile(m_tokens.front(), name);
 
     // read import statements, which must appear at the top of a source file
     while (is_token(Token::ImportKeyword)) {
@@ -68,12 +70,22 @@ SourceFile *Parser::parse(std::string name) {
 }
 
 void Parser::debug(std::string line) {
-    //std::cerr << line << std::endl;
+    std::cerr << line << std::endl;
 }
 
 bool Parser::next_token() {
+    bool found = false;
     Token token;
-    if (m_lexer.next_token(token)) {
+
+    // skip newline tokens
+    while (m_lexer.next_token(token)) {
+        if (token.kind != Token::Newline) {
+            found = true;
+            break;
+        }
+    }
+
+    if (found) {
         m_tokens.push_back(token);
         return true;
     } else {
@@ -81,18 +93,26 @@ bool Parser::next_token() {
     }
 }
 
-bool Parser::read_token(Token::Kind kind, Token &token) {
+bool Parser::fill_token() {
     if (m_tokens.empty()) {
         if (!next_token()) {
             return false;
         }
     }
 
+    return true;
+}
+
+bool Parser::read_token(Token::Kind kind, Token &token) {
+    if (!fill_token()) {
+        return false;
+    }
+
     auto next_token = m_tokens.front();
     m_tokens.pop_front();
 
     if (next_token.kind != kind) {
-        m_diagnostics->report(SyntaxError(token, kind));
+        m_diagnostics->report(SyntaxError(next_token, kind));
         return false;
     }
 
@@ -106,10 +126,8 @@ bool Parser::skip_token(Token::Kind kind) {
 }
 
 bool Parser::is_token(Token::Kind kind) {
-    if (m_tokens.empty()) {
-        if (!next_token()) {
-            return false;
-        }
+    if (!fill_token()) {
+        return false;
     }
 
     auto token = m_tokens.front();
@@ -117,6 +135,10 @@ bool Parser::is_token(Token::Kind kind) {
 }
 
 CodeBlock *Parser::readCodeBlock(bool in_switch) {
+    debug("Reading CodeBlock...");
+
+    return_if_false(fill_token())
+
     auto code = new CodeBlock(m_tokens.front());
 
     while (!is_token(Token::Deindent) && !(in_switch && (is_token(Token::CaseKeyword) || is_token(Token::DefaultKeyword)))) {
@@ -761,7 +783,7 @@ Parameter *Parser::readParameter() {
 
     parameter->name = readIdentifier(false);
 
-    return_if_false(skip_token(Token::AsKeyword));
+    return_if_false(skip_token(Token::Colon));
 
     parameter->typeNode = readIdentifier(true);
 
@@ -804,7 +826,10 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     skip_token(Token::OpenParenthesis);
 
     while (!is_token(Token::CloseParenthesis)) {
-        definition->parameters.push_back(readParameter());
+        auto p = readParameter();
+        return_if_null(p);
+
+        definition->parameters.push_back(p);
 
         if (is_token(Token::Comma)) {
             skip_token(Token::Comma);
@@ -813,15 +838,17 @@ FunctionDefinition *Parser::readFunctionDefinition() {
         }
     }
 
-    skip_token(Token::CloseParenthesis);
-
-    skip_token(Token::AsKeyword);
+    return_if_false(skip_token(Token::CloseParenthesis));
+    return_if_false(skip_token(Token::Arrow));
 
     definition->returnType = readIdentifier(true);
+    return_if_null(definition->returnType)
 
-    return_if_false(skip_token(Token::Newline));
+    return_if_false(skip_token(Token::Colon));
+    return_if_false(skip_token(Token::Indent));
 
     definition->code = readCodeBlock();
+    return_if_null(definition->code)
 
     debug("Ending FunctionDefinition!");
 
@@ -935,30 +962,29 @@ ast::EnumDefinition *Parser::readEnumDefinition() {
 Statement *Parser::readStatement() {
     debug("Reading Statement...");
 
-    Statement *statement;
+    Definition *def = nullptr;
 
     if (is_token(Token::LetKeyword)) {
-        auto definition = readVariableDefinition();
-        return_if_null(definition);
-        statement = new DefinitionStatement(definition);
+        def = readVariableDefinition();
     } else if (is_token(Token::DefKeyword)) {
-        statement = new DefinitionStatement(readFunctionDefinition());
+        def = readFunctionDefinition();
     } else if (is_token(Token::TypeKeyword)) {
-        statement = new DefinitionStatement(readTypeDefinition());
+        def = readTypeDefinition();
     } else if (is_token(Token::ProtocolKeyword)) {
-        statement = new DefinitionStatement(readProtocolDefinition());
+        def = readProtocolDefinition();
     } else if (is_token(Token::EnumKeyword)) {
-        statement = new DefinitionStatement(readEnumDefinition());
+        def = readEnumDefinition();
     } else {
         auto expression = readExpression(true);
         return_if_null(expression);
-
-        statement = new ExpressionStatement(expression);
+        return new ExpressionStatement(expression);
     }
 
-    return_if_false(skip_token(Token::Newline));
-
-    return statement;
+    if (def != nullptr) {
+        return new DefinitionStatement(def);
+    } else {
+        return nullptr;
+    }
 }
 
 ImportStatement *Parser::readImportStatement() {
