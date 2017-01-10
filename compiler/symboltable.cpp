@@ -107,17 +107,22 @@ bool Namespace::is_root() const {
     return m_parent == nullptr;
 }
 
-std::string Namespace::to_string() const {
+std::string Namespace::to_string(int indent) const {
     std::stringstream ss;
 
-    ss << "{";
+    std::string gap = "";
+    for (int i = 0; i < indent; i++) {
+        gap += " ";
+    }
+
+    ss << gap << "{\n";
 
     for (auto it = m_symbols.begin(); it != m_symbols.end(); it++) {
         auto symbol = it->second;
-        ss << symbol->to_string() << ", ";
+        ss << gap << " " << symbol->to_string(indent + 1) << "\n";
     }
 
-    ss << "}";
+    ss << gap << "}";
 
     return ss.str();
 }
@@ -150,16 +155,16 @@ bool Symbol::is_variable() const {
     return dynamic_cast<ast::VariableDefinition *>(this->node) != nullptr;
 }
 
-std::string Symbol::to_string() const {
+std::string Symbol::to_string(int indent) const {
     std::stringstream ss;
-    ss << this->name;
+    ss << this->name << " (" << this->node << ")";
 
     if (this->type) {
         ss << ": " << this->type->name();
     }
 
     if (this->nameSpace) {
-        ss << " " << this->nameSpace->to_string();
+        ss << " " << this->nameSpace->to_string(indent + 1);
     }
 
     return ss.str();
@@ -454,7 +459,7 @@ void Builder::visit(ast::FunctionDefinition *definition) {
     for (auto parameter : definition->name->parameters) {
         Symbol *sym = new Symbol(parameter->value);
         sym->type = new types::ParameterType();
-        m_scope.back()->insert(this, definition, sym);
+        m_scope.back()->insert(this, parameter, sym);
     }
 
     for (auto parameter : definition->parameters) {

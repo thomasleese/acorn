@@ -1,2 +1,4 @@
 def add(x: Int64, y: Int64) -> Int64:
-  return x + y
+    return x + y
+
+let x = add(1, 2)

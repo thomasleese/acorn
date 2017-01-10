@@ -198,7 +198,7 @@ void Inferrer::visit(ast::VariableDeclaration *node) {
 }
 
 void Inferrer::visit(ast::IntegerLiteral *expression) {
-    expression->type = instance_type(expression, "Integer");
+    expression->type = instance_type(expression, "Int64");
 }
 
 void Inferrer::visit(ast::FloatLiteral *expression) {

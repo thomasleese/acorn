@@ -87,12 +87,12 @@ bool Compiler::compile(std::string filename) {
 
     auto rootNamespace = symbol_table_builder.rootNamespace();
 
-    std::cout << rootNamespace->to_string() << std::endl;
-
     debug("Inferring types...");
 
     auto typeInferrer = new typing::Inferrer(m_diagnostics, rootNamespace);
     module->accept(typeInferrer);
+
+    std::cout << rootNamespace->to_string() << std::endl;
 
     auto printer = new PrettyPrinter();
     module->accept(printer);

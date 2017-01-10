@@ -50,7 +50,7 @@ namespace acorn {
             std::vector<Symbol *> symbols() const;
             bool is_root() const;
 
-            std::string to_string() const;
+            std::string to_string(int indent = 0) const;
 
             Namespace *clone() const;
 
@@ -73,7 +73,7 @@ namespace acorn {
             bool is_variable() const;
             bool is_type() const;
 
-            std::string to_string() const;
+            std::string to_string(int indent = 0) const;
 
             Symbol *clone() const;
         };

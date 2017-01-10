@@ -168,6 +168,9 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 
     m_irBuilder->restoreIP(old_insert_point);
 
+    symbol->value = function;
+    function_symbol->value = function;
+
     return function;
 }
 
@@ -227,9 +230,14 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
         return;
     }
 
-    // FIXME if it's a function, it needs pushing a function
-
-    push_value(symbol->value);
+    auto function_type = dynamic_cast<types::Function *>(symbol->type);
+    if (function_type) {
+        std::map<types::Method *, ast::FunctionDefinition *> defs;
+        // FIXME do something here
+        push_unit(Unit(identifier->value, defs));
+    } else {
+        push_value(symbol->value);
+    }
 }
 
 void ModuleGenerator::visit(ast::VariableDeclaration *node) {
@@ -425,11 +433,12 @@ void ModuleGenerator::visit(ast::Call *expression) {
     assert(method);
 
     std::string func_name = unit.function_name();
-    auto definition = unit.function_definition(method);
 
     std::string method_name = codegen::mangle_method(func_name, method);
 
     if (method->is_generic()) {
+        auto definition = unit.function_definition(method);
+
         std::map<types::ParameterType *, types::Type *> type_parameters = expression->inferred_type_parameters;
 
         method_name += "_";
@@ -477,10 +486,12 @@ void ModuleGenerator::visit(ast::Call *expression) {
         auto value = pop_value();
 
         if (method->is_parameter_inout(method->parameter_types()[i])) {
-            auto load = llvm::dyn_cast<llvm::LoadInst>(value);
+            /*auto load = llvm::dyn_cast<llvm::LoadInst>(value);
             assert(load);
 
-            value = load->getPointerOperand();
+            value = load->getPointerOperand();*/
+        } else {
+            value = m_irBuilder->CreateLoad(value);
         }
 
         arguments.push_back(value);
