@@ -22,7 +22,6 @@
 #include "../typing/types.h"
 #include "builtins.h"
 #include "types.h"
-#include "unit.h"
 
 #include "module.h"
 
@@ -36,8 +35,9 @@ std::string codegen::mangle_method(std::string name, types::Method *type) {
     return "_A_" + name + "_" + type->mangled_name();
 }
 
-ModuleGenerator::ModuleGenerator(Reporter *diagnostics, symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout) :
-        m_type_generator(new TypeGenerator(diagnostics, context)), m_context(context), m_diagnostics(diagnostics) {
+ModuleGenerator::ModuleGenerator(Reporter *diagnostics, symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout)
+        : m_context(context), m_type_generator(new TypeGenerator(diagnostics, context)), m_diagnostics(diagnostics)
+{
     m_scope.push_back(scope);
 
     m_irBuilder = new llvm::IRBuilder<>(context);
@@ -142,7 +142,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     if (definition->code->statements.empty()) {
         m_irBuilder->CreateRet(nothing);
     } else {
-        if (m_units.empty()) {
+        if (m_values.empty()) {
             m_irBuilder->CreateRet(nothing);
         } else {
             auto value = pop_value();
@@ -174,27 +174,18 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     return function;
 }
 
-void ModuleGenerator::push_unit(Unit unit) {
-    m_units.push_back(unit);
-}
-
-Unit ModuleGenerator::pop_unit() {
-    assert(!m_units.empty());
-    auto unit = m_units.back();
-    m_units.pop_back();
-    return unit;
-}
-
 void ModuleGenerator::push_value(llvm::Value *value) {
-    push_unit(Unit(value));
+    m_values.push_back(value);
 }
 
 llvm::Value *ModuleGenerator::pop_value() {
-    return pop_unit().llvm_value();
+    assert(!m_units.empty());
+    auto value = m_values.back();
+    m_values.pop_back();
+    return value;
 }
 
 llvm::BasicBlock *ModuleGenerator::create_basic_block(std::string name) const {
-
     auto parent = m_irBuilder->GetInsertBlock()->getParent();
     return llvm::BasicBlock::Create(m_module->getContext(), name, parent);
 }
@@ -223,21 +214,7 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
         return;
     }
 
-    auto tt = dynamic_cast<types::TypeType *>(symbol->type);
-    if (!tt && identifier->has_parameters()) {
-        m_diagnostics->report(InternalError(identifier, "should not have parameters"));
-        push_value(nullptr);
-        return;
-    }
-
-    auto function_type = dynamic_cast<types::Function *>(symbol->type);
-    if (function_type) {
-        std::map<types::Method *, ast::FunctionDefinition *> defs;
-        // FIXME do something here
-        push_unit(Unit(identifier->value, defs));
-    } else {
-        push_value(symbol->value);
-    }
+    push_value(symbol->value);
 }
 
 void ModuleGenerator::visit(ast::VariableDeclaration *node) {
@@ -420,8 +397,8 @@ void ModuleGenerator::visit(ast::TupleLiteral *expression) {
 
 void ModuleGenerator::visit(ast::Call *expression) {
     expression->operand->accept(this);
-    auto unit = pop_unit();
 
+    auto function = dynamic_cast<llvm::Function *>(pop_value());
     auto function_type = dynamic_cast<types::Function *>(expression->operand->type);
 
     std::vector<types::Type *> argument_types;
@@ -432,48 +409,8 @@ void ModuleGenerator::visit(ast::Call *expression) {
     auto method = function_type->find_method(expression, argument_types);
     assert(method);
 
-    std::string func_name = unit.function_name();
-
-    std::string method_name = codegen::mangle_method(func_name, method);
-
-    if (method->is_generic()) {
-        auto definition = unit.function_definition(method);
-
-        std::map<types::ParameterType *, types::Type *> type_parameters = expression->inferred_type_parameters;
-
-        method_name += "_";
-        for (auto entry : type_parameters) {
-            auto t = entry.second;
-            while (auto p = dynamic_cast<types::Parameter *>(t)) {
-                t = m_type_generator->get_type_parameter(p);
-                if (t == nullptr) {
-                    push_value(nullptr);
-                    return;
-                }
-            }
-            method_name += t->mangled_name();
-        }
-
-        if (m_module->getFunction(method_name) == nullptr) {
-            if (definition == nullptr) {
-                for (auto entry : type_parameters) {
-                    m_type_generator->push_type_parameter(entry.first, entry.second);
-                }
-
-                m_builtin_generator->generate_function(func_name, method, method_name);
-
-                for (auto entry : type_parameters) {
-                    m_type_generator->pop_type_parameter(entry.first);
-                }
-            } else {
-                generate_function(definition, type_parameters);
-            }
-        }
-    }
-
-    auto function = m_module->getFunction(method_name);
     if (function == nullptr) {
-        m_diagnostics->report(InternalError(expression, "No LLVM function was created for " + method_name + " (" + method->name() + ")!"));
+        m_diagnostics->report(InternalError(expression, "No LLVM function was available!"));
         push_value(nullptr);
         return;
     }
@@ -585,8 +522,6 @@ void ModuleGenerator::visit(ast::Assignment *expression) {
 }
 
 void ModuleGenerator::visit(ast::Selector *expression) {
-
-
     expression->operand->accept(this);
     auto instance = pop_value();
 
@@ -661,7 +596,7 @@ void ModuleGenerator::visit(ast::Selector *expression) {
             }
 
             // we don't pass any definitions as these are only required for generics
-            push_unit(Unit(function_name, std::map<types::Method *, ast::FunctionDefinition *>()));
+            push_value(m_module->getFunction(llvm_function_name));
         } else {
             auto enum_instance_type = dynamic_cast<types::Enum *>(expression->type);
             assert(enum_instance_type);

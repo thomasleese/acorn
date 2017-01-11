@@ -17,11 +17,14 @@ using namespace acorn;
 using namespace acorn::codegen;
 using namespace acorn::diagnostics;
 
-TypeGenerator::TypeGenerator(Reporter *diagnostics, llvm::LLVMContext &context) : m_diagnostics(diagnostics), m_context(context) {
+TypeGenerator::TypeGenerator(Reporter *diagnostics, llvm::LLVMContext &context)
+        : m_context(context), m_diagnostics(diagnostics)
+{
 
 }
 
-llvm::Type *TypeGenerator::take_type(ast::Node *node) {
+llvm::Type *TypeGenerator::take_type(ast::Node *node)
+{
     if (m_type_stack.size() >= 1) {
         llvm::Type *result = m_type_stack.back();
         m_type_stack.pop_back();

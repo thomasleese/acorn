@@ -56,9 +56,6 @@ namespace acorn {
             llvm::Function *generate_function(ast::FunctionDefinition *definition);
             llvm::Function *generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *>);
 
-            void push_unit(Unit unit);
-            Unit pop_unit();
-
             void push_value(llvm::Value *value);
             llvm::Value *pop_value();
 
@@ -109,7 +106,7 @@ namespace acorn {
             llvm::MDBuilder *m_mdBuilder;
             llvm::DataLayout *m_data_layout;
 
-            std::vector<Unit> m_units;
+            std::vector<llvm::Value *> m_values;
 
             BuiltinGenerator *m_builtin_generator;
             TypeGenerator *m_type_generator;

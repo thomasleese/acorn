@@ -361,7 +361,7 @@ TypeType *replace_parameters(TypeType *type, std::map<ParameterType *, TypeType 
     }
 
     auto parameters = type->parameters();
-    for (int i = 0; i < parameters.size(); i++) {
+    for (size_t i = 0; i < parameters.size(); i++) {
         auto tt = dynamic_cast<TypeType *>(parameters[i]);
         assert(tt);
         parameters[i] = replace_parameters(tt, mapping);
@@ -373,7 +373,7 @@ TypeType *replace_parameters(TypeType *type, std::map<ParameterType *, TypeType 
 Type *RecordType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
     if (m_parameters.size() == m_input_parameters.size()) {
         std::map<ParameterType *, TypeType *> parameter_mapping;
-        for (int i = 0; i < m_input_parameters.size(); i++) {
+        for (size_t i = 0; i < m_input_parameters.size(); i++) {
             auto type_type = dynamic_cast<TypeType *>(m_parameters[i]);
             assert(type_type);
             parameter_mapping[m_input_parameters[i]] = type_type;
@@ -381,7 +381,7 @@ Type *RecordType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
 
         std::vector<Type *> field_types;
 
-        for (int i = 0; i < m_field_types.size(); i++) {
+        for (size_t i = 0; i < m_field_types.size(); i++) {
             auto type = replace_parameters(m_field_types[i], parameter_mapping);
 
             auto result = type->create(diagnostics, node);
@@ -527,7 +527,7 @@ Type *AliasType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
         }
 
         std::map<ParameterType *, TypeType *> parameter_mapping;
-        for (int i = 0; i < m_input_parameters.size(); i++) {
+        for (size_t i = 0; i < m_input_parameters.size(); i++) {
             auto type_type = dynamic_cast<TypeType *>(m_parameters[i]);
             assert(type_type);
             parameter_mapping[m_input_parameters[i]] = type_type;
@@ -883,7 +883,7 @@ bool Record::has_field(std::string name) {
 }
 
 long Record::get_field_index(std::string name) {
-    for (long i = 0; i < m_field_names.size(); i++) {
+    for (size_t i = 0; i < m_field_names.size(); i++) {
         if (m_field_names[i] == name) {
             return i;
         }
@@ -943,7 +943,7 @@ bool Record::is_compatible(const Type *other) const {
     auto other_record = dynamic_cast<const Record *>(other);
     if (other_record) {
         if (m_parameters.size() == other_record->m_parameters.size()) {
-            for (int i = 0; i < m_parameters.size(); i++) {
+            for (size_t i = 0; i < m_parameters.size(); i++) {
                 if (!m_parameters[i]->is_compatible(other_record->m_parameters[i])) {
                     return false;
                 }
@@ -967,7 +967,7 @@ void Record::accept(Visitor *visitor) {
 }
 
 Tuple::Tuple(std::vector<Type *> field_types) : Record(std::vector<std::string>(), field_types) {
-    for (int i = 0; i < field_types.size(); i++) {
+    for (size_t i = 0; i < field_types.size(); i++) {
         std::stringstream ss;
         ss << i;
         m_field_names.push_back(ss.str());
@@ -1041,7 +1041,7 @@ bool Method::is_generic() const {
 
 std::vector<Type *> Method::parameter_types() const {
     std::vector<Type *> parameters;
-    for (int i = 1; i < m_parameters.size(); i++) {
+    for (size_t i = 1; i < m_parameters.size(); i++) {
         parameters.push_back(m_parameters[i]);
     }
     return parameters;
@@ -1243,7 +1243,7 @@ bool Enum::is_compatible(const Type *other) const {
     auto other_enum = dynamic_cast<const Enum *>(other);
 
     if (element_types().size() == other_enum->element_types().size()) {
-        for (int i = 0; i < element_types().size(); i++) {
+        for (size_t i = 0; i < element_types().size(); i++) {
             if (!element_types()[i]->is_compatible(other_enum->element_types()[i])) {
                 return false;
             }

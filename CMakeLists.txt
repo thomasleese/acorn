@@ -14,8 +14,7 @@ set(SOURCE_FILES compiler/ast/nodes.cpp
                  compiler/codegen/builtins.cpp
                  compiler/codegen/types.cpp
                  compiler/codegen/module.cpp
-                 compiler/codegen/unit.cpp
-                 compiler/parsing/lexer.cpp
+        compiler/parsing/lexer.cpp
                  compiler/parsing/parser.cpp
                  compiler/parsing/token.cpp
                  compiler/typing/checker.cpp
