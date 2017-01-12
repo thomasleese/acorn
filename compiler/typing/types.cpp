@@ -7,7 +7,7 @@
 #include <sstream>
 #include <iostream>
 
-#include "../ast/nodes.h"
+#include "../ast.h"
 #include "../diagnostics.h"
 
 #include "types.h"

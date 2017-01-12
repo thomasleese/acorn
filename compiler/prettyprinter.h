@@ -8,7 +8,7 @@
 #include <sstream>
 #include <string>
 
-#include "ast/visitor.h"
+#include "ast.h"
 
 namespace acorn {
 

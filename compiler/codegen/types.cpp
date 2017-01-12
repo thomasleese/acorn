@@ -11,7 +11,7 @@
 #include "../diagnostics.h"
 
 #include "types.h"
-#include "../ast/nodes.h"
+#include "../ast.h"
 
 using namespace acorn;
 using namespace acorn::codegen;

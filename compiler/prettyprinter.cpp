@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#include "ast/nodes.h"
+#include "ast.h"
 #include "typing/types.h"
 
 #include "prettyprinter.h"

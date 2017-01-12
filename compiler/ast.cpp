@@ -1,12 +1,10 @@
 //
-// Created by Thomas Leese on 07/05/2016.
+// Created by Thomas Leese on 12/01/2017.
 //
 
 #include <sstream>
 
-#include "visitor.h"
-
-#include "nodes.h"
+#include "ast.h"
 
 using namespace acorn::ast;
 
@@ -437,4 +435,9 @@ SourceFile::SourceFile(Token token, std::string name) : Node(token) {
 
 void SourceFile::accept(Visitor *visitor) {
     visitor->visit(this);
+}
+
+Visitor::~Visitor()
+{
+
 }

@@ -7,7 +7,7 @@
 #include <set>
 #include <sstream>
 
-#include "../ast/nodes.h"
+#include "../ast.h"
 #include "../diagnostics.h"
 #include "../symboltable.h"
 #include "types.h"

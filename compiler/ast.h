@@ -1,16 +1,16 @@
 //
-// Created by Thomas Leese on 07/05/2016.
+// Created by Thomas Leese on 12/01/2017.
 //
 
-#ifndef ACORN_AST_NODES_H
-#define ACORN_AST_NODES_H
+#ifndef ACORN_AST_H
+#define ACORN_AST_H
 
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 
-#include "../parsing/token.h"
+#include "parsing/token.h"
 
 namespace acorn {
 
@@ -413,8 +413,57 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
+        // Visitor
+        class Visitor {
+        public:
+            virtual ~Visitor();
+
+            // misc
+            virtual void visit(CodeBlock *block) = 0;
+
+            // expressions
+            virtual void visit(Identifier *identifier) = 0;
+            virtual void visit(VariableDeclaration *node) = 0;
+            virtual void visit(IntegerLiteral *expression) = 0;
+            virtual void visit(FloatLiteral *expression) = 0;
+            virtual void visit(ImaginaryLiteral *expression) = 0;
+            virtual void visit(StringLiteral *expression) = 0;
+            virtual void visit(SequenceLiteral *expression) = 0;
+            virtual void visit(MappingLiteral *expression) = 0;
+            virtual void visit(RecordLiteral *expression) = 0;
+            virtual void visit(TupleLiteral *expression) = 0;
+            virtual void visit(Call *expression) = 0;
+            virtual void visit(CCall *expression) = 0;
+            virtual void visit(Cast *expression) = 0;
+            virtual void visit(Assignment *expression) = 0;
+            virtual void visit(Selector *expression) = 0;
+            virtual void visit(While *expression) = 0;
+            virtual void visit(If *expression) = 0;
+            virtual void visit(Return *expression) = 0;
+            virtual void visit(Spawn *expression) = 0;
+            virtual void visit(Switch *expression) = 0;
+
+            // misc
+            virtual void visit(Parameter *parameter) = 0;
+
+            // definitions
+            virtual void visit(VariableDefinition *definition) = 0;
+            virtual void visit(FunctionDefinition *definition) = 0;
+            virtual void visit(TypeDefinition *definition) = 0;
+            virtual void visit(ProtocolDefinition *definition) = 0;
+            virtual void visit(EnumDefinition *definition) = 0;
+
+            // statements
+            virtual void visit(DefinitionStatement *statement) = 0;
+            virtual void visit(ExpressionStatement *statement) = 0;
+            virtual void visit(ImportStatement *statement) = 0;
+
+            // module
+            virtual void visit(SourceFile *module) = 0;
+        };
+
     }
 
 }
 
-#endif // ACORN_AST_NODES_H
+#endif //ACORN_AST_H

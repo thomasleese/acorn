@@ -11,7 +11,7 @@
 #include <llvm/IR/MDBuilder.h>
 #include <llvm/IR/Module.h>
 
-#include "../ast/visitor.h"
+#include "../ast.h"
 
 namespace acorn {
 

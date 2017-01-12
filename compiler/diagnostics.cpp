@@ -5,7 +5,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "ast/nodes.h"
+#include "ast.h"
 #include "parsing/lexer.h"
 #include "typing/types.h"
 

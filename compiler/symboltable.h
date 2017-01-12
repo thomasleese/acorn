@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include "ast/visitor.h"
+#include "ast.h"
 #include "diagnostics.h"
 
 namespace llvm {

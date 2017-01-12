@@ -9,12 +9,11 @@ execute_process(COMMAND /usr/local/Cellar/llvm/3.9.0/bin/llvm-config --libs OUTP
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS} -std=c++11 -Wall -pedantic")
 set(CMAKE_EXE_LINKER_FLAGS "${LLVM_LD_FLAGS} -lcurses -lz -fexceptions")
 
-set(SOURCE_FILES compiler/ast/nodes.cpp
-                 compiler/ast/visitor.cpp
+set(SOURCE_FILES compiler/ast.cpp
                  compiler/codegen/builtins.cpp
                  compiler/codegen/types.cpp
                  compiler/codegen/module.cpp
-        compiler/parsing/lexer.cpp
+                 compiler/parsing/lexer.cpp
                  compiler/parsing/parser.cpp
                  compiler/parsing/token.cpp
                  compiler/typing/checker.cpp

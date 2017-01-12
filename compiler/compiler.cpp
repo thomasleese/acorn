@@ -18,7 +18,7 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
 
-#include "ast/nodes.h"
+#include "ast.h"
 #include "codegen/module.h"
 #include "parsing/lexer.h"
 #include "parsing/parser.h"
