@@ -35,8 +35,8 @@ std::string codegen::mangle_method(std::string name, types::Method *type) {
     return "_A_" + name + "_" + type->mangled_name();
 }
 
-ModuleGenerator::ModuleGenerator(Reporter *diagnostics, symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout)
-        : m_context(context), m_type_generator(new TypeGenerator(diagnostics, context)), m_diagnostics(diagnostics)
+ModuleGenerator::ModuleGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout)
+        : m_context(context), m_type_generator(new TypeGenerator(this, context))
 {
     m_scope.push_back(scope);
 
@@ -71,9 +71,9 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *> type_parameters) {
     auto &context = m_module->getContext();
 
-    auto function_symbol = m_scope.back()->lookup(m_diagnostics, definition->name);
+    auto function_symbol = m_scope.back()->lookup(this, definition->name);
     auto method = static_cast<types::Method *>(definition->type);
-    auto symbol = function_symbol->nameSpace->lookup_by_node(m_diagnostics, definition);
+    auto symbol = function_symbol->nameSpace->lookup_by_node(this, definition);
 
     std::string llvm_function_name = codegen::mangle_method(function_symbol->name, method);
 
@@ -111,7 +111,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     m_irBuilder->SetInsertPoint(basicBlock);
 
     for (ast::Identifier *param : definition->name->parameters) {
-        auto s = m_scope.back()->lookup(m_diagnostics, definition, param->value);
+        auto s = m_scope.back()->lookup(this, definition, param->value);
         auto alloca = m_irBuilder->CreateAlloca(m_irBuilder->getInt1Ty(), 0, param->value);
         m_irBuilder->CreateStore(m_irBuilder->getInt1(false), alloca);
         s->value = alloca;
@@ -130,7 +130,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
             value = alloca;
         }
 
-        auto arg_symbol = m_scope.back()->lookup(m_diagnostics, definition, arg_name);
+        auto arg_symbol = m_scope.back()->lookup(this, definition, arg_name);
         arg_symbol->value = value;
 
         i++;
@@ -157,7 +157,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
         function->dump();
-        m_diagnostics->report(InternalError(definition, stream.str()));
+        report(InternalError(definition, stream.str()));
     }
 
     m_scope.pop_back();
@@ -202,14 +202,14 @@ void ModuleGenerator::visit(ast::CodeBlock *block) {
 }
 
 void ModuleGenerator::visit(ast::Identifier *identifier) {
-    auto symbol = m_scope.back()->lookup(m_diagnostics, identifier);
+    auto symbol = m_scope.back()->lookup(this, identifier);
     if (symbol == nullptr) {
         push_value(nullptr);
         return;
     }
 
     if (!symbol->value) {
-        m_diagnostics->report(InternalError(identifier, "should not be nullptr"));
+        report(InternalError(identifier, "should not be nullptr"));
         push_value(nullptr);
         return;
     }
@@ -218,7 +218,7 @@ void ModuleGenerator::visit(ast::Identifier *identifier) {
 }
 
 void ModuleGenerator::visit(ast::VariableDeclaration *node) {
-    auto symbol = m_scope.back()->lookup(m_diagnostics, node->name());
+    auto symbol = m_scope.back()->lookup(this, node->name());
 
     auto llvm_type = generate_type(node);
     return_if_null(llvm_type);
@@ -276,12 +276,12 @@ void ModuleGenerator::visit(ast::FloatLiteral *expression) {
 }
 
 void ModuleGenerator::visit(ast::ImaginaryLiteral *imaginary) {
-    m_diagnostics->report(InternalError(imaginary, "N/A"));
+    report(InternalError(imaginary, "N/A"));
     push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::StringLiteral *expression) {
-    m_diagnostics->report(InternalError(expression, "N/A"));
+    report(InternalError(expression, "N/A"));
     push_value(nullptr);
 }
 
@@ -332,7 +332,7 @@ void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
 }
 
 void ModuleGenerator::visit(ast::MappingLiteral *mapping) {
-    m_diagnostics->report(InternalError(mapping, "N/A"));
+    report(InternalError(mapping, "N/A"));
     push_value(nullptr);
 }
 
@@ -410,7 +410,7 @@ void ModuleGenerator::visit(ast::Call *expression) {
     assert(method);
 
     if (function == nullptr) {
-        m_diagnostics->report(InternalError(expression, "No LLVM function was available!"));
+        report(InternalError(expression, "No LLVM function was available!"));
         push_value(nullptr);
         return;
     }
@@ -714,7 +714,7 @@ void ModuleGenerator::visit(ast::Return *expression) {
 }
 
 void ModuleGenerator::visit(ast::Spawn *expression) {
-    m_diagnostics->report(InternalError(expression, "N/A"));
+    report(InternalError(expression, "N/A"));
     push_value(nullptr);
 }
 
@@ -740,12 +740,12 @@ void ModuleGenerator::visit(ast::Switch *expression) {
     auto exit_block = create_basic_block("switch_exit");
     m_irBuilder->SetInsertPoint(entry_block);*/
 
-    m_diagnostics->report(InternalError(expression, "N/A"));
+    report(InternalError(expression, "N/A"));
     push_value(nullptr);
 }
 
 void ModuleGenerator::visit(ast::Parameter *parameter) {
-    m_diagnostics->report(InternalError(parameter, "N/A"));
+    report(InternalError(parameter, "N/A"));
 }
 
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
@@ -762,8 +762,8 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
 
 void ModuleGenerator::visit(ast::TypeDefinition *definition) {
     if (definition->alias) {
-        auto new_symbol = m_scope.back()->lookup(m_diagnostics, definition->name);
-        auto old_symbol = m_scope.back()->lookup(m_diagnostics, definition->alias);
+        auto new_symbol = m_scope.back()->lookup(this, definition->name);
+        auto old_symbol = m_scope.back()->lookup(this, definition->alias);
         new_symbol->value = old_symbol->value;
     }
 
@@ -775,7 +775,7 @@ void ModuleGenerator::visit(ast::ProtocolDefinition *definition) {
 }
 
 void ModuleGenerator::visit(ast::EnumDefinition *definition) {
-    auto symbol = m_scope.back()->lookup(m_diagnostics, definition->name);
+    auto symbol = m_scope.back()->lookup(this, definition->name);
     symbol->value = new llvm::GlobalVariable(*m_module,
                                              m_irBuilder->getInt1Ty(), false,
                                              llvm::GlobalValue::InternalLinkage,
@@ -794,7 +794,7 @@ void ModuleGenerator::visit(ast::ExpressionStatement *statement) {
 }
 
 void ModuleGenerator::visit(ast::ImportStatement *statement) {
-    m_diagnostics->report(InternalError(statement, "N/A"));
+    report(InternalError(statement, "N/A"));
 }
 
 void ModuleGenerator::visit(ast::SourceFile *module) {
@@ -826,6 +826,6 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyModule(*m_module, &stream)) {
         m_module->dump();
-        m_diagnostics->report(InternalError(module, stream.str()));
+        report(InternalError(module, stream.str()));
     }
 }

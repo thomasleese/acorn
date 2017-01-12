@@ -21,9 +21,10 @@ using namespace acorn::typing;
 #define return_if_null(thing) if (thing == nullptr) return;
 #define return_if_null_type(node) return_if_null(node->type)
 
-Checker::Checker(diagnostics::Reporter *diagnostics, symboltable::Namespace *rootNamespace) {
-    m_diagnostics = diagnostics;
-    m_namespace = rootNamespace;
+Checker::Checker(symboltable::Namespace *root_namespace)
+        : m_namespace(root_namespace)
+{
+
 }
 
 Checker::~Checker() {
@@ -36,13 +37,13 @@ void Checker::check_types(ast::Node *lhs, ast::Node *rhs) {
 
     bool compatible = lhs->type->is_compatible(rhs->type);
     if (!compatible) {
-        m_diagnostics->report(TypeMismatchError(rhs, lhs));
+        report(TypeMismatchError(rhs, lhs));
     }
 }
 
 void Checker::check_not_null(ast::Node *node) {
     if (!node->type) {
-        m_diagnostics->report(InternalError(node, "No type given for: " + Token::as_string(node->token.kind)));
+        report(InternalError(node, "No type given for: " + Token::as_string(node->token.kind)));
     }
 }
 
@@ -229,11 +230,11 @@ void Checker::visit(ast::VariableDefinition *definition) {
 void Checker::visit(ast::FunctionDefinition *definition) {
     check_not_null(definition);
 
-    auto functionSymbol = m_namespace->lookup(m_diagnostics, definition->name);
+    auto functionSymbol = m_namespace->lookup(this, definition->name);
 
     types::Method *method = static_cast<types::Method *>(definition->type);
 
-    auto symbol = functionSymbol->nameSpace->lookup(m_diagnostics, definition, method->mangled_name());
+    auto symbol = functionSymbol->nameSpace->lookup(this, definition, method->mangled_name());
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -260,7 +261,7 @@ void Checker::visit(ast::TypeDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     //definition->name->accept(this);
 
-    auto symbol = m_namespace->lookup(m_diagnostics, definition->name);
+    auto symbol = m_namespace->lookup(this, definition->name);
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;

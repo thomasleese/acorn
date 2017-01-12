@@ -27,10 +27,10 @@ namespace acorn {
 
     namespace typing {
 
-        class Checker : public ast::Visitor {
+        class Checker : public ast::Visitor, public diagnostics::Reporter {
 
         public:
-            Checker(diagnostics::Reporter *diagnostics, symboltable::Namespace *rootNamespace);
+            explicit Checker(symboltable::Namespace *root_namespace);
             ~Checker();
 
         private:
@@ -73,7 +73,6 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         private:
-            diagnostics::Reporter *m_diagnostics;
             symboltable::Namespace *m_namespace;
 
         };

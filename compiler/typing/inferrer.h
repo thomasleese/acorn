@@ -31,11 +31,10 @@ namespace acorn {
 
     namespace typing {
 
-        class Inferrer : public ast::Visitor {
+        class Inferrer : public ast::Visitor, public diagnostics::Reporter {
 
         public:
-            Inferrer(diagnostics::Reporter *diagnostics,
-                     symboltable::Namespace *root_namespace);
+            explicit Inferrer(symboltable::Namespace *root_namespace);
             ~Inferrer();
 
         private:
@@ -91,7 +90,6 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         private:
-            diagnostics::Reporter *m_diagnostics;
             symboltable::Namespace *m_namespace;
             std::vector<ast::FunctionDefinition *> m_functionStack;
             bool m_in_if;

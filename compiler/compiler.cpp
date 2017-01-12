@@ -34,7 +34,7 @@ using namespace acorn;
 using namespace acorn::compiler;
 using namespace acorn::diagnostics;
 
-Compiler::Compiler() : m_diagnostics(new Reporter()) {
+Compiler::Compiler() {
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -68,10 +68,10 @@ bool Compiler::compile(std::string filename) {
 
     debug("Parsing...");
 
-    auto parser = new Parser(m_diagnostics, lexer);
-    auto module = parser->parse(filename);
+    Parser parser(lexer);
+    auto module = parser.parse(filename);
 
-    if (m_diagnostics->has_errors()) {
+    if (lexer.has_errors() || parser.has_errors()) {
         return false;
     }
 
@@ -89,32 +89,27 @@ bool Compiler::compile(std::string filename) {
 
     debug("Inferring types...");
 
-    auto typeInferrer = new typing::Inferrer(m_diagnostics, rootNamespace);
-    module->accept(typeInferrer);
+    typing::Inferrer inferrer(rootNamespace);
+    module->accept(&inferrer);
+
+    if (inferrer.has_errors()) {
+        return false;
+    }
 
     std::cout << rootNamespace->to_string() << std::endl;
 
-    auto printer = new PrettyPrinter();
-    module->accept(printer);
-    printer->print();
-    delete printer;
-
-    if (m_diagnostics->has_errors()) {
-        return false;
-    }
-
-    delete typeInferrer;
+    PrettyPrinter pp;
+    module->accept(&pp);
+    pp.print();
 
     debug("Checking types...");
 
-    auto typeChecker = new typing::Checker(m_diagnostics, rootNamespace);
-    module->accept(typeChecker);
+    typing::Checker type_checker(rootNamespace);
+    module->accept(&type_checker);
 
-    if (m_diagnostics->has_errors()) {
+    if (type_checker.has_errors()) {
         return false;
     }
-
-    delete typeChecker;
 
     debug("Generating code...");
 
@@ -157,15 +152,14 @@ bool Compiler::compile(std::string filename) {
 
     auto data_layout = target_machine->createDataLayout();
 
-    auto generator = new codegen::ModuleGenerator(m_diagnostics, rootNamespace, m_context, &data_layout);
-    module->accept(generator);
+    codegen::ModuleGenerator generator(rootNamespace, m_context, &data_layout);
+    module->accept(&generator);
 
-    if (m_diagnostics->has_errors()) {
+    if (generator.has_errors()) {
         return false;
     }
 
-    llvm::Module *llvmModule = generator->module();
-    delete generator;
+    llvm::Module *llvmModule = generator.module();
 
     delete module;
 

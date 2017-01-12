@@ -11,13 +11,7 @@
 
 namespace acorn {
 
-    namespace diagnostics {
-        class Reporter;
-    }
-
     namespace compiler {
-
-        class Pass;
 
         class Compiler {
 
@@ -30,7 +24,6 @@ namespace acorn {
 
         private:
             llvm::LLVMContext m_context;
-            diagnostics::Reporter *m_diagnostics;
 
         };
     }

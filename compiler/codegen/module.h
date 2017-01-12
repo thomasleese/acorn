@@ -12,6 +12,7 @@
 #include <llvm/IR/Module.h>
 
 #include "../ast.h"
+#include "../diagnostics.h"
 
 namespace acorn {
 
@@ -42,10 +43,10 @@ namespace acorn {
 
         std::string mangle_method(std::string name, types::Method *type);
 
-        class ModuleGenerator : public ast::Visitor {
+        class ModuleGenerator : public ast::Visitor, public diagnostics::Reporter {
 
         public:
-            ModuleGenerator(diagnostics::Reporter *diagnostics, symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
+            ModuleGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
             ~ModuleGenerator();
 
             llvm::Module *module() const;
@@ -110,8 +111,6 @@ namespace acorn {
 
             BuiltinGenerator *m_builtin_generator;
             TypeGenerator *m_type_generator;
-
-            diagnostics::Reporter *m_diagnostics;
         };
 
     }

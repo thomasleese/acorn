@@ -21,14 +21,10 @@ using namespace acorn::typing;
 #define return_if_null(thing) if (thing == nullptr) return;
 #define return_if_null_type(node) return_if_null(node->type)
 
-Inferrer::Inferrer(Reporter *diagnostics,
-                   symboltable::Namespace *root_namespace) :
-        m_diagnostics(diagnostics),
-        m_namespace(root_namespace),
-        m_in_if(false),
-        m_as_type(false)
+Inferrer::Inferrer(symboltable::Namespace *root_namespace)
+        : m_namespace(root_namespace), m_in_if(false), m_as_type(false)
 {
-    // intentionally empty
+
 }
 
 Inferrer::~Inferrer() {
@@ -36,12 +32,12 @@ Inferrer::~Inferrer() {
 }
 
 types::TypeType *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
-    auto symbol = m_namespace->lookup(m_diagnostics, node, name);
+    auto symbol = m_namespace->lookup(this, node, name);
     if (symbol == nullptr) {
         return nullptr;
     }
 
-    types::TypeType *typeConstructor = dynamic_cast<types::TypeType *>(symbol->type);
+    auto typeConstructor = dynamic_cast<types::TypeType *>(symbol->type);
     if (typeConstructor) {
         return typeConstructor;
     } else {
@@ -61,7 +57,7 @@ types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vec
     if (typeConstructor != nullptr) {
         return typeConstructor->with_parameters(parameterTypes);
     } else {
-        m_diagnostics->report(InvalidTypeConstructor(node));
+        report(InvalidTypeConstructor(node));
         return nullptr;
     }
 }
@@ -80,7 +76,7 @@ types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vec
         return nullptr;
     }
 
-    return type_constructor->create(m_diagnostics, node);
+    return type_constructor->create(this, node);
 }
 
 types::Type *Inferrer::instance_type(ast::Node *node, std::string name) {
@@ -100,7 +96,7 @@ bool Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Ty
         if (dt) {
             auto it = call->inferred_type_parameters.find(dt->type());
             if (it != call->inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
-                m_diagnostics->report(TypeMismatchError(call, argument_types[i], it->second));
+                report(TypeMismatchError(call, argument_types[i], it->second));
                 return false;
             } else {
                 call->inferred_type_parameters[dt->type()] = argument_types[i];
@@ -113,10 +109,10 @@ bool Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Ty
 
                 auto it = call->inferred_type_parameters.find(dt2);
                 if (it != call->inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
-                    m_diagnostics->report(TypeMismatchError(call, argument_types[i], it->second));
+                    report(TypeMismatchError(call, argument_types[i], it->second));
                     return false;
                 } else {
-                    call->inferred_type_parameters[dt2] = arg->create(m_diagnostics, call);
+                    call->inferred_type_parameters[dt2] = arg->create(this, call);
                 }
             } else {
                 if (!infer_call_type_parameters(call, t->parameters(), argument_types[i]->parameters())) {
@@ -167,7 +163,7 @@ void Inferrer::visit(ast::CodeBlock *block) {
 }
 
 void Inferrer::visit(ast::Identifier *expression) {
-    auto symbol = m_namespace->lookup(m_diagnostics, expression);
+    auto symbol = m_namespace->lookup(this, expression);
     if (symbol == nullptr) {
         return;
     }
@@ -185,7 +181,7 @@ void Inferrer::visit(ast::Identifier *expression) {
 void Inferrer::visit(ast::VariableDeclaration *node) {
     node->name()->accept(this);
 
-    auto symbol = m_namespace->lookup(m_diagnostics, node->name());
+    auto symbol = m_namespace->lookup(this, node->name());
 
     if (node->has_given_type()) {
         m_as_type = true;
@@ -237,7 +233,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
         std::vector<types::Type *> p;
         p.push_back(types[0]);
         auto array_type = find_type(sequence, "Array")->with_parameters(p);
-        sequence->type = array_type->create(m_diagnostics, sequence);
+        sequence->type = array_type->create(this, sequence);
     } else {
         // FIXME show error
         sequence->type = nullptr;
@@ -245,7 +241,7 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
 }
 
 void Inferrer::visit(ast::MappingLiteral *mapping) {
-    m_diagnostics->report(TypeInferenceError(mapping));
+    report(TypeInferenceError(mapping));
 }
 
 void Inferrer::visit(ast::RecordLiteral *expression) {
@@ -288,7 +284,7 @@ void Inferrer::visit(ast::Call *expression) {
     types::Function *function = dynamic_cast<types::Function *>(expression->operand->type);
     if (function == nullptr) {
         expression->type = new types::Function();
-        m_diagnostics->report(TypeMismatchError(expression->operand, expression));
+        report(TypeMismatchError(expression->operand, expression));
         delete expression->type;
         expression->type = nullptr;
         // FIXME make the construct accept a type directly
@@ -305,12 +301,12 @@ void Inferrer::visit(ast::Call *expression) {
             }
         }
 
-        m_diagnostics->report(UndefinedError(expression, "Method with " + ss.str() + " types"));
+        report(UndefinedError(expression, "Method with " + ss.str() + " types"));
         return;
     }
 
     if (!infer_call_type_parameters(expression, method->parameter_types(), argument_types)) {
-        m_diagnostics->report(InternalError(expression, "Could not infer type parameters."));
+        report(InternalError(expression, "Could not infer type parameters."));
         return;
     }
 
@@ -368,7 +364,7 @@ void Inferrer::visit(ast::Assignment *expression) {
     }
 
     if (!holder->type->is_compatible(holdee->type)) {
-        m_diagnostics->report(TypeMismatchError(holdee, holder));
+        report(TypeMismatchError(holdee, holder));
     } else {
         expression->type = expression->lhs->type;
     }
@@ -380,13 +376,13 @@ void Inferrer::visit(ast::Selector *expression) {
 
     auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type);
     if (selectable == nullptr) {
-        m_diagnostics->report(TypeMismatchError(expression->operand, expression));
+        report(TypeMismatchError(expression->operand, expression));
         return;
     }
 
     auto field_type = selectable->child_type(expression->name->value);
     if (field_type == nullptr) {
-        m_diagnostics->report(UndefinedError(expression->name, expression->name->value));
+        report(UndefinedError(expression->name, expression->name->value));
         return;
     }
 
@@ -423,11 +419,11 @@ void Inferrer::visit(ast::Return *expression) {
         return_if_null(method);
 
         if (!method->return_type()->is_compatible(expression->expression->type)) {
-            m_diagnostics->report(TypeMismatchError(expression->expression, def->returnType));
+            report(TypeMismatchError(expression->expression, def->returnType));
             return;
         }
     } else {
-        m_diagnostics->report(TypeMismatchError(expression, nullptr));
+        report(TypeMismatchError(expression, nullptr));
         return;
     }
 
@@ -444,7 +440,7 @@ void Inferrer::visit(ast::Switch *expression) {
 
     auto enum_type = dynamic_cast<types::Enum *>(expression->expression()->type);
     if (enum_type == nullptr) {
-        m_diagnostics->report(TypeMismatchError(expression->expression(), expression));
+        report(TypeMismatchError(expression->expression(), expression));
         return;
     }
 
@@ -470,7 +466,7 @@ void Inferrer::visit(ast::Switch *expression) {
 }
 
 void Inferrer::visit(ast::Parameter *parameter) {
-    auto symbol = m_namespace->lookup(m_diagnostics, parameter,
+    auto symbol = m_namespace->lookup(this, parameter,
                                       parameter->name->value);
 
     if (symbol == nullptr) {
@@ -486,7 +482,7 @@ void Inferrer::visit(ast::Parameter *parameter) {
 }
 
 void Inferrer::visit(ast::VariableDefinition *definition) {
-    auto symbol = m_namespace->lookup(m_diagnostics, definition,
+    auto symbol = m_namespace->lookup(this, definition,
                                       definition->name->value);
 
     if (symbol == nullptr) {
@@ -500,10 +496,10 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
-    auto functionSymbol = m_namespace->lookup(m_diagnostics, definition->name);
+    auto functionSymbol = m_namespace->lookup(this, definition->name);
     auto function = static_cast<types::Function *>(functionSymbol->type);
 
-    auto symbol = functionSymbol->nameSpace->lookup_by_node(m_diagnostics,
+    auto symbol = functionSymbol->nameSpace->lookup_by_node(this,
                                                             definition);
 
     symboltable::Namespace *oldNamespace = m_namespace;
@@ -547,7 +543,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     method->set_is_generic(!definition->name->parameters.empty());
     function->add_method(method);
 
-    functionSymbol->nameSpace->rename(m_diagnostics, symbol, method->mangled_name());
+    functionSymbol->nameSpace->rename(this, symbol, method->mangled_name());
 
     symbol->type = method;
     definition->type = method;
@@ -563,7 +559,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 }
 
 void Inferrer::visit(ast::TypeDefinition *definition) {
-    auto symbol = m_namespace->lookup(m_diagnostics, definition,
+    auto symbol = m_namespace->lookup(this, definition,
                                       definition->name->value);
 
     symboltable::Namespace *oldNamespace = m_namespace;
@@ -617,7 +613,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
 }
 
 void Inferrer::visit(ast::ProtocolDefinition *definition) {
-    auto symbol = m_namespace->lookup(m_diagnostics, definition,
+    auto symbol = m_namespace->lookup(this, definition,
                                       definition->name->value);
 
     symboltable::Namespace *oldNamespace = m_namespace;
@@ -659,7 +655,7 @@ void Inferrer::visit(ast::ProtocolDefinition *definition) {
 }
 
 void Inferrer::visit(ast::EnumDefinition *definition) {
-    auto symbol = m_namespace->lookup(m_diagnostics, definition,
+    auto symbol = m_namespace->lookup(this, definition,
                                       definition->name->value);
 
     symboltable::Namespace *oldNamespace = m_namespace;
