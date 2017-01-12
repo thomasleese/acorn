@@ -19,14 +19,13 @@
 #include <llvm/Support/ToolOutputFile.h>
 
 #include "ast.h"
-#include "codegen/module.h"
+#include "codegen.h"
+#include "diagnostics.h"
 #include "lexer.h"
 #include "parser.h"
 #include "prettyprinter.h"
 #include "symboltable.h"
-#include "diagnostics.h"
-#include "typing/checker.h"
-#include "typing/inferrer.h"
+#include "typing.h"
 
 #include "compiler.h"
 

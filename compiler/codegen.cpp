@@ -1,11 +1,13 @@
 //
-// Created by Thomas Leese on 15/03/2016.
+// Created by Thomas Leese on 12/01/2017.
 //
 
 #include <iostream>
 #include <sstream>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
+#include <llvm/IR/Constants.h>
+#include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
@@ -16,14 +18,13 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
 
-#include "../ast.h"
-#include "../diagnostics.h"
-#include "../symbolTable.h"
-#include "../typing/types.h"
-#include "builtins.h"
+
+#include "ast.h"
+#include "diagnostics.h"
+#include "symboltable.h"
 #include "types.h"
 
-#include "module.h"
+#include "codegen.h"
 
 using namespace acorn;
 using namespace acorn::codegen;
@@ -33,6 +34,479 @@ using namespace acorn::diagnostics;
 
 std::string codegen::mangle_method(std::string name, types::Method *type) {
     return "_A_" + name + "_" + type->mangled_name();
+}
+
+TypeGenerator::TypeGenerator(Reporter *diagnostics, llvm::LLVMContext &context)
+        : m_context(context), m_diagnostics(diagnostics)
+{
+
+}
+
+llvm::Type *TypeGenerator::take_type(ast::Node *node)
+{
+    if (m_type_stack.size() >= 1) {
+        llvm::Type *result = m_type_stack.back();
+        m_type_stack.pop_back();
+
+        if (node && result == nullptr) {
+            m_diagnostics->report(InternalError(node, "Invalid LLVM type generated. (" + node->type->name() + ")"));
+            return nullptr;
+        }
+
+        return result;
+    } else {
+        m_diagnostics->report(InternalError(node, "No LLVM type generated."));
+        return nullptr;
+    }
+}
+
+llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
+    if (m_initialiser_stack.size() >= 1) {
+        llvm::Constant *result = m_initialiser_stack.back();
+        m_initialiser_stack.pop_back();
+
+        if (node && result == nullptr) {
+            m_diagnostics->report(InternalError(node, "Invalid LLVM initialiser generated."));
+            return nullptr;
+        }
+
+        return result;
+    } else {
+        m_diagnostics->report(InternalError(node, "No LLVM initialiser generated."));
+        return nullptr;
+    }
+}
+
+void TypeGenerator::push_type_parameter(types::ParameterType *key, types::Type *value) {
+    m_type_parameters[key] = value;
+}
+
+void TypeGenerator::pop_type_parameter(types::ParameterType *key) {
+    m_type_parameters.erase(key);
+}
+
+types::Type *TypeGenerator::get_type_parameter(types::ParameterType *key) {
+    return m_type_parameters[key];
+}
+
+types::Type *TypeGenerator::get_type_parameter(types::Parameter *key) {
+    return get_type_parameter(key->type());
+}
+
+void TypeGenerator::visit_constructor(types::TypeType *type) {
+    llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
+
+    m_type_stack.push_back(llvm_type);
+    m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
+}
+
+void TypeGenerator::visit(types::ParameterType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::VoidType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::BooleanType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::IntegerType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::UnsignedIntegerType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::FloatType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::UnsafePointerType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::FunctionType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::RecordType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::EnumType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::TupleType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::AliasType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::ProtocolType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::TypeDescriptionType *type) {
+    visit_constructor(type);
+}
+
+void TypeGenerator::visit(types::Parameter *type) {
+    auto it = m_type_parameters.find(type->type());
+    if (it == m_type_parameters.end()) {
+        m_type_stack.push_back(nullptr);
+        m_initialiser_stack.push_back(nullptr);
+    } else {
+        it->second->accept(this);
+    }
+}
+
+void TypeGenerator::visit(types::Void *type) {
+    llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
+
+    m_type_stack.push_back(llvm_type);
+    m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
+}
+
+void TypeGenerator::visit(types::Boolean *type) {
+    llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
+
+    m_type_stack.push_back(llvm_type);
+    m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
+}
+
+void TypeGenerator::visit(types::Integer *type) {
+    const unsigned int size = type->size();
+    llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(m_context, size);
+
+    m_type_stack.push_back(llvm_type);
+    m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
+}
+
+void TypeGenerator::visit(types::UnsignedInteger *type) {
+    const unsigned int size = type->size();
+    llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(m_context, size);
+
+    m_type_stack.push_back(llvm_type);
+    m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
+}
+
+void TypeGenerator::visit(types::Float *type) {
+    const unsigned int size = type->size();
+    llvm::Type *llvm_type = nullptr;
+
+    switch (size) {
+        case 64:
+            llvm_type = llvm::Type::getDoubleTy(m_context);
+            break;
+        case 32:
+            llvm_type = llvm::Type::getFloatTy(m_context);
+            break;
+        case 16:
+            llvm_type = llvm::Type::getHalfTy(m_context);
+            break;
+        default:
+            break;
+    }
+
+    m_type_stack.push_back(llvm_type);
+    m_initialiser_stack.push_back(llvm::ConstantFP::get(llvm_type, 0));
+}
+
+void TypeGenerator::visit(types::UnsafePointer *type) {
+    type->element_type()->accept(this);
+    llvm::Type *element_type = take_type(nullptr);
+
+    if (element_type) {
+        llvm::PointerType *pointer_type = llvm::PointerType::getUnqual(element_type);
+        m_type_stack.push_back(pointer_type);
+        m_initialiser_stack.push_back(llvm::ConstantPointerNull::get(pointer_type));
+    } else {
+        m_type_stack.push_back(nullptr);
+        m_initialiser_stack.push_back(nullptr);
+    }
+}
+
+void TypeGenerator::visit(types::Record *type) {
+    std::vector<llvm::Type *> llvm_types;
+    std::vector<llvm::Constant *> llvm_initialisers;
+
+    for (auto field_type : type->field_types()) {
+        field_type->accept(this);
+
+        llvm::Type *llvm_field_type = take_type(nullptr);
+        llvm::Constant *llvm_field_initialiser = take_initialiser(nullptr);
+
+        if (llvm_field_type == nullptr || llvm_field_initialiser == nullptr) {
+            m_type_stack.push_back(nullptr);
+            m_initialiser_stack.push_back(nullptr);
+            return;
+        }
+
+        llvm_types.push_back(llvm_field_type);
+        llvm_initialisers.push_back(llvm_field_initialiser);
+    }
+
+    auto struct_type = llvm::StructType::get(m_context, llvm_types);
+    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
+
+    m_type_stack.push_back(struct_type);
+    m_initialiser_stack.push_back(struct_initialiser);
+}
+
+void TypeGenerator::visit(types::Tuple *type) {
+    visit(static_cast<types::Record *>(type));
+}
+
+void TypeGenerator::visit(types::Method *type) {
+    type->return_type()->accept(this);
+    llvm::Type *llvm_return_type = take_type(nullptr);
+
+    if (!llvm_return_type) {
+        m_type_stack.push_back(nullptr);
+        m_initialiser_stack.push_back(nullptr);
+        return;
+    }
+
+    std::vector<llvm::Type *> llvm_parameter_types;
+    for (auto parameter_type : type->parameter_types()) {
+        parameter_type->accept(this);
+        auto llvm_parameter_type = take_type(nullptr);
+
+        if (!llvm_parameter_type) {
+            m_type_stack.push_back(nullptr);
+            m_initialiser_stack.push_back(nullptr);
+            return;
+        }
+
+        if (type->is_parameter_inout(parameter_type)) {
+            llvm_parameter_type = llvm::PointerType::getUnqual(llvm_parameter_type);
+        }
+
+        llvm_parameter_types.push_back(llvm_parameter_type);
+    }
+
+    auto llvm_type = llvm::FunctionType::get(llvm_return_type,
+                                             llvm_parameter_types,
+                                             false);
+    m_type_stack.push_back(llvm_type);
+    m_initialiser_stack.push_back(nullptr);
+}
+
+void TypeGenerator::visit(types::Function *type) {
+    m_type_stack.push_back(nullptr);
+    m_initialiser_stack.push_back(nullptr);
+}
+
+void TypeGenerator::visit(types::Enum *type) {
+    std::vector<llvm::Type *> llvm_types;
+    std::vector<llvm::Constant *> llvm_initialisers;
+
+    auto i8 = llvm::IntegerType::getInt8Ty(m_context);
+
+    llvm_types.push_back(i8);
+    llvm_initialisers.push_back(llvm::ConstantInt::get(i8, 0));
+
+    for (auto field_type : type->element_types()) {
+        field_type->accept(this);
+
+        llvm::Type *llvm_field_type = take_type(nullptr);
+        llvm::Constant *llvm_field_initialiser = take_initialiser(nullptr);
+
+        if (llvm_field_type == nullptr || llvm_field_initialiser == nullptr) {
+            m_type_stack.push_back(nullptr);
+            m_initialiser_stack.push_back(nullptr);
+            return;
+        }
+
+        llvm_types.push_back(llvm_field_type);
+        llvm_initialisers.push_back(llvm_field_initialiser);
+    }
+
+    auto struct_type = llvm::StructType::get(m_context, llvm_types);
+    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
+
+    m_type_stack.push_back(struct_type);
+    m_initialiser_stack.push_back(struct_initialiser);
+}
+
+void TypeGenerator::visit(types::Protocol *type) {
+    m_type_stack.push_back(nullptr);
+    m_initialiser_stack.push_back(nullptr);
+}
+
+BuiltinGenerator::BuiltinGenerator(llvm::Module *module, llvm::IRBuilder<> *ir_builder, llvm::DataLayout *data_layout, TypeGenerator *type_generator) :
+        m_module(module),
+        m_ir_builder(ir_builder),
+        m_data_layout(data_layout),
+        m_type_generator(type_generator)
+{
+
+}
+
+void BuiltinGenerator::generate(symboltable::Namespace *table) {
+    initialise_boolean_variable(table, "Nothing", false);
+    initialise_boolean_variable(table, "True", true);
+    initialise_boolean_variable(table, "False", false);
+    initialise_boolean_variable(table, "Int32", false);
+    initialise_boolean_variable(table, "Int64", false);
+    initialise_boolean_variable(table, "UnsafePointer", false);
+
+    // not
+    llvm::Function *f = create_llvm_function(table, "not", 0);
+    m_ir_builder->CreateRet(m_ir_builder->CreateNot(m_args[0]));
+
+    // multiplication
+    f = create_llvm_function(table, "*", 0);
+    m_ir_builder->CreateRet(m_ir_builder->CreateMul(m_args[0], m_args[1]));
+
+    // addition
+    f = create_llvm_function(table, "+", 0);
+    m_ir_builder->CreateRet(m_ir_builder->CreateAdd(m_args[0], m_args[1]));
+
+    f = create_llvm_function(table, "+", 1);
+    m_ir_builder->CreateRet(m_ir_builder->CreateAdd(m_args[0], m_args[1]));
+
+    f = create_llvm_function(table, "+", 2);
+    m_ir_builder->CreateRet(m_ir_builder->CreateFAdd(m_args[0], m_args[1]));
+
+    // subtraction
+    f = create_llvm_function(table, "-", 0);
+    m_ir_builder->CreateRet(m_ir_builder->CreateSub(m_args[0], m_args[1]));
+
+    // equality
+    for (int i = 0; i < 3; i++) {
+        f = create_llvm_function(table, "==", 0);
+        m_ir_builder->CreateRet(m_ir_builder->CreateICmpEQ(m_args[0], m_args[1]));
+    }
+
+    // not equality
+    f = create_llvm_function(table, "!=", 0);
+    m_ir_builder->CreateRet(m_ir_builder->CreateICmpNE(m_args[0], m_args[1]));
+
+    // less than
+    f = create_llvm_function(table, "<", 0);
+    m_ir_builder->CreateRet(m_ir_builder->CreateICmpSLT(m_args[0], m_args[1]));
+
+    // greater than or equal to
+    f = create_llvm_function(table, ">=", 0);
+    m_ir_builder->CreateRet(m_ir_builder->CreateICmpSGE(m_args[0], m_args[1]));
+
+    // to integer
+    f = create_llvm_function(table, "to_integer", 0);
+    m_ir_builder->CreateRet(m_ir_builder->CreateFPToSI(m_args[0], f->getReturnType()));
+
+    // to float
+    f = create_llvm_function(table, "to_float", 0);
+    m_ir_builder->CreateRet(m_ir_builder->CreateSIToFP(m_args[0], f->getReturnType()));
+}
+
+llvm::Function *BuiltinGenerator::generate_function(std::string name, types::Method *method, std::string llvm_name) {
+    method->accept(m_type_generator);
+
+    auto type = static_cast<llvm::FunctionType *>(m_type_generator->take_type(nullptr));
+    assert(type);
+
+    auto old_insert_point = m_ir_builder->saveIP();
+
+    auto function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_name, m_module);
+    initialise_function(function, method->parameter_types().size());
+
+    if (name == "sizeof") {
+        generate_sizeof(method, function);
+    } else if (name == "strideof") {
+        generate_strideof(method, function);
+    } else {
+        std::vector<llvm::Value *> index_list;
+        index_list.push_back(m_args[1]);
+        auto gep = m_ir_builder->CreateInBoundsGEP(m_args[0], index_list);
+
+        if (name == "setindex") {
+            m_ir_builder->CreateStore(m_args[2], gep);
+            m_ir_builder->CreateRet(m_ir_builder->getInt1(false));
+        } else {
+            m_ir_builder->CreateRet(m_ir_builder->CreateLoad(gep));
+        }
+    }
+
+    m_ir_builder->restoreIP(old_insert_point);
+
+    return function;
+}
+
+void BuiltinGenerator::generate_sizeof(types::Method *method, llvm::Function *function) {
+    auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
+    type->create(nullptr, nullptr)->accept(m_type_generator);
+    auto llvm_type = m_type_generator->take_type(nullptr);
+
+    uint64_t size = m_data_layout->getTypeStoreSize(llvm_type);
+    m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
+}
+
+void BuiltinGenerator::generate_strideof(types::Method *method, llvm::Function *function) {
+    auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
+    type->create(nullptr, nullptr)->accept(m_type_generator);
+    auto llvm_type = m_type_generator->take_type(nullptr);
+
+    uint64_t size = m_data_layout->getTypeAllocSize(llvm_type);
+    m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
+}
+
+llvm::Function *BuiltinGenerator::create_llvm_function(symboltable::Namespace *table, std::string name, int index) {
+    auto symbol = table->lookup(nullptr, nullptr, name);
+
+    types::Function *functionType = static_cast<types::Function *>(symbol->type);
+    types::Method *methodType = functionType->get_method(index);
+
+    std::string mangled_name = codegen::mangle_method(name, methodType);
+
+    auto type_generator = new codegen::TypeGenerator(nullptr, m_module->getContext());
+    methodType->accept(type_generator);
+
+    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(type_generator->take_type(nullptr));
+    assert(type);
+
+    delete type_generator;
+
+    llvm::Function *f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, mangled_name, m_module);
+    f->addFnAttr(llvm::Attribute::AlwaysInline);
+
+    initialise_function(f, methodType->parameter_types().size());
+
+    symbol->value = f;
+
+    return f;
+}
+
+void BuiltinGenerator::initialise_boolean_variable(symboltable::Namespace *table, std::string name, bool value) {
+    auto symbol = table->lookup(nullptr, nullptr, name);
+    symbol->value = new llvm::GlobalVariable(*m_module, m_ir_builder->getInt1Ty(), false,
+                                             llvm::GlobalValue::InternalLinkage,
+                                             m_ir_builder->getInt1(value), name);
+}
+
+void BuiltinGenerator::initialise_function(llvm::Function *function, int no_arguments) {
+    m_args.clear();
+
+    if (!function->arg_empty()) {
+        m_args.push_back(&function->getArgumentList().front());
+        for (size_t i = 1; i < function->arg_size(); i++) {
+            m_args.push_back(function->getArgumentList().getNext(m_args[i - 1]));
+        }
+    }
+
+    assert(m_args.size() == function->arg_size());
+    assert(m_args.size() == no_arguments);
+
+    auto &context = function->getContext();
+
+    auto basic_block = llvm::BasicBlock::Create(context, "entry", function);
+    m_ir_builder->SetInsertPoint(basic_block);
 }
 
 ModuleGenerator::ModuleGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout)

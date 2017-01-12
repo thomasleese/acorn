@@ -10,19 +10,17 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS} -std=c++11 -Wall -peda
 set(CMAKE_EXE_LINKER_FLAGS "${LLVM_LD_FLAGS} -lcurses -lz -fexceptions")
 
 set(SOURCE_FILES compiler/ast.cpp
-                 compiler/codegen/builtins.cpp
-                 compiler/codegen/types.cpp
-                 compiler/codegen/module.cpp
-                 compiler/lexer.cpp
-                 compiler/parser.cpp
-                 compiler/typing/checker.cpp
-                 compiler/typing/inferrer.cpp
-                 compiler/typing/types.cpp
+                 compiler/codegen.cpp
                  compiler/compiler.cpp
                  compiler/diagnostics.cpp
+                 compiler/lexer.cpp
                  compiler/main.cpp
+                 compiler/parser.cpp
                  compiler/prettyprinter.cpp
-                 compiler/symboltable.cpp compiler/token.cpp compiler/token.h)
+                 compiler/symboltable.cpp
+                 compiler/token.cpp
+                 compiler/typing.cpp
+                 compiler/types.cpp)
 
 add_executable(acorn ${SOURCE_FILES})
 target_link_libraries(acorn ${LLVM_LIBS})

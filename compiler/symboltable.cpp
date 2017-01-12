@@ -9,7 +9,7 @@
 #include "ast.h"
 #include "diagnostics.h"
 #include "lexer.h"
-#include "typing/types.h"
+#include "types.h"
 
 #include "symboltable.h"
 

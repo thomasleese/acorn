@@ -7,8 +7,8 @@
 #include <sstream>
 #include <iostream>
 
-#include "../ast.h"
-#include "../diagnostics.h"
+#include "ast.h"
+#include "diagnostics.h"
 
 #include "types.h"
 

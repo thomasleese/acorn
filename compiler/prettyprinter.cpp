@@ -5,7 +5,7 @@
 #include <iostream>
 
 #include "ast.h"
-#include "typing/types.h"
+#include "types.h"
 
 #include "prettyprinter.h"
 

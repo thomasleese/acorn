@@ -7,7 +7,7 @@
 
 #include "ast.h"
 #include "lexer.h"
-#include "typing/types.h"
+#include "types.h"
 
 #include "diagnostics.h"
 
