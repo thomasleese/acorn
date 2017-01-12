@@ -15,7 +15,7 @@ namespace acorn {
     class PrettyPrinter : public ast::Visitor {
 
     public:
-        explicit PrettyPrinter();
+        PrettyPrinter();
 
     public:
         void visit(ast::CodeBlock *block);

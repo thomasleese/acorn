@@ -183,6 +183,10 @@ Reporter::Reporter() : m_has_errors(false) {
 
 }
 
+void Reporter::debug(std::string line) const {
+    std::cerr << line << std::endl;
+}
+
 void Reporter::report(const CompilerError &error) {
     error.print();
     m_has_errors = true;

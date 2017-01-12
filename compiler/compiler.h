@@ -9,17 +9,18 @@
 
 #include <llvm/IR/LLVMContext.h>
 
+#include "diagnostics.h"
+
 namespace acorn {
 
     namespace compiler {
 
-        class Compiler {
+        class Compiler : public diagnostics::Reporter {
 
         public:
             Compiler();
             ~Compiler();
 
-            void debug(std::string line) const;
             bool compile(std::string filename);
 
         private:

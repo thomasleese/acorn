@@ -34,7 +34,8 @@ using namespace acorn;
 using namespace acorn::compiler;
 using namespace acorn::diagnostics;
 
-Compiler::Compiler() {
+Compiler::Compiler()
+{
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -52,10 +53,6 @@ Compiler::Compiler() {
 
 Compiler::~Compiler() {
 
-}
-
-void Compiler::debug(std::string line) const {
-    std::cerr << line << std::endl;
 }
 
 bool Compiler::compile(std::string filename) {

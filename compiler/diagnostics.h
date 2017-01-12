@@ -116,6 +116,7 @@ namespace acorn {
         public:
             Reporter();
 
+            void debug(std::string line) const;
             void report(const CompilerError &error);
 
             bool has_errors() const;
