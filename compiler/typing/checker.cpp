@@ -95,7 +95,7 @@ void Checker::visit(ast::SequenceLiteral *sequence) {
 }
 
 void Checker::visit(ast::MappingLiteral *mapping) {
-    for (int i = 0; i < mapping->keys.size(); i++) {
+    for (size_t i = 0; i < mapping->keys.size(); i++) {
         mapping->keys[i]->accept(this);
         mapping->values[i]->accept(this);
     }

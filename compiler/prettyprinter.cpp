@@ -317,7 +317,7 @@ void PrettyPrinter::visit(ast::TypeDefinition *definition) {
     if (definition->alias) {
         definition->alias->accept(this);
     } else {
-        for (int i = 0; i < definition->field_names.size(); i++) {
+        for (size_t i = 0; i < definition->field_names.size(); i++) {
             definition->field_names[i]->accept(this);
             definition->field_types[i]->accept(this);
         }

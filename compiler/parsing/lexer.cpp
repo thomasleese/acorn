@@ -146,13 +146,13 @@ void Lexer::next_line() {
 }
 
 void Lexer::update_current_line() {
-    int pos = m_stream.tellg();
+    long long int pos = m_stream.tellg();
     std::getline(m_stream, m_current_line);
     m_stream.seekg(pos);
 }
 
 void Lexer::update_indentation(Token &token) {
-    unsigned int level = skip_whitespace();
+    int level = skip_whitespace();
     if (m_indentation.back() == level) {
         // do nothing
     } else if (level > m_indentation.back()) {

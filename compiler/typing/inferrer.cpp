@@ -146,7 +146,7 @@ types::Type *Inferrer::replace_type_parameters(types::Type *type, std::map<types
     if (parameters.empty()) {
         return type;
     } else {
-        for (int i = 0; i < parameters.size(); i++) {
+        for (size_t i = 0; i < parameters.size(); i++) {
             parameters[i] = replace_type_parameters(parameters[i], replacements);
         }
 
@@ -538,7 +538,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 
     auto method = new types::Method(parameterTypes, return_type);
 
-    for (int i = 0; i < parameterTypes.size(); i++) {
+    for (size_t i = 0; i < parameterTypes.size(); i++) {
         if (definition->parameters[i]->inout) {
             method->set_parameter_inout(parameterTypes[i], true);
         }
