@@ -252,35 +252,35 @@ void Builder::add_builtin_functions() {
     auto not_ = add_builtin_function("not");
     add_builtin_method(not_, new types::Method(new types::Boolean(), new types::Boolean()));
 
-    symboltable::Symbol *multiplication = add_builtin_function("*");
+    auto multiplication = add_builtin_function("*");
     add_builtin_method(multiplication, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
 
-    symboltable::Symbol *addition = add_builtin_function("+");
+    auto addition = add_builtin_function("+");
     add_builtin_method(addition, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
     add_builtin_method(addition, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::UnsignedInteger(64)));
     add_builtin_method(addition, new types::Method(new types::Float(64), new types::Float(64), new types::Float(64)));
 
-    symboltable::Symbol *subtraction = add_builtin_function("-");
+    auto subtraction = add_builtin_function("-");
     add_builtin_method(subtraction, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
 
-    symboltable::Symbol *equality = add_builtin_function("==");
+    auto equality = add_builtin_function("==");
     add_builtin_method(equality, new types::Method(new types::Boolean(), new types::Boolean(), new types::Boolean()));
     add_builtin_method(equality, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
     add_builtin_method(equality, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::Boolean()));
 
-    symboltable::Symbol *not_equality = add_builtin_function("!=");
+    auto not_equality = add_builtin_function("!=");
     add_builtin_method(not_equality, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
 
-    symboltable::Symbol *less_than = add_builtin_function("<");
+    auto less_than = add_builtin_function("<");
     add_builtin_method(less_than, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
 
     auto gte = add_builtin_function(">=");
     add_builtin_method(gte, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
 
-    symboltable::Symbol *to_integer = add_builtin_function("to_integer");
+    auto to_integer = add_builtin_function("to_integer");
     add_builtin_method(to_integer, new types::Method(new types::Float(64), new types::Integer(64)));
 
-    symboltable::Symbol *to_float = add_builtin_function("to_float");
+    auto to_float = add_builtin_function("to_float");
     add_builtin_method(to_float, new types::Method(new types::Integer(64), new types::Float(64)));
 
     auto getindex = add_builtin_function("getindex");
