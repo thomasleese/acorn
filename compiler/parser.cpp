@@ -6,8 +6,8 @@
 #include <iostream>
 #include <sstream>
 
-#include "../ast.h"
-#include "../diagnostics.h"
+#include "ast.h"
+#include "diagnostics.h"
 #include "lexer.h"
 
 #include "parser.h"

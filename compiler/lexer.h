@@ -8,7 +8,7 @@
 #include <fstream>
 #include <vector>
 
-#include "../diagnostics.h"
+#include "diagnostics.h"
 #include "token.h"
 
 namespace acorn {

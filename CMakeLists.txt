@@ -13,9 +13,8 @@ set(SOURCE_FILES compiler/ast.cpp
                  compiler/codegen/builtins.cpp
                  compiler/codegen/types.cpp
                  compiler/codegen/module.cpp
-                 compiler/parsing/lexer.cpp
-                 compiler/parsing/parser.cpp
-                 compiler/parsing/token.cpp
+                 compiler/lexer.cpp
+                 compiler/parser.cpp
                  compiler/typing/checker.cpp
                  compiler/typing/inferrer.cpp
                  compiler/typing/types.cpp
@@ -23,7 +22,7 @@ set(SOURCE_FILES compiler/ast.cpp
                  compiler/diagnostics.cpp
                  compiler/main.cpp
                  compiler/prettyprinter.cpp
-                 compiler/symboltable.cpp)
+                 compiler/symboltable.cpp compiler/token.cpp compiler/token.h)
 
 add_executable(acorn ${SOURCE_FILES})
 target_link_libraries(acorn ${LLVM_LIBS})

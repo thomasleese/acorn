@@ -8,7 +8,7 @@
 
 #include "ast.h"
 #include "diagnostics.h"
-#include "parsing/lexer.h"
+#include "lexer.h"
 #include "typing/types.h"
 
 #include "symboltable.h"

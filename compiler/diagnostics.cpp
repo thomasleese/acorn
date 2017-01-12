@@ -6,7 +6,7 @@
 #include <sstream>
 
 #include "ast.h"
-#include "parsing/lexer.h"
+#include "lexer.h"
 #include "typing/types.h"
 
 #include "diagnostics.h"

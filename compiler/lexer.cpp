@@ -11,7 +11,8 @@
 using namespace acorn;
 using namespace acorn::diagnostics;
 
-Lexer::Lexer(std::string filename) {
+Lexer::Lexer(std::string filename)
+{
     m_stream.open(filename.c_str());
 
     m_current_line_number = 0;

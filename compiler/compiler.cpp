@@ -20,8 +20,8 @@
 
 #include "ast.h"
 #include "codegen/module.h"
-#include "parsing/lexer.h"
-#include "parsing/parser.h"
+#include "lexer.h"
+#include "parser.h"
 #include "prettyprinter.h"
 #include "symboltable.h"
 #include "diagnostics.h"
