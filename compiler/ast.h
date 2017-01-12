@@ -10,7 +10,7 @@
 #include <string>
 #include <vector>
 
-#include "lexer.h"
+#include "token.h"
 
 namespace acorn {
 

@@ -24,22 +24,8 @@ namespace llvm {
 
 namespace acorn {
 
-    namespace ast {
-        struct Node;
-    }
-
-    namespace diagnostics {
-        class Reporter;
-    }
-
     namespace symboltable {
         class Namespace;
-    }
-
-    namespace types {
-        class Type;
-        class Method;
-        class ParameterType;
     }
 
     namespace codegen {

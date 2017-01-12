@@ -11,10 +11,6 @@
 
 namespace acorn {
 
-    namespace ast {
-        struct Node;
-    }
-
     namespace diagnostics {
         class Reporter;
     }

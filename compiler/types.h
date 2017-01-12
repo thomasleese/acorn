@@ -14,11 +14,6 @@ namespace acorn {
 
     namespace ast {
         struct Node;
-        struct Argument;
-    }
-
-    namespace compiler {
-        class Pass;
     }
 
     namespace diagnostics {

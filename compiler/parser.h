@@ -9,47 +9,9 @@
 #include <map>
 #include <string>
 
-#include "token.h"
+#include "ast.h"
 
 namespace acorn {
-
-    namespace ast {
-        struct Node;
-        struct Expression;
-        struct Misc;
-        struct Statement;
-        struct Definition;
-        struct CodeBlock;
-        struct Identifier;
-        struct BooleanLiteral;
-        struct IntegerLiteral;
-        struct FloatLiteral;
-        struct ImaginaryLiteral;
-        struct StringLiteral;
-        struct SequenceLiteral;
-        struct MappingLiteral;
-        struct RecordLiteral;
-        struct Argument;
-        struct Call;
-        struct CCall;
-        struct Cast;
-        struct Selector;
-        class While;
-        struct For;
-        struct If;
-        struct Return;
-        struct Spawn;
-        struct Sizeof;
-        struct Strideof;
-        struct Parameter;
-        struct VariableDefinition;
-        struct FunctionDefinition;
-        struct TypeDefinition;
-        struct DefinitionStatement;
-        struct ExpressionStatement;
-        struct ImportStatement;
-        struct SourceFile;
-    }
 
     class Parser : public diagnostics::Reporter {
 

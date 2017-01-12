@@ -18,14 +18,6 @@ namespace llvm {
 
 namespace acorn {
 
-    namespace ast {
-        struct Node;
-    }
-
-    namespace diagnostics {
-        class Reporter;
-    }
-
     namespace types {
         class Type;
         class Method;
