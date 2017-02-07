@@ -497,57 +497,6 @@ void Builder::visit(ast::TypeDefinition *definition) {
     m_scope.pop_back();
 }
 
-void Builder::visit(ast::ProtocolDefinition *definition) {
-    auto symbol = new Symbol(definition->name->value);
-    m_scope.back()->insert(this, definition, symbol);
-
-    symbol->nameSpace = new Namespace(m_scope.back());
-
-    m_scope.push_back(symbol->nameSpace);
-
-    auto self_symbol = new Symbol("Self");
-    self_symbol->type = new types::ParameterType();
-    m_scope.back()->insert(this, definition, self_symbol);
-
-    for (auto parameter : definition->name->parameters) {
-        Symbol *sym = new Symbol(parameter->value);
-        sym->type = new types::ParameterType();
-        m_scope.back()->insert(this, definition, sym);
-    }
-
-    for (auto method : definition->methods()) {
-        method->accept(this);
-    }
-
-    m_scope.pop_back();
-}
-
-void Builder::visit(ast::EnumDefinition *definition) {
-    auto symbol = new Symbol(definition->name->value);
-    m_scope.back()->insert(this, definition, symbol);
-
-    symbol->nameSpace = new Namespace(m_scope.back());
-
-    m_scope.push_back(symbol->nameSpace);
-
-    auto self_symbol = new Symbol("Self");
-    self_symbol->type = new types::ParameterType();
-    m_scope.back()->insert(this, definition, self_symbol);
-
-    for (auto parameter : definition->name->parameters) {
-        Symbol *sym = new Symbol(parameter->value);
-        sym->type = new types::ParameterType();
-        m_scope.back()->insert(this, definition, sym);
-    }
-
-    for (auto element : definition->elements()) {
-        Symbol *sym = new Symbol(element->name()->value);
-        m_scope.back()->insert(this, element, sym);
-    }
-
-    m_scope.pop_back();
-}
-
 void Builder::visit(ast::DefinitionStatement *statement) {
     statement->definition->accept(this);
 }

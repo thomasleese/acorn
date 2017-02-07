@@ -214,33 +214,6 @@ namespace acorn {
 
         };
 
-        class EnumType : public TypeType, public Selectable {
-        public:
-            EnumType(std::vector<ParameterType *> input_parameters,
-                     std::vector<std::string> names,
-                     std::vector<TypeType *> types);
-            EnumType(std::vector<ParameterType *> input_parameters,
-                     std::vector<std::string> names,
-                     std::vector<TypeType *> types,
-                     std::vector<TypeType *> parameters);
-
-            std::string name() const;
-
-            bool has_child(std::string name);
-            Type *child_type(std::string name);
-
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
-
-            EnumType *with_parameters(std::vector<TypeType *> parameters);
-
-            void accept(Visitor *visitor);
-
-        private:
-            std::vector<ParameterType *> m_input_parameters;
-            std::vector<std::string> m_element_names;
-            std::vector<TypeType *> m_element_types;
-        };
-
         class TupleType : public TypeType {
         public:
             TupleType();
@@ -278,26 +251,6 @@ namespace acorn {
         };
 
         class Method; // FIXME replace with 'MethodType'
-
-        class ProtocolType : public TypeType {
-        public:
-            explicit ProtocolType(std::vector<ParameterType *> input_parameters, std::vector<Method *> methods);
-            ProtocolType(std::vector<ParameterType *> input_parameters, std::vector<Method *> methods, std::vector<TypeType *> parameters);
-
-            std::string name() const;
-
-            bool is_compatible(const Type *other) const;
-
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
-
-            ProtocolType *with_parameters(std::vector<TypeType *> parameters);
-
-            void accept(Visitor *visitor);
-
-        private:
-            std::vector<ParameterType *> m_input_parameters;
-            std::vector<Method *> m_methods;
-        };
 
         class TypeDescriptionType : public TypeType {
         public:
@@ -518,56 +471,6 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class Enum : public Type, public Selectable {
-        public:
-            Enum(EnumType *type, std::string name1, Type *type1, std::string name2, Type *type2);
-            Enum(EnumType *type, std::vector<std::string> names, std::vector<Type *> types);
-
-            std::string name() const;
-            std::string mangled_name() const;
-
-            EnumType *type() const;
-
-            std::vector<Type *> element_types() const;
-            std::vector<std::string> element_names() const;
-            uint8_t type_index(const Type *type, bool *exists) const;
-
-            bool has_child(std::string name);
-            uint8_t child_index(std::string name, bool *exists) const;
-            Type *child_type(std::string name);
-
-            bool is_compatible(const Type *other) const;
-
-            Enum *with_parameters(std::vector<Type *> parameters);
-
-            void accept(Visitor *visitor);
-
-        private:
-            EnumType *m_type;
-            std::vector<std::string> m_element_names;
-        };
-
-        class Protocol : public Type {
-        public:
-            explicit Protocol(ProtocolType *type);
-            Protocol(std::vector<Method *> methods, ProtocolType *type);
-
-            std::string name() const;
-            std::string mangled_name() const;
-
-            ProtocolType *type() const;
-            std::vector<Method *> methods() const;
-
-            bool is_compatible(const Type *other) const;
-
-            Protocol *with_parameters(std::vector<Type *> parameters);
-
-            void accept(Visitor *visitor);
-
-        private:
-            ProtocolType *m_type;
-        };
-
         class Visitor {
         public:
             virtual ~Visitor();
@@ -581,10 +484,8 @@ namespace acorn {
             virtual void visit(UnsafePointerType *type) = 0;
             virtual void visit(FunctionType *type) = 0;
             virtual void visit(RecordType *type) = 0;
-            virtual void visit(EnumType *type) = 0;
             virtual void visit(TupleType *type) = 0;
             virtual void visit(AliasType *type) = 0;
-            virtual void visit(ProtocolType *type) = 0;
             virtual void visit(TypeDescriptionType *type) = 0;
 
             virtual void visit(Parameter *type) = 0;
@@ -598,8 +499,6 @@ namespace acorn {
             virtual void visit(Tuple *type) = 0;
             virtual void visit(Method *type) = 0;
             virtual void visit(Function *type) = 0;
-            virtual void visit(Enum *type) = 0;
-            virtual void visit(Protocol *type) = 0;
         };
 
     };

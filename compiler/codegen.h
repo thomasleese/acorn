@@ -55,11 +55,9 @@ namespace acorn {
             void visit(types::UnsafePointerType *type);
             void visit(types::FunctionType *type);
             void visit(types::RecordType *type);
-            void visit(types::EnumType *type);
             void visit(types::TupleType *type);
             void visit(types::AliasType *type);
             void visit(types::TypeDescriptionType *type);
-            void visit(types::ProtocolType *type);
 
             void visit(types::Parameter *type);
             void visit(types::Void *type);
@@ -72,8 +70,6 @@ namespace acorn {
             void visit(types::Tuple *type);
             void visit(types::Method *type);
             void visit(types::Function *type);
-            void visit(types::Enum *type);
-            void visit(types::Protocol *type);
 
         private:
             llvm::LLVMContext &m_context;
@@ -158,8 +154,6 @@ namespace acorn {
             void visit(ast::VariableDefinition *definition);
             void visit(ast::FunctionDefinition *definition);
             void visit(ast::TypeDefinition *definition);
-            void visit(ast::ProtocolDefinition *definition);
-            void visit(ast::EnumDefinition *definition);
 
             void visit(ast::DefinitionStatement *statement);
             void visit(ast::ExpressionStatement *statement);

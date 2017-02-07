@@ -136,19 +136,11 @@ void TypeGenerator::visit(types::RecordType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::EnumType *type) {
-    visit_constructor(type);
-}
-
 void TypeGenerator::visit(types::TupleType *type) {
     visit_constructor(type);
 }
 
 void TypeGenerator::visit(types::AliasType *type) {
-    visit_constructor(type);
-}
-
-void TypeGenerator::visit(types::ProtocolType *type) {
     visit_constructor(type);
 }
 
@@ -299,43 +291,6 @@ void TypeGenerator::visit(types::Method *type) {
 }
 
 void TypeGenerator::visit(types::Function *type) {
-    m_type_stack.push_back(nullptr);
-    m_initialiser_stack.push_back(nullptr);
-}
-
-void TypeGenerator::visit(types::Enum *type) {
-    std::vector<llvm::Type *> llvm_types;
-    std::vector<llvm::Constant *> llvm_initialisers;
-
-    auto i8 = llvm::IntegerType::getInt8Ty(m_context);
-
-    llvm_types.push_back(i8);
-    llvm_initialisers.push_back(llvm::ConstantInt::get(i8, 0));
-
-    for (auto field_type : type->element_types()) {
-        field_type->accept(this);
-
-        llvm::Type *llvm_field_type = take_type(nullptr);
-        llvm::Constant *llvm_field_initialiser = take_initialiser(nullptr);
-
-        if (llvm_field_type == nullptr || llvm_field_initialiser == nullptr) {
-            m_type_stack.push_back(nullptr);
-            m_initialiser_stack.push_back(nullptr);
-            return;
-        }
-
-        llvm_types.push_back(llvm_field_type);
-        llvm_initialisers.push_back(llvm_field_initialiser);
-    }
-
-    auto struct_type = llvm::StructType::get(m_context, llvm_types);
-    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
-
-    m_type_stack.push_back(struct_type);
-    m_initialiser_stack.push_back(struct_initialiser);
-}
-
-void TypeGenerator::visit(types::Protocol *type) {
     m_type_stack.push_back(nullptr);
     m_initialiser_stack.push_back(nullptr);
 }
@@ -1014,98 +969,11 @@ void ModuleGenerator::visit(ast::Selector *expression) {
         llvm::Value *value = m_irBuilder->CreateInBoundsGEP(instance, indexes);
         push_value(value);
     } else {
-        auto enum_type = dynamic_cast<types::EnumType *>(selectable);
-        assert(enum_type);
-
-        // get method
-        auto function_type = dynamic_cast<types::Function *>(expression->type);
-        if (function_type) {
-            auto method = function_type->get_method(0);
-            assert(method);
-
-            auto enum_instance_type = dynamic_cast<types::Enum *>(method->return_type());
-            assert(enum_instance_type);
-
-            bool exists = false;
-            auto index = enum_instance_type->child_index(expression->name->value, &exists);
-            assert(exists);
-
-            // ensure constructor function exists
-            std::string function_name = "enum_" + enum_type->mangled_name();
-            std::string llvm_function_name = codegen::mangle_method(function_name, method);
-
-            if (m_module->getFunction(llvm_function_name) == nullptr) {
-                auto ft = llvm::dyn_cast<llvm::FunctionType>(generate_type(expression, method));
-                auto function = llvm::Function::Create(ft, llvm::Function::ExternalLinkage, llvm_function_name,
-                                                       m_module);
-
-                auto arg0 = &function->getArgumentList().front();
-
-                auto llvm_enum_type = generate_type(expression, enum_instance_type);
-
-                auto old_insert_point = m_irBuilder->saveIP();
-
-                auto basic_block = llvm::BasicBlock::Create(m_module->getContext(), "entry", function);
-                m_irBuilder->SetInsertPoint(basic_block);
-
-                auto alloca = m_irBuilder->CreateAlloca(llvm_enum_type);
-
-                std::vector<llvm::Value *> indexes;
-                indexes.push_back(m_irBuilder->getInt32(0));
-                indexes.push_back(m_irBuilder->getInt32(0));
-
-                auto index_gep = m_irBuilder->CreateInBoundsGEP(alloca, indexes);
-                m_irBuilder->CreateStore(m_irBuilder->getInt8(index), index_gep);
-
-                indexes.clear();
-                indexes.push_back(m_irBuilder->getInt32(0));
-                indexes.push_back(m_irBuilder->getInt32(index + 1));
-
-                auto holder_gep = m_irBuilder->CreateInBoundsGEP(alloca, indexes);
-                m_irBuilder->CreateStore(arg0, holder_gep);
-
-                m_irBuilder->CreateRet(m_irBuilder->CreateLoad(alloca));
-
-                m_irBuilder->restoreIP(old_insert_point);
-            }
-
-            // we don't pass any definitions as these are only required for generics
-            push_value(m_module->getFunction(llvm_function_name));
-        } else {
-            auto enum_instance_type = dynamic_cast<types::Enum *>(expression->type);
-            assert(enum_instance_type);
-
-            auto llvm_enum_type = generate_type(expression, enum_instance_type);
-
-            bool exists = false;
-            auto index = enum_instance_type->child_index(expression->name->value, &exists);
-            assert(exists);
-
-            auto alloca = m_irBuilder->CreateAlloca(llvm_enum_type);
-
-            std::vector<llvm::Value *> indexes;
-            indexes.push_back(m_irBuilder->getInt32(0));
-            indexes.push_back(m_irBuilder->getInt32(0));
-
-            auto index_gep = m_irBuilder->CreateInBoundsGEP(alloca, indexes);
-            m_irBuilder->CreateStore(m_irBuilder->getInt8(index), index_gep);
-
-            indexes.clear();
-            indexes.push_back(m_irBuilder->getInt32(0));
-            indexes.push_back(m_irBuilder->getInt32(index + 1));
-
-            auto holder_gep = m_irBuilder->CreateInBoundsGEP(alloca, indexes);
-            m_irBuilder->CreateStore(m_irBuilder->getInt1(false), holder_gep);
-
-            // must be a void type
-            push_value(m_irBuilder->CreateLoad(alloca));
-        }
+        push_value(nullptr);
     }
 }
 
 void ModuleGenerator::visit(ast::While *expression) {
-
-
     auto function = m_irBuilder->GetInsertBlock()->getParent();
 
     auto entry_bb = llvm::BasicBlock::Create(m_module->getContext(), "while_entry", function);
@@ -1242,20 +1110,6 @@ void ModuleGenerator::visit(ast::TypeDefinition *definition) {
     }
 
     push_value(nullptr);
-}
-
-void ModuleGenerator::visit(ast::ProtocolDefinition *definition) {
-    push_value(nullptr);
-}
-
-void ModuleGenerator::visit(ast::EnumDefinition *definition) {
-    auto symbol = m_scope.back()->lookup(this, definition->name);
-    symbol->value = new llvm::GlobalVariable(*m_module,
-                                             m_irBuilder->getInt1Ty(), false,
-                                             llvm::GlobalValue::InternalLinkage,
-                                             m_irBuilder->getInt1(1),
-                                             definition->name->value);
-    push_value(symbol->value);
 }
 
 void ModuleGenerator::visit(ast::DefinitionStatement *statement) {

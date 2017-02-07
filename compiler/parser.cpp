@@ -888,84 +888,6 @@ TypeDefinition *Parser::readTypeDefinition() {
     return definition;
 }
 
-ast::ProtocolDefinition *Parser::readProtocolDefinition() {
-    return_if_false(read_token(Token::ProtocolKeyword, token));
-
-    auto name = readIdentifier(true);
-    std::vector<MethodSignature *> methods;
-
-    return_if_false(skip_token(Token::Newline));
-
-    while (!is_token(Token::Deindent)) {
-        Token method_token;
-        return_if_false(read_token(Token::DefKeyword, token));
-
-        auto method_name = readIdentifier(false);
-        return_if_null(method_name);
-
-        std::vector<Identifier *> parameter_types;
-
-        return_if_false(skip_token(Token::OpenParenthesis));
-        while (!is_token(Token::CloseParenthesis)) {
-            parameter_types.push_back(readIdentifier(true));
-
-            if (is_token(Token::Comma)) {
-                skip_token(Token::Comma);
-            } else {
-                break;  // no more parameters, apparently
-            }
-        }
-
-        skip_token(Token::CloseParenthesis);
-
-        return_if_false(skip_token(Token::AsKeyword));
-
-        auto return_type = readIdentifier(true);
-        return_if_null(return_type);
-
-        return_if_false(skip_token(Token::Newline));
-
-        methods.push_back(new MethodSignature(method_token, method_name, parameter_types, return_type));
-    }
-
-    skip_token(Token::Deindent);
-
-    return new ProtocolDefinition(token, name, methods);
-}
-
-ast::EnumDefinition *Parser::readEnumDefinition() {
-    return_if_false(read_token(Token::EnumKeyword, token));
-
-    auto name = readIdentifier(true);
-    return_if_null(name);
-
-    std::vector<EnumElement *> elements;
-
-    return_if_false(skip_token(Token::Newline));
-
-    while (!is_token(Token::Deindent)) {
-        auto element_name = readIdentifier(false);
-        return_if_null(element_name);
-
-        ast::Identifier *element_type = nullptr;
-
-        if (is_token(Token::AsKeyword)) {
-            skip_token(Token::AsKeyword);
-
-            element_type = readIdentifier(true);
-            return_if_null(element_type);
-        }
-
-        return_if_false(skip_token(Token::Newline));
-
-        elements.push_back(new EnumElement(element_name->token, element_name, element_type));
-    }
-
-    skip_token(Token::Deindent);
-
-    return new EnumDefinition(token, name, elements);
-}
-
 Statement *Parser::readStatement() {
     debug("Reading Statement...");
 
@@ -977,10 +899,6 @@ Statement *Parser::readStatement() {
         def = readFunctionDefinition();
     } else if (is_token(Token::TypeKeyword)) {
         def = readTypeDefinition();
-    } else if (is_token(Token::ProtocolKeyword)) {
-        def = readProtocolDefinition();
-    } else if (is_token(Token::EnumKeyword)) {
-        def = readEnumDefinition();
     } else {
         auto expression = readExpression(true);
         return_if_null(expression);

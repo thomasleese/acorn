@@ -438,12 +438,6 @@ void Inferrer::visit(ast::Spawn *expression) {
 void Inferrer::visit(ast::Switch *expression) {
     expression->expression()->accept(this);
 
-    auto enum_type = dynamic_cast<types::Enum *>(expression->expression()->type);
-    if (enum_type == nullptr) {
-        report(TypeMismatchError(expression->expression(), expression));
-        return;
-    }
-
     for (auto entry : expression->cases()) {
         entry->condition()->accept(this);
 
@@ -608,93 +602,6 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
 
     symbol->type = type;
     definition->type = type;
-
-    m_namespace = oldNamespace;
-}
-
-void Inferrer::visit(ast::ProtocolDefinition *definition) {
-    auto symbol = m_namespace->lookup(this, definition,
-                                      definition->name->value);
-
-    symboltable::Namespace *oldNamespace = m_namespace;
-    m_namespace = symbol->nameSpace;
-
-    std::vector<types::ParameterType *> input_parameters;
-    for (auto t : definition->name->parameters) {
-        t->accept(this);
-
-        auto param = dynamic_cast<types::ParameterType *>(t->type);
-        assert(param);
-
-        input_parameters.push_back(param);
-    }
-
-    std::vector<types::Method *> methods;
-    for (auto signature : definition->methods()) {
-        std::vector<types::Type *> parameter_types;
-        for (auto p : signature->parameter_types()) {
-            p->accept(this);
-            return_if_null(p->type);
-
-            parameter_types.push_back(p->type);
-        }
-
-        signature->return_type()->accept(this);
-        auto return_type = signature->return_type()->type;
-        return_if_null(return_type);
-
-        auto method = new types::Method(parameter_types, return_type);
-        method->set_is_generic(!definition->name->parameters.empty());
-        methods.push_back(method);
-    }
-
-    definition->type = new types::ProtocolType(input_parameters, methods);
-    symbol->type = definition->type;
-
-    m_namespace = oldNamespace;
-}
-
-void Inferrer::visit(ast::EnumDefinition *definition) {
-    auto symbol = m_namespace->lookup(this, definition,
-                                      definition->name->value);
-
-    symboltable::Namespace *oldNamespace = m_namespace;
-    m_namespace = symbol->nameSpace;
-
-    std::vector<types::ParameterType *> input_parameters;
-    for (auto t : definition->name->parameters) {
-        t->accept(this);
-
-        auto param = dynamic_cast<types::ParameterType *>(t->type);
-        assert(param);
-
-        input_parameters.push_back(param);
-    }
-
-    std::vector<std::string> element_names;
-    std::vector<types::TypeType *> element_types;
-
-    for (auto element : definition->elements()) {
-        types::TypeType *type = nullptr;
-
-        element_names.push_back(element->name()->value);
-
-        if (element->type_name()) {
-            element->type_name()->accept(this);
-            return_if_null_type(element->type_name());
-            type = dynamic_cast<types::TypeType *>(element->type_name()->type);
-            assert(type);
-        } else {
-            type = new types::VoidType();
-        }
-
-        element_types.push_back(type);
-
-        element->type = type;
-    }
-
-    definition->type = new types::EnumType(input_parameters, element_names, element_types);
-    symbol->type = definition->type;
 
     m_namespace = oldNamespace;
 }
@@ -979,18 +886,6 @@ void Checker::visit(ast::TypeDefinition *definition) {
     check_not_null(definition);
 
     m_namespace = oldNamespace;
-}
-
-void Checker::visit(ast::ProtocolDefinition *definition) {
-    check_not_null(definition);
-}
-
-void Checker::visit(ast::EnumDefinition *definition) {
-    for (auto element : definition->elements()) {
-        check_not_null(element);
-    }
-
-    check_not_null(definition);
 }
 
 void Checker::visit(ast::DefinitionStatement *statement) {

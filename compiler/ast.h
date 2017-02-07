@@ -339,44 +339,6 @@ namespace acorn {
             std::unique_ptr<Identifier> m_return_type;
         };
 
-        class ProtocolDefinition : public Definition {
-        public:
-            ProtocolDefinition(Token token, Identifier *name, std::vector<MethodSignature *> methods);
-
-            std::vector<MethodSignature *> methods() const;
-
-            void accept(Visitor *visitor);
-
-        private:
-            std::vector<std::unique_ptr<MethodSignature> > m_methods;
-        };
-
-        class EnumElement : public Node {
-        public:
-            EnumElement(Token token, Identifier *name, Identifier *type);
-
-            Identifier *name() const;
-            Identifier *type_name() const;
-
-            void accept(Visitor *visitor);
-
-        private:
-            std::unique_ptr<Identifier> m_name;
-            std::unique_ptr<Identifier> m_type_name;
-        };
-
-        class EnumDefinition : public Definition {
-        public:
-            EnumDefinition(Token token, Identifier *name, std::vector<EnumElement *> elements);
-
-            std::vector<EnumElement *> elements() const;
-
-            void accept(Visitor *visitor);
-
-        private:
-            std::vector<std::unique_ptr<EnumElement> > m_elements;
-        };
-
         // statements
         struct DefinitionStatement : Statement {
             explicit DefinitionStatement(Definition *definition);
@@ -450,8 +412,6 @@ namespace acorn {
             virtual void visit(VariableDefinition *definition) = 0;
             virtual void visit(FunctionDefinition *definition) = 0;
             virtual void visit(TypeDefinition *definition) = 0;
-            virtual void visit(ProtocolDefinition *definition) = 0;
-            virtual void visit(EnumDefinition *definition) = 0;
 
             // statements
             virtual void visit(DefinitionStatement *statement) = 0;
