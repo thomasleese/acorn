@@ -18,7 +18,6 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
 
-
 #include "ast.h"
 #include "diagnostics.h"
 #include "symboltable.h"
@@ -715,8 +714,6 @@ void ModuleGenerator::visit(ast::StringLiteral *expression) {
 }
 
 void ModuleGenerator::visit(ast::SequenceLiteral *sequence) {
-
-
     std::vector<llvm::Value *> elements;
 
     for (auto element : sequence->elements) {
@@ -766,8 +763,6 @@ void ModuleGenerator::visit(ast::MappingLiteral *mapping) {
 }
 
 void ModuleGenerator::visit(ast::RecordLiteral *expression) {
-
-
     //auto record = dynamic_cast<types::Record *>(expression->type);
 
     llvm::Type *llvm_type = generate_type(expression);
@@ -838,6 +833,8 @@ void ModuleGenerator::visit(ast::Call *expression) {
     auto method = function_type->find_method(expression, argument_types);
     assert(method);
 
+    std::cout << "found method: " << method->name() << std::endl;
+
     if (function == nullptr) {
         report(InternalError(expression, "No LLVM function was available!"));
         push_value(nullptr);
@@ -864,7 +861,9 @@ void ModuleGenerator::visit(ast::Call *expression) {
         i++;
     }
 
+    std::cout << "here" << std::endl;
     function->dump();
+    std::cout << "end here" << std::endl;
 
     auto value = m_irBuilder->CreateCall(function, arguments);
     push_value(value);
@@ -1000,8 +999,6 @@ void ModuleGenerator::visit(ast::While *expression) {
 void ModuleGenerator::visit(ast::If *expression) {
     expression->condition->accept(this);
     auto condition = pop_value();
-
-
 
     condition = m_irBuilder->CreateICmpEQ(condition, llvm::ConstantInt::get(llvm::Type::getInt1Ty(m_module->getContext()), 1), "ifcond");
 
