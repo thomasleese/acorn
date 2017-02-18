@@ -203,6 +203,10 @@ bool Lexer::read_keyword(Token &token) const {
         token.kind = Token::DefKeyword;
     } else if (token.lexeme == "return") {
         token.kind = Token::ReturnKeyword;
+    } else if (token.lexeme == "if") {
+        token.kind = Token::IfKeyword;
+    } else if (token.lexeme == "else") {
+        token.kind = Token::ElseKeyword;
     } else {
         return false;
     }
