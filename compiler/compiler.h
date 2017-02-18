@@ -13,6 +13,14 @@
 
 namespace acorn {
 
+    namespace ast {
+        struct SourceFile;
+    }
+
+    namespace symboltable {
+        class Namespace;
+    }
+
     namespace compiler {
 
         class Compiler : public diagnostics::Reporter {
@@ -21,7 +29,7 @@ namespace acorn {
             Compiler();
             ~Compiler();
 
-            bool compile(std::string filename);
+            bool compile(ast::SourceFile *module, symboltable::Namespace *root_namespace, std::string filename);
 
         private:
             llvm::LLVMContext m_context;

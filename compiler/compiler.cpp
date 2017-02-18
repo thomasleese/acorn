@@ -20,12 +20,6 @@
 
 #include "ast.h"
 #include "codegen.h"
-#include "diagnostics.h"
-#include "lexer.h"
-#include "parser.h"
-#include "prettyprinter.h"
-#include "symboltable.h"
-#include "typing.h"
 
 #include "compiler.h"
 
@@ -54,60 +48,9 @@ Compiler::~Compiler() {
 
 }
 
-bool Compiler::compile(std::string filename) {
+bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_namespace, std::string filename) {
     std::string outputName = filename + ".o";
     std::string moduleName = filename.substr(0, filename.find_last_of("."));
-
-    Lexer lexer(filename);
-
-    //lexer.debug();
-
-    debug("Parsing...");
-
-    Parser parser(lexer);
-    auto module = parser.parse(filename);
-
-    if (lexer.has_errors() || parser.has_errors()) {
-        return false;
-    }
-
-    debug("Building the Symbol Table...");
-
-    symboltable::Builder symbol_table_builder;
-    module->accept(&symbol_table_builder);
-    assert(symbolTableBuilder.isAtRoot());
-
-    if (symbol_table_builder.has_errors()) {
-        return false;
-    }
-
-    auto rootNamespace = symbol_table_builder.rootNamespace();
-
-    debug("Inferring types...");
-
-    typing::Inferrer inferrer(rootNamespace);
-    module->accept(&inferrer);
-
-    if (inferrer.has_errors()) {
-        return false;
-    }
-
-    std::cout << rootNamespace->to_string() << std::endl;
-
-    PrettyPrinter pp;
-    module->accept(&pp);
-    pp.print();
-
-    debug("Checking types...");
-
-    typing::Checker type_checker(rootNamespace);
-    module->accept(&type_checker);
-
-    if (type_checker.has_errors()) {
-        return false;
-    }
-
-    debug("Generating code...");
 
     llvm::Triple triple(llvm::sys::getDefaultTargetTriple());
 
@@ -148,7 +91,7 @@ bool Compiler::compile(std::string filename) {
 
     auto data_layout = target_machine->createDataLayout();
 
-    codegen::ModuleGenerator generator(rootNamespace, m_context, &data_layout);
+    codegen::ModuleGenerator generator(root_namespace, m_context, &data_layout);
     module->accept(&generator);
 
     if (generator.has_errors()) {
