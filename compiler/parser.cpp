@@ -526,9 +526,11 @@ CodeBlock *Parser::readFor() {
 }
 
 If *Parser::readIf() {
+    debug("Reading if");
+
     return_if_false(read_token(Token::IfKeyword, token));
 
-    If *expression = new If(token);
+    auto expression = new If(token);
 
     if (is_token(Token::LetKeyword)) {
         auto lhs = readVariableDeclaration();
@@ -546,7 +548,10 @@ If *Parser::readIf() {
         return_if_null(expression->condition);
     }
 
-    return_if_false(skip_token(Token::Newline));
+    debug("Reading :");
+
+    return_if_false(skip_token(Token::Colon));
+    return_if_false(skip_token(Token::Indent));
 
     expression->trueCode = new CodeBlock(m_tokens.front());
     expression->falseCode = nullptr;
@@ -560,15 +565,18 @@ If *Parser::readIf() {
         expression->trueCode->statements.push_back(statement);
     }
 
+    return_if_false(skip_token(Token::Deindent));
+
     if (is_token(Token::ElseKeyword)) {
         skip_token(Token::ElseKeyword);
 
         if (is_token(Token::IfKeyword)) {
             expression->falseCode = new CodeBlock(m_tokens.front());
-            If *if_expr = readIf();
+            auto if_expr = readIf();
             expression->falseCode->statements.push_back(new ExpressionStatement(if_expr));
         } else {
-            return_if_false(skip_token(Token::Newline));
+            return_if_false(skip_token(Token::Colon));
+            return_if_false(skip_token(Token::Indent));
             expression->falseCode = readCodeBlock();
         }
     } else {
@@ -697,6 +705,8 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
 }
 
 Expression *Parser::readPrimaryExpression() {
+    debug("Reading primary expression");
+
     if (is_token(Token::OpenParenthesis)) {
         skip_token(Token::OpenParenthesis);
         Expression *expr = readExpression(true);
