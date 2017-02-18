@@ -333,6 +333,10 @@ bool Lexer::read_delimiter(Token &token) {
             token.kind = Token::Assignment;
             return true;
 
+        case '|':
+            token.kind = Token::Pipe;
+            return true;
+
         default:
             m_stream.unget();
             token.lexeme.clear();

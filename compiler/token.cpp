@@ -113,6 +113,8 @@ std::string Token::as_string(Token::Kind kind)
             return ";";
         case Arrow:
             return "->";
+        case Pipe:
+            return "|";
         case Assignment:
             return "=";
         case Name:

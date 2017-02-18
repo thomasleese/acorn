@@ -749,6 +749,14 @@ Expression *Parser::readOperandExpression(bool parse_comma) {
             left = readCall(left);
         } else if (is_token(Token::OpenBracket)) {
             left = readIndex(left);
+        } else if (is_token(Token::Pipe)) {
+            skip_token(Token::Pipe);
+            auto name = readIdentifier(false);
+            return_if_null(name);
+            auto call = readCall(name);
+            return_if_null(call);
+            call->arguments.insert(call->arguments.begin(), left);
+            left = call;
         } else if (is_token(Token::AsKeyword)) {
             left = readCast(left);
         } else if (is_token(Token::Dot)) {

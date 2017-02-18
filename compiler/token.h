@@ -74,6 +74,7 @@ namespace acorn {
             Semicolon,
             Assignment,
             Arrow,
+            Pipe,
 
             // identifiers
             Operator,
