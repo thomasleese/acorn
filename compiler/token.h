@@ -30,6 +30,7 @@ namespace acorn {
             InKeyword,
             IfKeyword,
             ElseKeyword,
+            EndKeyword,
             ContinueKeyword,
             BreakKeyword,
             TryKeyword,

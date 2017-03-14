@@ -165,6 +165,7 @@ CodeBlock *Parser::readCodeBlock(bool in_switch) {
         }
     } else {
         skip_token(Token::Deindent);
+        skip_token(Token::EndKeyword);
     }
 
     return code;
@@ -550,7 +551,6 @@ If *Parser::readIf() {
 
     debug("Reading :");
 
-    return_if_false(skip_token(Token::Colon));
     return_if_false(skip_token(Token::Indent));
 
     expression->trueCode = new CodeBlock(m_tokens.front());
@@ -575,12 +575,12 @@ If *Parser::readIf() {
             auto if_expr = readIf();
             expression->falseCode->statements.push_back(new ExpressionStatement(if_expr));
         } else {
-            return_if_false(skip_token(Token::Colon));
             return_if_false(skip_token(Token::Indent));
             expression->falseCode = readCodeBlock();
         }
     } else {
         skip_token(Token::Deindent);
+        skip_token(Token::EndKeyword);
     }
 
     return expression;
@@ -808,7 +808,7 @@ Parameter *Parser::readParameter() {
 
     parameter->name = readIdentifier(false);
 
-    return_if_false(skip_token(Token::Colon));
+    return_if_false(skip_token(Token::AsKeyword));
 
     parameter->typeNode = readIdentifier(true);
 
@@ -864,12 +864,11 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     }
 
     return_if_false(skip_token(Token::CloseParenthesis));
-    return_if_false(skip_token(Token::Arrow));
+    return_if_false(skip_token(Token::AsKeyword));
 
     definition->returnType = readIdentifier(true);
     return_if_null(definition->returnType)
 
-    return_if_false(skip_token(Token::Colon));
     return_if_false(skip_token(Token::Indent));
 
     definition->code = readCodeBlock();

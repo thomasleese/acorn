@@ -207,6 +207,10 @@ bool Lexer::read_keyword(Token &token) const {
         token.kind = Token::IfKeyword;
     } else if (token.lexeme == "else") {
         token.kind = Token::ElseKeyword;
+    } else if (token.lexeme == "as") {
+        token.kind = Token::AsKeyword;
+    } else if (token.lexeme == "end") {
+        token.kind = Token::EndKeyword;
     } else {
         return false;
     }

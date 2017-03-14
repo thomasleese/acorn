@@ -1,4 +1,4 @@
-def fib(n as Int) as Int
+def fib(n as Int64) as Int64
     if n < 2
         n
     else
@@ -6,4 +6,4 @@ def fib(n as Int) as Int
     end
 end
 
-10 | fib
+10 | fib()
