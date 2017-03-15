@@ -567,7 +567,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     definition->code->accept(this);
 
     auto nothing = m_irBuilder->getInt1(false);
-    if (definition->code->statements.empty()) {
+    if (definition->code->expressions.empty()) {
         m_irBuilder->CreateRet(nothing);
     } else {
         if (m_values.empty()) {
@@ -621,7 +621,7 @@ llvm::BasicBlock *ModuleGenerator::create_basic_block(std::string name) const {
 void ModuleGenerator::visit(ast::CodeBlock *block) {
     llvm::Value *last_value = nullptr;
 
-    for (auto statement : block->statements) {
+    for (auto statement : block->expressions) {
         statement->accept(this);
         last_value = pop_value();
     }
@@ -1109,16 +1109,11 @@ void ModuleGenerator::visit(ast::TypeDefinition *definition) {
     push_value(nullptr);
 }
 
-void ModuleGenerator::visit(ast::DefinitionStatement *statement) {
+void ModuleGenerator::visit(ast::DefinitionExpression *statement) {
     statement->definition->accept(this);
 }
 
-void ModuleGenerator::visit(ast::ExpressionStatement *statement) {
-    statement->expression->accept(this);
-    // we don't pop a value here because we should end up just pushing it again
-}
-
-void ModuleGenerator::visit(ast::ImportStatement *statement) {
+void ModuleGenerator::visit(ast::ImportExpression *statement) {
     report(InternalError(statement, "N/A"));
 }
 

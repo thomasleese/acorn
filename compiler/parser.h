@@ -70,8 +70,8 @@ namespace acorn {
         ast::TypeDefinition *readTypeDefinition();
 
         // statements
-        ast::Statement *readStatement();
-        ast::ImportStatement *readImportStatement();
+        ast::Expression *readExpression();
+        ast::ImportExpression *readImportExpression();
 
     private:
         Lexer &m_lexer;

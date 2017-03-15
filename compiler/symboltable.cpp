@@ -315,7 +315,7 @@ void Builder::add_builtins() {
 }
 
 void Builder::visit(ast::CodeBlock *block) {
-    for (auto statement : block->statements) {
+    for (auto statement : block->expressions) {
         statement->accept(this);
     }
 }
@@ -497,15 +497,11 @@ void Builder::visit(ast::TypeDefinition *definition) {
     m_scope.pop_back();
 }
 
-void Builder::visit(ast::DefinitionStatement *statement) {
+void Builder::visit(ast::DefinitionExpression *statement) {
     statement->definition->accept(this);
 }
 
-void Builder::visit(ast::ExpressionStatement *statement) {
-    statement->expression->accept(this);
-}
-
-void Builder::visit(ast::ImportStatement *statement) {
+void Builder::visit(ast::ImportExpression *statement) {
 
 }
 

@@ -31,7 +31,7 @@ void PrettyPrinter::visit(ast::CodeBlock *codeBlock)
     ss << indentation() << "(CodeBlock [" << type_of(codeBlock) << "]\n";
     indent++;
 
-    for (auto statement : codeBlock->statements) {
+    for (auto statement : codeBlock->expressions) {
         statement->accept(this);
     }
 
@@ -355,9 +355,9 @@ void PrettyPrinter::visit(ast::TypeDefinition *definition)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::DefinitionStatement *statement)
+void PrettyPrinter::visit(ast::DefinitionExpression *statement)
 {
-    ss << indentation() << "(DefinitionStatement\n";
+    ss << indentation() << "(DefinitionExpression\n";
     indent++;
 
     statement->definition->accept(this);
@@ -366,20 +366,9 @@ void PrettyPrinter::visit(ast::DefinitionStatement *statement)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::ExpressionStatement *statement)
+void PrettyPrinter::visit(ast::ImportExpression *statement)
 {
-    ss << indentation() << "(ExpressionStatement [" << type_of(statement) << "]\n";
-    indent++;
-
-    statement->expression->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
-void PrettyPrinter::visit(ast::ImportStatement *statement)
-{
-    ss << indentation() << "(ImportStatement\n";
+    ss << indentation() << "(ImportExpression\n";
     indent++;
 
     statement->path->accept(this);

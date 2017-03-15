@@ -151,14 +151,14 @@ types::Type *Inferrer::replace_type_parameters(types::Type *type, std::map<types
 }
 
 void Inferrer::visit(ast::CodeBlock *block) {
-    for (auto statement : block->statements) {
+    for (auto statement : block->expressions) {
         statement->accept(this);
     }
 
-    if (block->statements.empty()) {
+    if (block->expressions.empty()) {
         block->type = new types::Void();
     } else {
-        block->type = block->statements.back()->type;
+        block->type = block->expressions.back()->type;
     }
 }
 
@@ -606,17 +606,12 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
     m_namespace = oldNamespace;
 }
 
-void Inferrer::visit(ast::DefinitionStatement *statement) {
+void Inferrer::visit(ast::DefinitionExpression *statement) {
     statement->definition->accept(this);
     statement->type = statement->definition->type;
 }
 
-void Inferrer::visit(ast::ExpressionStatement *statement) {
-    statement->expression->accept(this);
-    statement->type = statement->expression->type;
-}
-
-void Inferrer::visit(ast::ImportStatement *statement) {
+void Inferrer::visit(ast::ImportExpression *statement) {
     statement->path->accept(this);
     statement->type = new types::Void();
 }
@@ -653,7 +648,7 @@ void Checker::check_not_null(ast::Node *node) {
 }
 
 void Checker::visit(ast::CodeBlock *block) {
-    for (auto statement : block->statements) {
+    for (auto statement : block->expressions) {
         statement->accept(this);
     }
 
@@ -888,17 +883,12 @@ void Checker::visit(ast::TypeDefinition *definition) {
     m_namespace = oldNamespace;
 }
 
-void Checker::visit(ast::DefinitionStatement *statement) {
+void Checker::visit(ast::DefinitionExpression *statement) {
     statement->definition->accept(this);
     check_not_null(statement);
 }
 
-void Checker::visit(ast::ExpressionStatement *statement) {
-    statement->expression->accept(this);
-    check_not_null(statement);
-}
-
-void Checker::visit(ast::ImportStatement *statement) {
+void Checker::visit(ast::ImportExpression *statement) {
     statement->path->accept(this);
     check_not_null(statement);
 }

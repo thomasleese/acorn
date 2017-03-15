@@ -38,15 +38,11 @@ namespace acorn {
             using Node::Node;
         };
 
-        struct Statement : Node {
-            using Node::Node;
-        };
-
         // misc
         struct CodeBlock : Expression {
             using Expression::Expression;
 
-            std::vector<Statement *> statements;
+            std::vector<Expression *> expressions;
 
             void accept(Visitor *visitor);
         };
@@ -339,25 +335,16 @@ namespace acorn {
             std::unique_ptr<Identifier> m_return_type;
         };
 
-        // statements
-        struct DefinitionStatement : Statement {
-            explicit DefinitionStatement(Definition *definition);
+        struct DefinitionExpression : Expression {
+            explicit DefinitionExpression(Definition *definition);
 
             Definition *definition;
 
             void accept(Visitor *visitor);
         };
 
-        struct ExpressionStatement : Statement {
-            explicit ExpressionStatement(Expression *expression);
-
-            Expression *expression;
-
-            void accept(Visitor *visitor);
-        };
-
-        struct ImportStatement : Statement {
-            ImportStatement(Token token, StringLiteral *path);
+        struct ImportExpression : Expression {
+            ImportExpression(Token token, StringLiteral *path);
 
             StringLiteral *path;
 
@@ -370,7 +357,7 @@ namespace acorn {
 
             std::string name;
             CodeBlock *code;
-            std::vector<ImportStatement *> imports;
+            std::vector<ImportExpression *> imports;
 
             void accept(Visitor *visitor);
         };
@@ -413,10 +400,9 @@ namespace acorn {
             virtual void visit(FunctionDefinition *definition) = 0;
             virtual void visit(TypeDefinition *definition) = 0;
 
-            // statements
-            virtual void visit(DefinitionStatement *statement) = 0;
-            virtual void visit(ExpressionStatement *statement) = 0;
-            virtual void visit(ImportStatement *statement) = 0;
+            // Expressions
+            virtual void visit(DefinitionExpression *Expression) = 0;
+            virtual void visit(ImportExpression *Expression) = 0;
 
             // module
             virtual void visit(SourceFile *module) = 0;

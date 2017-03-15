@@ -40,9 +40,9 @@ SourceFile *Parser::parse(std::string name) {
 
     auto module = new SourceFile(m_tokens.front(), name);
 
-    // read import statements, which must appear at the top of a source file
+    // read import expressions, which must appear at the top of a source file
     while (is_token(Token::ImportKeyword)) {
-        module->imports.push_back(readImportStatement());
+        module->imports.push_back(readImportExpression());
     }
 
     // FIXME, implement a proper module system
@@ -58,19 +58,19 @@ SourceFile *Parser::parse(std::string name) {
             continue;
         }
 
-        for (auto statement : module2->code->statements) {
-            module->code->statements.push_back(statement);
+        for (auto statement : module2->code->expressions) {
+            module->code->expressions.push_back(statement);
         }
 
         delete module2;
     }
 
-    // read the remaining statements of the file
+    // read the remaining expressions of the file
     while (!is_token(Token::EndOfFile)) {
-        auto statement = readStatement();
+        auto statement = readExpression();
         if (statement == nullptr) break;
 
-        module->code->statements.push_back(statement);
+        module->code->expressions.push_back(statement);
     }
 
     return module;
@@ -149,12 +149,12 @@ CodeBlock *Parser::readCodeBlock(bool in_switch) {
     auto code = new CodeBlock(m_tokens.front());
 
     while (!is_token(Token::Deindent) && !(in_switch && (is_token(Token::CaseKeyword) || is_token(Token::DefaultKeyword)))) {
-        auto statement = readStatement();
+        auto statement = readExpression();
         if (statement == nullptr) {
             break;
         }
 
-        code->statements.push_back(statement);
+        code->expressions.push_back(statement);
     }
 
     if (in_switch) {
@@ -511,17 +511,17 @@ CodeBlock *Parser::readFor() {
     auto code_block = new CodeBlock(token);
 
     auto state_variable = new VariableDefinition(token, state_variable_name, new Call(token, "start", iterator));
-    code_block->statements.push_back(new DefinitionStatement(state_variable));
+    code_block->expressions.push_back(new DefinitionExpression(state_variable));
 
     auto condition = new Call(token, "not", new Call(token, "done", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
     auto while_code = new While(token, condition, loop_code);
 
     auto next_state_variable = new VariableDefinition(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
-    loop_code->statements.insert(loop_code->statements.begin(), new DefinitionStatement(next_state_variable));
-    loop_code->statements.insert(loop_code->statements.begin() + 1, new ExpressionStatement(new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name(), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1"))));
-    loop_code->statements.insert(loop_code->statements.begin() + 1, new ExpressionStatement(new Assignment(token, variable, new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0"))));
+    loop_code->expressions.insert(loop_code->expressions.begin(), new DefinitionExpression(next_state_variable));
+    loop_code->expressions.insert(loop_code->expressions.begin() + 1, new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name(), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1")));
+    loop_code->expressions.insert(loop_code->expressions.begin() + 1, new Assignment(token, variable, new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0")));
 
-    code_block->statements.push_back(new ExpressionStatement(while_code));
+    code_block->expressions.push_back(while_code);
 
     return code_block;
 }
@@ -557,12 +557,12 @@ If *Parser::readIf() {
     expression->falseCode = nullptr;
 
     while (!is_token(Token::ElseKeyword) && !is_token(Token::Deindent)) {
-        auto statement = readStatement();
+        auto statement = readExpression();
         if (statement == nullptr) {
             break;
         }
 
-        expression->trueCode->statements.push_back(statement);
+        expression->trueCode->expressions.push_back(statement);
     }
 
     return_if_false(skip_token(Token::Deindent));
@@ -573,7 +573,7 @@ If *Parser::readIf() {
         if (is_token(Token::IfKeyword)) {
             expression->falseCode = new CodeBlock(m_tokens.front());
             auto if_expr = readIf();
-            expression->falseCode->statements.push_back(new ExpressionStatement(if_expr));
+            expression->falseCode->expressions.push_back(if_expr);
         } else {
             return_if_false(skip_token(Token::Indent));
             expression->falseCode = readCodeBlock();
@@ -897,8 +897,8 @@ TypeDefinition *Parser::readTypeDefinition() {
     return definition;
 }
 
-Statement *Parser::readStatement() {
-    debug("Reading Statement...");
+Expression *Parser::readExpression() {
+    debug("Reading Expression...");
 
     Definition *def = nullptr;
 
@@ -911,20 +911,20 @@ Statement *Parser::readStatement() {
     } else {
         auto expression = readExpression(true);
         return_if_null(expression);
-        return new ExpressionStatement(expression);
+        return expression;
     }
 
     if (def != nullptr) {
-        return new DefinitionStatement(def);
+        return new DefinitionExpression(def);
     } else {
         return nullptr;
     }
 }
 
-ImportStatement *Parser::readImportStatement() {
+ImportExpression *Parser::readImportExpression() {
     return_if_false(read_token(Token::ImportKeyword, token));
     StringLiteral *path = readStringLiteral();
     return_if_false(skip_token(Token::Newline));
 
-    return new ImportStatement(token, path);
+    return new ImportExpression(token, path);
 }

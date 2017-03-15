@@ -342,27 +342,19 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-DefinitionStatement::DefinitionStatement(Definition *definition) : Statement(definition->token) {
+DefinitionExpression::DefinitionExpression(Definition *definition) : Expression(definition->token) {
     this->definition = definition;
 }
 
-void DefinitionStatement::accept(Visitor *visitor) {
+void DefinitionExpression::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-ExpressionStatement::ExpressionStatement(Expression *expression) : Statement(expression->token) {
-    this->expression = expression;
-}
-
-void ExpressionStatement::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-ImportStatement::ImportStatement(Token token, StringLiteral *path) : Statement(token) {
+ImportExpression::ImportExpression(Token token, StringLiteral *path) : Expression(token) {
     this->path = path;
 }
 
-void ImportStatement::accept(Visitor *visitor) {
+void ImportExpression::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

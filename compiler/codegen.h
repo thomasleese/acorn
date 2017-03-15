@@ -155,9 +155,8 @@ namespace acorn {
             void visit(ast::FunctionDefinition *definition);
             void visit(ast::TypeDefinition *definition);
 
-            void visit(ast::DefinitionStatement *statement);
-            void visit(ast::ExpressionStatement *statement);
-            void visit(ast::ImportStatement *statement);
+            void visit(ast::DefinitionExpression *statement);
+            void visit(ast::ImportExpression *statement);
 
             void visit(ast::SourceFile *module);
 
