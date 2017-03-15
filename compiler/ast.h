@@ -134,11 +134,14 @@ namespace acorn {
 
         class FloatLiteral : public Expression {
         public:
-            using Expression::Expression;
+            FloatLiteral(Token token, std::string value);
 
-            std::string value;
+            std::string value() const;
 
             void accept(Visitor *visitor);
+
+        private:
+            std::string m_value;
         };
 
         class ImaginaryLiteral : public Expression {
@@ -207,6 +210,7 @@ namespace acorn {
         class Call : public Expression {
         public:
             explicit Call(Token token);
+            Call(Token token, Expression *operand);
             Call(Token token, std::string name, Expression *arg1 = nullptr, Expression *arg2 = nullptr);
 
             Expression *operand;
@@ -230,7 +234,8 @@ namespace acorn {
 
         class Cast : public Expression {
         public:
-            Cast(Token token);
+            explicit Cast(Token token);
+            Cast(Token token, Expression *operand, Name *new_type);
 
             Expression *operand;
             Name *new_type;
@@ -286,7 +291,8 @@ namespace acorn {
 
         class Return : public Expression {
         public:
-            using Expression::Expression;
+            explicit Return(Token token);
+            Return(Token token, Expression *expression);
 
             Expression *expression;
 

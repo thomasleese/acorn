@@ -186,6 +186,14 @@ void IntegerLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+FloatLiteral::FloatLiteral(Token token, std::string value) : Expression(token), m_value(value) {
+
+}
+
+std::string FloatLiteral::value() const {
+    return m_value;
+}
+
 void FloatLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -242,6 +250,10 @@ Call::Call(Token token) : Expression(token), operand(nullptr) {
 
 }
 
+Call::Call(Token token, Expression *operand) : Expression(token) {
+    this->operand = operand;
+}
+
 Call::Call(Token token, std::string name, Expression *arg1, Expression *arg2) : Call(token) {
     this->operand = new Name(token, name);
 
@@ -269,6 +281,11 @@ void CCall::accept(Visitor *visitor) {
 Cast::Cast(Token token) : Expression(token) {
     this->operand = nullptr;
     this->new_type = nullptr;
+}
+
+Cast::Cast(Token token, Expression *operand, Name *new_type) : Expression(token) {
+    this->operand = operand;
+    this->new_type = new_type;
 }
 
 void Cast::accept(Visitor *visitor) {
@@ -324,6 +341,14 @@ void While::accept(Visitor *visitor) {
 
 void If::accept(Visitor *visitor) {
     visitor->visit(this);
+}
+
+Return::Return(Token token) : Expression(token), expression(nullptr) {
+
+}
+
+Return::Return(Token token, Expression *expression) : Expression(token) {
+    this->expression = expression;
 }
 
 void Return::accept(Visitor *visitor) {
@@ -388,7 +413,7 @@ void Switch::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Parameter::Parameter(Token token) : Expression(token), name(nullptr), typeNode(nullptr) {
+Parameter::Parameter(Token token) : Expression(token), inout(false), name(nullptr), typeNode(nullptr) {
 
 }
 

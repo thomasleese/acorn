@@ -771,7 +771,7 @@ void ModuleGenerator::visit(ast::FloatLiteral *expression) {
 
     double floatValue;
     std::stringstream ss;
-    ss << expression->value;
+    ss << expression->value();
     ss >> floatValue;
 
     push_value(llvm::ConstantFP::get(type, floatValue));

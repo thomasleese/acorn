@@ -69,12 +69,12 @@ void PrettyPrinter::visit(ast::VariableDeclaration *node)
 
 void PrettyPrinter::visit(ast::IntegerLiteral *expression)
 {
-    ss << indentation() << "(IntegerLiteral " << expression->value() << ")\n";
+    ss << indentation() << "(IntegerLiteral " << expression->value() << " [" << type_of(expression) << "])\n";
 }
 
 void PrettyPrinter::visit(ast::FloatLiteral *expression)
 {
-    ss << indentation() << "(FloatLiteral " << expression->value << ")\n";
+    ss << indentation() << "(FloatLiteral " << expression->value() << " [" << type_of(expression) << "])\n";
 }
 
 void PrettyPrinter::visit(ast::ImaginaryLiteral *imaginary)

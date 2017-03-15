@@ -1,6 +1,6 @@
 import 'base/os'
 
-def modify_integer(n as Int64)
+def modify_integer(n as Int)
   let i = n * 2
     let j = i * 2
       j * 2
