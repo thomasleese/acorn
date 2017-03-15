@@ -35,6 +35,21 @@ std::string codegen::mangle_method(std::string name, types::Method *type) {
     return "_A_" + name + "_" + type->mangled_name();
 }
 
+void ValueFollower::push_value(llvm::Value *value) {
+    m_values.push_back(value);
+}
+
+llvm::Value *ValueFollower::pop_value() {
+    assert(!m_units.empty());
+    auto value = m_values.back();
+    m_values.pop_back();
+    return value;
+}
+
+llvm::Value *ValueFollower::value() const {
+    return m_values.back();
+}
+
 TypeGenerator::TypeGenerator(Reporter *diagnostics, llvm::LLVMContext &context)
         : m_context(context), m_diagnostics(diagnostics)
 {
@@ -669,17 +684,6 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     m_irBuilder->CreateStore(function, gep);
 
     return function;
-}
-
-void ModuleGenerator::push_value(llvm::Value *value) {
-    m_values.push_back(value);
-}
-
-llvm::Value *ModuleGenerator::pop_value() {
-    assert(!m_units.empty());
-    auto value = m_values.back();
-    m_values.pop_back();
-    return value;
 }
 
 llvm::BasicBlock *ModuleGenerator::create_basic_block(std::string name) const {

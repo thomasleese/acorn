@@ -33,6 +33,16 @@ namespace acorn {
 
         std::string mangle_method(std::string name, types::Method *type);
 
+        class ValueFollower {
+        public:
+            void push_value(llvm::Value *value);
+            llvm::Value *pop_value();
+            llvm::Value *value() const;
+
+        private:
+            std::vector<llvm::Value *> m_values;
+        };
+
         class TypeGenerator : public types::Visitor {
         public:
             explicit TypeGenerator(diagnostics::Reporter *diagnostics, llvm::LLVMContext &context);
@@ -109,7 +119,7 @@ namespace acorn {
             std::vector<llvm::Argument *> m_args;
         };
 
-        class ModuleGenerator : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower {
+        class ModuleGenerator : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower {
 
         public:
             ModuleGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
@@ -122,9 +132,6 @@ namespace acorn {
 
             llvm::Function *generate_function(ast::FunctionDefinition *definition);
             llvm::Function *generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *>);
-
-            void push_value(llvm::Value *value);
-            llvm::Value *pop_value();
 
             llvm::BasicBlock *create_basic_block(std::string name) const;
 
@@ -167,8 +174,6 @@ namespace acorn {
             llvm::IRBuilder<> *m_irBuilder;
             llvm::MDBuilder *m_mdBuilder;
             llvm::DataLayout *m_data_layout;
-
-            std::vector<llvm::Value *> m_values;
 
             BuiltinGenerator *m_builtin_generator;
             TypeGenerator *m_type_generator;
