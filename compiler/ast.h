@@ -122,11 +122,14 @@ namespace acorn {
 
         class IntegerLiteral : public Expression {
         public:
-            using Expression::Expression;
+            IntegerLiteral(Token token, std::string value);
 
-            std::string value;
+            std::string value() const;
 
             void accept(Visitor *visitor);
+
+        private:
+            std::string m_value;
         };
 
         class FloatLiteral : public Expression {
@@ -216,7 +219,7 @@ namespace acorn {
 
             Name *name;
             std::vector<Name *> parameters;
-            Name *returnType;
+            Name *given_return_type;
             std::vector<Expression *> arguments;
 
             void accept(Visitor *visitor);
@@ -361,7 +364,7 @@ namespace acorn {
 
             std::vector<Parameter *> parameters;
             Expression *body;
-            Name *returnType;
+            Name *given_return_type;
 
             void accept(Visitor *visitor);
         };

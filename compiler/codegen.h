@@ -171,7 +171,7 @@ namespace acorn {
         private:
             llvm::LLVMContext &m_context;
             llvm::Module *m_module;
-            llvm::IRBuilder<> *m_irBuilder;
+            llvm::IRBuilder<> *m_ir_builder;
             llvm::MDBuilder *m_mdBuilder;
             llvm::DataLayout *m_data_layout;
 

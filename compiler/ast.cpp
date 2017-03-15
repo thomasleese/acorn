@@ -174,6 +174,14 @@ void Definition::set_type(types::Type *type) {
     m_name->set_type(type);
 }
 
+IntegerLiteral::IntegerLiteral(Token token, std::string value) : Expression(token), m_value(value) {
+
+}
+
+std::string IntegerLiteral::value() const {
+    return m_value;
+}
+
 void IntegerLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -242,9 +250,8 @@ void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-CCall::CCall(Token token) : Expression(token) {
-    this->name = nullptr;
-    this->returnType = nullptr;
+CCall::CCall(Token token) : Expression(token), name(nullptr), given_return_type(nullptr) {
+
 }
 
 void CCall::accept(Visitor *visitor) {
@@ -411,7 +418,7 @@ void VariableDefinition::accept(Visitor *visitor) {
 
 FunctionDefinition::FunctionDefinition(Token token) :
         Definition(token),
-        returnType(nullptr)
+        given_return_type(nullptr)
 {
     // intentionally empty
 }

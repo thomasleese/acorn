@@ -69,7 +69,7 @@ void PrettyPrinter::visit(ast::VariableDeclaration *node)
 
 void PrettyPrinter::visit(ast::IntegerLiteral *expression)
 {
-    ss << indentation() << "(IntegerLiteral " << expression->value << ")\n";
+    ss << indentation() << "(IntegerLiteral " << expression->value() << ")\n";
 }
 
 void PrettyPrinter::visit(ast::FloatLiteral *expression)
@@ -169,7 +169,7 @@ void PrettyPrinter::visit(ast::CCall *ccall)
         parameter->accept(this);
     }
 
-    ccall->returnType->accept(this);
+    ccall->given_return_type->accept(this);
 
     for (auto argument : ccall->arguments) {
         argument->accept(this);
@@ -325,8 +325,8 @@ void PrettyPrinter::visit(ast::FunctionDefinition *definition)
         parameter->accept(this);
     }
 
-    if (definition->returnType) {
-        definition->returnType->accept(this);
+    if (definition->given_return_type) {
+        definition->given_return_type->accept(this);
     }
 
     definition->body->accept(this);

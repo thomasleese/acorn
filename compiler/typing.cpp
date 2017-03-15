@@ -321,9 +321,9 @@ void Inferrer::visit(ast::CCall *ccall) {
 
     // TODO check arg and param types match
 
-    ccall->returnType->accept(this);
+    ccall->given_return_type->accept(this);
 
-    ccall->set_type(instance_type(ccall->returnType));
+    ccall->set_type(instance_type(ccall->given_return_type));
 }
 
 void Inferrer::visit(ast::Cast *cast) {
@@ -406,7 +406,7 @@ void Inferrer::visit(ast::Return *expression) {
         return_if_null(method);
 
         if (!method->return_type()->is_compatible(expression->expression->type())) {
-            report(TypeMismatchError(expression->expression, def->returnType));
+            report(TypeMismatchError(expression->expression, def->given_return_type));
             return;
         }
     } else {
@@ -497,9 +497,9 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     definition->body->accept(this);
 
     types::Type *return_type;
-    if (definition->returnType) {
-        definition->returnType->accept(this);
-        return_type = instance_type(definition->returnType);
+    if (definition->given_return_type) {
+        definition->given_return_type->accept(this);
+        return_type = instance_type(definition->given_return_type);
     } else {
         return_type = definition->body->type();
     }
@@ -711,7 +711,7 @@ void Checker::visit(ast::CCall *ccall) {
         param->accept(this);
     }
 
-    ccall->returnType->accept(this);
+    ccall->given_return_type->accept(this);
 
     for (auto arg : ccall->arguments) {
         arg->accept(this);
@@ -816,8 +816,8 @@ void Checker::visit(ast::FunctionDefinition *definition) {
         p->accept(this);
     }
 
-    if (definition->returnType) {
-        definition->returnType->accept(this);
+    if (definition->given_return_type) {
+        definition->given_return_type->accept(this);
     }
 
     for (auto p : definition->parameters) {
