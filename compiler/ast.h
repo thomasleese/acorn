@@ -152,11 +152,14 @@ namespace acorn {
 
         class StringLiteral : public Expression {
         public:
-            using Expression::Expression;
+            StringLiteral(Token token, std::string value);
 
-            std::string value;
+            std::string value() const;
 
             void accept(Visitor *visitor);
+
+        private:
+            std::string m_value;
         };
 
         class SequenceLiteral : public Expression {

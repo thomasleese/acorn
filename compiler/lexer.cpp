@@ -215,6 +215,10 @@ bool Lexer::read_keyword(Token &token) const {
         token.kind = Token::CCallKeyword;
     } else if (token.lexeme == "using") {
         token.kind = Token::UsingKeyword;
+    } else if (token.lexeme == "import") {
+        token.kind = Token::ImportKeyword;
+    } else if (token.lexeme == "type") {
+        token.kind = Token::TypeKeyword;
     } else {
         return false;
     }
@@ -247,23 +251,26 @@ bool Lexer::read_number(Token &token) {
     return true;
 }
 
+bool is_quote_char(int ch) {
+    return ch == '"' || ch == '\'';
+}
+
 bool Lexer::read_string(Token &token) {
     int ch = m_stream.get();
 
-    if (ch != '"' && ch != '\'') {
+    if (!is_quote_char(ch)) {
         m_stream.unget();
         return false;
     }
 
     token.kind = Token::StringLiteral;
 
-    while (ch != '"' && ch != '\'') {
+    ch = m_stream.get();
+    while (!is_quote_char(ch) && ch != EOF) {
         token.lexeme.append(1, ch);
         ch = m_stream.get();
         m_current_column++;
     }
-
-    m_stream.unget();
 
     return true;
 }

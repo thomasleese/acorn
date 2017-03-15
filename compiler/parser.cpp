@@ -38,13 +38,12 @@ SourceFile *Parser::parse(std::string name) {
 
     auto module = new SourceFile(front_token(), name);
 
-    // read import expressions, which must appear at the top of a source file
     while (is_token(Token::ImportKeyword)) {
         module->imports.push_back(read_import_expression());
     }
 
     for (auto import : module->imports) {
-        std::string filename = "library/" + import->path->value + ".acorn";
+        std::string filename = "../library/" + import->path->value() + ".acorn";
 
         Lexer lexer(filename);
         Parser parser(lexer);
@@ -182,13 +181,21 @@ Block *Parser::read_block(bool in_switch) {
 Expression *Parser::read_expression(bool parse_comma) {
     debug("Reading expression...");
 
-    auto expr = read_unary_expression(parse_comma);
-    return_if_null(expr);
-
-    if (is_token(Token::Operator) || is_token(Token::Assignment)) {
-        return read_binary_expression(expr, 0);
+    if (is_token(Token::LetKeyword)) {
+        return read_variable_definition();
+    } else if (is_token(Token::DefKeyword)) {
+        return read_function_definition();
+    } else if (is_token(Token::TypeKeyword)) {
+        return read_type_definition();
     } else {
-        return expr;
+        auto expr = read_unary_expression(parse_comma);
+        return_if_null(expr);
+
+        if (is_token(Token::Operator) || is_token(Token::Assignment)) {
+            return read_binary_expression(expr, 0);
+        } else {
+            return expr;
+        }
     }
 }
 
@@ -277,11 +284,7 @@ FloatLiteral *Parser::read_float_literal() {
 
 StringLiteral *Parser::read_string_literal() {
     return_if_false(read_token(Token::StringLiteral, token));
-
-    StringLiteral *literal = new StringLiteral(token);
-    literal->value = token.lexeme.substr(1, token.lexeme.length() - 2);
-
-    return literal;
+    return new StringLiteral(token, token.lexeme);
 }
 
 SequenceLiteral *Parser::read_sequence_literal() {
@@ -908,24 +911,9 @@ TypeDefinition *Parser::read_type_definition() {
     return definition;
 }
 
-Expression *Parser::read_expression() {
-    debug("Reading Expression...");
-
-    if (is_token(Token::LetKeyword)) {
-        return read_variable_definition();
-    } else if (is_token(Token::DefKeyword)) {
-        return read_function_definition();
-    } else if (is_token(Token::TypeKeyword)) {
-        return read_type_definition();
-    } else {
-        return read_expression(true);
-    }
-}
-
 Import *Parser::read_import_expression() {
     return_if_false(read_token(Token::ImportKeyword, token));
-    StringLiteral *path = read_string_literal();
-    return_if_false(skip_token(Token::Newline));
-
+    auto path = read_string_literal();
+    return_if_null(path);
     return new Import(token, path);
 }

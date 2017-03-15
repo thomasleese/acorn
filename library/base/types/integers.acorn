@@ -1,0 +1,6 @@
+type Int as Int64
+type UInt as UInt64
+
+def -(n as Int64)
+  0 - n
+end

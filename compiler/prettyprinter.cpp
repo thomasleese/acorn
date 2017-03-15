@@ -84,7 +84,7 @@ void PrettyPrinter::visit(ast::ImaginaryLiteral *imaginary)
 
 void PrettyPrinter::visit(ast::StringLiteral *expression)
 {
-    ss << indentation() << "(StringLiteral " << expression->value << ")\n";
+    ss << indentation() << "(StringLiteral " << expression->value() << ")\n";
 }
 
 void PrettyPrinter::visit(ast::SequenceLiteral *sequence)
@@ -357,7 +357,7 @@ void PrettyPrinter::visit(ast::TypeDefinition *definition)
 
 void PrettyPrinter::visit(ast::Import *statement)
 {
-    ss << indentation() << "(Import\n";
+    ss << indentation() << "(Import [" << type_of(statement) << "]\n";
     indent++;
 
     statement->path->accept(this);
@@ -368,7 +368,7 @@ void PrettyPrinter::visit(ast::Import *statement)
 
 void PrettyPrinter::visit(ast::SourceFile *module)
 {
-    ss << indentation() << "(SourceFile " << module->name << "\n";
+    ss << indentation() << "(SourceFile " << module->name << " [" << type_of(module) << "]\n";
 
     indent++;
     module->code->accept(this);

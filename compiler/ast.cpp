@@ -194,6 +194,14 @@ void ImaginaryLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+StringLiteral::StringLiteral(Token token, std::string value) : Expression(token), m_value(value) {
+
+}
+
+std::string StringLiteral::value() const {
+    return m_value;
+}
+
 void StringLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }

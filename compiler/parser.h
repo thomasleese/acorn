@@ -33,7 +33,7 @@ namespace acorn {
         bool is_token(Token::Kind kind);
 
         ast::Block *read_block(bool in_switch = false);
-        ast::Expression *read_expression(bool parse_comma);
+        ast::Expression *read_expression(bool parse_comma = true);
         ast::Name *read_name(bool accept_parameters);
         ast::Name *read_operator(bool accept_parameters);
         ast::VariableDeclaration *read_variable_declaration();
@@ -64,7 +64,6 @@ namespace acorn {
         ast::VariableDefinition *read_variable_definition();
         ast::FunctionDefinition *read_function_definition();
         ast::TypeDefinition *read_type_definition();
-        ast::Expression *read_expression();
         ast::Import *read_import_expression();
 
     private:

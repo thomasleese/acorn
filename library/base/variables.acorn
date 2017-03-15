@@ -1,0 +1,10 @@
+## Swap the value of two variables.
+def swap{T}(inout a as T, inout b as T)
+  let old_a = a
+    do
+      a = b
+      b = old_a
+      null
+    end
+  end
+end
