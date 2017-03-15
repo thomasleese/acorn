@@ -465,11 +465,11 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-ImportExpression::ImportExpression(Token token, StringLiteral *path) : Expression(token) {
+Import::Import(Token token, StringLiteral *path) : Expression(token) {
     this->path = path;
 }
 
-void ImportExpression::accept(Visitor *visitor) {
+void Import::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

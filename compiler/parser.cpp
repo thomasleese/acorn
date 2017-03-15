@@ -923,10 +923,10 @@ Expression *Parser::read_expression() {
     }
 }
 
-ImportExpression *Parser::read_import_expression() {
+Import *Parser::read_import_expression() {
     return_if_false(read_token(Token::ImportKeyword, token));
     StringLiteral *path = read_string_literal();
     return_if_false(skip_token(Token::Newline));
 
-    return new ImportExpression(token, path);
+    return new Import(token, path);
 }

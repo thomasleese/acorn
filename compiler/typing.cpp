@@ -585,7 +585,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
     pop_scope();
 }
 
-void Inferrer::visit(ast::ImportExpression *statement) {
+void Inferrer::visit(ast::Import *statement) {
     statement->path->accept(this);
     statement->set_type(new types::Void());
 }
@@ -853,7 +853,7 @@ void Checker::visit(ast::TypeDefinition *definition) {
     pop_scope();
 }
 
-void Checker::visit(ast::ImportExpression *statement) {
+void Checker::visit(ast::Import *statement) {
     statement->path->accept(this);
     check_not_null(statement);
 }

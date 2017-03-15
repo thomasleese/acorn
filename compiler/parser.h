@@ -65,7 +65,7 @@ namespace acorn {
         ast::FunctionDefinition *read_function_definition();
         ast::TypeDefinition *read_type_definition();
         ast::Expression *read_expression();
-        ast::ImportExpression *read_import_expression();
+        ast::Import *read_import_expression();
 
     private:
         Lexer &m_lexer;

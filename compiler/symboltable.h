@@ -132,7 +132,7 @@ namespace acorn {
             void visit(ast::FunctionDefinition *definition);
             void visit(ast::TypeDefinition *definition);
 
-            void visit(ast::ImportExpression *statement);
+            void visit(ast::Import *statement);
             void visit(ast::SourceFile *module);
 
         private:

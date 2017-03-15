@@ -519,7 +519,7 @@ void Builder::visit(ast::TypeDefinition *definition) {
     pop_scope();
 }
 
-void Builder::visit(ast::ImportExpression *statement) {
+void Builder::visit(ast::Import *statement) {
 
 }
 

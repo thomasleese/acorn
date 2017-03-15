@@ -355,9 +355,9 @@ void PrettyPrinter::visit(ast::TypeDefinition *definition)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::ImportExpression *statement)
+void PrettyPrinter::visit(ast::Import *statement)
 {
-    ss << indentation() << "(ImportExpression\n";
+    ss << indentation() << "(Import\n";
     indent++;
 
     statement->path->accept(this);

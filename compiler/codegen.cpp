@@ -1189,7 +1189,7 @@ void ModuleGenerator::visit(ast::TypeDefinition *definition) {
     push_value(nullptr);
 }
 
-void ModuleGenerator::visit(ast::ImportExpression *statement) {
+void ModuleGenerator::visit(ast::Import *statement) {
     report(InternalError(statement, "N/A"));
 }
 
