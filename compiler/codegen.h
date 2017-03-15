@@ -69,7 +69,7 @@ namespace acorn {
         class CodeGenerator : public ast::Visitor, public types::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower, public TypeFollower, public InitialiserFollower {
 
         public:
-            CodeGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
+            CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout);
             ~CodeGenerator();
 
             llvm::Type *take_type(ast::Expression *expression);
@@ -166,7 +166,7 @@ namespace acorn {
             void builtin_initialise_function(llvm::Function *function, int no_arguments);
 
         private:
-            llvm::LLVMContext &m_context;
+            llvm::LLVMContext m_context;
             llvm::Module *m_module;
             llvm::IRBuilder<> *m_ir_builder;
             llvm::MDBuilder *m_md_builder;

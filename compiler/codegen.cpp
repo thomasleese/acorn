@@ -92,6 +92,20 @@ llvm::Constant *InitialiserFollower::llvm_initialiser() const {
     return m_llvm_initialiser_stack.back();
 }
 
+CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout)
+{
+    push_scope(scope);
+
+    m_ir_builder = new llvm::IRBuilder<>(m_context);
+    m_md_builder = new llvm::MDBuilder(m_context);
+    m_data_layout = data_layout;
+}
+
+CodeGenerator::~CodeGenerator() {
+    delete m_ir_builder;
+    delete m_md_builder;
+}
+
 llvm::Type *CodeGenerator::take_type(ast::Expression *expression)
 {
     if (has_llvm_type()) {
@@ -142,9 +156,8 @@ types::Type *CodeGenerator::get_type_parameter(types::Parameter *key) {
 }
 
 void CodeGenerator::visit_constructor(types::TypeType *type) {
-    auto llvm_type = llvm::Type::getInt1Ty(m_context);
-    push_llvm_type(llvm_type);
-    push_llvm_initialiser(llvm::ConstantInt::get(llvm_type, 0));
+    push_llvm_type(m_ir_builder->getInt1Ty());
+    push_llvm_initialiser(m_ir_builder->getInt1(0));
 }
 
 void CodeGenerator::visit(types::ParameterType *type) {
@@ -210,14 +223,12 @@ void CodeGenerator::visit(types::Parameter *type) {
 }
 
 void CodeGenerator::visit(types::Void *type) {
-    llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
-
-    push_llvm_type(llvm_type);
-    push_llvm_initialiser(llvm::ConstantInt::get(llvm_type, 0));
+    push_llvm_type(m_ir_builder->getInt1Ty());
+    push_llvm_initialiser(m_ir_builder->getInt1(0));
 }
 
 void CodeGenerator::visit(types::Boolean *type) {
-    llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
+    llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_module->getContext());
 
     push_llvm_type(llvm_type);
     push_llvm_initialiser(llvm::ConstantInt::get(llvm_type, 0));
@@ -225,7 +236,7 @@ void CodeGenerator::visit(types::Boolean *type) {
 
 void CodeGenerator::visit(types::Integer *type) {
     const unsigned int size = type->size();
-    llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(m_context, size);
+    auto llvm_type = llvm::IntegerType::getIntNTy(m_module->getContext(), size);
 
     push_llvm_type(llvm_type);
     push_llvm_initialiser(llvm::ConstantInt::get(llvm_type, 0));
@@ -233,7 +244,7 @@ void CodeGenerator::visit(types::Integer *type) {
 
 void CodeGenerator::visit(types::UnsignedInteger *type) {
     const unsigned int size = type->size();
-    llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(m_context, size);
+    auto llvm_type = llvm::IntegerType::getIntNTy(m_module->getContext(), size);
 
     push_llvm_type(llvm_type);
     push_llvm_initialiser(llvm::ConstantInt::get(llvm_type, 0));
@@ -245,15 +256,13 @@ void CodeGenerator::visit(types::Float *type) {
 
     switch (size) {
         case 64:
-            llvm_type = llvm::Type::getDoubleTy(m_context);
+            llvm_type = m_ir_builder->getDoubleTy();
             break;
         case 32:
-            llvm_type = llvm::Type::getFloatTy(m_context);
+            llvm_type = m_ir_builder->getFloatTy();
             break;
         case 16:
-            llvm_type = llvm::Type::getHalfTy(m_context);
-            break;
-        default:
+            llvm_type = m_ir_builder->getHalfTy();
             break;
     }
 
@@ -295,7 +304,7 @@ void CodeGenerator::visit(types::Record *type) {
         llvm_initialisers.push_back(llvm_field_initialiser);
     }
 
-    auto struct_type = llvm::StructType::get(m_context, llvm_types);
+    auto struct_type = llvm::StructType::get(m_module->getContext(), llvm_types);
     auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
 
     push_llvm_type(struct_type);
@@ -359,20 +368,6 @@ void CodeGenerator::visit(types::Function *type) {
 
     push_llvm_type(llvm_type);
     push_llvm_initialiser(struct_initialiser);
-}
-
-CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout) : m_context(context)
-{
-    push_scope(scope);
-
-    m_ir_builder = new llvm::IRBuilder<>(context);
-    m_md_builder = new llvm::MDBuilder(context);
-    m_data_layout = data_layout;
-}
-
-CodeGenerator::~CodeGenerator() {
-    delete m_ir_builder;
-    delete m_md_builder;
 }
 
 llvm::Module *CodeGenerator::module() const {
@@ -508,11 +503,9 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
         }
     }
 
-    auto i32 = llvm::IntegerType::getInt32Ty(m_module->getContext());
-
     std::vector<llvm::Value *> indexes;
-    indexes.push_back(llvm::ConstantInt::get(i32, 0));
-    indexes.push_back(llvm::ConstantInt::get(i32, index));
+    indexes.push_back(m_ir_builder->getInt32(0));
+    indexes.push_back(m_ir_builder->getInt32(index));
     auto gep = m_ir_builder->CreateInBoundsGEP(function_symbol->value, indexes, "f");
     m_ir_builder->CreateStore(function, gep);
 
@@ -636,25 +629,23 @@ void CodeGenerator::visit(ast::SequenceLiteral *sequence) {
     // assign length
     llvm::Value *instance = m_ir_builder->CreateAlloca(type, nullptr, "array");
 
-    llvm::Type *i32 = llvm::IntegerType::getInt32Ty(m_module->getContext());
-
     std::vector<llvm::Value *> length_index;
-    length_index.push_back(llvm::ConstantInt::get(i32, 0));
-    length_index.push_back(llvm::ConstantInt::get(i32, 0));
+    length_index.push_back(m_ir_builder->getInt32(0));
+    length_index.push_back(m_ir_builder->getInt32(0));
 
     std::vector<llvm::Value *> elements_index;
-    elements_index.push_back(llvm::ConstantInt::get(i32, 0));
-    elements_index.push_back(llvm::ConstantInt::get(i32, 1));
+    elements_index.push_back(m_ir_builder->getInt32(0));
+    elements_index.push_back(m_ir_builder->getInt32(1));
 
-    llvm::Value *length = m_ir_builder->CreateInBoundsGEP(instance, length_index, "length");
+    auto length = m_ir_builder->CreateInBoundsGEP(instance, length_index, "length");
     m_ir_builder->CreateStore(llvm::ConstantInt::get(length_type, elements.size()), length);
 
     auto elements_value = m_ir_builder->CreateInBoundsGEP(instance, elements_index, "elements");
-    auto elements_instance = m_ir_builder->CreateAlloca(element_type, llvm::ConstantInt::get(i32, elements.size()));
+    auto elements_instance = m_ir_builder->CreateAlloca(element_type, m_ir_builder->getInt32(elements.size()));
 
     for (size_t i = 0; i < elements.size(); i++) {
         std::vector<llvm::Value *> index;
-        index.push_back(llvm::ConstantInt::get(i32, i));
+        index.push_back(m_ir_builder->getInt32(i));
         auto place = m_ir_builder->CreateInBoundsGEP(elements_instance, index);
         m_ir_builder->CreateStore(elements[i], place);
     }
@@ -680,10 +671,9 @@ void CodeGenerator::visit(ast::RecordLiteral *expression) {
 
     auto instance = m_ir_builder->CreateAlloca(llvm_type);
 
-    auto i32 = llvm::IntegerType::get(m_module->getContext(), 32);
-    auto index0 = llvm::ConstantInt::get(i32, 0);
+    auto index0 = m_ir_builder->getInt32(0);
     for (size_t i = 0; i < expression->field_names.size(); i++) {
-        auto index = llvm::ConstantInt::get(i32, i);
+        auto index = m_ir_builder->getInt32(i);
 
         expression->field_values[i]->accept(this);
 
@@ -705,8 +695,7 @@ void CodeGenerator::visit(ast::TupleLiteral *expression) {
 
     auto instance = m_ir_builder->CreateAlloca(llvm_type);
 
-    auto i32 = llvm::IntegerType::get(m_module->getContext(), 32);
-    auto index0 = llvm::ConstantInt::get(i32, 0);
+    auto index0 = m_ir_builder->getInt32(0);
 
     auto elements = expression->elements();
     for (size_t i = 0; i < elements.size(); i++) {
@@ -743,10 +732,9 @@ void CodeGenerator::visit(ast::Call *expression) {
 
     auto ir_function = llvm::dyn_cast<llvm::LoadInst>(pop_llvm_value())->getPointerOperand();
 
-    auto i32 = llvm::IntegerType::getInt32Ty(m_module->getContext());
     std::vector<llvm::Value *> indexes;
-    indexes.push_back(llvm::ConstantInt::get(i32, 0));
-    indexes.push_back(llvm::ConstantInt::get(i32, index));
+    indexes.push_back(m_ir_builder->getInt32(0));
+    indexes.push_back(m_ir_builder->getInt32(index));
     auto ir_method = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(ir_function, indexes));
 
     if (ir_method == nullptr) {
@@ -874,8 +862,8 @@ void CodeGenerator::visit(ast::Selector *expression) {
         uint64_t index = record->get_field_index(expression->name->value());
 
         std::vector<llvm::Value *> indexes;
-        indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(m_module->getContext(), 32), 0));
-        indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(m_module->getContext(), 32), index));
+        indexes.push_back(m_ir_builder->getInt32(0));
+        indexes.push_back(m_ir_builder->getInt32(index));
 
         llvm::Value *value = m_ir_builder->CreateInBoundsGEP(instance, indexes);
         push_llvm_value(value);
@@ -894,8 +882,8 @@ void CodeGenerator::visit(ast::While *expression) {
     expression->condition()->accept(this);
     auto condition = m_ir_builder->CreateICmpEQ(pop_llvm_value(), m_ir_builder->getInt1(true), "while_cond");
 
-    auto loop_bb = llvm::BasicBlock::Create(m_module->getContext(), "while_loop", function);
-    auto else_bb = llvm::BasicBlock::Create(m_module->getContext(), "while_else", function);
+    auto loop_bb = llvm::BasicBlock::Create(m_context, "while_loop", function);
+    auto else_bb = llvm::BasicBlock::Create(m_context, "while_else", function);
 
     m_ir_builder->CreateCondBr(condition, loop_bb, else_bb);
     m_ir_builder->SetInsertPoint(loop_bb);
@@ -916,9 +904,9 @@ void CodeGenerator::visit(ast::If *expression) {
 
     llvm::Function *function = m_ir_builder->GetInsertBlock()->getParent();
 
-    llvm::BasicBlock *then_bb = llvm::BasicBlock::Create(m_module->getContext(), "then", function);
-    llvm::BasicBlock *else_bb = llvm::BasicBlock::Create(m_module->getContext(), "else");
-    llvm::BasicBlock *merge_bb = llvm::BasicBlock::Create(m_module->getContext(), "ifcont");
+    llvm::BasicBlock *then_bb = llvm::BasicBlock::Create(m_context, "then", function);
+    llvm::BasicBlock *else_bb = llvm::BasicBlock::Create(m_context, "else");
+    llvm::BasicBlock *merge_bb = llvm::BasicBlock::Create(m_context, "ifcont");
 
     m_ir_builder->CreateCondBr(condition, then_bb, else_bb);
     m_ir_builder->SetInsertPoint(then_bb);
@@ -1031,13 +1019,13 @@ void CodeGenerator::visit(ast::SourceFile *module) {
 
     builtin_generate();
 
-    llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(m_module->getContext()), false);
+    llvm::FunctionType *fType = llvm::FunctionType::get(m_ir_builder->getVoidTy(), false);
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);
-    llvm::BasicBlock *bb1 = llvm::BasicBlock::Create(m_module->getContext(), "entry", function);
+    llvm::BasicBlock *bb1 = llvm::BasicBlock::Create(m_context, "entry", function);
 
-    fType = llvm::FunctionType::get(llvm::Type::getInt32Ty(m_module->getContext()), false);
+    fType = llvm::FunctionType::get(llvm::Type::getInt32Ty(m_context), false);
     llvm::Function *mainFunction = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "main", m_module);
-    llvm::BasicBlock *main_bb = llvm::BasicBlock::Create(m_module->getContext(), "entry", mainFunction);
+    llvm::BasicBlock *main_bb = llvm::BasicBlock::Create(m_context, "entry", mainFunction);
 
     m_ir_builder->SetInsertPoint(main_bb);
     m_ir_builder->CreateCall(m_module->getFunction("_init_builtins"));
