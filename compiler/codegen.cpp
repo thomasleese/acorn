@@ -1184,10 +1184,6 @@ void ModuleGenerator::visit(ast::TypeDefinition *definition) {
     push_value(nullptr);
 }
 
-void ModuleGenerator::visit(ast::DefinitionExpression *statement) {
-    statement->definition->accept(this);
-}
-
 void ModuleGenerator::visit(ast::ImportExpression *statement) {
     report(InternalError(statement, "N/A"));
 }

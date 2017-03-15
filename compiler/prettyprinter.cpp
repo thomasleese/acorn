@@ -358,17 +358,6 @@ void PrettyPrinter::visit(ast::TypeDefinition *definition)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::DefinitionExpression *statement)
-{
-    ss << indentation() << "(DefinitionExpression\n";
-    indent++;
-
-    statement->definition->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
 void PrettyPrinter::visit(ast::ImportExpression *statement)
 {
     ss << indentation() << "(ImportExpression\n";

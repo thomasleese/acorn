@@ -498,10 +498,6 @@ void Builder::visit(ast::TypeDefinition *definition) {
     m_scope.pop_back();
 }
 
-void Builder::visit(ast::DefinitionExpression *statement) {
-    statement->definition->accept(this);
-}
-
 void Builder::visit(ast::ImportExpression *statement) {
 
 }

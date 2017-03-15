@@ -83,9 +83,9 @@ namespace acorn {
             std::unique_ptr<Identifier> m_given_type;
         };
 
-        class Definition : public Node {
+        class Definition : public Expression {
         public:
-            using Node::Node;
+            using Expression::Expression;
 
             Identifier *name;
         };
@@ -360,15 +360,6 @@ namespace acorn {
             std::unique_ptr<Identifier> m_return_type;
         };
 
-        class DefinitionExpression : public Expression {
-        public:
-            explicit DefinitionExpression(Definition *definition);
-
-            Definition *definition;
-
-            void accept(Visitor *visitor);
-        };
-
         class ImportExpression : public Expression {
         public:
             ImportExpression(Token token, StringLiteral *path);
@@ -429,7 +420,6 @@ namespace acorn {
             virtual void visit(TypeDefinition *definition) = 0;
 
             // Expressions
-            virtual void visit(DefinitionExpression *Expression) = 0;
             virtual void visit(ImportExpression *Expression) = 0;
 
             // module

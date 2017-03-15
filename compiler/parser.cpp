@@ -515,13 +515,13 @@ Block *Parser::readFor() {
     auto code_block = new Block(token);
 
     auto state_variable = new VariableDefinition(token, state_variable_name, new Call(token, "start", iterator));
-    code_block->expressions.push_back(new DefinitionExpression(state_variable));
+    code_block->expressions.push_back(state_variable);
 
     auto condition = new Call(token, "not", new Call(token, "done", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
     auto while_code = new While(token, condition, loop_code);
 
     auto next_state_variable = new VariableDefinition(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
-    loop_code->expressions.insert(loop_code->expressions.begin(), new DefinitionExpression(next_state_variable));
+    loop_code->expressions.insert(loop_code->expressions.begin(), next_state_variable);
     loop_code->expressions.insert(loop_code->expressions.begin() + 1, new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name(), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1")));
     loop_code->expressions.insert(loop_code->expressions.begin() + 1, new Assignment(token, variable, new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0")));
 
@@ -902,24 +902,14 @@ TypeDefinition *Parser::readTypeDefinition() {
 Expression *Parser::readExpression() {
     debug("Reading Expression...");
 
-    Definition *def = nullptr;
-
     if (is_token(Token::LetKeyword)) {
-        def = readVariableDefinition();
+        return readVariableDefinition();
     } else if (is_token(Token::DefKeyword)) {
-        def = readFunctionDefinition();
+        return readFunctionDefinition();
     } else if (is_token(Token::TypeKeyword)) {
-        def = readTypeDefinition();
+        return readTypeDefinition();
     } else {
-        auto expression = readExpression(true);
-        return_if_null(expression);
-        return expression;
-    }
-
-    if (def != nullptr) {
-        return new DefinitionExpression(def);
-    } else {
-        return nullptr;
+        return readExpression(true);
     }
 }
 

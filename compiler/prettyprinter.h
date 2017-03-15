@@ -45,7 +45,6 @@ namespace acorn {
         void visit(ast::FunctionDefinition *definition);
         void visit(ast::TypeDefinition *definition);
 
-        void visit(ast::DefinitionExpression *statement);
         void visit(ast::ImportExpression *statement);
         void visit(ast::SourceFile *module);
 

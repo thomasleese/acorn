@@ -353,14 +353,6 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-DefinitionExpression::DefinitionExpression(Definition *definition) : Expression(definition->token()) {
-    this->definition = definition;
-}
-
-void DefinitionExpression::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 ImportExpression::ImportExpression(Token token, StringLiteral *path) : Expression(token) {
     this->path = path;
 }

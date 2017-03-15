@@ -611,11 +611,6 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
     m_namespace = oldNamespace;
 }
 
-void Inferrer::visit(ast::DefinitionExpression *statement) {
-    statement->definition->accept(this);
-    statement->type = statement->definition->type;
-}
-
 void Inferrer::visit(ast::ImportExpression *statement) {
     statement->path->accept(this);
     statement->type = new types::Void();
@@ -888,11 +883,6 @@ void Checker::visit(ast::TypeDefinition *definition) {
     check_not_null(definition);
 
     m_namespace = oldNamespace;
-}
-
-void Checker::visit(ast::DefinitionExpression *statement) {
-    statement->definition->accept(this);
-    check_not_null(statement);
 }
 
 void Checker::visit(ast::ImportExpression *statement) {
