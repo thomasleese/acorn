@@ -43,9 +43,11 @@ namespace acorn {
             std::vector<llvm::Value *> m_values;
         };
 
-        class TypeGenerator : public types::Visitor {
+        class CodeGenerator : public ast::Visitor, public types::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower {
+
         public:
-            explicit TypeGenerator(diagnostics::Reporter *diagnostics, llvm::LLVMContext &context);
+            CodeGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
+            ~CodeGenerator();
 
             llvm::Type *take_type(ast::Expression *expression);
             llvm::Constant *take_initialiser(ast::Node *node);
@@ -82,22 +84,6 @@ namespace acorn {
             void visit(types::Tuple *type);
             void visit(types::Method *type);
             void visit(types::Function *type);
-
-        private:
-            llvm::LLVMContext &m_context;
-            std::vector<llvm::Type *> m_type_stack;
-            std::vector<llvm::Constant *> m_initialiser_stack;
-
-            std::map<types::ParameterType *, types::Type *> m_type_parameters;
-
-            diagnostics::Reporter *m_diagnostics;
-        };
-
-        class CodeGenerator : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower {
-
-        public:
-            CodeGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
-            ~CodeGenerator();
 
             llvm::Module *module() const;
 
@@ -143,7 +129,7 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         public:
-            void builtin_generate(symboltable::Namespace *table);
+            void builtin_generate();
 
             llvm::Function *builtin_generate_function(std::string name, types::Method *method, std::string llvm_name);
 
@@ -151,9 +137,9 @@ namespace acorn {
             void builtin_generate_sizeof(types::Method *method, llvm::Function *function);
             void builtin_generate_strideof(types::Method *method, llvm::Function *function);
 
-            llvm::Function *builtin_create_llvm_function(symboltable::Namespace *table, std::string name, int index);
+            llvm::Function *builtin_create_llvm_function(std::string name, int index);
 
-            void builtin_initialise_boolean_variable(symboltable::Namespace *table, std::string name, bool value);
+            void builtin_initialise_boolean_variable(std::string name, bool value);
             void builtin_initialise_function(llvm::Function *function, int no_arguments);
 
         private:
@@ -163,9 +149,12 @@ namespace acorn {
             llvm::MDBuilder *m_md_builder;
             llvm::DataLayout *m_data_layout;
 
-            TypeGenerator *m_type_generator;
-
             std::vector<llvm::Argument *> m_args;
+
+            std::vector<llvm::Type *> m_type_stack;
+            std::vector<llvm::Constant *> m_initialiser_stack;
+
+            std::map<types::ParameterType *, types::Type *> m_type_parameters;
         };
 
     }

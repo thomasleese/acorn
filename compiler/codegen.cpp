@@ -50,123 +50,117 @@ llvm::Value *ValueFollower::value() const {
     return m_values.back();
 }
 
-TypeGenerator::TypeGenerator(Reporter *diagnostics, llvm::LLVMContext &context)
-        : m_context(context), m_diagnostics(diagnostics)
-{
-
-}
-
-llvm::Type *TypeGenerator::take_type(ast::Expression *expression)
+llvm::Type *CodeGenerator::take_type(ast::Expression *expression)
 {
     if (m_type_stack.size() >= 1) {
         llvm::Type *result = m_type_stack.back();
         m_type_stack.pop_back();
 
         if (expression && result == nullptr) {
-            m_diagnostics->report(InternalError(expression, "Invalid LLVM type generated. (" + expression->type_name() + ")"));
+            report(InternalError(expression, "Invalid LLVM type generated. (" + expression->type_name() + ")"));
             return nullptr;
         }
 
         return result;
     } else {
-        m_diagnostics->report(InternalError(expression, "No LLVM type generated."));
+        report(InternalError(expression, "No LLVM type generated."));
         return nullptr;
     }
 }
 
-llvm::Constant *TypeGenerator::take_initialiser(ast::Node *node) {
+llvm::Constant *CodeGenerator::take_initialiser(ast::Node *node) {
     if (m_initialiser_stack.size() >= 1) {
         llvm::Constant *result = m_initialiser_stack.back();
         m_initialiser_stack.pop_back();
 
         if (node && result == nullptr) {
-            m_diagnostics->report(InternalError(node, "Invalid LLVM initialiser generated."));
+            report(InternalError(node, "Invalid LLVM initialiser generated."));
             return nullptr;
         }
 
         return result;
     } else {
-        m_diagnostics->report(InternalError(node, "No LLVM initialiser generated."));
+        report(InternalError(node, "No LLVM initialiser generated."));
         return nullptr;
     }
 }
 
-void TypeGenerator::push_type_parameter(types::ParameterType *key, types::Type *value) {
+void CodeGenerator::push_type_parameter(types::ParameterType *key, types::Type *value) {
     m_type_parameters[key] = value;
 }
 
-void TypeGenerator::pop_type_parameter(types::ParameterType *key) {
+void CodeGenerator::pop_type_parameter(types::ParameterType *key) {
     m_type_parameters.erase(key);
 }
 
-types::Type *TypeGenerator::get_type_parameter(types::ParameterType *key) {
+types::Type *CodeGenerator::get_type_parameter(types::ParameterType *key) {
     return m_type_parameters[key];
 }
 
-types::Type *TypeGenerator::get_type_parameter(types::Parameter *key) {
+types::Type *CodeGenerator::get_type_parameter(types::Parameter *key) {
     return get_type_parameter(key->type());
 }
 
-void TypeGenerator::visit_constructor(types::TypeType *type) {
+void CodeGenerator::visit_constructor(types::TypeType *type) {
     llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
 
     m_type_stack.push_back(llvm_type);
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(types::ParameterType *type) {
+void CodeGenerator::visit(types::ParameterType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::VoidType *type) {
+void CodeGenerator::visit(types::VoidType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::BooleanType *type) {
+void CodeGenerator::visit(types::BooleanType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::IntegerType *type) {
+void CodeGenerator::visit(types::IntegerType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::UnsignedIntegerType *type) {
+void CodeGenerator::visit(types::UnsignedIntegerType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::FloatType *type) {
+void CodeGenerator::visit(types::FloatType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::UnsafePointerType *type) {
+void CodeGenerator::visit(types::UnsafePointerType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::FunctionType *type) {
+void CodeGenerator::visit(types::FunctionType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::MethodType *type) {
+void CodeGenerator::visit(types::MethodType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::RecordType *type) {
+void CodeGenerator::visit(types::RecordType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::TupleType *type) {
+void CodeGenerator::visit(types::TupleType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::AliasType *type) {
+void CodeGenerator::visit(types::AliasType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::TypeDescriptionType *type) {
+void CodeGenerator::visit(types::TypeDescriptionType *type) {
     visit_constructor(type);
 }
 
-void TypeGenerator::visit(types::Parameter *type) {
+void CodeGenerator::visit(types::Parameter *type) {
     auto it = m_type_parameters.find(type->type());
     if (it == m_type_parameters.end()) {
         m_type_stack.push_back(nullptr);
@@ -176,21 +170,21 @@ void TypeGenerator::visit(types::Parameter *type) {
     }
 }
 
-void TypeGenerator::visit(types::Void *type) {
+void CodeGenerator::visit(types::Void *type) {
     llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
 
     m_type_stack.push_back(llvm_type);
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(types::Boolean *type) {
+void CodeGenerator::visit(types::Boolean *type) {
     llvm::Type *llvm_type = llvm::Type::getInt1Ty(m_context);
 
     m_type_stack.push_back(llvm_type);
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(types::Integer *type) {
+void CodeGenerator::visit(types::Integer *type) {
     const unsigned int size = type->size();
     llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(m_context, size);
 
@@ -198,7 +192,7 @@ void TypeGenerator::visit(types::Integer *type) {
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(types::UnsignedInteger *type) {
+void CodeGenerator::visit(types::UnsignedInteger *type) {
     const unsigned int size = type->size();
     llvm::Type *llvm_type = llvm::IntegerType::getIntNTy(m_context, size);
 
@@ -206,7 +200,7 @@ void TypeGenerator::visit(types::UnsignedInteger *type) {
     m_initialiser_stack.push_back(llvm::ConstantInt::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(types::Float *type) {
+void CodeGenerator::visit(types::Float *type) {
     const unsigned int size = type->size();
     llvm::Type *llvm_type = nullptr;
 
@@ -228,7 +222,7 @@ void TypeGenerator::visit(types::Float *type) {
     m_initialiser_stack.push_back(llvm::ConstantFP::get(llvm_type, 0));
 }
 
-void TypeGenerator::visit(types::UnsafePointer *type) {
+void CodeGenerator::visit(types::UnsafePointer *type) {
     type->element_type()->accept(this);
     llvm::Type *element_type = take_type(nullptr);
 
@@ -242,7 +236,7 @@ void TypeGenerator::visit(types::UnsafePointer *type) {
     }
 }
 
-void TypeGenerator::visit(types::Record *type) {
+void CodeGenerator::visit(types::Record *type) {
     std::vector<llvm::Type *> llvm_types;
     std::vector<llvm::Constant *> llvm_initialisers;
 
@@ -269,11 +263,11 @@ void TypeGenerator::visit(types::Record *type) {
     m_initialiser_stack.push_back(struct_initialiser);
 }
 
-void TypeGenerator::visit(types::Tuple *type) {
+void CodeGenerator::visit(types::Tuple *type) {
     visit(static_cast<types::Record *>(type));
 }
 
-void TypeGenerator::visit(types::Method *type) {
+void CodeGenerator::visit(types::Method *type) {
     type->return_type()->accept(this);
     llvm::Type *llvm_return_type = take_type(nullptr);
 
@@ -308,7 +302,7 @@ void TypeGenerator::visit(types::Method *type) {
     m_initialiser_stack.push_back(nullptr);
 }
 
-void TypeGenerator::visit(types::Function *type) {
+void CodeGenerator::visit(types::Function *type) {
     std::vector<llvm::Type *> function_types;
     std::vector<llvm::Constant *> llvm_initialisers;
 
@@ -328,8 +322,7 @@ void TypeGenerator::visit(types::Function *type) {
     m_initialiser_stack.push_back(struct_initialiser);
 }
 
-CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout)
-        : m_context(context), m_type_generator(new TypeGenerator(this, context))
+CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout) : m_context(context)
 {
     push_scope(scope);
 
@@ -348,8 +341,8 @@ llvm::Module *CodeGenerator::module() const {
 }
 
 llvm::Type *CodeGenerator::generate_type(ast::Expression *expression, types::Type *type) {
-    type->accept(m_type_generator);
-    return m_type_generator->take_type(expression);
+    type->accept(this);
+    return take_type(expression);
 }
 
 llvm::Type *CodeGenerator::generate_type(ast::Expression *expression) {
@@ -377,7 +370,7 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
         for (auto entry : type_parameters) {
             auto t = entry.second;
             while (auto p = dynamic_cast<types::Parameter *>(t)) {
-                t = m_type_generator->get_type_parameter(p);
+                t = get_type_parameter(p);
                 if (t == nullptr) {
                     return nullptr;
                 }
@@ -389,7 +382,7 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
     push_scope(symbol);
 
     for (auto entry : type_parameters) {
-        m_type_generator->push_type_parameter(entry.first, entry.second);
+        push_type_parameter(entry.first, entry.second);
     }
 
     llvm::Type *llvmType = generate_type(definition);
@@ -446,7 +439,7 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
     pop_scope();
 
     for (auto entry : type_parameters) {
-        m_type_generator->pop_type_parameter(entry.first);
+        pop_type_parameter(entry.first);
     }
 
     m_ir_builder->restoreIP(old_insert_point);
@@ -460,7 +453,7 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
           return nullptr;
       }
 
-      auto llvm_initialiser = m_type_generator->take_initialiser(definition);
+      auto llvm_initialiser = take_initialiser(definition);
 
       auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
                                                llvm::GlobalValue::InternalLinkage,
@@ -529,7 +522,7 @@ void CodeGenerator::visit(ast::VariableDeclaration *node) {
     auto old_insert_point = m_ir_builder->saveIP();
 
     if (scope()->is_root()) {
-        auto llvm_initialiser = m_type_generator->take_initialiser(node);
+        auto llvm_initialiser = take_initialiser(node);
         if (llvm_initialiser == nullptr) {
             return;
         }
@@ -997,7 +990,7 @@ void CodeGenerator::visit(ast::Import *statement) {
 void CodeGenerator::visit(ast::SourceFile *module) {
     m_module = new llvm::Module(module->name, m_context);
 
-    builtin_generate(scope());
+    builtin_generate();
 
     llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(m_module->getContext()), false);
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);
@@ -1027,64 +1020,64 @@ void CodeGenerator::visit(ast::SourceFile *module) {
     }
 }
 
-void CodeGenerator::builtin_generate(symboltable::Namespace *table) {
+void CodeGenerator::builtin_generate() {
     llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(m_module->getContext()), false);
     auto init_function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_builtins", m_module);
     auto init_bb = llvm::BasicBlock::Create(m_module->getContext(), "entry", init_function);
 
-    builtin_initialise_boolean_variable(table, "nil", false);
-    builtin_initialise_boolean_variable(table, "true", true);
-    builtin_initialise_boolean_variable(table, "false", false);
+    builtin_initialise_boolean_variable("nil", false);
+    builtin_initialise_boolean_variable("true", true);
+    builtin_initialise_boolean_variable("false", false);
     //initialise_boolean_variable(table, "Int32", false);
     //initialise_boolean_variable(table, "Int64", false);
     //initialise_boolean_variable(table, "UnsafePointer", false);
 
     // not
-    llvm::Function *f = builtin_create_llvm_function(table, "not", 0);
+    llvm::Function *f = builtin_create_llvm_function("not", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateNot(m_args[0]));
 
     // multiplication
-    f = builtin_create_llvm_function(table, "*", 0);
+    f = builtin_create_llvm_function("*", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateMul(m_args[0], m_args[1]));
 
     // addition
-    f = builtin_create_llvm_function(table, "+", 0);
+    f = builtin_create_llvm_function("+", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateAdd(m_args[0], m_args[1]));
 
-    f = builtin_create_llvm_function(table, "+", 1);
+    f = builtin_create_llvm_function("+", 1);
     m_ir_builder->CreateRet(m_ir_builder->CreateAdd(m_args[0], m_args[1]));
 
-    f = builtin_create_llvm_function(table, "+", 2);
+    f = builtin_create_llvm_function("+", 2);
     m_ir_builder->CreateRet(m_ir_builder->CreateFAdd(m_args[0], m_args[1]));
 
     // subtraction
-    f = builtin_create_llvm_function(table, "-", 0);
+    f = builtin_create_llvm_function("-", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateSub(m_args[0], m_args[1]));
 
     // equality
     for (int i = 0; i < 3; i++) {
-        f = builtin_create_llvm_function(table, "==", i);
+        f = builtin_create_llvm_function("==", i);
         m_ir_builder->CreateRet(m_ir_builder->CreateICmpEQ(m_args[0], m_args[1]));
     }
 
     // not equality
-    f = builtin_create_llvm_function(table, "!=", 0);
+    f = builtin_create_llvm_function("!=", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateICmpNE(m_args[0], m_args[1]));
 
     // less than
-    f = builtin_create_llvm_function(table, "<", 0);
+    f = builtin_create_llvm_function("<", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateICmpSLT(m_args[0], m_args[1]));
 
     // greater than or equal to
-    f = builtin_create_llvm_function(table, ">=", 0);
+    f = builtin_create_llvm_function(">=", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateICmpSGE(m_args[0], m_args[1]));
 
     // to integer
-    f = builtin_create_llvm_function(table, "to_integer", 0);
+    f = builtin_create_llvm_function("to_integer", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateFPToSI(m_args[0], f->getReturnType()));
 
     // to float
-    f = builtin_create_llvm_function(table, "to_float", 0);
+    f = builtin_create_llvm_function("to_float", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateSIToFP(m_args[0], f->getReturnType()));
 
     m_ir_builder->SetInsertPoint(init_bb);
@@ -1092,9 +1085,9 @@ void CodeGenerator::builtin_generate(symboltable::Namespace *table) {
 }
 
 llvm::Function *CodeGenerator::builtin_generate_function(std::string name, types::Method *method, std::string llvm_name) {
-    method->accept(m_type_generator);
+    method->accept(this);
 
-    auto type = static_cast<llvm::FunctionType *>(m_type_generator->take_type(nullptr));
+    auto type = static_cast<llvm::FunctionType *>(take_type(nullptr));
     assert(type);
 
     auto old_insert_point = m_ir_builder->saveIP();
@@ -1126,8 +1119,8 @@ llvm::Function *CodeGenerator::builtin_generate_function(std::string name, types
 
 void CodeGenerator::builtin_generate_sizeof(types::Method *method, llvm::Function *function) {
     auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
-    type->create(nullptr, nullptr)->accept(m_type_generator);
-    auto llvm_type = m_type_generator->take_type(nullptr);
+    type->create(nullptr, nullptr)->accept(this);
+    auto llvm_type = take_type(nullptr);
 
     uint64_t size = m_data_layout->getTypeStoreSize(llvm_type);
     m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
@@ -1135,25 +1128,24 @@ void CodeGenerator::builtin_generate_sizeof(types::Method *method, llvm::Functio
 
 void CodeGenerator::builtin_generate_strideof(types::Method *method, llvm::Function *function) {
     auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
-    type->create(nullptr, nullptr)->accept(m_type_generator);
-    auto llvm_type = m_type_generator->take_type(nullptr);
+    type->create(nullptr, nullptr)->accept(this);
+    auto llvm_type = take_type(nullptr);
 
     uint64_t size = m_data_layout->getTypeAllocSize(llvm_type);
     m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
 }
 
-llvm::Function *CodeGenerator::builtin_create_llvm_function(symboltable::Namespace *table, std::string name, int index) {
-    auto function_symbol = table->lookup(nullptr, nullptr, name);
+llvm::Function *CodeGenerator::builtin_create_llvm_function(std::string name, int index) {
+    auto function_symbol = scope()->lookup(nullptr, nullptr, name);
 
     auto functionType = static_cast<types::Function *>(function_symbol->type);
     auto methodType = functionType->get_method(index);
 
     std::string mangled_name = codegen::mangle_method(name, methodType);
 
-    auto type_generator = new codegen::TypeGenerator(nullptr, m_module->getContext());
-    methodType->accept(type_generator);
+    methodType->accept(this);
 
-    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(type_generator->take_type(nullptr));
+    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(take_type(nullptr));
     assert(type);
 
     llvm::Function *f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, mangled_name, m_module);
@@ -1161,10 +1153,10 @@ llvm::Function *CodeGenerator::builtin_create_llvm_function(symboltable::Namespa
 
     if (function_symbol->value == nullptr) {
       // check if global symbol is set
-      functionType->accept(type_generator);
+      functionType->accept(this);
 
-      auto llvm_function_type = type_generator->take_type(nullptr);
-      auto llvm_initialiser = type_generator->take_initialiser(nullptr);
+      auto llvm_function_type = take_type(nullptr);
+      auto llvm_initialiser = take_initialiser(nullptr);
 
       auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
                                                llvm::GlobalValue::InternalLinkage,
@@ -1172,8 +1164,6 @@ llvm::Function *CodeGenerator::builtin_create_llvm_function(symboltable::Namespa
 
       function_symbol->value = variable;
     }
-
-    delete type_generator;
 
     auto i32 = llvm::IntegerType::getInt32Ty(m_module->getContext());
 
@@ -1191,11 +1181,12 @@ llvm::Function *CodeGenerator::builtin_create_llvm_function(symboltable::Namespa
     return f;
 }
 
-void CodeGenerator::builtin_initialise_boolean_variable(symboltable::Namespace *table, std::string name, bool value) {
-    auto symbol = table->lookup(nullptr, nullptr, name);
-    symbol->value = new llvm::GlobalVariable(*m_module, m_ir_builder->getInt1Ty(), false,
-                                             llvm::GlobalValue::InternalLinkage,
-                                             m_ir_builder->getInt1(value), name);
+void CodeGenerator::builtin_initialise_boolean_variable(std::string name, bool value) {
+    auto symbol = scope()->lookup(nullptr, nullptr, name);
+    symbol->value = new llvm::GlobalVariable(
+        *m_module, m_ir_builder->getInt1Ty(), false,
+        llvm::GlobalValue::InternalLinkage, m_ir_builder->getInt1(value), name
+    );
 }
 
 void CodeGenerator::builtin_initialise_function(llvm::Function *function, int no_arguments) {
