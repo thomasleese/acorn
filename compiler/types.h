@@ -178,11 +178,28 @@ namespace acorn {
 
         class FunctionType : public TypeType {
         public:
+            FunctionType();
+            FunctionType(std::vector<TypeType *> parameters);
+
             std::string name() const;
 
             Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             FunctionType *with_parameters(std::vector<TypeType *> parameters);
+
+            void accept(Visitor *visitor);
+        };
+
+        class MethodType : public TypeType {
+        public:
+            MethodType();
+            MethodType(std::vector<TypeType *> parameters);
+
+            std::string name() const;
+
+            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+
+            MethodType *with_parameters(std::vector<TypeType *> parameters);
 
             void accept(Visitor *visitor);
         };
@@ -249,8 +266,6 @@ namespace acorn {
             std::vector<Type *> m_knownTypes;
 
         };
-
-        class Method; // FIXME replace with 'MethodType'
 
         class TypeDescriptionType : public TypeType {
         public:
@@ -484,6 +499,7 @@ namespace acorn {
             virtual void visit(FloatType *type) = 0;
             virtual void visit(UnsafePointerType *type) = 0;
             virtual void visit(FunctionType *type) = 0;
+            virtual void visit(MethodType *type) = 0;
             virtual void visit(RecordType *type) = 0;
             virtual void visit(TupleType *type) = 0;
             virtual void visit(AliasType *type) = 0;

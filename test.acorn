@@ -2,12 +2,16 @@ def exit(code as Int64)
   ccall exit(Int64) as Void using code
 end
 
-def test(n as Int64)
-  if n == 10
-    0
-  else
-    n
-  end
+def modify_integer(n as Int64)
+  n * 2
 end
 
-exit(test(9))
+def modify_boolean(n as Bool)
+  not(n)
+end
+
+def test(n as Int64, f as Function{Method{Int64, Int64}})
+  f(n)
+end
+
+exit(test(9, modify_integer))

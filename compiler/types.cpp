@@ -288,6 +288,14 @@ void UnsafePointerType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+FunctionType::FunctionType() {
+
+}
+
+FunctionType::FunctionType(std::vector<TypeType *> parameters) : TypeType(parameters) {
+
+}
+
 std::string FunctionType::name() const {
     return "FunctionType";
 }
@@ -296,7 +304,13 @@ Type *FunctionType::create(diagnostics::Reporter *diagnostics, ast::Node *node) 
     Function *function = new Function();
 
     for (auto parameter : m_parameters) {
-        Method *method = dynamic_cast<Method *>(parameter);
+        auto method_type = dynamic_cast<MethodType *>(parameter);
+        if (method_type == nullptr) {
+            diagnostics->report(InvalidTypeParameters(node, 0, 0));
+            continue;
+        }
+
+        auto method = dynamic_cast<Method *>(method_type->create(diagnostics, node));
         if (method == nullptr) {
             diagnostics->report(InvalidTypeParameters(node, 0, 0));
             continue;
@@ -309,10 +323,48 @@ Type *FunctionType::create(diagnostics::Reporter *diagnostics, ast::Node *node) 
 }
 
 FunctionType *FunctionType::with_parameters(std::vector<TypeType *> parameters) {
-    return nullptr;
+    return new FunctionType(parameters);
 }
 
 void FunctionType::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+MethodType::MethodType() : TypeType() {
+
+}
+
+MethodType::MethodType(std::vector<TypeType *> parameters) : TypeType(parameters) {
+
+}
+
+std::string MethodType::name() const {
+    return "MethodType";
+}
+
+Type *MethodType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
+    auto return_type = dynamic_cast<TypeType *>(m_parameters[0])->create(diagnostics, node);
+    if (return_type == nullptr) {
+        return nullptr;
+    }
+
+    std::vector<Type *> parameter_types;
+    for (size_t i = 1; i < m_parameters.size(); i++) {
+        auto type = dynamic_cast<TypeType *>(m_parameters[i])->create(diagnostics, node);
+        if (type == nullptr) {
+            return nullptr;
+        }
+        parameter_types.push_back(type);
+    }
+
+    return new Method(parameter_types, return_type);
+}
+
+MethodType *MethodType::with_parameters(std::vector<TypeType *> parameters) {
+    return new MethodType(parameters);
+}
+
+void MethodType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

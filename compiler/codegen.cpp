@@ -131,6 +131,10 @@ void TypeGenerator::visit(types::FunctionType *type) {
     visit_constructor(type);
 }
 
+void TypeGenerator::visit(types::MethodType *type) {
+    visit_constructor(type);
+}
+
 void TypeGenerator::visit(types::RecordType *type) {
     visit_constructor(type);
 }

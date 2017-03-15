@@ -175,12 +175,12 @@ void Lexer::update_indentation(Token &token) {
 bool Lexer::read_identifier(Token &token) {
     int ch = m_stream.get();
 
-    if (!isalpha(ch)) {
+    if (!isalpha(ch) && ch != '_') {
         m_stream.unget();
         return false;
     }
 
-    while (isalpha(ch) || isdigit(ch)) {
+    while (isalpha(ch) || isdigit(ch) || ch == '_') {
         token.lexeme.append(1, ch);
         ch = m_stream.get();
     }

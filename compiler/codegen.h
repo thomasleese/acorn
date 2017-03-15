@@ -54,6 +54,7 @@ namespace acorn {
             void visit(types::FloatType *type);
             void visit(types::UnsafePointerType *type);
             void visit(types::FunctionType *type);
+            void visit(types::MethodType *type);
             void visit(types::RecordType *type);
             void visit(types::TupleType *type);
             void visit(types::AliasType *type);

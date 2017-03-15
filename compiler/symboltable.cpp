@@ -238,6 +238,7 @@ void Builder::add_builtin_types() {
     add_builtin_symbol("Float128", new types::FloatType(128));
     add_builtin_symbol("UnsafePointer", new types::UnsafePointerType());
     add_builtin_symbol("Function", new types::FunctionType());
+    add_builtin_symbol("Method", new types::MethodType());
     add_builtin_symbol("Tuple", new types::TupleType());
     add_builtin_symbol("Type", new types::TypeDescriptionType());
 }
