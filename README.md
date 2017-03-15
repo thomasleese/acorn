@@ -14,3 +14,13 @@ end
 
 hello()
 ```
+
+## How to use?
+
+    $ mkdir build
+    $ cd build
+    $ cmake ..
+    $ make
+    $ cd ..
+    $ ./build/acorn test.acorn
+    $ ./test

@@ -58,7 +58,8 @@ ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space
 }
 
 int main(int argc, char *argv[]) {
-    std::string filename = "../test.acorn";
+    std::string filename = argv[1];
+
     symboltable::Namespace *root_namespace;
     auto module = parse(filename, &root_namespace);
 
