@@ -690,8 +690,8 @@ llvm::BasicBlock *ModuleGenerator::create_basic_block(std::string name) const {
 void ModuleGenerator::visit(ast::Block *block) {
     llvm::Value *last_value = nullptr;
 
-    for (auto statement : block->expressions) {
-        statement->accept(this);
+    for (auto expression : block->expressions()) {
+        expression->accept(this);
         last_value = pop_value();
     }
 

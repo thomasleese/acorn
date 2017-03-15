@@ -27,7 +27,7 @@ void PrettyPrinter::visit(ast::Block *codeBlock)
     ss << indentation() << "(Block [" << type_of(codeBlock) << "]\n";
     indent++;
 
-    for (auto statement : codeBlock->expressions) {
+    for (auto statement : codeBlock->expressions()) {
         statement->accept(this);
     }
 

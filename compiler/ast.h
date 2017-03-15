@@ -55,9 +55,15 @@ namespace acorn {
         public:
             using Expression::Expression;
 
-            std::vector<Expression *> expressions;
+            std::vector<Expression *> expressions() const;
+            void add_expression(Expression *expression);
+            void insert_expression(int index, Expression *expression);
+            bool empty() const;
 
             void accept(Visitor *visitor);
+
+        private:
+            std::vector<Expression *> m_expressions;
         };
 
         class Name : public Expression {

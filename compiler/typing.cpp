@@ -151,14 +151,14 @@ types::Type *Inferrer::replace_type_parameters(types::Type *type, std::map<types
 }
 
 void Inferrer::visit(ast::Block *block) {
-    for (auto statement : block->expressions) {
+    for (auto statement : block->expressions()) {
         statement->accept(this);
     }
 
-    if (block->expressions.empty()) {
+    if (block->empty()) {
         block->set_type(new types::Void());
     } else {
-        block->copy_type_from(block->expressions.back());
+        block->copy_type_from(block->expressions().back());
     }
 }
 
@@ -646,8 +646,8 @@ void Checker::check_not_null(ast::Expression *expression) {
 }
 
 void Checker::visit(ast::Block *block) {
-    for (auto statement : block->expressions) {
-        statement->accept(this);
+    for (auto expression : block->expressions()) {
+        expression->accept(this);
     }
 
     check_not_null(block);

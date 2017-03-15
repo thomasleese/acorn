@@ -315,8 +315,8 @@ void Builder::add_builtins() {
 }
 
 void Builder::visit(ast::Block *block) {
-    for (auto statement : block->expressions) {
-        statement->accept(this);
+    for (auto expression : block->expressions()) {
+        expression->accept(this);
     }
 }
 

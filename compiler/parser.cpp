@@ -58,8 +58,8 @@ SourceFile *Parser::parse(std::string name) {
             continue;
         }
 
-        for (auto statement : module2->code->expressions) {
-            module->code->expressions.push_back(statement);
+        for (auto expression : module2->code->expressions()) {
+            module->code->add_expression(expression);
         }
 
         delete module2;
@@ -67,10 +67,10 @@ SourceFile *Parser::parse(std::string name) {
 
     // read the remaining expressions of the file
     while (!is_token(Token::EndOfFile)) {
-        auto statement = readExpression();
-        if (statement == nullptr) break;
+        auto expression = readExpression();
+        if (expression == nullptr) break;
 
-        module->code->expressions.push_back(statement);
+        module->code->add_expression(expression);
     }
 
     return module;
@@ -149,12 +149,12 @@ Block *Parser::readBlock(bool in_switch) {
     auto code = new Block(m_tokens.front());
 
     while (!is_token(Token::Deindent) && !(in_switch && (is_token(Token::CaseKeyword) || is_token(Token::DefaultKeyword)))) {
-        auto statement = readExpression();
-        if (statement == nullptr) {
+        auto expression = readExpression();
+        if (expression == nullptr) {
             break;
         }
 
-        code->expressions.push_back(statement);
+        code->add_expression(expression);
     }
 
     if (in_switch) {
@@ -515,17 +515,17 @@ Block *Parser::readFor() {
     auto code_block = new Block(token);
 
     auto state_variable = new VariableDefinition(token, state_variable_name, new Call(token, "start", iterator));
-    code_block->expressions.push_back(state_variable);
+    code_block->add_expression(state_variable);
 
     auto condition = new Call(token, "not", new Call(token, "done", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
     auto while_code = new While(token, condition, loop_code);
 
     auto next_state_variable = new VariableDefinition(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
-    loop_code->expressions.insert(loop_code->expressions.begin(), next_state_variable);
-    loop_code->expressions.insert(loop_code->expressions.begin() + 1, new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name(), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1")));
-    loop_code->expressions.insert(loop_code->expressions.begin() + 1, new Assignment(token, variable, new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0")));
+    loop_code->insert_expression(0, next_state_variable);
+    loop_code->insert_expression(1, new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name(), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1")));
+    loop_code->insert_expression(1, new Assignment(token, variable, new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0")));
 
-    code_block->expressions.push_back(while_code);
+    code_block->add_expression(while_code);
 
     return code_block;
 }

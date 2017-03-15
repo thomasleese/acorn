@@ -105,6 +105,22 @@ void Name::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+std::vector<Expression *> Block::expressions() const {
+    return m_expressions;
+}
+
+void Block::add_expression(Expression *expression) {
+    m_expressions.push_back(expression);
+}
+
+void Block::insert_expression(int index, Expression *expression) {
+    m_expressions.insert(m_expressions.begin() + index, expression);
+}
+
+bool Block::empty() const {
+    return m_expressions.empty();
+}
+
 VariableDeclaration::VariableDeclaration(Token token, Name *name, Name *type) :
         Expression(token), m_name(name), m_given_type(type) {
 
