@@ -193,7 +193,7 @@ Identifier *Parser::readIdentifier(bool accept_parameters) {
         skip_token(Token::OpenBrace);
 
         while (!is_token(Token::CloseBrace)) {
-            identifier->parameters.push_back(readIdentifier(true));
+            identifier->add_parameter(readIdentifier(true));
 
             if (is_token(Token::Comma)) {
                 skip_token(Token::Comma);
@@ -217,7 +217,7 @@ Identifier *Parser::readOperator(bool accept_parameters) {
         skip_token(Token::OpenBrace);
 
         while (!is_token(Token::CloseBrace)) {
-            identifier->parameters.push_back(readIdentifier(true));
+            identifier->add_parameter(readIdentifier(true));
 
             if (is_token(Token::Comma)) {
                 skip_token(Token::Comma);
@@ -672,10 +672,10 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
 
         std::string opName = "=";
 
-        Identifier *op = 0;
+        Identifier *op = nullptr;
         if (is_token(Token::Operator)) {
             op = readOperator(true);
-            opName = op->value;
+            opName = op->value();
         } else {
             skip_token(Token::Assignment);
         }
@@ -835,7 +835,7 @@ FunctionDefinition *Parser::readFunctionDefinition() {
         return nullptr;
     }
 
-    debug("Name: " + definition->name->value);
+    debug("Name: " + definition->name->value());
 
     skip_token(Token::OpenParenthesis);
 

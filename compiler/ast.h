@@ -69,10 +69,16 @@ namespace acorn {
             std::string collapsed_value() const;
             void collapse_parameters();
 
-            std::string value;
-            std::vector<Identifier *> parameters;
+            std::string value() const;
+
+            std::vector<Identifier *> parameters() const;
+            void add_parameter(Identifier *identifier);
 
             void accept(Visitor *visitor);
+
+        private:
+            std::string m_value;
+            std::vector<Identifier *> m_parameters;
         };
 
         class VariableDeclaration : public Expression {

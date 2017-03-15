@@ -38,17 +38,17 @@ void PrettyPrinter::visit(ast::Block *codeBlock)
 void PrettyPrinter::visit(ast::Identifier *identifier)
 {
     if (identifier->has_parameters()) {
-        ss << indentation() << "(Identifier " << identifier->value << " [" << type_of(identifier) << "]\n";
+        ss << indentation() << "(Identifier " << identifier->value() << " [" << type_of(identifier) << "]\n";
         indent++;
 
-        for (auto parameter : identifier->parameters) {
+        for (auto parameter : identifier->parameters()) {
             parameter->accept(this);
         }
 
         indent--;
         ss << indentation() << ")\n";
     } else {
-        ss << indentation() << "(Identifier " << identifier->value << " [" << type_of(identifier) << "])\n";
+        ss << indentation() << "(Identifier " << identifier->value() << " [" << type_of(identifier) << "])\n";
     }
 }
 

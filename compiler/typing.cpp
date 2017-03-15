@@ -67,7 +67,7 @@ types::TypeType *Inferrer::find_type(ast::Node *node, std::string name) {
 }
 
 types::TypeType *Inferrer::find_type(ast::Identifier *type) {
-    return find_type(type, type->value, type->parameters);
+    return find_type(type, type->value(), type->parameters());
 }
 
 types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters) {
@@ -84,7 +84,7 @@ types::Type *Inferrer::instance_type(ast::Node *node, std::string name) {
 }
 
 types::Type *Inferrer::instance_type(ast::Identifier *identifier) {
-    return instance_type(identifier, identifier->value, identifier->parameters);
+    return instance_type(identifier, identifier->value(), identifier->parameters());
 }
 
 bool Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Type *> parameter_types, std::vector<types::Type *> argument_types) {
@@ -379,9 +379,9 @@ void Inferrer::visit(ast::Selector *expression) {
         return;
     }
 
-    auto field_type = selectable->child_type(expression->name->value);
+    auto field_type = selectable->child_type(expression->name->value());
     if (field_type == nullptr) {
-        report(UndefinedError(expression->name, expression->name->value));
+        report(UndefinedError(expression->name, expression->name->value()));
         return;
     }
 
@@ -461,7 +461,7 @@ void Inferrer::visit(ast::Switch *expression) {
 
 void Inferrer::visit(ast::Parameter *parameter) {
     auto symbol = m_namespace->lookup(this, parameter,
-                                      parameter->name->value);
+                                      parameter->name->value());
 
     if (symbol == nullptr) {
         return;
@@ -477,7 +477,7 @@ void Inferrer::visit(ast::Parameter *parameter) {
 
 void Inferrer::visit(ast::VariableDefinition *definition) {
     auto symbol = m_namespace->lookup(this, definition,
-                                      definition->name->value);
+                                      definition->name->value());
 
     if (symbol == nullptr) {
         return;
@@ -499,7 +499,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    for (auto p : definition->name->parameters) {
+    for (auto p : definition->name->parameters()) {
         p->accept(this);
     }
 
@@ -514,7 +514,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
         }
 
         parameterTypes.push_back(parameter->type());
-        officialParameterOrder.push_back(parameter->name->value);
+        officialParameterOrder.push_back(parameter->name->value());
     }
 
     definition->body->accept(this);
@@ -540,7 +540,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
         }
     }
 
-    method->set_is_generic(!definition->name->parameters.empty());
+    method->set_is_generic(definition->name->has_parameters());
     function->add_method(method);
 
     functionSymbol->nameSpace->rename(this, symbol, method->mangled_name());
@@ -558,13 +558,13 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 
 void Inferrer::visit(ast::TypeDefinition *definition) {
     auto symbol = m_namespace->lookup(this, definition,
-                                      definition->name->value);
+                                      definition->name->value());
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
     std::vector<types::ParameterType *> input_parameters;
-    for (auto t : definition->name->parameters) {
+    for (auto t : definition->name->parameters()) {
         t->accept(this);
 
         auto param = dynamic_cast<types::ParameterType *>(t->type());
@@ -588,7 +588,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
         std::vector<types::TypeType *> field_types;
 
         for (auto name : definition->field_names) {
-            field_names.push_back(name->value);
+            field_names.push_back(name->value());
         }
 
         for (auto type : definition->field_types) {
@@ -654,7 +654,7 @@ void Checker::visit(ast::Block *block) {
 }
 
 void Checker::visit(ast::Identifier *identifier) {
-    for (auto p : identifier->parameters) {
+    for (auto p : identifier->parameters()) {
         p->accept(this);
     }
 
@@ -840,7 +840,7 @@ void Checker::visit(ast::FunctionDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     // definition->name->accept(this);
 
-    for (auto p : definition->name->parameters) {
+    for (auto p : definition->name->parameters()) {
         p->accept(this);
     }
 

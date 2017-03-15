@@ -64,20 +64,20 @@ Identifier::Identifier(Token token) : Expression(token) {
 
 }
 
-Identifier::Identifier(Token token, std::string name) : Expression(token) {
-    this->value = name;
+Identifier::Identifier(Token token, std::string name) : Expression(token), m_value(name) {
+
 }
 
 bool Identifier::has_parameters() const {
-    return !parameters.empty();
+    return !m_parameters.empty();
 }
 
 std::string Identifier::collapsed_value() const {
     std::stringstream ss;
-    ss << this->value;
+    ss << m_value;
     if (has_parameters()) {
         ss << "_";
-        for (auto p : this->parameters) {
+        for (auto p : m_parameters) {
             ss << p->collapsed_value() << "_";
         }
     }
@@ -85,8 +85,20 @@ std::string Identifier::collapsed_value() const {
 }
 
 void Identifier::collapse_parameters() {
-    this->value = collapsed_value();
-    this->parameters.clear();
+    m_value = collapsed_value();
+    m_parameters.clear();
+}
+
+std::string Identifier::value() const {
+    return m_value;
+}
+
+std::vector<Identifier *> Identifier::parameters() const {
+    return m_parameters;
+}
+
+void Identifier::add_parameter(Identifier *identifier) {
+    m_parameters.push_back(identifier);
 }
 
 void Identifier::accept(Visitor *visitor) {

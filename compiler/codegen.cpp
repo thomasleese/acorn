@@ -589,16 +589,16 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", function);
     m_irBuilder->SetInsertPoint(basicBlock);
 
-    for (ast::Identifier *param : definition->name->parameters) {
-        auto s = m_scope.back()->lookup(this, definition, param->value);
-        auto alloca = m_irBuilder->CreateAlloca(m_irBuilder->getInt1Ty(), 0, param->value);
+    for (ast::Identifier *param : definition->name->parameters()) {
+        auto s = m_scope.back()->lookup(this, definition, param->value());
+        auto alloca = m_irBuilder->CreateAlloca(m_irBuilder->getInt1Ty(), 0, param->value());
         m_irBuilder->CreateStore(m_irBuilder->getInt1(false), alloca);
         s->value = alloca;
     }
 
     int i = 0;
     for (auto &arg : function->args()) {
-        std::string arg_name = definition->parameters[i]->name->value;
+        std::string arg_name = definition->parameters[i]->name->value();
         arg.setName(arg_name);
 
         llvm::Value *value = &arg;
@@ -648,7 +648,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 
       auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
                                                llvm::GlobalValue::InternalLinkage,
-                                               llvm_initialiser, definition->name->value);
+                                               llvm_initialiser, definition->name->value());
 
       function_symbol->value = variable;
     }
@@ -731,7 +731,7 @@ void ModuleGenerator::visit(ast::VariableDeclaration *node) {
 
         auto variable = new llvm::GlobalVariable(*m_module, llvm_type, false,
                                                  llvm::GlobalValue::CommonLinkage,
-                                                 llvm_initialiser, node->name()->value);
+                                                 llvm_initialiser, node->name()->value());
         variable->setAlignment(4);
         variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
 
@@ -743,7 +743,7 @@ void ModuleGenerator::visit(ast::VariableDeclaration *node) {
         auto insert_function = m_irBuilder->GetInsertBlock()->getParent();
         m_irBuilder->SetInsertPoint(&insert_function->getEntryBlock().front());
 
-        symbol->value = m_irBuilder->CreateAlloca(llvm_type, 0, node->name()->value);
+        symbol->value = m_irBuilder->CreateAlloca(llvm_type, 0, node->name()->value());
     }
 
     m_irBuilder->restoreIP(old_insert_point);
@@ -952,7 +952,7 @@ void ModuleGenerator::visit(ast::CCall *ccall) {
         parameters.push_back(generate_type(parameter));
     }
 
-    std::string name = ccall->name->value;
+    std::string name = ccall->name->value();
 
     llvm::FunctionType *functionType = llvm::FunctionType::get(returnType, parameters, false);
 
@@ -1034,7 +1034,7 @@ void ModuleGenerator::visit(ast::Selector *expression) {
     // either an enum, or a record
     auto record = dynamic_cast<types::Record *>(selectable);
     if (record) {
-        uint64_t index = record->get_field_index(expression->name->value);
+        uint64_t index = record->get_field_index(expression->name->value());
 
         std::vector<llvm::Value *> indexes;
         indexes.push_back(llvm::ConstantInt::get(llvm::IntegerType::get(m_module->getContext(), 32), 0));
@@ -1167,7 +1167,7 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
-    if (definition->name->parameters.empty()) {
+    if (!definition->name->has_parameters()) {
         generate_function(definition);
     }
 
