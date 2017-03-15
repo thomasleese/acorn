@@ -43,7 +43,6 @@ SourceFile *Parser::parse(std::string name) {
         module->imports.push_back(read_import_expression());
     }
 
-    // FIXME, implement a proper module system
     for (auto import : module->imports) {
         std::string filename = "library/" + import->path->value + ".acorn";
 
@@ -743,7 +742,7 @@ Expression *Parser::read_primary_expression() {
         return read_record_literal();
     } else if (is_token(Token::Name)) {
         return read_name(true);
-    } else if (!is_token_available()) {  // FIXME refactor into function
+    } else if (!is_token_available()) {
         report(SyntaxError(front_token(), "primary expression"));
     }
 
