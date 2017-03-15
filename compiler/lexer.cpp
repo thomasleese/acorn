@@ -68,9 +68,9 @@ bool Lexer::next_token(Token &token) {
         // do nothing :)
     } else if (read_string(token)) {
         // do nothing :)
-    } else if (read_delimiter(token)) {
-        // do nothing :)
     } else if (read_operator(token)) {
+        // do nothing :)
+    } else if (read_delimiter(token)) {
         // do nothing :)
     } else {
         report(SyntaxError(token, "code"));
@@ -270,16 +270,6 @@ bool Lexer::read_string(Token &token) {
 
 bool Lexer::read_delimiter(Token &token) {
     int ch = m_stream.get();
-    int ch2 = m_stream.get();
-
-    if (ch == '-' && ch2 == '>') {
-        token.kind = Token::Arrow;
-        token.lexeme = "->";
-        m_current_column += 2;
-        return true;
-    } else {
-        m_stream.unget();
-    }
 
     // the following two lines are reversed in the default case below
     token.lexeme.append(1, ch);
@@ -296,7 +286,6 @@ bool Lexer::read_delimiter(Token &token) {
             update_indentation(token);
             return true;
 
-        // delimiters
         case '[':
             token.kind = Token::OpenBracket;
             return true;

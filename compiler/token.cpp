@@ -113,8 +113,6 @@ std::string Token::as_string(Token::Kind kind)
             return ":";
         case Semicolon:
             return ";";
-        case Arrow:
-            return "->";
         case Assignment:
             return "=";
         case Name:
