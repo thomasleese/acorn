@@ -22,6 +22,8 @@ ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space
         return nullptr;
     }
 
+    PrettyPrinter pp;
+
     symboltable::Builder symbol_table_builder;
     module->accept(&symbol_table_builder);
     assert(symbolTableBuilder.isAtRoot());
@@ -35,15 +37,14 @@ ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space
     typing::Inferrer inferrer(root_namespace);
     module->accept(&inferrer);
 
+    std::cout << root_namespace->to_string() << std::endl;
+
+    module->accept(&pp);
+    pp.print();
+
     if (inferrer.has_errors()) {
         return nullptr;
     }
-
-    std::cout << root_namespace->to_string() << std::endl;
-
-    PrettyPrinter pp;
-    module->accept(&pp);
-    pp.print();
 
     typing::Checker type_checker(root_namespace);
     module->accept(&type_checker);

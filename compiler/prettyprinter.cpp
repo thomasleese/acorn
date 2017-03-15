@@ -54,7 +54,7 @@ void PrettyPrinter::visit(ast::Name *identifier)
 
 void PrettyPrinter::visit(ast::VariableDeclaration *node)
 {
-    ss << indentation() << "(VariableDeclaration\n";
+    ss << indentation() << "(VariableDeclaration [" << type_of(node) << "]\n";
     indent++;
 
     node->name()->accept(this);
@@ -160,7 +160,7 @@ void PrettyPrinter::visit(ast::Call *expression)
 
 void PrettyPrinter::visit(ast::CCall *ccall)
 {
-    ss << indentation() << "(CCall\n";
+    ss << indentation() << "(CCall [" << type_of(ccall) << "]\n";
     indent++;
 
     ccall->name->accept(this);
@@ -193,7 +193,7 @@ void PrettyPrinter::visit(ast::Cast *cast)
 
 void PrettyPrinter::visit(ast::Assignment *expression)
 {
-    ss << indentation() << "(Assignment\n";
+    ss << indentation() << "(Assignment [" << type_of(expression) << "]\n";
     indent++;
 
     expression->lhs->accept(this);
@@ -205,7 +205,7 @@ void PrettyPrinter::visit(ast::Assignment *expression)
 
 void PrettyPrinter::visit(ast::Selector *expression)
 {
-    ss << indentation() << "(Selector\n";
+    ss << indentation() << "(Selector [" << type_of(expression) << "]\n";
     indent++;
 
     expression->operand->accept(this);
@@ -217,7 +217,7 @@ void PrettyPrinter::visit(ast::Selector *expression)
 
 void PrettyPrinter::visit(ast::While *expression)
 {
-    ss << indentation() << "(While\n";
+    ss << indentation() << "(While [" << type_of(expression) << "]\n";
     indent++;
 
     expression->condition()->accept(this);
@@ -256,7 +256,7 @@ void PrettyPrinter::visit(ast::Return *expression)
 
 void PrettyPrinter::visit(ast::Spawn *expression)
 {
-    ss << indentation() << "(Spawn\n";
+    ss << indentation() << "(Spawn [" << type_of(expression) << "]\n";
     indent++;
 
     expression->call->accept(this);
@@ -267,7 +267,7 @@ void PrettyPrinter::visit(ast::Spawn *expression)
 
 void PrettyPrinter::visit(ast::Switch *expression)
 {
-    ss << indentation() << "(Switch\n";
+    ss << indentation() << "(Switch [" << type_of(expression) << "]\n";
     indent++;
 
     expression->expression()->accept(this);
@@ -304,10 +304,11 @@ void PrettyPrinter::visit(ast::Parameter *parameter)
 
 void PrettyPrinter::visit(ast::VariableDefinition *definition)
 {
-    ss << indentation() << "(VariableDefinition\n";
+    ss << indentation() << "(VariableDefinition [" << type_of(definition) << "]\n";
     indent++;
 
     definition->assignment->accept(this);
+    definition->body()->accept(this);
 
     indent--;
     ss << indentation() << ")\n";
@@ -315,7 +316,7 @@ void PrettyPrinter::visit(ast::VariableDefinition *definition)
 
 void PrettyPrinter::visit(ast::FunctionDefinition *definition)
 {
-    ss << indentation() << "(FunctionDefinition\n";
+    ss << indentation() << "(FunctionDefinition [" << type_of(definition) << "]\n";
     indent++;
 
     definition->name->accept(this);

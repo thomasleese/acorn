@@ -65,7 +65,7 @@ namespace acorn {
         ast::Parameter *readParameter();
 
         // definitions
-        ast::VariableDefinition *readVariableDefinition();
+        ast::VariableDefinition *read_variable_definition();
         ast::FunctionDefinition *readFunctionDefinition();
         ast::TypeDefinition *readTypeDefinition();
 

@@ -2,6 +2,7 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
+#include <iostream>
 #include <sstream>
 
 #include "types.h"
@@ -40,7 +41,7 @@ bool Expression::has_type() const {
 
 void Expression::copy_type_from(Expression *expression) {
     // TODO set a warning here if the type is null?
-    m_type = expression->type();
+    set_type(expression->type());
 }
 
 bool Expression::has_compatible_type_with(Expression *expression) const {
@@ -138,6 +139,12 @@ Name *VariableDeclaration::given_type() const {
     return m_given_type.get();
 }
 
+void VariableDeclaration::set_type(types::Type *type) {
+    std::cout << "hi!" << std::endl;
+    Expression::set_type(type);
+    m_name->set_type(type);
+}
+
 void VariableDeclaration::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -228,7 +235,7 @@ void Cast::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Assignment::Assignment(Token token, Expression *lhs, Expression *rhs) : Expression(token) {
+Assignment::Assignment(Token token, VariableDeclaration *lhs, Expression *rhs) : Expression(token) {
     this->lhs = lhs;
     this->rhs = rhs;
 }
@@ -351,16 +358,26 @@ void Parameter::accept(Visitor *visitor) {
 
 VariableDefinition::VariableDefinition(Token token) :
         Definition(token),
-        assignment(nullptr)
+        assignment(nullptr),
+        m_body(nullptr)
 {
     // intentionally empty
 }
 
-VariableDefinition::VariableDefinition(Token token, std::string name, Expression *value) :
-        VariableDefinition(token)
+VariableDefinition::VariableDefinition(Token token, std::string name, Expression *value, Expression *body) :
+        Definition(token),
+        m_body(body)
 {
     this->name = new Name(token, name);
     this->assignment = new Assignment(token, new VariableDeclaration(token, this->name), value);
+}
+
+Expression *VariableDefinition::body() const {
+    return m_body.get();
+}
+
+void VariableDefinition::set_body(Expression *body) {
+    m_body.reset(body);
 }
 
 void VariableDefinition::accept(Visitor *visitor) {

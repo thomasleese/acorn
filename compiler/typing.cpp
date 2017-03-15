@@ -346,9 +346,12 @@ void Inferrer::visit(ast::Assignment *expression) {
     expression->rhs->accept(this);
 
     // variable type inference
-    if (dynamic_cast<ast::VariableDeclaration *>(expression->lhs)) {
-        if (!expression->lhs->has_type()) {
-            expression->lhs->copy_type_from(expression->rhs);
+    if (auto variable_declaration = expression->lhs) {
+        if (!variable_declaration->has_type()) {
+            variable_declaration->copy_type_from(expression->rhs);
+
+            auto symbol = m_namespace->lookup(this, variable_declaration->name());
+            symbol->copy_type_from(variable_declaration);
         }
     }
 
@@ -357,10 +360,6 @@ void Inferrer::visit(ast::Assignment *expression) {
 
     auto holder = expression->lhs;
     auto holdee = expression->rhs;
-
-    if (m_in_if) {
-        std::swap(holder, holdee);
-    }
 
     if (holder->has_compatible_type_with(holdee)) {
         expression->copy_type_from(expression->lhs);
@@ -484,9 +483,10 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
     }
 
     definition->assignment->accept(this);
+    definition->body()->accept(this);
 
-    symbol->type = definition->assignment->type();
-    definition->copy_type_from(definition->assignment);
+    definition->copy_type_from(definition->body());
+    symbol->copy_type_from(definition);
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
@@ -820,9 +820,12 @@ void Checker::visit(ast::VariableDefinition *definition) {
     // it's valid for the name not to have a type, since it's doesn't exist
     // definition->name->accept(this);
 
-    definition->assignment->accept(this);
+    check_not_null(definition);
 
-    check_types(definition, definition->assignment->rhs);
+    definition->assignment->accept(this);
+    definition->body()->accept(this);
+
+    check_types(definition, definition->body());
 }
 
 void Checker::visit(ast::FunctionDefinition *definition) {

@@ -154,6 +154,11 @@ bool Symbol::is_variable() const {
     return dynamic_cast<ast::VariableDefinition *>(this->node) != nullptr;
 }
 
+void Symbol::copy_type_from(ast::Expression *expression) {
+    // TODO check type is not null?
+    this->type = expression->type();
+}
+
 std::string Symbol::to_string(int indent) const {
     std::stringstream ss;
     ss << this->name << " (" << this->node << ")";
@@ -428,6 +433,7 @@ void Builder::visit(ast::Parameter *parameter) {
 
 void Builder::visit(ast::VariableDefinition *definition) {
     definition->assignment->accept(this);
+    definition->body()->accept(this);
 }
 
 void Builder::visit(ast::FunctionDefinition *definition) {

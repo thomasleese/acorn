@@ -66,6 +66,8 @@ namespace acorn {
             bool is_variable() const;
             bool is_type() const;
 
+            void copy_type_from(ast::Expression *expression);
+
             std::string to_string(int indent = 0) const;
 
             Symbol *clone() const;

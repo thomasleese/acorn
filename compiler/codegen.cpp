@@ -1164,6 +1164,7 @@ void ModuleGenerator::visit(ast::Parameter *parameter) {
 
 void ModuleGenerator::visit(ast::VariableDefinition *definition) {
     definition->assignment->accept(this);
+    definition->body()->accept(this);
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {

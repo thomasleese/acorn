@@ -522,8 +522,8 @@ Block *Parser::readFor() {
 
     auto next_state_variable = new VariableDefinition(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
     loop_code->insert_expression(0, next_state_variable);
-    loop_code->insert_expression(1, new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name(), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1")));
-    loop_code->insert_expression(1, new Assignment(token, variable, new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0")));
+    loop_code->insert_expression(1, new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1")));
+    loop_code->insert_expression(1, new Assignment(token, new VariableDeclaration(token, new Name(token, next_state_variable_name)), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0")));
 
     code_block->add_expression(while_code);
 
@@ -670,7 +670,7 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
     while ((is_token(Token::Operator) || is_token(Token::Assignment)) && m_operatorPrecendence[m_tokens.front().lexeme] >= minPrecedence) {
         auto token = m_tokens.front();
 
-        std::string opName = "=";
+        std::string opName = "";
 
         Name *op = nullptr;
         if (is_token(Token::Operator)) {
@@ -686,16 +686,12 @@ Expression *Parser::readBinaryExpression(Expression *lhs, int minPrecedence) {
             rhs = readBinaryExpression(rhs, m_operatorPrecendence[m_tokens.front().lexeme]);
         }
 
-        if (op) {
-            auto call = new Call(token);
-            call->operand = op;
-            call->arguments.push_back(lhs);
-            call->arguments.push_back(rhs);
+        auto call = new Call(token);
+        call->operand = op;
+        call->arguments.push_back(lhs);
+        call->arguments.push_back(rhs);
 
-            lhs = call;
-        } else {
-            lhs = new Assignment(token, lhs, rhs);
-        }
+        lhs = call;
     }
 
     return lhs;
@@ -804,7 +800,7 @@ Parameter *Parser::readParameter() {
     return parameter;
 }
 
-VariableDefinition *Parser::readVariableDefinition() {
+VariableDefinition *Parser::read_variable_definition() {
     auto lhs = readVariableDeclaration();
     return_if_null(lhs);
 
@@ -813,9 +809,17 @@ VariableDefinition *Parser::readVariableDefinition() {
     auto rhs = readExpression(true);
     return_if_null(rhs);
 
+    return_if_false(skip_token(Token::Indent));
+
+    auto body = readExpression();
+
+    return_if_false(skip_token(Token::Deindent));
+    return_if_false(skip_token(Token::EndKeyword));
+
     auto definition = new VariableDefinition(lhs->token());
     definition->name = lhs->name();
     definition->assignment = new Assignment(token, lhs, rhs);
+    definition->set_body(body);
     return definition;
 }
 
@@ -903,7 +907,7 @@ Expression *Parser::readExpression() {
     debug("Reading Expression...");
 
     if (is_token(Token::LetKeyword)) {
-        return readVariableDefinition();
+        return read_variable_definition();
     } else if (is_token(Token::DefKeyword)) {
         return readFunctionDefinition();
     } else if (is_token(Token::TypeKeyword)) {

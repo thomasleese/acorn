@@ -3,20 +3,9 @@ def exit(code as Int64)
 end
 
 def modify_integer(n as Int64)
-  n * 2
+  let i = n * 2
+    i * 2
+  end
 end
 
-def modify_boolean(n as Bool)
-  not(n)
-end
-
-def apply(f as Function{Method{Int64, Int64}}, n as Int64)
-  f(n)
-end
-
-def apply(f as Function{Method{Bool, Bool}}, n as Bool)
-  f(n)
-end
-
-apply(modify_boolean, true)
-exit(apply(modify_integer, 9))
+exit(modify_integer(9))

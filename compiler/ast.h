@@ -41,7 +41,7 @@ namespace acorn {
             explicit Expression(Token token);
 
             types::Type *type() const;
-            void set_type(types::Type *type);
+            virtual void set_type(types::Type *type);
             bool has_type() const;
             void copy_type_from(Expression *expression);
             bool has_compatible_type_with(Expression *expression) const;
@@ -96,7 +96,9 @@ namespace acorn {
             bool has_given_type();
             Name *given_type() const;
 
-            void accept(Visitor *visitor);
+            void set_type(types::Type *type) override;
+
+            void accept(Visitor *visitor) override;
 
         private:
             std::unique_ptr<Name> m_name;
@@ -224,9 +226,9 @@ namespace acorn {
 
         class Assignment : public Expression {
         public:
-            explicit Assignment(Token token, Expression *lhs, Expression *rhs);
+            explicit Assignment(Token token, VariableDeclaration *lhs, Expression *rhs);
 
-            Expression *lhs;
+            VariableDeclaration *lhs;
             Expression *rhs;
 
             void accept(Visitor *visitor);
@@ -332,11 +334,17 @@ namespace acorn {
         class VariableDefinition : public Definition {
         public:
             explicit VariableDefinition(Token token);
-            VariableDefinition(Token token, std::string name, Expression *value = nullptr);
+            VariableDefinition(Token token, std::string name, Expression *value = nullptr, Expression *body = nullptr);
 
             Assignment *assignment;
 
+            Expression *body() const;
+            void set_body(Expression *body);
+
             void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Expression> m_body;
         };
 
         class FunctionDefinition : public Definition {
