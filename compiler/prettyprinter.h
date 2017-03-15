@@ -19,7 +19,7 @@ namespace acorn {
 
     public:
         void visit(ast::Block *block);
-        void visit(ast::Identifier *identifier);
+        void visit(ast::Name *identifier);
         void visit(ast::VariableDeclaration *node);
         void visit(ast::IntegerLiteral *expression);
         void visit(ast::FloatLiteral *expression);

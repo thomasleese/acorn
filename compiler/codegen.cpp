@@ -589,7 +589,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", function);
     m_irBuilder->SetInsertPoint(basicBlock);
 
-    for (ast::Identifier *param : definition->name->parameters()) {
+    for (ast::Name *param : definition->name->parameters()) {
         auto s = m_scope.back()->lookup(this, definition, param->value());
         auto alloca = m_irBuilder->CreateAlloca(m_irBuilder->getInt1Ty(), 0, param->value());
         m_irBuilder->CreateStore(m_irBuilder->getInt1(false), alloca);
@@ -698,7 +698,7 @@ void ModuleGenerator::visit(ast::Block *block) {
     push_value(last_value);
 }
 
-void ModuleGenerator::visit(ast::Identifier *identifier) {
+void ModuleGenerator::visit(ast::Name *identifier) {
     auto symbol = m_scope.back()->lookup(this, identifier);
     if (symbol == nullptr) {
         push_value(nullptr);

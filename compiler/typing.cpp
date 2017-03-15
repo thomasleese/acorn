@@ -45,7 +45,7 @@ types::TypeType *Inferrer::find_type_constructor(ast::Node *node, std::string na
     }
 }
 
-types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters) {
+types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
     std::vector<types::Type *> parameterTypes;
 
     for (auto parameter : parameters) {
@@ -63,14 +63,14 @@ types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vec
 }
 
 types::TypeType *Inferrer::find_type(ast::Node *node, std::string name) {
-    return find_type(node, name, std::vector<ast::Identifier *>());
+    return find_type(node, name, std::vector<ast::Name *>());
 }
 
-types::TypeType *Inferrer::find_type(ast::Identifier *type) {
+types::TypeType *Inferrer::find_type(ast::Name *type) {
     return find_type(type, type->value(), type->parameters());
 }
 
-types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters) {
+types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
     types::TypeType *type_constructor = find_type(node, name, parameters);
     if (type_constructor == nullptr) {
         return nullptr;
@@ -80,10 +80,10 @@ types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vec
 }
 
 types::Type *Inferrer::instance_type(ast::Node *node, std::string name) {
-    return instance_type(node, name, std::vector<ast::Identifier *>());
+    return instance_type(node, name, std::vector<ast::Name *>());
 }
 
-types::Type *Inferrer::instance_type(ast::Identifier *identifier) {
+types::Type *Inferrer::instance_type(ast::Name *identifier) {
     return instance_type(identifier, identifier->value(), identifier->parameters());
 }
 
@@ -162,7 +162,7 @@ void Inferrer::visit(ast::Block *block) {
     }
 }
 
-void Inferrer::visit(ast::Identifier *expression) {
+void Inferrer::visit(ast::Name *expression) {
     auto symbol = m_namespace->lookup(this, expression);
     if (symbol == nullptr) {
         return;
@@ -653,7 +653,7 @@ void Checker::visit(ast::Block *block) {
     check_not_null(block);
 }
 
-void Checker::visit(ast::Identifier *identifier) {
+void Checker::visit(ast::Name *identifier) {
     for (auto p : identifier->parameters()) {
         p->accept(this);
     }

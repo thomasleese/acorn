@@ -36,13 +36,13 @@ namespace acorn {
         private:
             types::TypeType *find_type_constructor(ast::Node *node, std::string name);
 
-            types::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters);
+            types::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
             types::TypeType *find_type(ast::Node *node, std::string name);
-            types::TypeType *find_type(ast::Identifier *type);
+            types::TypeType *find_type(ast::Name *type);
 
-            types::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::Identifier *> parameters);
+            types::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
             types::Type *instance_type(ast::Node *node, std::string name);
-            types::Type *instance_type(ast::Identifier *identifier);
+            types::Type *instance_type(ast::Name *identifier);
 
             bool infer_call_type_parameters(ast::Call *call, std::vector<types::Type *> parameter_types,
                                             std::vector<types::Type *> argument_types);
@@ -52,7 +52,7 @@ namespace acorn {
 
         public:
             void visit(ast::Block *block);
-            void visit(ast::Identifier *identifier);
+            void visit(ast::Name *identifier);
             void visit(ast::VariableDeclaration *node);
             void visit(ast::IntegerLiteral *expression);
             void visit(ast::FloatLiteral *expression);
@@ -101,7 +101,7 @@ namespace acorn {
 
         public:
             void visit(ast::Block *block);
-            void visit(ast::Identifier *expression);
+            void visit(ast::Name *expression);
             void visit(ast::VariableDeclaration *node);
             void visit(ast::IntegerLiteral *expression);
             void visit(ast::FloatLiteral *expression);

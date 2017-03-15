@@ -52,7 +52,7 @@ Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node *currentNode, std::st
     return it->second;
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::Identifier *identifier) const {
+Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *identifier) const {
     return lookup(diagnostics, identifier, identifier->value());
 }
 
@@ -320,7 +320,7 @@ void Builder::visit(ast::Block *block) {
     }
 }
 
-void Builder::visit(ast::Identifier *identifier) {
+void Builder::visit(ast::Name *identifier) {
 
 }
 

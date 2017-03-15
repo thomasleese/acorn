@@ -34,7 +34,7 @@ namespace acorn {
 
             bool has(std::string name, bool follow_parents = true) const;
             Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Node *currentNode, std::string name) const;
-            Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Identifier *identifier) const;
+            Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Name *identifier) const;
             Symbol *lookup_by_node(diagnostics::Reporter *diagnostics, ast::Node *node) const;
             void insert(diagnostics::Reporter *diagnostics, ast::Node *currentNode, Symbol *symbol);
             void rename(diagnostics::Reporter *diagnostics, Symbol *symbol, std::string new_name);
@@ -91,7 +91,7 @@ namespace acorn {
             void add_builtins();
 
             void visit(ast::Block *block);
-            void visit(ast::Identifier *identifier);
+            void visit(ast::Name *identifier);
             void visit(ast::VariableDeclaration *node);
             void visit(ast::IntegerLiteral *expression);
             void visit(ast::FloatLiteral *expression);

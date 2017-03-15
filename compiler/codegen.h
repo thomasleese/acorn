@@ -129,7 +129,7 @@ namespace acorn {
 
             void visit(ast::Block *block);
 
-            void visit(ast::Identifier *expression);
+            void visit(ast::Name *expression);
             void visit(ast::VariableDeclaration *node);
             void visit(ast::IntegerLiteral *expression);
             void visit(ast::FloatLiteral *expression);

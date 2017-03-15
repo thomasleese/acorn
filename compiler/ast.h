@@ -60,10 +60,10 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class Identifier : public Expression {
+        class Name : public Expression {
         public:
-            Identifier(Token token);
-            Identifier(Token token, std::string name);
+            Name(Token token);
+            Name(Token token, std::string name);
 
             bool has_parameters() const;
             std::string collapsed_value() const;
@@ -71,37 +71,37 @@ namespace acorn {
 
             std::string value() const;
 
-            std::vector<Identifier *> parameters() const;
-            void add_parameter(Identifier *identifier);
+            std::vector<Name *> parameters() const;
+            void add_parameter(Name *identifier);
 
             void accept(Visitor *visitor);
 
         private:
             std::string m_value;
-            std::vector<Identifier *> m_parameters;
+            std::vector<Name *> m_parameters;
         };
 
         class VariableDeclaration : public Expression {
         public:
-            VariableDeclaration(Token token, Identifier *name = nullptr, Identifier *type = nullptr);
+            VariableDeclaration(Token token, Name *name = nullptr, Name *type = nullptr);
 
-            Identifier *name() const;
+            Name *name() const;
 
             bool has_given_type();
-            Identifier *given_type() const;
+            Name *given_type() const;
 
             void accept(Visitor *visitor);
 
         private:
-            std::unique_ptr<Identifier> m_name;
-            std::unique_ptr<Identifier> m_given_type;
+            std::unique_ptr<Name> m_name;
+            std::unique_ptr<Name> m_given_type;
         };
 
         class Definition : public Expression {
         public:
             using Expression::Expression;
 
-            Identifier *name;
+            Name *name;
         };
 
         class IntegerLiteral : public Expression {
@@ -163,8 +163,8 @@ namespace acorn {
         public:
             using Expression::Expression;
 
-            Identifier *name;
-            std::vector<Identifier *> field_names;
+            Name *name;
+            std::vector<Name *> field_names;
             std::vector<Expression *> field_values;
 
             void accept(Visitor *visitor);
@@ -198,9 +198,9 @@ namespace acorn {
         public:
             CCall(Token token);
 
-            Identifier *name;
-            std::vector<Identifier *> parameters;
-            Identifier *returnType;
+            Name *name;
+            std::vector<Name *> parameters;
+            Name *returnType;
             std::vector<Expression *> arguments;
 
             void accept(Visitor *visitor);
@@ -211,7 +211,7 @@ namespace acorn {
             Cast(Token token);
 
             Expression *operand;
-            Identifier *new_type;
+            Name *new_type;
 
             void accept(Visitor *visitor);
         };
@@ -228,11 +228,11 @@ namespace acorn {
 
         class Selector : public Expression {
         public:
-            Selector(Token token, Expression *operand, Identifier *field);
+            Selector(Token token, Expression *operand, Name *field);
             Selector(Token token, Expression *operand, std::string field);
 
             Expression *operand;
-            Identifier *name;
+            Name *name;
 
             void accept(Visitor *visitor);
         };
@@ -317,8 +317,8 @@ namespace acorn {
             explicit Parameter(Token token);
 
             bool inout;
-            Identifier *name;
-            Identifier *typeNode;
+            Name *name;
+            Name *typeNode;
 
             void accept(Visitor *visitor);
         };
@@ -339,7 +339,7 @@ namespace acorn {
 
             std::vector<Parameter *> parameters;
             Expression *body;
-            Identifier *returnType;
+            Name *returnType;
 
             void accept(Visitor *visitor);
         };
@@ -348,28 +348,28 @@ namespace acorn {
         public:
             TypeDefinition(Token token);
 
-            Identifier *alias;
+            Name *alias;
 
-            std::vector<Identifier *> field_names;
-            std::vector<Identifier *> field_types;
+            std::vector<Name *> field_names;
+            std::vector<Name *> field_types;
 
             void accept(Visitor *visitor);
         };
 
         class MethodSignature : public Node {
         public:
-            MethodSignature(Token token, Identifier *name, std::vector<Identifier *> parameter_types, Identifier *return_type);
+            MethodSignature(Token token, Name *name, std::vector<Name *> parameter_types, Name *return_type);
 
-            Identifier *name() const;
-            std::vector<Identifier *> parameter_types() const;
-            Identifier *return_type() const;
+            Name *name() const;
+            std::vector<Name *> parameter_types() const;
+            Name *return_type() const;
 
             void accept(Visitor *visitor);
 
         private:
-            std::unique_ptr<Identifier> m_name;
-            std::vector<std::unique_ptr<Identifier>> m_parameter_types;
-            std::unique_ptr<Identifier> m_return_type;
+            std::unique_ptr<Name> m_name;
+            std::vector<std::unique_ptr<Name>> m_parameter_types;
+            std::unique_ptr<Name> m_return_type;
         };
 
         class ImportExpression : public Expression {
@@ -400,7 +400,7 @@ namespace acorn {
             virtual void visit(Block *block) = 0;
 
             // expressions
-            virtual void visit(Identifier *identifier) = 0;
+            virtual void visit(Name *identifier) = 0;
             virtual void visit(VariableDeclaration *node) = 0;
             virtual void visit(IntegerLiteral *expression) = 0;
             virtual void visit(FloatLiteral *expression) = 0;

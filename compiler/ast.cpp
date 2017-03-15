@@ -60,19 +60,19 @@ void Block::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Identifier::Identifier(Token token) : Expression(token) {
+Name::Name(Token token) : Expression(token) {
 
 }
 
-Identifier::Identifier(Token token, std::string name) : Expression(token), m_value(name) {
+Name::Name(Token token, std::string name) : Expression(token), m_value(name) {
 
 }
 
-bool Identifier::has_parameters() const {
+bool Name::has_parameters() const {
     return !m_parameters.empty();
 }
 
-std::string Identifier::collapsed_value() const {
+std::string Name::collapsed_value() const {
     std::stringstream ss;
     ss << m_value;
     if (has_parameters()) {
@@ -84,33 +84,33 @@ std::string Identifier::collapsed_value() const {
     return ss.str();
 }
 
-void Identifier::collapse_parameters() {
+void Name::collapse_parameters() {
     m_value = collapsed_value();
     m_parameters.clear();
 }
 
-std::string Identifier::value() const {
+std::string Name::value() const {
     return m_value;
 }
 
-std::vector<Identifier *> Identifier::parameters() const {
+std::vector<Name *> Name::parameters() const {
     return m_parameters;
 }
 
-void Identifier::add_parameter(Identifier *identifier) {
+void Name::add_parameter(Name *identifier) {
     m_parameters.push_back(identifier);
 }
 
-void Identifier::accept(Visitor *visitor) {
+void Name::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-VariableDeclaration::VariableDeclaration(Token token, Identifier *name, Identifier *type) :
+VariableDeclaration::VariableDeclaration(Token token, Name *name, Name *type) :
         Expression(token), m_name(name), m_given_type(type) {
 
 }
 
-Identifier *VariableDeclaration::name() const {
+Name *VariableDeclaration::name() const {
     return m_name.get();
 }
 
@@ -118,7 +118,7 @@ bool VariableDeclaration::has_given_type() {
     return m_given_type != nullptr;
 }
 
-Identifier *VariableDeclaration::given_type() const {
+Name *VariableDeclaration::given_type() const {
     return m_given_type.get();
 }
 
@@ -179,7 +179,7 @@ Call::Call(Token token) : Expression(token), operand(nullptr) {
 }
 
 Call::Call(Token token, std::string name, Expression *arg1, Expression *arg2) : Call(token) {
-    this->operand = new Identifier(token, name);
+    this->operand = new Name(token, name);
 
     if (arg1) {
         this->arguments.push_back(arg1);
@@ -221,7 +221,7 @@ void Assignment::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Selector::Selector(Token token, Expression *operand, Identifier *field) :
+Selector::Selector(Token token, Expression *operand, Name *field) :
         Expression(token),
         operand(operand),
         name(field)
@@ -230,7 +230,7 @@ Selector::Selector(Token token, Expression *operand, Identifier *field) :
 }
 
 Selector::Selector(Token token, Expression *operand, std::string field) :
-        Selector(token, operand, new Identifier(token, field))
+        Selector(token, operand, new Name(token, field))
 {
 
 }
@@ -343,7 +343,7 @@ VariableDefinition::VariableDefinition(Token token) :
 VariableDefinition::VariableDefinition(Token token, std::string name, Expression *value) :
         VariableDefinition(token)
 {
-    this->name = new Identifier(token, name);
+    this->name = new Name(token, name);
     this->assignment = new Assignment(token, new VariableDeclaration(token, this->name), value);
 }
 
@@ -371,29 +371,29 @@ void TypeDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-MethodSignature::MethodSignature(Token token, Identifier *name, std::vector<Identifier *> parameter_types, Identifier *return_type) :
+MethodSignature::MethodSignature(Token token, Name *name, std::vector<Name *> parameter_types, Name *return_type) :
         Node(token),
         m_name(name),
         m_return_type(return_type)
 {
     for (auto p : parameter_types) {
-        m_parameter_types.push_back(std::unique_ptr<Identifier>(p));
+        m_parameter_types.push_back(std::unique_ptr<Name>(p));
     }
 }
 
-Identifier *MethodSignature::name() const {
+Name *MethodSignature::name() const {
     return m_name.get();
 }
 
-std::vector<Identifier *> MethodSignature::parameter_types() const {
-    std::vector<Identifier *> result;
+std::vector<Name *> MethodSignature::parameter_types() const {
+    std::vector<Name *> result;
     for (auto &type : m_parameter_types) {
         result.push_back(type.get());
     }
     return result;
 }
 
-Identifier *MethodSignature::return_type() const {
+Name *MethodSignature::return_type() const {
     return m_return_type.get();
 }
 

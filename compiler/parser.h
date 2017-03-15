@@ -35,8 +35,8 @@ namespace acorn {
 
         // expressions
         ast::Expression *readExpression(bool parse_comma);
-        ast::Identifier *readIdentifier(bool accept_parameters);
-        ast::Identifier *readOperator(bool accept_parameters);
+        ast::Name *readName(bool accept_parameters);
+        ast::Name *readOperator(bool accept_parameters);
         ast::VariableDeclaration *readVariableDeclaration();
         ast::IntegerLiteral *readIntegerLiteral();
         ast::FloatLiteral *readFloatLiteral();
