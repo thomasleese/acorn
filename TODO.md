@@ -1,5 +1,3 @@
-- Support passing functions around.
-- Implement full generics.
 - Code improvements, with tests.
 
 
