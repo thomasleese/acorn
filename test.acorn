@@ -10,11 +10,7 @@ def modify_boolean(n as Bool)
   not(n)
 end
 
-def apply(f as Function{Method{Int64, Int64}}, n as Int64)
-  f(n)
-end
-
-def apply(f as Function{Method{Bool, Bool}}, n as Bool)
+def apply{T}(f as Function{Method{T, T}}, n as T)
   f(n)
 end
 
