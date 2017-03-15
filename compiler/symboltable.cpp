@@ -182,18 +182,34 @@ Symbol* Symbol::clone() const {
     return new_symbol;
 }
 
+void ScopeFollower::push_scope(symboltable::Symbol *symbol) {
+    push_scope(symbol->nameSpace);
+}
+
+void ScopeFollower::push_scope(symboltable::Namespace *name_space) {
+    m_scope.push_back(name_space);
+}
+
+void ScopeFollower::pop_scope() {
+    m_scope.pop_back();
+}
+
+symboltable::Namespace *ScopeFollower::scope() const {
+    return m_scope.back();
+}
+
 Builder::Builder() {
     m_root = new Namespace(nullptr);
-    m_scope.push_back(m_root);
+    push_scope(m_root);
 
     add_builtins();
 }
 
-bool Builder::isAtRoot() const {
-    return m_root == m_scope.back();
+bool Builder::is_at_root() const {
+    return m_root == scope();
 }
 
-Namespace *Builder::rootNamespace() {
+Namespace *Builder::root_namespace() {
     return m_root;
 }
 
@@ -201,13 +217,13 @@ Symbol *Builder::add_builtin_symbol(std::string name, types::Type *type) {
     auto symbol = new Symbol(name);
     symbol->type = type;
     symbol->is_builtin = true;
-    m_scope.back()->insert(nullptr, nullptr, symbol);
+    scope()->insert(nullptr, nullptr, symbol);
     return symbol;
 }
 
 Symbol *Builder::add_builtin_function(std::string name) {
     auto symbol = add_builtin_symbol(name, new types::Function());
-    symbol->nameSpace = new Namespace(m_scope.back());
+    symbol->nameSpace = new Namespace(scope());
     return symbol;
 }
 
@@ -333,7 +349,7 @@ void Builder::visit(ast::VariableDeclaration *node) {
     assert(!node->name()->has_parameters());
 
     Symbol *symbol = new Symbol(node->name()->value());
-    m_scope.back()->insert(this, node, symbol);
+    scope()->insert(this, node, symbol);
 }
 
 void Builder::visit(ast::IntegerLiteral *expression) {
@@ -428,7 +444,7 @@ void Builder::visit(ast::Switch *expression) {
 
 void Builder::visit(ast::Parameter *parameter) {
     Symbol *symbol = new Symbol(parameter->name->value());
-    m_scope.back()->insert(this, parameter, symbol);
+    scope()->insert(this, parameter, symbol);
 }
 
 void Builder::visit(ast::VariableDefinition *definition) {
@@ -438,16 +454,16 @@ void Builder::visit(ast::VariableDefinition *definition) {
 
 void Builder::visit(ast::FunctionDefinition *definition) {
     Symbol *functionSymbol;
-    if (m_scope.back()->has(definition->name()->value(), false)) {
+    if (scope()->has(definition->name()->value(), false)) {
         // we don't want to look in any parent scope when we're
         // defining a new function; it should follow the notion of
         // variables, i.e. we are hiding the previous binding
-        functionSymbol = m_scope.back()->lookup(this, definition->name());
+        functionSymbol = scope()->lookup(this, definition->name());
     } else {
         functionSymbol = new Symbol(definition->name()->value());
         functionSymbol->type = new types::Function();
-        functionSymbol->nameSpace = new Namespace(m_scope.back());
-        m_scope.back()->insert(this, definition, functionSymbol);
+        functionSymbol->nameSpace = new Namespace(scope());
+        scope()->insert(this, definition, functionSymbol);
         functionSymbol->node = nullptr;  // explicit no node for function symbols
     }
 
@@ -457,15 +473,15 @@ void Builder::visit(ast::FunctionDefinition *definition) {
     ss << pointer_location;
 
     Symbol *symbol = new Symbol(ss.str());
-    symbol->nameSpace = new Namespace(m_scope.back());
+    symbol->nameSpace = new Namespace(scope());
     functionSymbol->nameSpace->insert(this, definition, symbol);
 
-    m_scope.push_back(symbol->nameSpace);
+    push_scope(symbol);
 
     for (auto parameter : definition->name()->parameters()) {
         Symbol *sym = new Symbol(parameter->value());
         sym->type = new types::ParameterType();
-        m_scope.back()->insert(this, parameter, sym);
+        scope()->insert(this, parameter, sym);
     }
 
     for (auto parameter : definition->parameters) {
@@ -474,21 +490,21 @@ void Builder::visit(ast::FunctionDefinition *definition) {
 
     definition->body->accept(this);
 
-    m_scope.pop_back();
+    pop_scope();
 }
 
 void Builder::visit(ast::TypeDefinition *definition) {
     Symbol *symbol = new Symbol(definition->name()->value());
-    m_scope.back()->insert(this, definition, symbol);
+    scope()->insert(this, definition, symbol);
 
-    symbol->nameSpace = new Namespace(m_scope.back());
+    symbol->nameSpace = new Namespace(scope());
 
-    m_scope.push_back(symbol->nameSpace);
+    push_scope(symbol);
 
     for (auto parameter : definition->name()->parameters()) {
         Symbol *sym = new Symbol(parameter->value());
         sym->type = new types::ParameterType();
-        m_scope.back()->insert(this, definition, sym);
+        scope()->insert(this, definition, sym);
     }
 
     if (definition->alias) {
@@ -496,11 +512,11 @@ void Builder::visit(ast::TypeDefinition *definition) {
     } else {
         for (auto name : definition->field_names) {
             Symbol *sym = new Symbol(name->value());
-            m_scope.back()->insert(this, name, sym);
+            scope()->insert(this, name, sym);
         }
     }
 
-    m_scope.pop_back();
+    pop_scope();
 }
 
 void Builder::visit(ast::ImportExpression *statement) {

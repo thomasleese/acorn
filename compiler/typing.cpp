@@ -9,7 +9,6 @@
 
 #include "ast.h"
 #include "diagnostics.h"
-#include "symboltable.h"
 #include "types.h"
 
 #include "typing.h"
@@ -19,12 +18,13 @@ using namespace acorn::diagnostics;
 using namespace acorn::typing;
 
 #define return_if_null(thing) if (thing == nullptr) return;
+#define return_null_if_null(thing) if (thing == nullptr) return nullptr;
 #define return_if_null_type(node) return_if_null(node->type())
 
 Inferrer::Inferrer(symboltable::Namespace *root_namespace)
-        : m_namespace(root_namespace), m_in_if(false), m_as_type(false)
+        : m_in_if(false), m_as_type(false)
 {
-
+    push_scope(root_namespace);
 }
 
 Inferrer::~Inferrer() {
@@ -32,17 +32,9 @@ Inferrer::~Inferrer() {
 }
 
 types::TypeType *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
-    auto symbol = m_namespace->lookup(this, node, name);
-    if (symbol == nullptr) {
-        return nullptr;
-    }
-
-    auto typeConstructor = dynamic_cast<types::TypeType *>(symbol->type);
-    if (typeConstructor) {
-        return typeConstructor;
-    } else {
-        return nullptr;
-    }
+    auto symbol = scope()->lookup(this, node, name);
+    return_null_if_null(symbol);
+    return dynamic_cast<types::TypeType *>(symbol->type);
 }
 
 types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
@@ -163,7 +155,7 @@ void Inferrer::visit(ast::Block *block) {
 }
 
 void Inferrer::visit(ast::Name *expression) {
-    auto symbol = m_namespace->lookup(this, expression);
+    auto symbol = scope()->lookup(this, expression);
     if (symbol == nullptr) {
         return;
     }
@@ -180,7 +172,7 @@ void Inferrer::visit(ast::Name *expression) {
 void Inferrer::visit(ast::VariableDeclaration *node) {
     node->name()->accept(this);
 
-    auto symbol = m_namespace->lookup(this, node->name());
+    auto symbol = scope()->lookup(this, node->name());
 
     if (node->has_given_type()) {
         m_as_type = true;
@@ -342,7 +334,7 @@ void Inferrer::visit(ast::Cast *cast) {
 }
 
 void Inferrer::visit(ast::Assignment *expression) {
-    auto symbol = m_namespace->lookup(this, expression->lhs->name());
+    auto symbol = scope()->lookup(this, expression->lhs->name());
     return_if_null(symbol);
 
     expression->rhs->accept(this);
@@ -455,12 +447,10 @@ void Inferrer::visit(ast::Switch *expression) {
 }
 
 void Inferrer::visit(ast::Parameter *parameter) {
-    auto symbol = m_namespace->lookup(this, parameter,
+    auto symbol = scope()->lookup(this, parameter,
                                       parameter->name->value());
 
-    if (symbol == nullptr) {
-        return;
-    }
+    return_if_null(symbol);
 
     parameter->typeNode->accept(this);
 
@@ -478,14 +468,13 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
-    auto functionSymbol = m_namespace->lookup(this, definition->name());
+    auto functionSymbol = scope()->lookup(this, definition->name());
     auto function = static_cast<types::Function *>(functionSymbol->type);
 
     auto symbol = functionSymbol->nameSpace->lookup_by_node(this,
                                                             definition);
 
-    symboltable::Namespace *oldNamespace = m_namespace;
-    m_namespace = symbol->nameSpace;
+    push_scope(symbol);
 
     for (auto p : definition->name()->parameters()) {
         p->accept(this);
@@ -497,7 +486,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
         parameter->accept(this);
 
         if (!parameter->has_type()) {
-            m_namespace = oldNamespace;
+            pop_scope();
             return;
         }
 
@@ -516,7 +505,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     }
 
     if (return_type == nullptr) {
-        m_namespace = oldNamespace;
+        pop_scope();
         return;
     }
 
@@ -541,15 +530,13 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     assert(m_functionStack.back() == definition);
     m_functionStack.pop_back();
 
-    m_namespace = oldNamespace;
+    pop_scope();
 }
 
 void Inferrer::visit(ast::TypeDefinition *definition) {
-    auto symbol = m_namespace->lookup(this, definition,
-                                      definition->name()->value());
+    auto symbol = scope()->lookup(this, definition, definition->name()->value());
 
-    symboltable::Namespace *oldNamespace = m_namespace;
-    m_namespace = symbol->nameSpace;
+    push_scope(symbol);
 
     std::vector<types::ParameterType *> input_parameters;
     for (auto t : definition->name()->parameters()) {
@@ -595,7 +582,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
     symbol->type = type;
     definition->set_type(type);
 
-    m_namespace = oldNamespace;
+    pop_scope();
 }
 
 void Inferrer::visit(ast::ImportExpression *statement) {
@@ -609,9 +596,8 @@ void Inferrer::visit(ast::SourceFile *module) {
 }
 
 Checker::Checker(symboltable::Namespace *root_namespace)
-        : m_namespace(root_namespace)
 {
-
+    push_scope(root_namespace);
 }
 
 Checker::~Checker() {
@@ -816,14 +802,13 @@ void Checker::visit(ast::VariableDefinition *definition) {
 void Checker::visit(ast::FunctionDefinition *definition) {
     check_not_null(definition);
 
-    auto functionSymbol = m_namespace->lookup(this, definition->name());
+    auto functionSymbol = scope()->lookup(this, definition->name());
 
-    types::Method *method = static_cast<types::Method *>(definition->type());
+    auto method = static_cast<types::Method *>(definition->type());
 
     auto symbol = functionSymbol->nameSpace->lookup(this, definition, method->mangled_name());
 
-    symboltable::Namespace *oldNamespace = m_namespace;
-    m_namespace = symbol->nameSpace;
+    push_scope(symbol);
 
     definition->name()->accept(this);
 
@@ -841,7 +826,7 @@ void Checker::visit(ast::FunctionDefinition *definition) {
 
     definition->body->accept(this);
 
-    m_namespace = oldNamespace;
+    pop_scope();
 }
 
 void Checker::visit(ast::TypeDefinition *definition) {
@@ -849,10 +834,9 @@ void Checker::visit(ast::TypeDefinition *definition) {
 
     definition->name()->accept(this);
 
-    auto symbol = m_namespace->lookup(this, definition->name());
+    auto symbol = scope()->lookup(this, definition->name());
 
-    symboltable::Namespace *oldNamespace = m_namespace;
-    m_namespace = symbol->nameSpace;
+    push_scope(symbol);
 
     if (definition->alias) {
         definition->alias->accept(this);
@@ -866,7 +850,7 @@ void Checker::visit(ast::TypeDefinition *definition) {
         }
     }
 
-    m_namespace = oldNamespace;
+    pop_scope();
 }
 
 void Checker::visit(ast::ImportExpression *statement) {

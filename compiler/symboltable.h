@@ -73,12 +73,25 @@ namespace acorn {
             Symbol *clone() const;
         };
 
-        class Builder : public ast::Visitor, public diagnostics::Reporter {
+        class ScopeFollower {
+
+        public:
+            void push_scope(symboltable::Symbol *symbol);
+            void push_scope(symboltable::Namespace *name_space);
+            void pop_scope();
+            symboltable::Namespace *scope() const;
+
+        private:
+            std::vector<symboltable::Namespace *> m_scope;
+
+        };
+
+        class Builder : public ast::Visitor, public diagnostics::Reporter, ScopeFollower {
         public:
             Builder();
 
-            bool isAtRoot() const;
-            Namespace *rootNamespace();
+            bool is_at_root() const;
+            Namespace *root_namespace();
 
         private:
             Symbol *add_builtin_symbol(std::string name, types::Type *type);
@@ -124,7 +137,6 @@ namespace acorn {
 
         private:
             Namespace *m_root;
-            std::vector<Namespace *> m_scope;
         };
 
     };

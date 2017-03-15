@@ -515,7 +515,7 @@ void BuiltinGenerator::initialise_function(llvm::Function *function, int no_argu
 ModuleGenerator::ModuleGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout)
         : m_context(context), m_type_generator(new TypeGenerator(this, context))
 {
-    m_scope.push_back(scope);
+    push_scope(scope);
 
     m_irBuilder = new llvm::IRBuilder<>(context);
     m_mdBuilder = new llvm::MDBuilder(context);
@@ -548,7 +548,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *> type_parameters) {
     auto &context = m_module->getContext();
 
-    auto function_symbol = m_scope.back()->lookup(this, definition->name());
+    auto function_symbol = scope()->lookup(this, definition->name());
     auto function_type = static_cast<types::Function *>(function_symbol->type);
 
     auto method = static_cast<types::Method *>(definition->type());
@@ -570,7 +570,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
         }
     }
 
-    m_scope.push_back(symbol->nameSpace);
+    push_scope(symbol);
 
     for (auto entry : type_parameters) {
         m_type_generator->push_type_parameter(entry.first, entry.second);
@@ -590,7 +590,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     m_irBuilder->SetInsertPoint(basicBlock);
 
     for (ast::Name *param : definition->name()->parameters()) {
-        auto s = m_scope.back()->lookup(this, definition, param->value());
+        auto s = scope()->lookup(this, definition, param->value());
         auto alloca = m_irBuilder->CreateAlloca(m_irBuilder->getInt1Ty(), 0, param->value());
         m_irBuilder->CreateStore(m_irBuilder->getInt1(false), alloca);
         s->value = alloca;
@@ -609,7 +609,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
             value = alloca;
         }
 
-        auto arg_symbol = m_scope.back()->lookup(this, definition, arg_name);
+        auto arg_symbol = scope()->lookup(this, definition, arg_name);
         arg_symbol->value = value;
 
         i++;
@@ -627,7 +627,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
         report(InternalError(definition, stream.str()));
     }
 
-    m_scope.pop_back();
+    pop_scope();
 
     for (auto entry : type_parameters) {
         m_type_generator->pop_type_parameter(entry.first);
@@ -699,7 +699,7 @@ void ModuleGenerator::visit(ast::Block *block) {
 }
 
 void ModuleGenerator::visit(ast::Name *identifier) {
-    auto symbol = m_scope.back()->lookup(this, identifier);
+    auto symbol = scope()->lookup(this, identifier);
     if (symbol == nullptr) {
         push_value(nullptr);
         return;
@@ -716,14 +716,14 @@ void ModuleGenerator::visit(ast::Name *identifier) {
 }
 
 void ModuleGenerator::visit(ast::VariableDeclaration *node) {
-    auto symbol = m_scope.back()->lookup(this, node->name());
+    auto symbol = scope()->lookup(this, node->name());
 
     auto llvm_type = generate_type(node);
     return_if_null(llvm_type);
 
     auto old_insert_point = m_irBuilder->saveIP();
 
-    if (m_scope.back()->is_root()) {
+    if (scope()->is_root()) {
         auto llvm_initialiser = m_type_generator->take_initialiser(node);
         if (llvm_initialiser == nullptr) {
             return;
@@ -1177,8 +1177,8 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
 
 void ModuleGenerator::visit(ast::TypeDefinition *definition) {
     if (definition->alias) {
-        auto new_symbol = m_scope.back()->lookup(this, definition->name());
-        auto old_symbol = m_scope.back()->lookup(this, definition->alias);
+        auto new_symbol = scope()->lookup(this, definition->name());
+        auto old_symbol = scope()->lookup(this, definition->alias);
         new_symbol->value = old_symbol->value;
     }
 
@@ -1193,7 +1193,7 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     m_module = new llvm::Module(module->name, m_context);
 
     m_builtin_generator = new BuiltinGenerator(m_module, m_irBuilder, m_data_layout, m_type_generator);
-    m_builtin_generator->generate(m_scope.back());
+    m_builtin_generator->generate(scope());
 
     llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(m_module->getContext()), false);
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);

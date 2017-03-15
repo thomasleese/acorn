@@ -26,13 +26,13 @@ ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space
 
     symboltable::Builder symbol_table_builder;
     module->accept(&symbol_table_builder);
-    assert(symbolTableBuilder.isAtRoot());
+    assert(symbolTableBuilder.is_at_root());
 
     if (symbol_table_builder.has_errors()) {
         return nullptr;
     }
 
-    auto root_namespace = symbol_table_builder.rootNamespace();
+    auto root_namespace = symbol_table_builder.root_namespace();
 
     typing::Inferrer inferrer(root_namespace);
     module->accept(&inferrer);

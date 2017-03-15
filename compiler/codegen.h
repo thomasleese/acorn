@@ -15,6 +15,7 @@
 
 #include "ast.h"
 #include "diagnostics.h"
+#include "symboltable.h"
 #include "types.h"
 
 namespace llvm {
@@ -108,7 +109,7 @@ namespace acorn {
             std::vector<llvm::Argument *> m_args;
         };
 
-        class ModuleGenerator : public ast::Visitor, public diagnostics::Reporter {
+        class ModuleGenerator : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower {
 
         public:
             ModuleGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
@@ -161,7 +162,6 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         private:
-            std::vector<symboltable::Namespace *> m_scope;
             llvm::LLVMContext &m_context;
             llvm::Module *m_module;
             llvm::IRBuilder<> *m_irBuilder;

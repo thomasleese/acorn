@@ -8,15 +8,12 @@
 #include <vector>
 
 #include "ast.h"
+#include "symboltable.h"
 
 namespace acorn {
 
     namespace diagnostics {
         class Reporter;
-    }
-
-    namespace symboltable {
-        class Namespace;
     }
 
     namespace types {
@@ -27,7 +24,7 @@ namespace acorn {
 
     namespace typing {
 
-        class Inferrer : public ast::Visitor, public diagnostics::Reporter {
+        class Inferrer : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower {
 
         public:
             explicit Inferrer(symboltable::Namespace *root_namespace);
@@ -82,14 +79,13 @@ namespace acorn {
             void visit(ast::SourceFile *module);
 
         private:
-            symboltable::Namespace *m_namespace;
             std::vector<ast::FunctionDefinition *> m_functionStack;
             bool m_in_if;
             bool m_as_type;
 
         };
 
-        class Checker : public ast::Visitor, public diagnostics::Reporter {
+        class Checker : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower {
 
         public:
             explicit Checker(symboltable::Namespace *root_namespace);
@@ -129,9 +125,6 @@ namespace acorn {
 
             void visit(ast::ImportExpression *statement);
             void visit(ast::SourceFile *module);
-
-        private:
-            symboltable::Namespace *m_namespace;
 
         };
 
