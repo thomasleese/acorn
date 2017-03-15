@@ -386,16 +386,16 @@ void Builder::visit(ast::Selector *expression) {
 
 void Builder::visit(ast::While *expression) {
     expression->condition()->accept(this);
-    expression->code()->accept(this);
+    expression->body()->accept(this);
 }
 
 void Builder::visit(ast::If *expression) {
     expression->condition->accept(this);
 
-    expression->trueCode->accept(this);
+    expression->true_case->accept(this);
 
-    if (expression->falseCode) {
-        expression->falseCode->accept(this);
+    if (expression->false_case) {
+        expression->false_case->accept(this);
     }
 }
 
@@ -416,8 +416,8 @@ void Builder::visit(ast::Switch *expression) {
         }
     }
 
-    if (expression->default_block()) {
-        expression->default_block()->accept(this);
+    if (expression->default_case()) {
+        expression->default_case()->accept(this);
     }
 }
 
@@ -466,7 +466,7 @@ void Builder::visit(ast::FunctionDefinition *definition) {
         parameter->accept(this);
     }
 
-    definition->code->accept(this);
+    definition->body->accept(this);
 
     m_scope.pop_back();
 }

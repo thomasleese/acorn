@@ -187,10 +187,10 @@ void Selector::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-While::While(Token token, Expression *condition, Block *code) :
+While::While(Token token, Expression *condition, Expression *body) :
         Expression(token),
         m_condition(condition),
-        m_code(code)
+        m_body(body)
 {
     // intentionally left empty
 }
@@ -199,8 +199,8 @@ Expression *While::condition() const {
     return m_condition.get();
 }
 
-Block *While::code() const {
-    return m_code.get();
+Expression *While::body() const {
+    return m_body.get();
 }
 
 void While::accept(Visitor *visitor) {
@@ -223,8 +223,8 @@ void Spawn::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Case::Case(Token token, Expression *condition, Expression *assignment, Block *code) :
-        Node(token), m_condition(condition), m_assignment(assignment), m_code(code)
+Case::Case(Token token, Expression *condition, Expression *assignment, Expression *body) :
+        Node(token), m_condition(condition), m_assignment(assignment), m_body(body)
 {
 
 }
@@ -237,16 +237,16 @@ Expression *Case::assignment() const {
     return m_assignment.get();
 }
 
-Block *Case::code() const {
-    return m_code.get();
+Expression *Case::body() const {
+    return m_body.get();
 }
 
 void Case::accept(Visitor *visitor) {
     // visitor->visit(this);
 }
 
-Switch::Switch(Token token, Expression *expression, std::vector<Case *> cases, Block *default_block) :
-        Expression(token), m_expression(expression), m_default_block(default_block)
+Switch::Switch(Token token, Expression *expression, std::vector<Case *> cases, Expression *default_case) :
+        Expression(token), m_expression(expression), m_default_case(default_case)
 {
     for (auto entry : cases) {
         m_cases.push_back(std::unique_ptr<Case>(entry));
@@ -265,8 +265,8 @@ std::vector<Case *> Switch::cases() const {
     return cases;
 }
 
-Block *Switch::default_block() const {
-    return m_default_block.get();
+Expression *Switch::default_case() const {
+    return m_default_case.get();
 }
 
 void Switch::accept(Visitor *visitor) {

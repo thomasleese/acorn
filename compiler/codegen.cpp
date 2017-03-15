@@ -564,22 +564,10 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
         i++;
     }
 
-    definition->code->accept(this);
+    definition->body->accept(this);
 
-    auto nothing = m_irBuilder->getInt1(false);
-    if (definition->code->expressions.empty()) {
-        m_irBuilder->CreateRet(nothing);
-    } else {
-        if (m_values.empty()) {
-            m_irBuilder->CreateRet(nothing);
-        } else {
-            auto value = pop_value();
-
-            if (value == nullptr || !llvm::isa<llvm::ReturnInst>(value)) {
-                m_irBuilder->CreateRet(nothing);
-            }
-        }
-    }
+    auto value = pop_value();
+    m_irBuilder->CreateRet(value);
 
     std::string str;
     llvm::raw_string_ostream stream(str);
@@ -988,7 +976,7 @@ void ModuleGenerator::visit(ast::While *expression) {
     m_irBuilder->CreateCondBr(condition, loop_bb, else_bb);
     m_irBuilder->SetInsertPoint(loop_bb);
 
-    expression->code()->accept(this);
+    expression->body()->accept(this);
     auto then_value = pop_value();
     push_value(then_value);
     m_irBuilder->CreateBr(entry_bb);
@@ -1011,7 +999,7 @@ void ModuleGenerator::visit(ast::If *expression) {
     m_irBuilder->CreateCondBr(condition, then_bb, else_bb);
     m_irBuilder->SetInsertPoint(then_bb);
 
-    expression->trueCode->accept(this);
+    expression->true_case->accept(this);
     auto then_value = pop_value();
 
     m_irBuilder->CreateBr(merge_bb);
@@ -1022,8 +1010,8 @@ void ModuleGenerator::visit(ast::If *expression) {
     m_irBuilder->SetInsertPoint(else_bb);
 
     llvm::Value *else_value = nullptr;
-    if (expression->falseCode) {
-        expression->falseCode->accept(this);
+    if (expression->false_case) {
+        expression->false_case->accept(this);
         else_value = pop_value();
     } else {
         else_value = m_irBuilder->getInt1(false);

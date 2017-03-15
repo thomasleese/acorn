@@ -465,11 +465,15 @@ While *Parser::readWhile() {
     return_if_null(condition);
 
     return_if_false(skip_token(Token::Newline));
+    return_if_false(skip_token(Token::Indent));
 
-    auto code = readBlock();
-    return_if_null(code);
+    auto body = readExpression();
+    return_if_null(body);
 
-    return new While(token, condition, code);
+    return_if_false(skip_token(Token::Deindent));
+    return_if_false(skip_token(Token::EndKeyword));
+
+    return new While(token, condition, body);
 }
 
 Block *Parser::readFor() {
@@ -545,42 +549,35 @@ If *Parser::readIf() {
 
         expression->condition = new Assignment(assignment_token, lhs, rhs);
     } else {
-        expression->condition = readExpression(true);
+        expression->condition = readExpression();
         return_if_null(expression->condition);
     }
 
-    debug("Reading :");
+    debug("Reading indent");
 
     return_if_false(skip_token(Token::Indent));
 
-    expression->trueCode = new Block(m_tokens.front());
-    expression->falseCode = nullptr;
-
-    while (!is_token(Token::ElseKeyword) && !is_token(Token::Deindent)) {
-        auto statement = readExpression();
-        if (statement == nullptr) {
-            break;
-        }
-
-        expression->trueCode->expressions.push_back(statement);
-    }
+    expression->true_case = readExpression();
+    expression->false_case = nullptr;
 
     return_if_false(skip_token(Token::Deindent));
+
+    debug("Reading potential false case");
 
     if (is_token(Token::ElseKeyword)) {
         skip_token(Token::ElseKeyword);
 
         if (is_token(Token::IfKeyword)) {
-            expression->falseCode = new Block(m_tokens.front());
-            auto if_expr = readIf();
-            expression->falseCode->expressions.push_back(if_expr);
+            expression->false_case = readIf();
         } else {
             return_if_false(skip_token(Token::Indent));
-            expression->falseCode = readBlock();
+            expression->false_case = readExpression();
+            return_if_false(skip_token(Token::Deindent));
+            return_if_false(skip_token(Token::EndKeyword));
         }
     } else {
-        skip_token(Token::Deindent);
-        skip_token(Token::EndKeyword);
+        return_if_false(skip_token(Token::Deindent));
+        return_if_false(skip_token(Token::EndKeyword));
     }
 
     return expression;
@@ -590,14 +587,14 @@ Return *Parser::readReturn() {
     return_if_false(read_token(Token::ReturnKeyword, token));
 
     Return *r = new Return(token);
-    r->expression = readExpression(true);
+    r->expression = readExpression();
     return r;
 }
 
 Spawn *Parser::readSpawn() {
     return_if_false(read_token(Token::SpawnKeyword, token));
 
-    Expression *expr = readExpression(true);
+    Expression *expr = readExpression();
     Call *call = dynamic_cast<Call *>(expr);
     if (call) {
         return new Spawn(token, call);
@@ -610,7 +607,7 @@ Spawn *Parser::readSpawn() {
 Case *Parser::readCase() {
     return_if_false(read_token(Token::CaseKeyword, token));
 
-    auto condition = readExpression(true);
+    auto condition = readExpression();
     return_if_null(condition);
 
     Expression *assignment = nullptr;
@@ -863,8 +860,11 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 
     return_if_false(skip_token(Token::Indent));
 
-    definition->code = readBlock();
-    return_if_null(definition->code)
+    definition->body = readExpression();
+    return_if_null(definition->body);
+
+    return_if_false(skip_token(Token::Deindent));
+    return_if_false(skip_token(Token::EndKeyword));
 
     debug("Ending FunctionDefinition!");
 

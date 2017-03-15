@@ -391,9 +391,9 @@ void Inferrer::visit(ast::Selector *expression) {
 
 void Inferrer::visit(ast::While *expression) {
     expression->condition()->accept(this);
-    expression->code()->accept(this);
+    expression->body()->accept(this);
 
-    expression->type = expression->code()->type;
+    expression->type = expression->body()->type;
 }
 
 void Inferrer::visit(ast::If *expression) {
@@ -401,12 +401,13 @@ void Inferrer::visit(ast::If *expression) {
     expression->condition->accept(this);
     m_in_if = false;
 
-    expression->trueCode->accept(this);
-    if (expression->falseCode) {
-        expression->falseCode->accept(this);
+    expression->true_case->accept(this);
+    if (expression->false_case) {
+        expression->false_case->accept(this);
     }
 
-    expression->type = expression->trueCode->type;
+    // FIXME return a union type
+    expression->type = expression->true_case->type;
 }
 
 void Inferrer::visit(ast::Return *expression) {
@@ -445,13 +446,13 @@ void Inferrer::visit(ast::Switch *expression) {
             entry->assignment()->accept(this);
         }
 
-        entry->code()->accept(this);
+        entry->body()->accept(this);
 
-        entry->type = entry->code()->type;
+        entry->type = entry->body()->type;
     }
 
-    if (expression->default_block()) {
-        expression->default_block()->accept(this);
+    if (expression->default_case()) {
+        expression->default_case()->accept(this);
     }
 
     // TODO ensure all cases are the same type
@@ -544,7 +545,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 
     m_functionStack.push_back(definition);
 
-    definition->code->accept(this);
+    definition->body->accept(this);
 
     assert(m_functionStack.back() == definition);
     m_functionStack.pop_back();
@@ -768,15 +769,15 @@ void Checker::visit(ast::Selector *expression) {
 
 void Checker::visit(ast::While *expression) {
     expression->condition()->accept(this);
-    expression->code()->accept(this);
+    expression->body()->accept(this);
     check_not_null(expression);
 }
 
 void Checker::visit(ast::If *expression) {
     expression->condition->accept(this);
-    expression->trueCode->accept(this);
-    if (expression->falseCode) {
-        expression->falseCode->accept(this);
+    expression->true_case->accept(this);
+    if (expression->false_case) {
+        expression->false_case->accept(this);
     }
     check_not_null(expression);
 }
@@ -801,12 +802,12 @@ void Checker::visit(ast::Switch *expression) {
             entry->assignment()->accept(this);
         }
 
-        entry->code()->accept(this);
+        entry->body()->accept(this);
         check_not_null(entry);
     }
 
-    if (expression->default_block()) {
-        check_not_null(expression->default_block());
+    if (expression->default_case()) {
+        check_not_null(expression->default_case());
     }
 
     check_not_null(expression);
@@ -852,7 +853,7 @@ void Checker::visit(ast::FunctionDefinition *definition) {
         p->accept(this);
     }
 
-    definition->code->accept(this);
+    definition->body->accept(this);
 
     m_namespace = oldNamespace;
 }

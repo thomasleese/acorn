@@ -33,12 +33,10 @@ namespace acorn {
             types::Type *type;
         };
 
-        // basic categories
         struct Expression : Node {
             using Node::Node;
         };
 
-        // misc
         struct Block : Expression {
             using Expression::Expression;
 
@@ -47,7 +45,6 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        // expressions
         struct Identifier : Expression {
             Identifier(Token token);
             Identifier(Token token, std::string name);
@@ -207,24 +204,24 @@ namespace acorn {
 
         class While : public Expression {
         public:
-            While(Token token, Expression *condition, Block *code);
+            While(Token token, Expression *condition, Expression *body);
 
             Expression *condition() const;
-            Block *code() const;
+            Expression *body() const;
 
             void accept(Visitor *visitor);
 
         private:
             std::unique_ptr<Expression> m_condition;
-            std::unique_ptr<Block> m_code;
+            std::unique_ptr<Expression> m_body;
         };
 
         struct If : Expression {
             using Expression::Expression;
 
             Expression *condition;
-            Block *trueCode;
-            Block *falseCode;
+            Expression *true_case;
+            Expression *false_case;
 
             void accept(Visitor *visitor);
         };
@@ -247,34 +244,34 @@ namespace acorn {
 
         class Case : public Node {
         public:
-            Case(Token token, Expression *condition, Expression *assignment, Block *code);
+            Case(Token token, Expression *condition, Expression *assignment, Expression *body);
 
             Expression *condition() const;
             Expression *assignment() const;
-            Block *code() const;
+            Expression *body() const;
 
             void accept(Visitor *visitor);
 
         private:
             std::unique_ptr<Expression> m_condition;
             std::unique_ptr<Expression> m_assignment;
-            std::unique_ptr<Block> m_code;
+            std::unique_ptr<Expression> m_body;
         };
 
         class Switch : public Expression {
         public:
-            Switch(Token token, Expression *expression, std::vector<Case *> cases, Block *default_block = nullptr);
+            Switch(Token token, Expression *expression, std::vector<Case *> cases, Expression *default_case = nullptr);
 
             Expression *expression() const;
             std::vector<Case *> cases() const;
-            Block *default_block() const;
+            Expression *default_case() const;
 
             void accept(Visitor *visitor);
 
         private:
             std::unique_ptr<Expression> m_expression;
             std::vector<std::unique_ptr<Case> > m_cases;
-            std::unique_ptr<Block> m_default_block;
+            std::unique_ptr<Expression> m_default_case;
         };
 
         // misc
@@ -302,7 +299,7 @@ namespace acorn {
             using Definition::Definition;
 
             std::vector<Parameter *> parameters;
-            Block *code;
+            Expression *body;
             Identifier *returnType;
 
             void accept(Visitor *visitor);

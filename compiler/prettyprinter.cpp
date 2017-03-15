@@ -225,7 +225,7 @@ void PrettyPrinter::visit(ast::While *expression)
     indent++;
 
     expression->condition()->accept(this);
-    expression->code()->accept(this);
+    expression->body()->accept(this);
 
     indent--;
     ss << indentation() << ")\n";
@@ -237,10 +237,10 @@ void PrettyPrinter::visit(ast::If *expression)
     indent++;
 
     expression->condition->accept(this);
-    expression->trueCode->accept(this);
+    expression->true_case->accept(this);
 
-    if (expression->falseCode) {
-        expression->falseCode->accept(this);
+    if (expression->false_case) {
+        expression->false_case->accept(this);
     }
 
     indent--;
@@ -283,11 +283,11 @@ void PrettyPrinter::visit(ast::Switch *expression)
             entry->assignment()->accept(this);
         }
 
-        entry->code()->accept(this);
+        entry->body()->accept(this);
     }
 
-    if (expression->default_block()) {
-        expression->default_block()->accept(this);
+    if (expression->default_case()) {
+        expression->default_case()->accept(this);
     }
 
     indent--;
@@ -329,7 +329,7 @@ void PrettyPrinter::visit(ast::FunctionDefinition *definition)
     }
 
     definition->returnType->accept(this);
-    definition->code->accept(this);
+    definition->body->accept(this);
 
     indent--;
     ss << indentation() << ")\n";
