@@ -1,8 +1,8 @@
-def exit(code as Int64) as Void
+def exit(code as Int64)
   ccall exit(Int64) as Void using code
 end
 
-def test(n as Int64) as Int64
+def test(n as Int64)
   if n == 10
     0
   else

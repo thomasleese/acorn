@@ -296,7 +296,7 @@ namespace acorn {
         };
 
         struct FunctionDefinition : Definition {
-            using Definition::Definition;
+            explicit FunctionDefinition(Token token);
 
             std::vector<Parameter *> parameters;
             Expression *body;

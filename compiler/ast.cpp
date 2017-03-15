@@ -299,6 +299,13 @@ void VariableDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+FunctionDefinition::FunctionDefinition(Token token) :
+        Definition(token),
+        returnType(nullptr)
+{
+    // intentionally empty
+}
+
 void FunctionDefinition::accept(Visitor *visitor) {
     visitor->visit(this);
 }

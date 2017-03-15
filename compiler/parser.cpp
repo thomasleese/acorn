@@ -853,10 +853,12 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     }
 
     return_if_false(skip_token(Token::CloseParenthesis));
-    return_if_false(skip_token(Token::AsKeyword));
 
-    definition->returnType = readIdentifier(true);
-    return_if_null(definition->returnType)
+    if (is_token(Token::AsKeyword)) {
+        return_if_false(skip_token(Token::AsKeyword));
+        definition->returnType = readIdentifier(true);
+        return_if_null(definition->returnType);
+    }
 
     return_if_false(skip_token(Token::Indent));
 

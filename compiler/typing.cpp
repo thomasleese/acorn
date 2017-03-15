@@ -518,10 +518,16 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
         officialParameterOrder.push_back(parameter->name->value);
     }
 
-    definition->returnType->accept(this);
-    return_if_null_type(definition->returnType);
+    definition->body->accept(this);
 
-    auto return_type = instance_type(definition->returnType);
+    types::Type *return_type;
+    if (definition->returnType) {
+        definition->returnType->accept(this);
+        return_type = instance_type(definition->returnType);
+    } else {
+        return_type = definition->body->type;
+    }
+
     if (return_type == nullptr) {
         m_namespace = oldNamespace;
         return;
@@ -544,8 +550,6 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     definition->type = method;
 
     m_functionStack.push_back(definition);
-
-    definition->body->accept(this);
 
     assert(m_functionStack.back() == definition);
     m_functionStack.pop_back();
@@ -847,7 +851,9 @@ void Checker::visit(ast::FunctionDefinition *definition) {
         p->accept(this);
     }
 
-    definition->returnType->accept(this);
+    if (definition->returnType) {
+        definition->returnType->accept(this);
+    }
 
     for (auto p : definition->parameters) {
         p->accept(this);

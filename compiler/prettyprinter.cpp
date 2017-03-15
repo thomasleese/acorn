@@ -233,7 +233,7 @@ void PrettyPrinter::visit(ast::While *expression)
 
 void PrettyPrinter::visit(ast::If *expression)
 {
-    ss << indentation() << "(If\n";
+    ss << indentation() << "(If [" << type_of(expression) << "]\n";
     indent++;
 
     expression->condition->accept(this);
@@ -328,7 +328,10 @@ void PrettyPrinter::visit(ast::FunctionDefinition *definition)
         parameter->accept(this);
     }
 
-    definition->returnType->accept(this);
+    if (definition->returnType) {
+        definition->returnType->accept(this);
+    }
+
     definition->body->accept(this);
 
     indent--;
