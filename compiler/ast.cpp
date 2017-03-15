@@ -16,7 +16,7 @@ Node::~Node() {
 
 }
 
-void CodeBlock::accept(Visitor *visitor) {
+void Block::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -187,7 +187,7 @@ void Selector::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-While::While(Token token, Expression *condition, CodeBlock *code) :
+While::While(Token token, Expression *condition, Block *code) :
         Expression(token),
         m_condition(condition),
         m_code(code)
@@ -199,7 +199,7 @@ Expression *While::condition() const {
     return m_condition.get();
 }
 
-CodeBlock *While::code() const {
+Block *While::code() const {
     return m_code.get();
 }
 
@@ -223,7 +223,7 @@ void Spawn::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Case::Case(Token token, Expression *condition, Expression *assignment, CodeBlock *code) :
+Case::Case(Token token, Expression *condition, Expression *assignment, Block *code) :
         Node(token), m_condition(condition), m_assignment(assignment), m_code(code)
 {
 
@@ -237,7 +237,7 @@ Expression *Case::assignment() const {
     return m_assignment.get();
 }
 
-CodeBlock *Case::code() const {
+Block *Case::code() const {
     return m_code.get();
 }
 
@@ -245,7 +245,7 @@ void Case::accept(Visitor *visitor) {
     // visitor->visit(this);
 }
 
-Switch::Switch(Token token, Expression *expression, std::vector<Case *> cases, CodeBlock *default_block) :
+Switch::Switch(Token token, Expression *expression, std::vector<Case *> cases, Block *default_block) :
         Expression(token), m_expression(expression), m_default_block(default_block)
 {
     for (auto entry : cases) {
@@ -265,7 +265,7 @@ std::vector<Case *> Switch::cases() const {
     return cases;
 }
 
-CodeBlock *Switch::default_block() const {
+Block *Switch::default_block() const {
     return m_default_block.get();
 }
 
@@ -360,7 +360,7 @@ void ImportExpression::accept(Visitor *visitor) {
 
 SourceFile::SourceFile(Token token, std::string name) : Node(token) {
     this->name = name;
-    this->code = new CodeBlock(token);
+    this->code = new Block(token);
 }
 
 void SourceFile::accept(Visitor *visitor) {

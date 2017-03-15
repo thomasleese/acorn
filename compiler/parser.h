@@ -31,7 +31,7 @@ namespace acorn {
         bool is_token(Token::Kind kind);
 
         // misc
-        ast::CodeBlock *readCodeBlock(bool in_switch = false);
+        ast::Block *readBlock(bool in_switch = false);
 
         // expressions
         ast::Expression *readExpression(bool parse_comma);
@@ -50,7 +50,7 @@ namespace acorn {
         ast::Selector *readSelector(ast::Expression *operand);
         ast::Call *readIndex(ast::Expression *operand);
         ast::While *readWhile();
-        ast::CodeBlock *readFor();
+        ast::Block *readFor();
         ast::If *readIf();
         ast::Return *readReturn();
         ast::Spawn *readSpawn();

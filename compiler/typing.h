@@ -51,7 +51,7 @@ namespace acorn {
                                                  std::map<types::ParameterType *, types::Type *> replacements);
 
         public:
-            void visit(ast::CodeBlock *block);
+            void visit(ast::Block *block);
             void visit(ast::Identifier *identifier);
             void visit(ast::VariableDeclaration *node);
             void visit(ast::IntegerLiteral *expression);
@@ -101,7 +101,7 @@ namespace acorn {
             void check_not_null(ast::Node *node);
 
         public:
-            void visit(ast::CodeBlock *block);
+            void visit(ast::Block *block);
             void visit(ast::Identifier *expression);
             void visit(ast::VariableDeclaration *node);
             void visit(ast::IntegerLiteral *expression);

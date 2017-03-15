@@ -141,12 +141,12 @@ bool Parser::is_token(Token::Kind kind) {
     return token.kind == kind;
 }
 
-CodeBlock *Parser::readCodeBlock(bool in_switch) {
-    debug("Reading CodeBlock...");
+Block *Parser::readBlock(bool in_switch) {
+    debug("Reading Block...");
 
     return_if_false(fill_token())
 
-    auto code = new CodeBlock(m_tokens.front());
+    auto code = new Block(m_tokens.front());
 
     while (!is_token(Token::Deindent) && !(in_switch && (is_token(Token::CaseKeyword) || is_token(Token::DefaultKeyword)))) {
         auto statement = readExpression();
@@ -466,13 +466,13 @@ While *Parser::readWhile() {
 
     return_if_false(skip_token(Token::Newline));
 
-    auto code = readCodeBlock();
+    auto code = readBlock();
     return_if_null(code);
 
     return new While(token, condition, code);
 }
 
-CodeBlock *Parser::readFor() {
+Block *Parser::readFor() {
     /*
      * for item in blah
      *
@@ -497,7 +497,7 @@ CodeBlock *Parser::readFor() {
 
     return_if_false(skip_token(Token::Newline));
 
-    auto loop_code = readCodeBlock();
+    auto loop_code = readBlock();
     return_if_null(loop_code);
 
     std::string for_id;
@@ -508,7 +508,7 @@ CodeBlock *Parser::readFor() {
     std::string state_variable_name = "state_" + for_id;
     std::string next_state_variable_name = "next_state_" + for_id;
 
-    auto code_block = new CodeBlock(token);
+    auto code_block = new Block(token);
 
     auto state_variable = new VariableDefinition(token, state_variable_name, new Call(token, "start", iterator));
     code_block->expressions.push_back(new DefinitionExpression(state_variable));
@@ -553,7 +553,7 @@ If *Parser::readIf() {
 
     return_if_false(skip_token(Token::Indent));
 
-    expression->trueCode = new CodeBlock(m_tokens.front());
+    expression->trueCode = new Block(m_tokens.front());
     expression->falseCode = nullptr;
 
     while (!is_token(Token::ElseKeyword) && !is_token(Token::Deindent)) {
@@ -571,12 +571,12 @@ If *Parser::readIf() {
         skip_token(Token::ElseKeyword);
 
         if (is_token(Token::IfKeyword)) {
-            expression->falseCode = new CodeBlock(m_tokens.front());
+            expression->falseCode = new Block(m_tokens.front());
             auto if_expr = readIf();
             expression->falseCode->expressions.push_back(if_expr);
         } else {
             return_if_false(skip_token(Token::Indent));
-            expression->falseCode = readCodeBlock();
+            expression->falseCode = readBlock();
         }
     } else {
         skip_token(Token::Deindent);
@@ -626,7 +626,7 @@ Case *Parser::readCase() {
 
     return_if_false(skip_token(Token::Newline));
 
-    auto code = readCodeBlock(true);
+    auto code = readBlock(true);
     return_if_null(code);
 
     return new Case(token, condition, assignment, code);
@@ -647,9 +647,9 @@ Switch *Parser::readSwitch() {
         cases.push_back(entry);
     }
 
-    CodeBlock *default_block = nullptr;
+    Block *default_block = nullptr;
     if (is_token(Token::DefaultKeyword)) {
-        default_block = readCodeBlock(true);
+        default_block = readBlock(true);
     }
 
     return_if_false(skip_token(Token::Deindent));
@@ -863,7 +863,7 @@ FunctionDefinition *Parser::readFunctionDefinition() {
 
     return_if_false(skip_token(Token::Indent));
 
-    definition->code = readCodeBlock();
+    definition->code = readBlock();
     return_if_null(definition->code)
 
     debug("Ending FunctionDefinition!");

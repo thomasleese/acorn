@@ -314,7 +314,7 @@ void Builder::add_builtins() {
     add_builtin_functions();
 }
 
-void Builder::visit(ast::CodeBlock *block) {
+void Builder::visit(ast::Block *block) {
     for (auto statement : block->expressions) {
         statement->accept(this);
     }

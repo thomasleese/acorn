@@ -26,9 +26,9 @@ std::string type_of(ast::Node *node)
     }
 }
 
-void PrettyPrinter::visit(ast::CodeBlock *codeBlock)
+void PrettyPrinter::visit(ast::Block *codeBlock)
 {
-    ss << indentation() << "(CodeBlock [" << type_of(codeBlock) << "]\n";
+    ss << indentation() << "(Block [" << type_of(codeBlock) << "]\n";
     indent++;
 
     for (auto statement : codeBlock->expressions) {

@@ -126,7 +126,7 @@ namespace acorn {
 
             llvm::BasicBlock *create_basic_block(std::string name) const;
 
-            void visit(ast::CodeBlock *block);
+            void visit(ast::Block *block);
 
             void visit(ast::Identifier *expression);
             void visit(ast::VariableDeclaration *node);

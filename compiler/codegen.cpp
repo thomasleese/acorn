@@ -618,7 +618,7 @@ llvm::BasicBlock *ModuleGenerator::create_basic_block(std::string name) const {
     return llvm::BasicBlock::Create(m_module->getContext(), name, parent);
 }
 
-void ModuleGenerator::visit(ast::CodeBlock *block) {
+void ModuleGenerator::visit(ast::Block *block) {
     llvm::Value *last_value = nullptr;
 
     for (auto statement : block->expressions) {

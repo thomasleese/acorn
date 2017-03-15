@@ -39,7 +39,7 @@ namespace acorn {
         };
 
         // misc
-        struct CodeBlock : Expression {
+        struct Block : Expression {
             using Expression::Expression;
 
             std::vector<Expression *> expressions;
@@ -207,24 +207,24 @@ namespace acorn {
 
         class While : public Expression {
         public:
-            While(Token token, Expression *condition, CodeBlock *code);
+            While(Token token, Expression *condition, Block *code);
 
             Expression *condition() const;
-            CodeBlock *code() const;
+            Block *code() const;
 
             void accept(Visitor *visitor);
 
         private:
             std::unique_ptr<Expression> m_condition;
-            std::unique_ptr<CodeBlock> m_code;
+            std::unique_ptr<Block> m_code;
         };
 
         struct If : Expression {
             using Expression::Expression;
 
             Expression *condition;
-            CodeBlock *trueCode;
-            CodeBlock *falseCode;
+            Block *trueCode;
+            Block *falseCode;
 
             void accept(Visitor *visitor);
         };
@@ -247,34 +247,34 @@ namespace acorn {
 
         class Case : public Node {
         public:
-            Case(Token token, Expression *condition, Expression *assignment, CodeBlock *code);
+            Case(Token token, Expression *condition, Expression *assignment, Block *code);
 
             Expression *condition() const;
             Expression *assignment() const;
-            CodeBlock *code() const;
+            Block *code() const;
 
             void accept(Visitor *visitor);
 
         private:
             std::unique_ptr<Expression> m_condition;
             std::unique_ptr<Expression> m_assignment;
-            std::unique_ptr<CodeBlock> m_code;
+            std::unique_ptr<Block> m_code;
         };
 
         class Switch : public Expression {
         public:
-            Switch(Token token, Expression *expression, std::vector<Case *> cases, CodeBlock *default_block = nullptr);
+            Switch(Token token, Expression *expression, std::vector<Case *> cases, Block *default_block = nullptr);
 
             Expression *expression() const;
             std::vector<Case *> cases() const;
-            CodeBlock *default_block() const;
+            Block *default_block() const;
 
             void accept(Visitor *visitor);
 
         private:
             std::unique_ptr<Expression> m_expression;
             std::vector<std::unique_ptr<Case> > m_cases;
-            std::unique_ptr<CodeBlock> m_default_block;
+            std::unique_ptr<Block> m_default_block;
         };
 
         // misc
@@ -302,7 +302,7 @@ namespace acorn {
             using Definition::Definition;
 
             std::vector<Parameter *> parameters;
-            CodeBlock *code;
+            Block *code;
             Identifier *returnType;
 
             void accept(Visitor *visitor);
@@ -356,7 +356,7 @@ namespace acorn {
             SourceFile(Token token, std::string name);
 
             std::string name;
-            CodeBlock *code;
+            Block *code;
             std::vector<ImportExpression *> imports;
 
             void accept(Visitor *visitor);
@@ -368,7 +368,7 @@ namespace acorn {
             virtual ~Visitor();
 
             // misc
-            virtual void visit(CodeBlock *block) = 0;
+            virtual void visit(Block *block) = 0;
 
             // expressions
             virtual void visit(Identifier *identifier) = 0;

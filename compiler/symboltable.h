@@ -89,7 +89,7 @@ namespace acorn {
         public:
             void add_builtins();
 
-            void visit(ast::CodeBlock *block);
+            void visit(ast::Block *block);
             void visit(ast::Identifier *identifier);
             void visit(ast::VariableDeclaration *node);
             void visit(ast::IntegerLiteral *expression);

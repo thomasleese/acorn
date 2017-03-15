@@ -150,7 +150,7 @@ types::Type *Inferrer::replace_type_parameters(types::Type *type, std::map<types
     }
 }
 
-void Inferrer::visit(ast::CodeBlock *block) {
+void Inferrer::visit(ast::Block *block) {
     for (auto statement : block->expressions) {
         statement->accept(this);
     }
@@ -647,7 +647,7 @@ void Checker::check_not_null(ast::Node *node) {
     }
 }
 
-void Checker::visit(ast::CodeBlock *block) {
+void Checker::visit(ast::Block *block) {
     for (auto statement : block->expressions) {
         statement->accept(this);
     }
