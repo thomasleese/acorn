@@ -1,9 +1,5 @@
-def fib(n as Int64) as Int64
-    if n < 2
-        n
-    else
-        fib(n - 1) + fib(n - 2)
-    end
+def multiply(n as Int64) as Int64
+  n
 end
 
-fib(10)
+ccall exit(Int64) as Void using multiply(10)
