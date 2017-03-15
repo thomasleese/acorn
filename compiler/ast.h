@@ -41,10 +41,10 @@ namespace acorn {
             explicit Expression(Token token);
 
             types::Type *type() const;
-            bool has_type() const;
             void set_type(types::Type *type);
-            void set_type_from(Expression *expression);
-
+            bool has_type() const;
+            void copy_type_from(Expression *expression);
+            bool has_compatible_type_with(Expression *expression) const;
             std::string type_name() const;
 
         private:
@@ -274,7 +274,7 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class Case : public Node {
+        class Case : public Expression {
         public:
             Case(Token token, Expression *condition, Expression *assignment, Expression *body);
 
@@ -306,8 +306,7 @@ namespace acorn {
             std::unique_ptr<Expression> m_default_case;
         };
 
-        // misc
-        class Parameter : public Node {
+        class Parameter : public Expression {
         public:
             explicit Parameter(Token token);
 
@@ -318,7 +317,6 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        // definitions
         class VariableDefinition : public Definition {
         public:
             explicit VariableDefinition(Token token);
@@ -377,8 +375,7 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        // source file
-        class SourceFile : public Node {
+        class SourceFile : public Expression {
         public:
             SourceFile(Token token, std::string name);
 
@@ -389,7 +386,6 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        // Visitor
         class Visitor {
         public:
             virtual ~Visitor();

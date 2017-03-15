@@ -96,8 +96,8 @@ namespace acorn {
             ~Checker();
 
         private:
-            void check_types(ast::Node *lhs, ast::Node *rhs);
-            void check_not_null(ast::Node *node);
+            void check_types(ast::Expression *lhs, ast::Expression *rhs);
+            void check_not_null(ast::Expression *expression);
 
         public:
             void visit(ast::Block *block);

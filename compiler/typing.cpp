@@ -19,7 +19,7 @@ using namespace acorn::diagnostics;
 using namespace acorn::typing;
 
 #define return_if_null(thing) if (thing == nullptr) return;
-#define return_if_null_type(node) return_if_null(node->type)
+#define return_if_null_type(node) return_if_null(node->type())
 
 Inferrer::Inferrer(symboltable::Namespace *root_namespace)
         : m_namespace(root_namespace), m_in_if(false), m_as_type(false)
@@ -158,7 +158,7 @@ void Inferrer::visit(ast::Block *block) {
     if (block->expressions.empty()) {
         block->set_type(new types::Void());
     } else {
-        block->set_type_from(block->expressions.back());
+        block->copy_type_from(block->expressions.back());
     }
 }
 
@@ -193,19 +193,19 @@ void Inferrer::visit(ast::VariableDeclaration *node) {
 }
 
 void Inferrer::visit(ast::IntegerLiteral *expression) {
-    expression->type = instance_type(expression, "Int64");
+    expression->set_type(instance_type(expression, "Int64"));
 }
 
 void Inferrer::visit(ast::FloatLiteral *expression) {
-    expression->type = instance_type(expression, "Float");
+    expression->set_type(instance_type(expression, "Float"));
 }
 
 void Inferrer::visit(ast::ImaginaryLiteral *expression) {
-    expression->type = instance_type(expression, "Complex");
+    expression->set_type(instance_type(expression, "Complex"));
 }
 
 void Inferrer::visit(ast::StringLiteral *expression) {
-    expression->type = instance_type(expression, "String");
+    expression->set_type(instance_type(expression, "String"));
 }
 
 void Inferrer::visit(ast::SequenceLiteral *sequence) {
@@ -217,14 +217,14 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
     for (auto element : sequence->elements) {
         bool inList = false;
         for (auto type : types) {
-            if (type->is_compatible(element->type)) {
+            if (type->is_compatible(element->type())) {
                 inList = true;
                 break;
             }
         }
 
         if (!inList) {
-            types.push_back(element->type);
+            types.push_back(element->type());
         }
     }
 
@@ -250,7 +250,7 @@ void Inferrer::visit(ast::RecordLiteral *expression) {
         value->accept(this);
     }
 
-    expression->type = instance_type(expression->name);
+    expression->set_type(instance_type(expression->name));
 
     // TODO check matches definition of record
 }
@@ -260,10 +260,10 @@ void Inferrer::visit(ast::TupleLiteral *expression) {
 
     for (auto value : expression->elements()) {
         value->accept(this);
-        element_types.push_back(value->type);
+        element_types.push_back(value->type());
     }
 
-    expression->type = new types::Tuple(element_types);
+    expression->set_type(new types::Tuple(element_types));
 }
 
 void Inferrer::visit(ast::Call *expression) {
@@ -282,7 +282,7 @@ void Inferrer::visit(ast::Call *expression) {
 
     types::Function *function = dynamic_cast<types::Function *>(expression->operand->type());
     if (function == nullptr) {
-        expression->type = new types::Function();
+        expression->set_type(new types::Function());
         report(TypeMismatchError(expression->operand, expression));
         delete expression->type();
         expression->set_type(nullptr);
@@ -320,7 +320,7 @@ void Inferrer::visit(ast::Call *expression) {
 void Inferrer::visit(ast::CCall *ccall) {
     for (auto param : ccall->parameters) {
         param->accept(this);
-        param->type = instance_type(param);
+        param->set_type(instance_type(param));
     }
 
     for (auto arg : ccall->arguments) {
@@ -331,14 +331,14 @@ void Inferrer::visit(ast::CCall *ccall) {
 
     ccall->returnType->accept(this);
 
-    ccall->type = instance_type(ccall->returnType);
+    ccall->set_type(instance_type(ccall->returnType));
 }
 
 void Inferrer::visit(ast::Cast *cast) {
     cast->operand->accept(this);
     cast->new_type->accept(this);
 
-    cast->type = instance_type(cast->new_type);
+    cast->set_type(instance_type(cast->new_type));
 }
 
 void Inferrer::visit(ast::Assignment *expression) {
@@ -347,8 +347,8 @@ void Inferrer::visit(ast::Assignment *expression) {
 
     // variable type inference
     if (dynamic_cast<ast::VariableDeclaration *>(expression->lhs)) {
-        if (!expression->lhs->type) {
-            expression->lhs->type = expression->rhs->type;
+        if (!expression->lhs->has_type()) {
+            expression->lhs->copy_type_from(expression->rhs);
         }
     }
 
@@ -362,10 +362,10 @@ void Inferrer::visit(ast::Assignment *expression) {
         std::swap(holder, holdee);
     }
 
-    if (!holder->type->is_compatible(holdee->type)) {
-        report(TypeMismatchError(holdee, holder));
+    if (holder->has_compatible_type_with(holdee)) {
+        expression->copy_type_from(expression->lhs);
     } else {
-        expression->type = expression->lhs->type;
+        report(TypeMismatchError(holdee, holder));
     }
 }
 
@@ -385,14 +385,14 @@ void Inferrer::visit(ast::Selector *expression) {
         return;
     }
 
-    expression->type = field_type;
+    expression->set_type(field_type);
 }
 
 void Inferrer::visit(ast::While *expression) {
     expression->condition()->accept(this);
     expression->body()->accept(this);
 
-    expression->type = expression->body()->type;
+    expression->copy_type_from(expression->body());
 }
 
 void Inferrer::visit(ast::If *expression) {
@@ -406,7 +406,7 @@ void Inferrer::visit(ast::If *expression) {
     }
 
     // FIXME return a union type
-    expression->type = expression->true_case->type;
+    expression->copy_type_from(expression->true_case);
 }
 
 void Inferrer::visit(ast::Return *expression) {
@@ -414,11 +414,11 @@ void Inferrer::visit(ast::Return *expression) {
     return_if_null_type(expression->expression)
 
     if (!m_functionStack.empty()) {
-        ast::FunctionDefinition *def = m_functionStack.back();
-        auto method = static_cast<types::Method *>(def->type);
+        auto def = m_functionStack.back();
+        auto method = static_cast<types::Method *>(def->type());
         return_if_null(method);
 
-        if (!method->return_type()->is_compatible(expression->expression->type)) {
+        if (!method->return_type()->is_compatible(expression->expression->type())) {
             report(TypeMismatchError(expression->expression, def->returnType));
             return;
         }
@@ -427,12 +427,12 @@ void Inferrer::visit(ast::Return *expression) {
         return;
     }
 
-    expression->type = expression->expression->type;
+    expression->copy_type_from(expression->expression);
 }
 
 void Inferrer::visit(ast::Spawn *expression) {
     expression->call->accept(this);
-    expression->type = expression->call->type;
+    expression->copy_type_from(expression->call);
 }
 
 void Inferrer::visit(ast::Switch *expression) {
@@ -447,7 +447,7 @@ void Inferrer::visit(ast::Switch *expression) {
 
         entry->body()->accept(this);
 
-        entry->type = entry->body()->type;
+        entry->copy_type_from(entry->body());
     }
 
     if (expression->default_case()) {
@@ -456,7 +456,7 @@ void Inferrer::visit(ast::Switch *expression) {
 
     // TODO ensure all cases are the same type
 
-    expression->type = expression->cases()[0]->type;
+    expression->copy_type_from(expression->cases()[0]);
 }
 
 void Inferrer::visit(ast::Parameter *parameter) {
@@ -469,10 +469,10 @@ void Inferrer::visit(ast::Parameter *parameter) {
 
     parameter->typeNode->accept(this);
 
-    parameter->type = instance_type(parameter->typeNode);
+    parameter->set_type(instance_type(parameter->typeNode));
     return_if_null_type(parameter);
 
-    symbol->type = parameter->type;
+    symbol->type = parameter->type();
 }
 
 void Inferrer::visit(ast::VariableDefinition *definition) {
@@ -485,8 +485,8 @@ void Inferrer::visit(ast::VariableDefinition *definition) {
 
     definition->assignment->accept(this);
 
-    symbol->type = definition->assignment->type;
-    definition->type = definition->assignment->type;
+    symbol->type = definition->assignment->type();
+    definition->copy_type_from(definition->assignment);
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
@@ -508,12 +508,12 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     for (auto parameter : definition->parameters) {
         parameter->accept(this);
 
-        if (parameter->type == nullptr) {
+        if (!parameter->has_type()) {
             m_namespace = oldNamespace;
             return;
         }
 
-        parameterTypes.push_back(parameter->type);
+        parameterTypes.push_back(parameter->type());
         officialParameterOrder.push_back(parameter->name->value);
     }
 
@@ -524,7 +524,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
         definition->returnType->accept(this);
         return_type = instance_type(definition->returnType);
     } else {
-        return_type = definition->body->type;
+        return_type = definition->body->type();
     }
 
     if (return_type == nullptr) {
@@ -546,7 +546,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     functionSymbol->nameSpace->rename(this, symbol, method->mangled_name());
 
     symbol->type = method;
-    definition->type = method;
+    definition->set_type(method);
 
     m_functionStack.push_back(definition);
 
@@ -567,7 +567,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
     for (auto t : definition->name->parameters) {
         t->accept(this);
 
-        auto param = dynamic_cast<types::ParameterType *>(t->type);
+        auto param = dynamic_cast<types::ParameterType *>(t->type());
         assert(param);
 
         input_parameters.push_back(param);
@@ -579,7 +579,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
         definition->alias->accept(this);
         m_as_type = false;
 
-        auto alias = dynamic_cast<types::TypeType *>(definition->alias->type);
+        auto alias = dynamic_cast<types::TypeType *>(definition->alias->type());
         assert(alias);
 
         type = new types::AliasType(alias, input_parameters);
@@ -596,7 +596,7 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
             type->accept(this);
             m_as_type = false;
 
-            auto type_type = dynamic_cast<types::TypeType *>(type->type);
+            auto type_type = dynamic_cast<types::TypeType *>(type->type());
             assert(type_type);
             field_types.push_back(type_type);
         }
@@ -605,19 +605,19 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
     }
 
     symbol->type = type;
-    definition->type = type;
+    definition->set_type(type);
 
     m_namespace = oldNamespace;
 }
 
 void Inferrer::visit(ast::ImportExpression *statement) {
     statement->path->accept(this);
-    statement->type = new types::Void();
+    statement->set_type(new types::Void());
 }
 
 void Inferrer::visit(ast::SourceFile *module) {
     module->code->accept(this);
-    module->type = module->code->type;
+    module->copy_type_from(module->code);
 }
 
 Checker::Checker(symboltable::Namespace *root_namespace)
@@ -630,19 +630,18 @@ Checker::~Checker() {
 
 }
 
-void Checker::check_types(ast::Node *lhs, ast::Node *rhs) {
+void Checker::check_types(ast::Expression *lhs, ast::Expression *rhs) {
     check_not_null(lhs);
     check_not_null(rhs);
 
-    bool compatible = lhs->type->is_compatible(rhs->type);
-    if (!compatible) {
+    if (!lhs->has_compatible_type_with(rhs)) {
         report(TypeMismatchError(rhs, lhs));
     }
 }
 
-void Checker::check_not_null(ast::Node *node) {
-    if (!node->type) {
-        report(InternalError(node, "No type given for: " + Token::as_string(node->token().kind)));
+void Checker::check_not_null(ast::Expression *expression) {
+    if (!expression->has_type()) {
+        report(InternalError(expression, "No type given for: " + Token::as_string(expression->token().kind)));
     }
 }
 
@@ -831,7 +830,7 @@ void Checker::visit(ast::FunctionDefinition *definition) {
 
     auto functionSymbol = m_namespace->lookup(this, definition->name);
 
-    types::Method *method = static_cast<types::Method *>(definition->type);
+    types::Method *method = static_cast<types::Method *>(definition->type());
 
     auto symbol = functionSymbol->nameSpace->lookup(this, definition, method->mangled_name());
 

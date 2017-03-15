@@ -30,17 +30,22 @@ acorn::types::Type *Expression::type() const {
     return m_type;
 }
 
-bool Expression::has_type() const {
-    return m_type != nullptr;
-}
-
 void Expression::set_type(acorn::types::Type *type) {
     m_type = type;
 }
 
-void Expression::set_type_from(Expression *expression) {
+bool Expression::has_type() const {
+    return m_type != nullptr;
+}
+
+void Expression::copy_type_from(Expression *expression) {
     // TODO set a warning here if the type is null?
     m_type = expression->type();
+}
+
+bool Expression::has_compatible_type_with(Expression *expression) const {
+    // TODO set a warning here if the type is null?
+    return m_type->is_compatible(expression->type());
 }
 
 std::string Expression::type_name() const {
@@ -259,7 +264,7 @@ void Spawn::accept(Visitor *visitor) {
 }
 
 Case::Case(Token token, Expression *condition, Expression *assignment, Expression *body) :
-        Node(token), m_condition(condition), m_assignment(assignment), m_body(body)
+        Expression(token), m_condition(condition), m_assignment(assignment), m_body(body)
 {
 
 }
@@ -308,7 +313,7 @@ void Switch::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Parameter::Parameter(Token token) : Node(token), name(nullptr), typeNode(nullptr) {
+Parameter::Parameter(Token token) : Expression(token), name(nullptr), typeNode(nullptr) {
 
 }
 
@@ -392,7 +397,7 @@ void ImportExpression::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-SourceFile::SourceFile(Token token, std::string name) : Node(token) {
+SourceFile::SourceFile(Token token, std::string name) : Expression(token) {
     this->name = name;
     this->code = new Block(token);
 }
