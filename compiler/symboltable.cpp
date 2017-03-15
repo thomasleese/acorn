@@ -66,7 +66,7 @@ Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const 
     if (m_parent) {
         return m_parent->lookup_by_node(diagnostics, node);
     } else {
-        diagnostics->report(UndefinedError(node, node->token.lexeme));
+        diagnostics->report(UndefinedError(node, node->token().lexeme));
         return nullptr;
     }
 }

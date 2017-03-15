@@ -648,7 +648,7 @@ void Checker::check_types(ast::Node *lhs, ast::Node *rhs) {
 
 void Checker::check_not_null(ast::Node *node) {
     if (!node->type) {
-        report(InternalError(node, "No type given for: " + Token::as_string(node->token.kind)));
+        report(InternalError(node, "No type given for: " + Token::as_string(node->token().kind)));
     }
 }
 

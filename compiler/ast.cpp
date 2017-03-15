@@ -8,12 +8,16 @@
 
 using namespace acorn::ast;
 
-Node::Node(Token token) : token(token), type(nullptr) {
+Node::Node(Token token) : type(nullptr), m_token(token) {
 
 }
 
 Node::~Node() {
 
+}
+
+acorn::Token Node::token() const {
+    return m_token;
 }
 
 void Block::accept(Visitor *visitor) {
@@ -349,7 +353,7 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-DefinitionExpression::DefinitionExpression(Definition *definition) : Expression(definition->token) {
+DefinitionExpression::DefinitionExpression(Definition *definition) : Expression(definition->token()) {
     this->definition = definition;
 }
 

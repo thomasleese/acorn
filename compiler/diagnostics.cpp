@@ -28,7 +28,7 @@ CompilerError::CompilerError(const Token &token) :
 }
 
 CompilerError::CompilerError(ast::Node *node) :
-        CompilerError(node->token) {
+        CompilerError(node->token()) {
 
 }
 

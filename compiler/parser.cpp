@@ -427,7 +427,7 @@ Selector *Parser::readSelector(Expression *operand) {
 
     if (is_token(Token::IntegerLiteral)) {
         auto il = readIntegerLiteral();
-        name = new Identifier(il->token, il->value);
+        name = new Identifier(il->token(), il->value);
         delete il;
     } else {
         name = readIdentifier(true);
@@ -599,7 +599,7 @@ Spawn *Parser::readSpawn() {
     if (call) {
         return new Spawn(token, call);
     } else {
-        report(SyntaxError(expr->token, "function call"));
+        report(SyntaxError(expr->token(), "function call"));
         return nullptr;
     }
 }
@@ -776,7 +776,7 @@ Expression *Parser::readOperandExpression(bool parse_comma) {
                 elements.push_back(rhs);
             }
 
-            left = new TupleLiteral(left->token, elements);
+            left = new TupleLiteral(left->token(), elements);
         } else {
             break;
         }
@@ -813,7 +813,7 @@ VariableDefinition *Parser::readVariableDefinition() {
     auto rhs = readExpression(true);
     return_if_null(rhs);
 
-    auto definition = new VariableDefinition(lhs->token);
+    auto definition = new VariableDefinition(lhs->token());
     definition->name = lhs->name();
     definition->assignment = new Assignment(token, lhs, rhs);
     return definition;

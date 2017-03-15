@@ -30,8 +30,12 @@ namespace acorn {
 
             virtual void accept(Visitor *visitor) = 0;
 
-            Token token;
+            Token token() const;
+
             types::Type *type;
+
+        private:
+            Token m_token;
         };
 
         class Expression : public Node {
