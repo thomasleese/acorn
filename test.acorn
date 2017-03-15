@@ -6,4 +6,4 @@ def fib(n as Int64) as Int64
     end
 end
 
-10 | fib()
+fib(10)

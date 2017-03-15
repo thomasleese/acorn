@@ -337,10 +337,6 @@ bool Lexer::read_delimiter(Token &token) {
             token.kind = Token::Assignment;
             return true;
 
-        case '|':
-            token.kind = Token::Pipe;
-            return true;
-
         default:
             m_stream.unget();
             token.lexeme.clear();
@@ -381,6 +377,7 @@ bool Lexer::read_operator(Token &token) {
         case '*':
         case '/':
         case '%':
+        case '|':
             token.kind = Token::Operator;
             token.lexeme.append(1, ch);
             m_current_column++;

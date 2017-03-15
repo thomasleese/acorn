@@ -13,6 +13,10 @@ std::string Token::as_string(Token::Kind kind)
             return "EOF";
         case Newline:
             return "newline";
+        case Indent:
+            return "(indent)";
+        case Deindent:
+            return "(deindent)";
         case LetKeyword:
             return "let";
         case DefKeyword:
@@ -111,8 +115,6 @@ std::string Token::as_string(Token::Kind kind)
             return ";";
         case Arrow:
             return "->";
-        case Pipe:
-            return "|";
         case Assignment:
             return "=";
         case Name:
