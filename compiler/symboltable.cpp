@@ -438,13 +438,13 @@ void Builder::visit(ast::VariableDefinition *definition) {
 
 void Builder::visit(ast::FunctionDefinition *definition) {
     Symbol *functionSymbol;
-    if (m_scope.back()->has(definition->name->value(), false)) {
+    if (m_scope.back()->has(definition->name()->value(), false)) {
         // we don't want to look in any parent scope when we're
         // defining a new function; it should follow the notion of
         // variables, i.e. we are hiding the previous binding
-        functionSymbol = m_scope.back()->lookup(this, definition->name);
+        functionSymbol = m_scope.back()->lookup(this, definition->name());
     } else {
-        functionSymbol = new Symbol(definition->name->value());
+        functionSymbol = new Symbol(definition->name()->value());
         functionSymbol->type = new types::Function();
         functionSymbol->nameSpace = new Namespace(m_scope.back());
         m_scope.back()->insert(this, definition, functionSymbol);
@@ -462,7 +462,7 @@ void Builder::visit(ast::FunctionDefinition *definition) {
 
     m_scope.push_back(symbol->nameSpace);
 
-    for (auto parameter : definition->name->parameters()) {
+    for (auto parameter : definition->name()->parameters()) {
         Symbol *sym = new Symbol(parameter->value());
         sym->type = new types::ParameterType();
         m_scope.back()->insert(this, parameter, sym);
@@ -478,14 +478,14 @@ void Builder::visit(ast::FunctionDefinition *definition) {
 }
 
 void Builder::visit(ast::TypeDefinition *definition) {
-    Symbol *symbol = new Symbol(definition->name->value());
+    Symbol *symbol = new Symbol(definition->name()->value());
     m_scope.back()->insert(this, definition, symbol);
 
     symbol->nameSpace = new Namespace(m_scope.back());
 
     m_scope.push_back(symbol->nameSpace);
 
-    for (auto parameter : definition->name->parameters()) {
+    for (auto parameter : definition->name()->parameters()) {
         Symbol *sym = new Symbol(parameter->value());
         sym->type = new types::ParameterType();
         m_scope.back()->insert(this, definition, sym);

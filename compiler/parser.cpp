@@ -817,7 +817,6 @@ VariableDefinition *Parser::read_variable_definition() {
     return_if_false(skip_token(Token::EndKeyword));
 
     auto definition = new VariableDefinition(lhs->token());
-    definition->name = lhs->name();
     definition->assignment = new Assignment(token, lhs, rhs);
     definition->set_body(body);
     return definition;
@@ -831,15 +830,15 @@ FunctionDefinition *Parser::readFunctionDefinition() {
     FunctionDefinition *definition = new FunctionDefinition(token);
 
     if (is_token(Token::Name)) {
-        definition->name = readName(true);
+        definition->set_name(readName(true));
     } else if (is_token(Token::Operator)) {
-        definition->name = readOperator(true);
+        definition->set_name(readOperator(true));
     } else {
         report(SyntaxError(m_tokens.front(), "identifier or operator"));
         return nullptr;
     }
 
-    debug("Name: " + definition->name->value());
+    debug("Name: " + definition->name()->value());
 
     skip_token(Token::OpenParenthesis);
 
@@ -882,7 +881,7 @@ TypeDefinition *Parser::readTypeDefinition() {
 
     TypeDefinition *definition = new TypeDefinition(token);
 
-    definition->name = readName(true);
+    definition->set_name(readName(true));
 
     if (is_token(Token::AsKeyword)) {
         skip_token(Token::AsKeyword);

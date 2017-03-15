@@ -149,6 +149,31 @@ void VariableDeclaration::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+Definition::Definition(Token token) : Expression(token) {
+
+}
+
+Definition::Definition(Token token, Name *name) : Expression(token), m_name(name) {
+
+}
+
+Definition::Definition(Token token, std::string name) : Expression(token), m_name(new Name(token, name)) {
+
+}
+
+Name *Definition::name() const {
+    return m_name.get();
+}
+
+void Definition::set_name(Name *name) {
+    m_name.reset(name);
+}
+
+void Definition::set_type(types::Type *type) {
+    Expression::set_type(type);
+    m_name->set_type(type);
+}
+
 void IntegerLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -357,7 +382,7 @@ void Parameter::accept(Visitor *visitor) {
 }
 
 VariableDefinition::VariableDefinition(Token token) :
-        Definition(token),
+        Expression(token),
         assignment(nullptr),
         m_body(nullptr)
 {
@@ -365,11 +390,11 @@ VariableDefinition::VariableDefinition(Token token) :
 }
 
 VariableDefinition::VariableDefinition(Token token, std::string name, Expression *value, Expression *body) :
-        Definition(token),
+        Expression(token),
         m_body(body)
 {
-    this->name = new Name(token, name);
-    this->assignment = new Assignment(token, new VariableDeclaration(token, this->name), value);
+    auto variable_declaration = new VariableDeclaration(token, new Name(token, name));
+    this->assignment = new Assignment(token, variable_declaration, value);
 }
 
 Expression *VariableDefinition::body() const {
@@ -397,7 +422,6 @@ void FunctionDefinition::accept(Visitor *visitor) {
 
 TypeDefinition::TypeDefinition(Token token) : Definition(token) {
     this->alias = nullptr;
-    this->name = nullptr;
 }
 
 void TypeDefinition::accept(Visitor *visitor) {

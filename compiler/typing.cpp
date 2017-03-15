@@ -342,30 +342,26 @@ void Inferrer::visit(ast::Cast *cast) {
 }
 
 void Inferrer::visit(ast::Assignment *expression) {
-    expression->lhs->accept(this);
+    auto symbol = m_namespace->lookup(this, expression->lhs->name());
+    return_if_null(symbol);
+
     expression->rhs->accept(this);
+    return_if_null_type(expression->rhs);
 
-    // variable type inference
-    if (auto variable_declaration = expression->lhs) {
-        if (!variable_declaration->has_type()) {
-            variable_declaration->copy_type_from(expression->rhs);
-
-            auto symbol = m_namespace->lookup(this, variable_declaration->name());
-            symbol->copy_type_from(variable_declaration);
-        }
+    expression->lhs->accept(this);
+    if (!expression->lhs->has_type()) {
+        expression->lhs->copy_type_from(expression->rhs);
     }
 
     return_if_null_type(expression->lhs);
-    return_if_null_type(expression->rhs);
 
-    auto holder = expression->lhs;
-    auto holdee = expression->rhs;
-
-    if (holder->has_compatible_type_with(holdee)) {
-        expression->copy_type_from(expression->lhs);
-    } else {
-        report(TypeMismatchError(holdee, holder));
+    if (!expression->lhs->has_compatible_type_with(expression->rhs)) {
+        report(TypeMismatchError(expression->lhs, expression->rhs));
+        return;
     }
+
+    expression->copy_type_from(expression->lhs);
+    symbol->copy_type_from(expression);
 }
 
 void Inferrer::visit(ast::Selector *expression) {
@@ -475,22 +471,14 @@ void Inferrer::visit(ast::Parameter *parameter) {
 }
 
 void Inferrer::visit(ast::VariableDefinition *definition) {
-    auto symbol = m_namespace->lookup(this, definition,
-                                      definition->name->value());
-
-    if (symbol == nullptr) {
-        return;
-    }
-
     definition->assignment->accept(this);
     definition->body()->accept(this);
 
     definition->copy_type_from(definition->body());
-    symbol->copy_type_from(definition);
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
-    auto functionSymbol = m_namespace->lookup(this, definition->name);
+    auto functionSymbol = m_namespace->lookup(this, definition->name());
     auto function = static_cast<types::Function *>(functionSymbol->type);
 
     auto symbol = functionSymbol->nameSpace->lookup_by_node(this,
@@ -499,7 +487,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    for (auto p : definition->name->parameters()) {
+    for (auto p : definition->name()->parameters()) {
         p->accept(this);
     }
 
@@ -540,7 +528,7 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
         }
     }
 
-    method->set_is_generic(definition->name->has_parameters());
+    method->set_is_generic(definition->name()->has_parameters());
     function->add_method(method);
 
     functionSymbol->nameSpace->rename(this, symbol, method->mangled_name());
@@ -558,13 +546,13 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
 
 void Inferrer::visit(ast::TypeDefinition *definition) {
     auto symbol = m_namespace->lookup(this, definition,
-                                      definition->name->value());
+                                      definition->name()->value());
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
     std::vector<types::ParameterType *> input_parameters;
-    for (auto t : definition->name->parameters()) {
+    for (auto t : definition->name()->parameters()) {
         t->accept(this);
 
         auto param = dynamic_cast<types::ParameterType *>(t->type());
@@ -817,9 +805,6 @@ void Checker::visit(ast::Parameter *parameter) {
 }
 
 void Checker::visit(ast::VariableDefinition *definition) {
-    // it's valid for the name not to have a type, since it's doesn't exist
-    // definition->name->accept(this);
-
     check_not_null(definition);
 
     definition->assignment->accept(this);
@@ -831,7 +816,7 @@ void Checker::visit(ast::VariableDefinition *definition) {
 void Checker::visit(ast::FunctionDefinition *definition) {
     check_not_null(definition);
 
-    auto functionSymbol = m_namespace->lookup(this, definition->name);
+    auto functionSymbol = m_namespace->lookup(this, definition->name());
 
     types::Method *method = static_cast<types::Method *>(definition->type());
 
@@ -840,10 +825,9 @@ void Checker::visit(ast::FunctionDefinition *definition) {
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
 
-    // it's valid for the name not to have a type, since it's doesn't exist
-    // definition->name->accept(this);
+    definition->name()->accept(this);
 
-    for (auto p : definition->name->parameters()) {
+    for (auto p : definition->name()->parameters()) {
         p->accept(this);
     }
 
@@ -861,10 +845,11 @@ void Checker::visit(ast::FunctionDefinition *definition) {
 }
 
 void Checker::visit(ast::TypeDefinition *definition) {
-    // it's valid for the name not to have a type, since it's doesn't exist
-    //definition->name->accept(this);
+    check_not_null(definition);
 
-    auto symbol = m_namespace->lookup(this, definition->name);
+    definition->name()->accept(this);
+
+    auto symbol = m_namespace->lookup(this, definition->name());
 
     symboltable::Namespace *oldNamespace = m_namespace;
     m_namespace = symbol->nameSpace;
@@ -880,8 +865,6 @@ void Checker::visit(ast::TypeDefinition *definition) {
             type->accept(this);
         }
     }
-
-    check_not_null(definition);
 
     m_namespace = oldNamespace;
 }

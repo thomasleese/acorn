@@ -548,7 +548,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *> type_parameters) {
     auto &context = m_module->getContext();
 
-    auto function_symbol = m_scope.back()->lookup(this, definition->name);
+    auto function_symbol = m_scope.back()->lookup(this, definition->name());
     auto function_type = static_cast<types::Function *>(function_symbol->type);
 
     auto method = static_cast<types::Method *>(definition->type());
@@ -589,7 +589,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", function);
     m_irBuilder->SetInsertPoint(basicBlock);
 
-    for (ast::Name *param : definition->name->parameters()) {
+    for (ast::Name *param : definition->name()->parameters()) {
         auto s = m_scope.back()->lookup(this, definition, param->value());
         auto alloca = m_irBuilder->CreateAlloca(m_irBuilder->getInt1Ty(), 0, param->value());
         m_irBuilder->CreateStore(m_irBuilder->getInt1(false), alloca);
@@ -648,7 +648,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
 
       auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
                                                llvm::GlobalValue::InternalLinkage,
-                                               llvm_initialiser, definition->name->value());
+                                               llvm_initialiser, definition->name()->value());
 
       function_symbol->value = variable;
     }
@@ -1168,7 +1168,7 @@ void ModuleGenerator::visit(ast::VariableDefinition *definition) {
 }
 
 void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
-    if (!definition->name->has_parameters()) {
+    if (!definition->name()->has_parameters()) {
         generate_function(definition);
     }
 
@@ -1177,7 +1177,7 @@ void ModuleGenerator::visit(ast::FunctionDefinition *definition) {
 
 void ModuleGenerator::visit(ast::TypeDefinition *definition) {
     if (definition->alias) {
-        auto new_symbol = m_scope.back()->lookup(this, definition->name);
+        auto new_symbol = m_scope.back()->lookup(this, definition->name());
         auto old_symbol = m_scope.back()->lookup(this, definition->alias);
         new_symbol->value = old_symbol->value;
     }

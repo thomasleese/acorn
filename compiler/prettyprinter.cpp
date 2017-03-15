@@ -319,7 +319,7 @@ void PrettyPrinter::visit(ast::FunctionDefinition *definition)
     ss << indentation() << "(FunctionDefinition [" << type_of(definition) << "]\n";
     indent++;
 
-    definition->name->accept(this);
+    definition->name()->accept(this);
 
     for (auto parameter : definition->parameters) {
         parameter->accept(this);
@@ -340,7 +340,7 @@ void PrettyPrinter::visit(ast::TypeDefinition *definition)
     ss << indentation() << "(TypeDefinition\n";
     indent++;
 
-    definition->name->accept(this);
+    definition->name()->accept(this);
 
     if (definition->alias) {
         definition->alias->accept(this);

@@ -107,9 +107,17 @@ namespace acorn {
 
         class Definition : public Expression {
         public:
-            using Expression::Expression;
+            explicit Definition(Token token);
+            Definition(Token token, Name *name);
+            Definition(Token token, std::string name);
 
-            Name *name;
+            Name *name() const;
+            void set_name(Name *name);
+
+            void set_type(types::Type *type) override;
+
+        private:
+            std::unique_ptr<Name> m_name;
         };
 
         class IntegerLiteral : public Expression {
@@ -331,7 +339,7 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class VariableDefinition : public Definition {
+        class VariableDefinition : public Expression {
         public:
             explicit VariableDefinition(Token token);
             VariableDefinition(Token token, std::string name, Expression *value = nullptr, Expression *body = nullptr);
@@ -410,10 +418,7 @@ namespace acorn {
         public:
             virtual ~Visitor();
 
-            // misc
             virtual void visit(Block *block) = 0;
-
-            // expressions
             virtual void visit(Name *identifier) = 0;
             virtual void visit(VariableDeclaration *node) = 0;
             virtual void visit(IntegerLiteral *expression) = 0;
@@ -434,19 +439,11 @@ namespace acorn {
             virtual void visit(Return *expression) = 0;
             virtual void visit(Spawn *expression) = 0;
             virtual void visit(Switch *expression) = 0;
-
-            // misc
             virtual void visit(Parameter *parameter) = 0;
-
-            // definitions
             virtual void visit(VariableDefinition *definition) = 0;
             virtual void visit(FunctionDefinition *definition) = 0;
             virtual void visit(TypeDefinition *definition) = 0;
-
-            // Expressions
             virtual void visit(ImportExpression *Expression) = 0;
-
-            // module
             virtual void visit(SourceFile *module) = 0;
         };
 
