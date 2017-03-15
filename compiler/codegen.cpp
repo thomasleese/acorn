@@ -327,12 +327,12 @@ void BuiltinGenerator::generate(symboltable::Namespace *table) {
     auto init_function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_builtins", m_module);
     auto init_bb = llvm::BasicBlock::Create(m_module->getContext(), "entry", init_function);
 
-    initialise_boolean_variable(table, "Nothing", false);
-    initialise_boolean_variable(table, "True", true);
-    initialise_boolean_variable(table, "False", false);
-    initialise_boolean_variable(table, "Int32", false);
-    initialise_boolean_variable(table, "Int64", false);
-    initialise_boolean_variable(table, "UnsafePointer", false);
+    initialise_boolean_variable(table, "nil", false);
+    initialise_boolean_variable(table, "true", true);
+    initialise_boolean_variable(table, "false", false);
+    //initialise_boolean_variable(table, "Int32", false);
+    //initialise_boolean_variable(table, "Int64", false);
+    //initialise_boolean_variable(table, "UnsafePointer", false);
 
     // not
     llvm::Function *f = create_llvm_function(table, "not", 0);

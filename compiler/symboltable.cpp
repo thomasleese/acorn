@@ -244,9 +244,9 @@ void Builder::add_builtin_types() {
 }
 
 void Builder::add_builtin_variables() {
-    add_builtin_symbol("Nothing", new types::Void());
-    add_builtin_symbol("True", new types::Boolean());
-    add_builtin_symbol("False", new types::Boolean());
+    add_builtin_symbol("nil", new types::Void());
+    add_builtin_symbol("true", new types::Boolean());
+    add_builtin_symbol("false", new types::Boolean());
 }
 
 void Builder::add_builtin_functions() {
