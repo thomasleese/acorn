@@ -36,7 +36,7 @@ namespace acorn {
         public:
             explicit TypeGenerator(diagnostics::Reporter *diagnostics, llvm::LLVMContext &context);
 
-            llvm::Type *take_type(ast::Node *node);
+            llvm::Type *take_type(ast::Expression *expression);
             llvm::Constant *take_initialiser(ast::Node *node);
 
             void push_type_parameter(types::ParameterType *key, types::Type *value);
@@ -116,8 +116,8 @@ namespace acorn {
 
             llvm::Module *module() const;
 
-            llvm::Type *generate_type(ast::Node *node, types::Type *type);
-            llvm::Type *generate_type(ast::Node *node);
+            llvm::Type *generate_type(ast::Expression *expression, types::Type *type);
+            llvm::Type *generate_type(ast::Expression *expression);
 
             llvm::Function *generate_function(ast::FunctionDefinition *definition);
             llvm::Function *generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *>);

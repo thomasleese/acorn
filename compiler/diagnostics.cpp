@@ -143,8 +143,8 @@ InvalidTypeParameters::InvalidTypeParameters(ast::Node *node, unsigned long give
     m_message = ss.str();
 }
 
-TypeMismatchError::TypeMismatchError(ast::Node *node1, ast::Node *node2) :
-        TypeMismatchError(node1, node1->type, node2 ? node2->type : nullptr)
+TypeMismatchError::TypeMismatchError(ast::Expression *node1, ast::Expression *node2) :
+        TypeMismatchError(node1, node1->type(), node2 ? node2->type() : nullptr)
 {
 
 }

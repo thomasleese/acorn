@@ -32,15 +32,23 @@ namespace acorn {
 
             Token token() const;
 
-            types::Type *type;
-
         private:
             Token m_token;
         };
 
         class Expression : public Node {
         public:
-            using Node::Node;
+            explicit Expression(Token token);
+
+            types::Type *type() const;
+            bool has_type() const;
+            void set_type(types::Type *type);
+            void set_type_from(Expression *expression);
+
+            std::string type_name() const;
+
+        private:
+            types::Type *m_type;
         };
 
         class Block : public Expression {

@@ -41,20 +41,20 @@ TypeGenerator::TypeGenerator(Reporter *diagnostics, llvm::LLVMContext &context)
 
 }
 
-llvm::Type *TypeGenerator::take_type(ast::Node *node)
+llvm::Type *TypeGenerator::take_type(ast::Expression *expression)
 {
     if (m_type_stack.size() >= 1) {
         llvm::Type *result = m_type_stack.back();
         m_type_stack.pop_back();
 
-        if (node && result == nullptr) {
-            m_diagnostics->report(InternalError(node, "Invalid LLVM type generated. (" + node->type->name() + ")"));
+        if (expression && result == nullptr) {
+            m_diagnostics->report(InternalError(expression, "Invalid LLVM type generated. (" + expression->type_name() + ")"));
             return nullptr;
         }
 
         return result;
     } else {
-        m_diagnostics->report(InternalError(node, "No LLVM type generated."));
+        m_diagnostics->report(InternalError(expression, "No LLVM type generated."));
         return nullptr;
     }
 }
@@ -531,13 +531,13 @@ llvm::Module *ModuleGenerator::module() const {
     return m_module;
 }
 
-llvm::Type *ModuleGenerator::generate_type(ast::Node *node, types::Type *type) {
+llvm::Type *ModuleGenerator::generate_type(ast::Expression *expression, types::Type *type) {
     type->accept(m_type_generator);
-    return m_type_generator->take_type(node);
+    return m_type_generator->take_type(expression);
 }
 
-llvm::Type *ModuleGenerator::generate_type(ast::Node *node) {
-    return generate_type(node, node->type);
+llvm::Type *ModuleGenerator::generate_type(ast::Expression *expression) {
+    return generate_type(expression, expression->type());
 }
 
 llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *definition) {
@@ -551,7 +551,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     auto function_symbol = m_scope.back()->lookup(this, definition->name);
     auto function_type = static_cast<types::Function *>(function_symbol->type);
 
-    auto method = static_cast<types::Method *>(definition->type);
+    auto method = static_cast<types::Method *>(definition->type());
     auto symbol = function_symbol->nameSpace->lookup_by_node(this, definition);
 
     std::string llvm_function_name = codegen::mangle_method(function_symbol->name, method);
@@ -890,11 +890,11 @@ void ModuleGenerator::visit(ast::TupleLiteral *expression) {
 void ModuleGenerator::visit(ast::Call *expression) {
     expression->operand->accept(this);
 
-    auto function_type = dynamic_cast<types::Function *>(expression->operand->type);
+    auto function_type = dynamic_cast<types::Function *>(expression->operand->type());
 
     std::vector<types::Type *> argument_types;
     for (auto arg : expression->arguments) {
-        argument_types.push_back(arg->type);
+        argument_types.push_back(arg->type());
     }
 
     auto method = function_type->find_method(expression, argument_types);
@@ -1028,7 +1028,7 @@ void ModuleGenerator::visit(ast::Selector *expression) {
     expression->operand->accept(this);
     auto instance = pop_value();
 
-    auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type);
+    auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type());
     assert(selectable);
 
     // either an enum, or a record

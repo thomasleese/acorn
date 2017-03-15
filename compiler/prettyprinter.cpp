@@ -17,13 +17,9 @@ PrettyPrinter::PrettyPrinter()
 
 }
 
-std::string type_of(ast::Node *node)
+std::string type_of(ast::Expression *expression)
 {
-    if (node->type) {
-        return node->type->name();
-    } else {
-        return "null";
-    }
+    return expression->type_name();
 }
 
 void PrettyPrinter::visit(ast::Block *codeBlock)

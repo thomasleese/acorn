@@ -4,11 +4,13 @@
 
 #include <sstream>
 
+#include "types.h"
+
 #include "ast.h"
 
 using namespace acorn::ast;
 
-Node::Node(Token token) : type(nullptr), m_token(token) {
+Node::Node(Token token) : m_token(token) {
 
 }
 
@@ -18,6 +20,35 @@ Node::~Node() {
 
 acorn::Token Node::token() const {
     return m_token;
+}
+
+Expression::Expression(Token token) : Node(token), m_type(nullptr) {
+
+}
+
+acorn::types::Type *Expression::type() const {
+    return m_type;
+}
+
+bool Expression::has_type() const {
+    return m_type != nullptr;
+}
+
+void Expression::set_type(acorn::types::Type *type) {
+    m_type = type;
+}
+
+void Expression::set_type_from(Expression *expression) {
+    // TODO set a warning here if the type is null?
+    m_type = expression->type();
+}
+
+std::string Expression::type_name() const {
+    if (m_type) {
+        return m_type->name();
+    } else {
+        return "null";
+    }
 }
 
 void Block::accept(Visitor *visitor) {

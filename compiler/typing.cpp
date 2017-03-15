@@ -50,7 +50,7 @@ types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vec
 
     for (auto parameter : parameters) {
         parameter->accept(this);
-        parameterTypes.push_back(parameter->type);
+        parameterTypes.push_back(parameter->type());
     }
 
     types::TypeType *typeConstructor = find_type_constructor(node, name);
@@ -156,9 +156,9 @@ void Inferrer::visit(ast::Block *block) {
     }
 
     if (block->expressions.empty()) {
-        block->type = new types::Void();
+        block->set_type(new types::Void());
     } else {
-        block->type = block->expressions.back()->type;
+        block->set_type_from(block->expressions.back());
     }
 }
 
@@ -169,12 +169,11 @@ void Inferrer::visit(ast::Identifier *expression) {
     }
 
     if (dynamic_cast<types::TypeType *>(symbol->type)) {
-        expression->type = find_type(expression);
+        expression->set_type(find_type(expression));
     } else {
         // it *must* be empty
         assert(expression->parameters.empty());
-
-        expression->type = symbol->type;
+        expression->set_type(symbol->type);
     }
 }
 
@@ -188,8 +187,8 @@ void Inferrer::visit(ast::VariableDeclaration *node) {
         node->given_type()->accept(this);
         m_as_type = false;
 
-        node->type = instance_type(node->given_type());
-        symbol->type = node->type;
+        node->set_type(instance_type(node->given_type()));
+        symbol->type = node->type();
     }
 }
 
@@ -233,10 +232,10 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
         std::vector<types::Type *> p;
         p.push_back(types[0]);
         auto array_type = find_type(sequence, "Array")->with_parameters(p);
-        sequence->type = array_type->create(this, sequence);
+        sequence->set_type(array_type->create(this, sequence));
     } else {
         // FIXME show error
-        sequence->type = nullptr;
+        sequence->set_type(nullptr);
     }
 }
 
@@ -274,19 +273,19 @@ void Inferrer::visit(ast::Call *expression) {
     std::vector<types::Type *> argument_types;
     for (auto arg : expression->arguments) {
         arg->accept(this);
-        argument_types.push_back(arg->type);
+        argument_types.push_back(arg->type());
 
-        if (arg->type == nullptr) {
+        if (!arg->has_type()) {
             return;
         }
     }
 
-    types::Function *function = dynamic_cast<types::Function *>(expression->operand->type);
+    types::Function *function = dynamic_cast<types::Function *>(expression->operand->type());
     if (function == nullptr) {
         expression->type = new types::Function();
         report(TypeMismatchError(expression->operand, expression));
-        delete expression->type;
-        expression->type = nullptr;
+        delete expression->type();
+        expression->set_type(nullptr);
         // FIXME make the construct accept a type directly
         return;
     }
@@ -315,7 +314,7 @@ void Inferrer::visit(ast::Call *expression) {
 
     std::cout << "call " << return_type << std::endl;
 
-    expression->type = return_type;
+    expression->set_type(return_type);
 }
 
 void Inferrer::visit(ast::CCall *ccall) {
@@ -374,7 +373,7 @@ void Inferrer::visit(ast::Selector *expression) {
     expression->operand->accept(this);
     return_if_null_type(expression->operand);
 
-    auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type);
+    auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type());
     if (selectable == nullptr) {
         report(TypeMismatchError(expression->operand, expression));
         return;
