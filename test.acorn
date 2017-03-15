@@ -1,9 +1,9 @@
-def exit(code as Int64) as Void
-  ccall exit(Int64) as Void using code
+def exit(code as Bool) as Void
+  ccall exit(Bool) as Void using code
 end
 
-def multiply(n as Int64) as Int64
-  n * 2
+def test(n as Int64) as Bool
+  n < 2
 end
 
-exit(multiply(10))
+exit(test(10))
