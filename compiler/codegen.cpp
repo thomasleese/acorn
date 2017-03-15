@@ -354,7 +354,7 @@ void BuiltinGenerator::generate(symboltable::Namespace *table) {
 
     // equality
     for (int i = 0; i < 3; i++) {
-        f = create_llvm_function(table, "==", 0);
+        f = create_llvm_function(table, "==", i);
         m_ir_builder->CreateRet(m_ir_builder->CreateICmpEQ(m_args[0], m_args[1]));
     }
 
@@ -898,12 +898,14 @@ void ModuleGenerator::visit(ast::Call *expression) {
 
     std::cout << "found method: " << method->name() << std::endl;
 
+    int index = function_type->index_of(method);
+
     auto ir_function = llvm::dyn_cast<llvm::LoadInst>(pop_value())->getPointerOperand();
 
     auto i32 = llvm::IntegerType::getInt32Ty(m_module->getContext());
     std::vector<llvm::Value *> indexes;
     indexes.push_back(llvm::ConstantInt::get(i32, 0));
-    indexes.push_back(llvm::ConstantInt::get(i32, 0));
+    indexes.push_back(llvm::ConstantInt::get(i32, index));
     auto ir_method = m_irBuilder->CreateLoad(m_irBuilder->CreateInBoundsGEP(ir_function, indexes));
 
     if (ir_method == nullptr) {

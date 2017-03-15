@@ -1,3 +1,9 @@
+- Support passing functions around.
+- Implement full generics.
+- Code improvements, with tests.
+
+
+
 - Pattern matching
 - Remove 'if let'
 - 'repeat', break and continue
@@ -36,16 +42,16 @@
 
     def after(n as Integer) as Channel{Void}
         let channel = new Channel{Void}(buffer: 0)
-    
+
         def callback() as Void
             sleep(duration: n)
             channel <- Nothing
         end
-    
+
         spawn callback()
-    
+
         return channel
     end
-    
+
     let channel = 2.after()
     <- channel  # wait for the channel

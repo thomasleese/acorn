@@ -10,4 +10,4 @@ def test(n as Int64) as Int64
   end
 end
 
-exit(test(10))
+exit(test(9))

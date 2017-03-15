@@ -465,6 +465,7 @@ namespace acorn {
             Method *find_method(ast::Node *node, std::vector<Type *> arguments) const;
             Method *get_method(int index) const;
             int no_methods() const;
+            int index_of(Method *method) const;
 
             Function *with_parameters(std::vector<Type *> parameters);
 

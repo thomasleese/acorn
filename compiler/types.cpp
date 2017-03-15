@@ -1049,6 +1049,16 @@ int Function::no_methods() const {
     return m_parameters.size();
 }
 
+int Function::index_of(Method *method) const {
+    for (int i = 0; i < no_methods(); i++) {
+        if (get_method(i) == method) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 Function *Function::with_parameters(std::vector<Type *> parameters) {
     assert(false);
     return nullptr;
