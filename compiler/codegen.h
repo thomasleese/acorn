@@ -93,37 +93,11 @@ namespace acorn {
             diagnostics::Reporter *m_diagnostics;
         };
 
-        class BuiltinGenerator {
-        public:
-            BuiltinGenerator(llvm::Module *module, llvm::IRBuilder<> *ir_builder, llvm::DataLayout *data_layout, TypeGenerator *type_generator);
-
-            void generate(symboltable::Namespace *table);
-
-            llvm::Function *generate_function(std::string name, types::Method *method, std::string llvm_name);
-
-        private:
-            void generate_sizeof(types::Method *method, llvm::Function *function);
-            void generate_strideof(types::Method *method, llvm::Function *function);
-
-            llvm::Function *create_llvm_function(symboltable::Namespace *table, std::string name, int index);
-
-            void initialise_boolean_variable(symboltable::Namespace *table, std::string name, bool value);
-            void initialise_function(llvm::Function *function, int no_arguments);
-
-        private:
-            llvm::Module *m_module;
-            llvm::IRBuilder<> *m_ir_builder;
-            llvm::DataLayout *m_data_layout;
-            TypeGenerator *m_type_generator;
-
-            std::vector<llvm::Argument *> m_args;
-        };
-
-        class ModuleGenerator : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower {
+        class CodeGenerator : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower {
 
         public:
-            ModuleGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
-            ~ModuleGenerator();
+            CodeGenerator(symboltable::Namespace *scope, llvm::LLVMContext &context, llvm::DataLayout *data_layout);
+            ~CodeGenerator();
 
             llvm::Module *module() const;
 
@@ -168,19 +142,34 @@ namespace acorn {
 
             void visit(ast::SourceFile *module);
 
+        public:
+            void builtin_generate(symboltable::Namespace *table);
+
+            llvm::Function *builtin_generate_function(std::string name, types::Method *method, std::string llvm_name);
+
+        private:
+            void builtin_generate_sizeof(types::Method *method, llvm::Function *function);
+            void builtin_generate_strideof(types::Method *method, llvm::Function *function);
+
+            llvm::Function *builtin_create_llvm_function(symboltable::Namespace *table, std::string name, int index);
+
+            void builtin_initialise_boolean_variable(symboltable::Namespace *table, std::string name, bool value);
+            void builtin_initialise_function(llvm::Function *function, int no_arguments);
+
         private:
             llvm::LLVMContext &m_context;
             llvm::Module *m_module;
             llvm::IRBuilder<> *m_ir_builder;
-            llvm::MDBuilder *m_mdBuilder;
+            llvm::MDBuilder *m_md_builder;
             llvm::DataLayout *m_data_layout;
 
-            BuiltinGenerator *m_builtin_generator;
             TypeGenerator *m_type_generator;
+
+            std::vector<llvm::Argument *> m_args;
         };
 
     }
 
 }
 
-#endif //ACORN_CODEGEN_H
+#endif // ACORN_CODEGEN_H

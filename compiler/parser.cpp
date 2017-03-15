@@ -37,26 +37,26 @@ SourceFile *Parser::parse(std::string name) {
     auto module = new SourceFile(front_token(), name);
 
     while (is_token(Token::ImportKeyword)) {
-        module->imports.push_back(read_import_expression());
-    }
+        auto import = read_import_expression();
+        return_if_null(import);
 
-    for (auto import : module->imports) {
         std::string filename = "../library/" + import->path->value() + ".acorn";
 
         Lexer lexer(filename);
         Parser parser(lexer);
 
-        auto module2 = parser.parse(filename);
+        auto imported_module = parser.parse(filename);
 
         if (lexer.has_errors() || parser.has_errors()) {
             continue;
         }
 
-        for (auto expression : module2->code->expressions()) {
+        for (auto expression : imported_module->code->expressions()) {
             module->code->add_expression(expression);
         }
 
-        delete module2;
+        delete imported_module;
+        delete import;
     }
 
     while (!is_token(Token::EndOfFile)) {

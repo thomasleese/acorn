@@ -91,7 +91,7 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
 
     auto data_layout = target_machine->createDataLayout();
 
-    codegen::ModuleGenerator generator(root_namespace, m_context, &data_layout);
+    codegen::CodeGenerator generator(root_namespace, m_context, &data_layout);
     module->accept(&generator);
 
     if (generator.has_errors()) {
