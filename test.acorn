@@ -1,5 +1,9 @@
-def multiply(n as Int64) as Int64
-  n
+def exit(code as Int64) as Void
+  ccall exit(Int64) as Void using code
 end
 
-ccall exit(Int64) as Void using multiply(10)
+def multiply(n as Int64) as Int64
+  n * 2
+end
+
+exit(multiply(10))

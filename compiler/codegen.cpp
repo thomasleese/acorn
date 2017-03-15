@@ -319,6 +319,10 @@ BuiltinGenerator::BuiltinGenerator(llvm::Module *module, llvm::IRBuilder<> *ir_b
 }
 
 void BuiltinGenerator::generate(symboltable::Namespace *table) {
+    llvm::FunctionType *fType = llvm::FunctionType::get(llvm::Type::getVoidTy(m_module->getContext()), false);
+    auto init_function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_builtins", m_module);
+    auto init_bb = llvm::BasicBlock::Create(m_module->getContext(), "entry", init_function);
+
     initialise_boolean_variable(table, "Nothing", false);
     initialise_boolean_variable(table, "True", true);
     initialise_boolean_variable(table, "False", false);
@@ -373,6 +377,9 @@ void BuiltinGenerator::generate(symboltable::Namespace *table) {
     // to float
     f = create_llvm_function(table, "to_float", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateSIToFP(m_args[0], f->getReturnType()));
+
+    m_ir_builder->SetInsertPoint(init_bb);
+    m_ir_builder->CreateRetVoid();
 }
 
 llvm::Function *BuiltinGenerator::generate_function(std::string name, types::Method *method, std::string llvm_name) {
@@ -427,10 +434,10 @@ void BuiltinGenerator::generate_strideof(types::Method *method, llvm::Function *
 }
 
 llvm::Function *BuiltinGenerator::create_llvm_function(symboltable::Namespace *table, std::string name, int index) {
-    auto symbol = table->lookup(nullptr, nullptr, name);
+    auto function_symbol = table->lookup(nullptr, nullptr, name);
 
-    types::Function *functionType = static_cast<types::Function *>(symbol->type);
-    types::Method *methodType = functionType->get_method(index);
+    auto functionType = static_cast<types::Function *>(function_symbol->type);
+    auto methodType = functionType->get_method(index);
 
     std::string mangled_name = codegen::mangle_method(name, methodType);
 
@@ -440,14 +447,37 @@ llvm::Function *BuiltinGenerator::create_llvm_function(symboltable::Namespace *t
     llvm::FunctionType *type = static_cast<llvm::FunctionType *>(type_generator->take_type(nullptr));
     assert(type);
 
-    delete type_generator;
-
     llvm::Function *f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, mangled_name, m_module);
     f->addFnAttr(llvm::Attribute::AlwaysInline);
 
-    initialise_function(f, methodType->parameter_types().size());
+    if (function_symbol->value == nullptr) {
+      // check if global symbol is set
+      functionType->accept(type_generator);
 
-    symbol->value = f;
+      auto llvm_function_type = type_generator->take_type(nullptr);
+      auto llvm_initialiser = type_generator->take_initialiser(nullptr);
+
+      auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
+                                               llvm::GlobalValue::InternalLinkage,
+                                               llvm_initialiser, name);
+
+      function_symbol->value = variable;
+    }
+
+    delete type_generator;
+
+    auto i32 = llvm::IntegerType::getInt32Ty(m_module->getContext());
+
+    auto insert_function = m_module->getFunction("_init_builtins");
+    m_ir_builder->SetInsertPoint(&insert_function->getEntryBlock());
+
+    std::vector<llvm::Value *> indexes;
+    indexes.push_back(llvm::ConstantInt::get(i32, 0));
+    indexes.push_back(llvm::ConstantInt::get(i32, index));
+    auto gep = m_ir_builder->CreateInBoundsGEP(function_symbol->value, indexes, "f");
+    m_ir_builder->CreateStore(f, gep);
+
+    initialise_function(f, methodType->parameter_types().size());
 
     return f;
 }
@@ -606,7 +636,7 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     if (function_symbol->value == nullptr) {
       // check if global symbol is set
       auto llvm_function_type = generate_type(definition, function_type);
-      if (llvmType == nullptr) {
+      if (llvm_function_type == nullptr) {
           return nullptr;
       }
 
@@ -629,8 +659,8 @@ llvm::Function *ModuleGenerator::generate_function(ast::FunctionDefinition *defi
     auto i32 = llvm::IntegerType::getInt32Ty(m_module->getContext());
 
     std::vector<llvm::Value *> indexes;
-    indexes.push_back(llvm::ConstantInt::get(i32, index));
     indexes.push_back(llvm::ConstantInt::get(i32, 0));
+    indexes.push_back(llvm::ConstantInt::get(i32, index));
     auto gep = m_irBuilder->CreateInBoundsGEP(function_symbol->value, indexes, "f");
     m_irBuilder->CreateStore(function, gep);
 
@@ -869,8 +899,6 @@ void ModuleGenerator::visit(ast::Call *expression) {
     std::cout << "found method: " << method->name() << std::endl;
 
     auto ir_function = llvm::dyn_cast<llvm::LoadInst>(pop_value())->getPointerOperand();
-
-    auto llvm_function_type = generate_type(expression, method);
 
     auto i32 = llvm::IntegerType::getInt32Ty(m_module->getContext());
     std::vector<llvm::Value *> indexes;
@@ -1173,6 +1201,7 @@ void ModuleGenerator::visit(ast::SourceFile *module) {
     llvm::BasicBlock *main_bb = llvm::BasicBlock::Create(m_module->getContext(), "entry", mainFunction);
 
     m_irBuilder->SetInsertPoint(main_bb);
+    m_irBuilder->CreateCall(m_module->getFunction("_init_builtins"));
     m_irBuilder->CreateCall(function);
 
     module->code->accept(this);
