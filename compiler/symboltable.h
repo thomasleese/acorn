@@ -25,7 +25,7 @@ namespace acorn {
 
     namespace symboltable {
 
-        struct Symbol;
+        class Symbol;
 
         class Namespace {
         public:
@@ -51,7 +51,8 @@ namespace acorn {
             std::map<std::string, Symbol *> m_symbols;
         };
 
-        struct Symbol {
+        class Symbol {
+        public:
             explicit Symbol(std::string name);
 
             std::string name;

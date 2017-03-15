@@ -23,7 +23,8 @@ namespace acorn {
 
         class Visitor;
 
-        struct Node {
+        class Node {
+        public:
             explicit Node(Token token);
             virtual ~Node();
 
@@ -33,11 +34,13 @@ namespace acorn {
             types::Type *type;
         };
 
-        struct Expression : Node {
+        class Expression : public Node {
+        public:
             using Node::Node;
         };
 
-        struct Block : Expression {
+        class Block : public Expression {
+        public:
             using Expression::Expression;
 
             std::vector<Expression *> expressions;
@@ -45,7 +48,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct Identifier : Expression {
+        class Identifier : public Expression {
+        public:
             Identifier(Token token);
             Identifier(Token token, std::string name);
 
@@ -75,13 +79,15 @@ namespace acorn {
             std::unique_ptr<Identifier> m_given_type;
         };
 
-        struct Definition : Node {
+        class Definition : public Node {
+        public:
             using Node::Node;
 
             Identifier *name;
         };
 
-        struct IntegerLiteral : Expression {
+        class IntegerLiteral : public Expression {
+        public:
             using Expression::Expression;
 
             std::string value;
@@ -89,7 +95,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct FloatLiteral : Expression {
+        class FloatLiteral : public Expression {
+        public:
             using Expression::Expression;
 
             std::string value;
@@ -97,7 +104,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct ImaginaryLiteral : Expression {
+        class ImaginaryLiteral : public Expression {
+        public:
             using Expression::Expression;
 
             std::string value;
@@ -105,7 +113,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct StringLiteral : Expression {
+        class StringLiteral : public Expression {
+        public:
             using Expression::Expression;
 
             std::string value;
@@ -113,7 +122,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct SequenceLiteral : Expression {
+        class SequenceLiteral : public Expression {
+        public:
             using Expression::Expression;
 
             std::vector<Expression *> elements;
@@ -121,7 +131,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct MappingLiteral : Expression {
+        class MappingLiteral : public Expression {
+        public:
             using Expression::Expression;
 
             std::vector<Expression *> keys;
@@ -130,7 +141,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct RecordLiteral : Expression {
+        class RecordLiteral : public Expression {
+        public:
             using Expression::Expression;
 
             Identifier *name;
@@ -152,7 +164,8 @@ namespace acorn {
             std::vector<std::unique_ptr<Expression> > m_elements;
         };
 
-        struct Call : Expression {
+        class Call : public Expression {
+        public:
             explicit Call(Token token);
             Call(Token token, std::string name, Expression *arg1 = nullptr, Expression *arg2 = nullptr);
 
@@ -163,7 +176,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct CCall : Expression {
+        class CCall : public Expression {
+        public:
             CCall(Token token);
 
             Identifier *name;
@@ -174,7 +188,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct Cast : Expression {
+        class Cast : public Expression {
+        public:
             Cast(Token token);
 
             Expression *operand;
@@ -183,7 +198,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct Assignment : Expression {
+        class Assignment : public Expression {
+        public:
             explicit Assignment(Token token, Expression *lhs, Expression *rhs);
 
             Expression *lhs;
@@ -192,7 +208,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct Selector : Expression {
+        class Selector : public Expression {
+        public:
             Selector(Token token, Expression *operand, Identifier *field);
             Selector(Token token, Expression *operand, std::string field);
 
@@ -216,7 +233,8 @@ namespace acorn {
             std::unique_ptr<Expression> m_body;
         };
 
-        struct If : Expression {
+        class If : public Expression {
+        public:
             using Expression::Expression;
 
             Expression *condition;
@@ -226,7 +244,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct Return : Expression {
+        class Return : public Expression {
+        public:
             using Expression::Expression;
 
             Expression *expression;
@@ -234,7 +253,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct Spawn : Expression {
+        class Spawn : public Expression {
+        public:
             Spawn(Token token, Call *call);
 
             Call *call;
@@ -275,7 +295,8 @@ namespace acorn {
         };
 
         // misc
-        struct Parameter : Node {
+        class Parameter : public Node {
+        public:
             explicit Parameter(Token token);
 
             bool inout;
@@ -286,7 +307,8 @@ namespace acorn {
         };
 
         // definitions
-        struct VariableDefinition : Definition {
+        class VariableDefinition : public Definition {
+        public:
             explicit VariableDefinition(Token token);
             VariableDefinition(Token token, std::string name, Expression *value = nullptr);
 
@@ -295,7 +317,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct FunctionDefinition : Definition {
+        class FunctionDefinition : public Definition {
+        public:
             explicit FunctionDefinition(Token token);
 
             std::vector<Parameter *> parameters;
@@ -305,7 +328,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct TypeDefinition : Definition {
+        class TypeDefinition : public Definition {
+        public:
             TypeDefinition(Token token);
 
             Identifier *alias;
@@ -332,7 +356,8 @@ namespace acorn {
             std::unique_ptr<Identifier> m_return_type;
         };
 
-        struct DefinitionExpression : Expression {
+        class DefinitionExpression : public Expression {
+        public:
             explicit DefinitionExpression(Definition *definition);
 
             Definition *definition;
@@ -340,7 +365,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        struct ImportExpression : Expression {
+        class ImportExpression : public Expression {
+        public:
             ImportExpression(Token token, StringLiteral *path);
 
             StringLiteral *path;
@@ -349,7 +375,8 @@ namespace acorn {
         };
 
         // source file
-        struct SourceFile : Node {
+        class SourceFile : public Node {
+        public:
             SourceFile(Token token, std::string name);
 
             std::string name;
@@ -409,4 +436,4 @@ namespace acorn {
 
 }
 
-#endif //ACORN_AST_H
+#endif // ACORN_AST_H

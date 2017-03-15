@@ -12,7 +12,7 @@
 namespace acorn {
 
     namespace ast {
-        struct Node;
+        class Node;
     }
 
     namespace types {

@@ -14,7 +14,7 @@
 namespace acorn {
 
     namespace ast {
-        struct SourceFile;
+        class SourceFile;
     }
 
     namespace symboltable {
