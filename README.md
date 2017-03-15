@@ -1,24 +1,16 @@
 # Acorn
 
 > Acorn is a elegant, minimalistic, high-level programming language implemented
-> in C++ with LLVM. It borrows ideas from MATLAB, Julia, Python and many others.
-> It supports features such as multiple-dispatch, operating overloading, static
-> typing with inference and concurrency.
+> in C++ with LLVM. It borrows ideas from MATLAB, Julia, Python, Ruby and many
+> other languages. It supports features such as multiple-dispatch, operating
+> overloading, static typing with inference and concurrency.
 
-## Progress
+## What does it look like?
 
-- Lexer ✓
-- Parser ✓
-- Error Handler ✓
-- Type Checker ~
-- Code Generator ~
+```ruby
+def hello
+  print("Hello, world!")
+end
 
-## Ideas
-
-- Full support for Unicode.
-- http://docs.julialang.org/en/release-0.4/manual/methods/
-  - Multiple-dispatch
-  - Overloading operators
-- https://github.com/tj/luna
-- Implicit return
-- Type Inference
+hello()
+```
