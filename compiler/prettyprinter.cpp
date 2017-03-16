@@ -359,8 +359,8 @@ void PrettyPrinter::visit(ast::Module *module) {
     ss << indentation() << "(Module [" << type_of(module) << "]\n";
 
     indent++;
-    module->body()->accept(this);
     module->name()->accept(this);
+    module->body()->accept(this);
     indent--;
 
     ss << indentation() << ")\n";
