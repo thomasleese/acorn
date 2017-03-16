@@ -1017,7 +1017,6 @@ bool Method::could_be_called_with(std::vector<Type *> arguments) {
 
     for (unsigned long i = 0; i < arguments.size(); i++) {
         bool compatible = parameters[i]->is_compatible(arguments[i]);
-        std::cout << parameters[i]->name() << " ? " << arguments[i]->name() << " = " << compatible << std::endl;
         if (!compatible) {
             return false;
         }

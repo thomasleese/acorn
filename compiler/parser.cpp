@@ -97,9 +97,6 @@ bool Parser::next_non_newline_token() {
 }
 
 void Parser::collapse_deindent_indent_tokens() {
-    debug("collapse_deindent_indent_tokens");
-    std::cout << Token::as_string(m_tokens[0].kind) << std::endl;
-    std::cout << Token::as_string(m_tokens[1].kind) << std::endl;
     while (m_tokens.size() >= 2 && m_tokens[0].kind == Token::Deindent && m_tokens[1].kind == Token::Indent) {
         m_tokens.erase(m_tokens.begin());
         m_tokens.erase(m_tokens.begin());
