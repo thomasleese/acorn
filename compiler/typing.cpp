@@ -360,19 +360,32 @@ void Inferrer::visit(ast::Selector *expression) {
     expression->operand->accept(this);
     return_if_null_type(expression->operand);
 
-    auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type());
-    if (selectable == nullptr) {
-        report(TypeMismatchError(expression->operand, expression));
-        return;
-    }
+    auto module = dynamic_cast<types::Module *>(expression->operand->type());
+    if (module) {
+        auto module_name = static_cast<ast::Name *>(expression->operand);
 
-    auto field_type = selectable->child_type(expression->name->value());
-    if (field_type == nullptr) {
-        report(UndefinedError(expression->name, expression->name->value()));
-        return;
-    }
+        auto symbol = scope()->lookup(this, module_name);
+        return_if_null(symbol);
 
-    expression->set_type(field_type);
+        auto child_symbol = symbol->nameSpace->lookup(this, expression->name);
+        return_if_null(child_symbol);
+
+        expression->set_type(child_symbol->type);
+    } else {
+        auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type());
+        if (selectable == nullptr) {
+            report(TypeMismatchError(expression->operand, expression));
+            return;
+        }
+
+        auto field_type = selectable->child_type(expression->name->value());
+        if (field_type == nullptr) {
+            report(UndefinedError(expression->name, expression->name->value()));
+            return;
+        }
+
+        expression->set_type(field_type);
+    }
 }
 
 void Inferrer::visit(ast::While *expression) {
@@ -592,7 +605,8 @@ void Inferrer::visit(ast::Module *module) {
     push_scope(symbol);
 
     module->body()->accept(this);
-    module->copy_type_from(module->body());
+    module->set_type(new types::Module());
+    symbol->copy_type_from(module);
 
     pop_scope();
 }

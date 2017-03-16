@@ -1010,20 +1010,32 @@ void CodeGenerator::visit(ast::Assignment *expression) {
 }
 
 void CodeGenerator::visit(ast::Selector *expression) {
-    expression->operand->accept(this);
-    auto instance = pop_llvm_value();
+    auto module_type = dynamic_cast<types::Module *>(expression->operand->type());
+    if (module_type) {
+        auto module_name = static_cast<ast::Name *>(expression->operand);
 
-    auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type());
-    assert(selectable);
+        auto symbol = scope()->lookup(this, module_name);
+        return_and_push_null_if_null(symbol);
 
-    // either an enum, or a record
-    auto record = dynamic_cast<types::Record *>(selectable);
-    if (record) {
-        int index = record->get_field_index(expression->name->value());
-        auto value = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, index }));
-        push_llvm_value(value);
+        push_scope(symbol);
+        expression->name->accept(this);
+        pop_scope();
     } else {
-        push_llvm_value(nullptr);
+        expression->operand->accept(this);
+        auto instance = pop_llvm_value();
+
+        auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type());
+        assert(selectable);
+
+        // either an enum, or a record
+        auto record = dynamic_cast<types::Record *>(selectable);
+        if (record) {
+            int index = record->get_field_index(expression->name->value());
+            auto value = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, index }));
+            push_llvm_value(value);
+        } else {
+            push_llvm_value(nullptr);
+        }
     }
 }
 

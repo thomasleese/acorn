@@ -162,7 +162,7 @@ void Symbol::copy_type_from(ast::Expression *expression) {
 
 std::string Symbol::to_string(int indent) const {
     std::stringstream ss;
-    ss << this->name << " (" << this->node << ")";
+    ss << this->name << " (Node: " << this->node << ") (Value: " << this->value << ")";
 
     if (this->type) {
         ss << ": " << this->type->name();
