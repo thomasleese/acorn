@@ -302,13 +302,16 @@ void PrettyPrinter::visit(ast::Parameter *parameter)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::VariableDefinition *definition)
+void PrettyPrinter::visit(ast::Let *definition)
 {
-    ss << indentation() << "(VariableDefinition [" << type_of(definition) << "]\n";
+    ss << indentation() << "(Let [" << type_of(definition) << "]\n";
     indent++;
 
     definition->assignment->accept(this);
-    definition->body()->accept(this);
+
+    if (definition->has_body()) {
+        definition->body()->accept(this);
+    }
 
     indent--;
     ss << indentation() << ")\n";

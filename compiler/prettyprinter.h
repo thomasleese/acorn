@@ -40,7 +40,7 @@ namespace acorn {
         void visit(ast::Spawn *expression);
         void visit(ast::Switch *expression);
         void visit(ast::Parameter *parameter);
-        void visit(ast::VariableDefinition *definition);
+        void visit(ast::Let *definition);
         void visit(ast::FunctionDefinition *definition);
         void visit(ast::TypeDefinition *definition);
         void visit(ast::Module *module);

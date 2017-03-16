@@ -152,7 +152,7 @@ bool Symbol::is_type() const {
 }
 
 bool Symbol::is_variable() const {
-    return dynamic_cast<ast::VariableDefinition *>(this->node) != nullptr;
+    return dynamic_cast<ast::Let *>(this->node) != nullptr;
 }
 
 void Symbol::copy_type_from(ast::Expression *expression) {
@@ -448,9 +448,12 @@ void Builder::visit(ast::Parameter *parameter) {
     scope()->insert(this, parameter, symbol);
 }
 
-void Builder::visit(ast::VariableDefinition *definition) {
+void Builder::visit(ast::Let *definition) {
     definition->assignment->accept(this);
-    definition->body()->accept(this);
+
+    if (definition->has_body()) {
+        definition->body()->accept(this);
+    }
 }
 
 void Builder::visit(ast::FunctionDefinition *definition) {

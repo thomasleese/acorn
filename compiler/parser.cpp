@@ -73,10 +73,11 @@ void Parser::debug(std::string line) {
 }
 
 Token Parser::front_token() {
+    fill_token();
     return m_tokens.front();
 }
 
-bool Parser::next_token() {
+bool Parser::next_non_newline_token() {
     bool found = false;
     Token token;
 
@@ -95,8 +96,30 @@ bool Parser::next_token() {
     }
 }
 
+void Parser::collapse_deindent_indent_tokens() {
+    debug("collapse_deindent_indent_tokens");
+    std::cout << Token::as_string(m_tokens[0].kind) << std::endl;
+    std::cout << Token::as_string(m_tokens[1].kind) << std::endl;
+    while (m_tokens.size() >= 2 && m_tokens[0].kind == Token::Deindent && m_tokens[1].kind == Token::Indent) {
+        m_tokens.erase(m_tokens.begin());
+        m_tokens.erase(m_tokens.begin());
+    }
+}
+
+bool Parser::next_token() {
+    while (m_tokens.size() < 2) {
+        if (next_non_newline_token() && next_non_newline_token()) {
+            collapse_deindent_indent_tokens();
+        } else {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool Parser::fill_token() {
-    if (m_tokens.empty() && !next_token()) {
+    if (m_tokens.size() < 2 && !next_token()) {
         return false;
     }
 
@@ -108,15 +131,15 @@ bool Parser::read_token(Token::Kind kind, Token &token) {
         return false;
     }
 
-    auto next_token = front_token();
+    auto next_front_token = front_token();
     m_tokens.pop_front();
 
-    if (next_token.kind != kind) {
-        report(SyntaxError(next_token, kind));
+    if (next_front_token.kind != kind) {
+        report(SyntaxError(next_front_token, kind));
         return false;
     }
 
-    token = next_token;
+    token = next_front_token;
     return true;
 }
 
@@ -175,7 +198,7 @@ Expression *Parser::read_expression(bool parse_comma) {
     debug("read_expression(parse_comma=" + std::string(parse_comma ? "true" : "false") + ")");
 
     if (is_token(Token::LetKeyword)) {
-        return read_variable_definition();
+        return read_let();
     } else if (is_token(Token::DefKeyword)) {
         return read_function_definition();
     } else if (is_token(Token::TypeKeyword)) {
@@ -214,14 +237,18 @@ Name *Parser::read_name_or_operator(Token::Kind kind, bool accept_parameters) {
 }
 
 Name *Parser::read_name(bool accept_parameters) {
+    debug("read_name");
     return read_name_or_operator(Token::Name, accept_parameters);
 }
 
 Name *Parser::read_operator(bool accept_parameters) {
+    debug("read_operator");
     return read_name_or_operator(Token::Operator, accept_parameters);
 }
 
 ast::VariableDeclaration *Parser::read_variable_declaration() {
+    debug("read_variable_declaration");
+
     return_if_false(read_token(Token::LetKeyword, token));
 
     auto name = read_name(false);
@@ -237,16 +264,19 @@ ast::VariableDeclaration *Parser::read_variable_declaration() {
 }
 
 IntegerLiteral *Parser::read_integer_literal() {
+    debug("read_integer_literal");
     return_if_false(read_token(Token::IntegerLiteral, token));
     return new IntegerLiteral(token, token.lexeme);
 }
 
 FloatLiteral *Parser::read_float_literal() {
+    debug("read_float_literal");
     return_if_false(read_token(Token::FloatLiteral, token));
     return new FloatLiteral(token, token.lexeme);
 }
 
 StringLiteral *Parser::read_string_literal() {
+    debug("read_string_literal");
     return_if_false(read_token(Token::StringLiteral, token));
     return new StringLiteral(token, token.lexeme);
 }
@@ -316,6 +346,8 @@ RecordLiteral *Parser::read_record_literal() {
 }
 
 Call *Parser::read_call(Expression *operand) {
+    debug("read_call");
+
     return_if_false(read_token(Token::OpenParenthesis, token));
 
     auto call = new Call(token, operand);
@@ -333,6 +365,8 @@ Call *Parser::read_call(Expression *operand) {
 }
 
 CCall *Parser::read_ccall() {
+    debug("read_ccall");
+
     return_if_false(read_token(Token::CCallKeyword, token));
 
     CCall *ccall = new CCall(token);
@@ -374,6 +408,8 @@ Cast *Parser::read_cast(Expression *operand) {
 }
 
 Selector *Parser::read_selector(Expression *operand) {
+    debug("read_selector");
+
     return_if_false(read_token(Token::Dot, token));
 
     Name *name = nullptr;
@@ -392,6 +428,8 @@ Selector *Parser::read_selector(Expression *operand) {
 }
 
 Call *Parser::read_index(Expression *operand) {
+    debug("read_index");
+
     return_if_false(read_token(Token::OpenBracket, token));
 
     auto call = new Call(token);
@@ -466,13 +504,13 @@ Block *Parser::read_for() {
 
     auto code_block = new Block(token);
 
-    auto state_variable = new VariableDefinition(token, state_variable_name, new Call(token, "start", iterator));
+    auto state_variable = new Let(token, state_variable_name, new Call(token, "start", iterator));
     code_block->add_expression(state_variable);
 
     auto condition = new Call(token, "not", new Call(token, "done", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
     auto while_code = new While(token, condition, loop_code);
 
-    auto next_state_variable = new VariableDefinition(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
+    auto next_state_variable = new Let(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
     loop_code->insert_expression(0, next_state_variable);
     loop_code->insert_expression(1, new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1")));
     loop_code->insert_expression(1, new Assignment(token, new VariableDeclaration(token, new Name(token, next_state_variable_name)), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0")));
@@ -483,7 +521,7 @@ Block *Parser::read_for() {
 }
 
 If *Parser::read_if() {
-    debug("Reading if");
+    debug("read_if");
 
     return_if_false(read_token(Token::IfKeyword, token));
 
@@ -606,6 +644,8 @@ Switch *Parser::read_switch() {
 }
 
 Expression *Parser::read_unary_expression(bool parse_comma) {
+    debug("read_unary_expression");
+
     if (is_token(Token::Operator)) {
         auto operand = read_operator(true);
         return_if_null(operand);
@@ -619,6 +659,8 @@ Expression *Parser::read_unary_expression(bool parse_comma) {
 }
 
 Expression *Parser::read_binary_expression(Expression *lhs, int min_precedence) {
+    debug("read_binary_expression");
+
     while ((is_token(Token::Operator) || is_token(Token::Assignment)) && m_operator_precendence[front_token().lexeme] >= min_precedence) {
         auto saved_token = front_token();
 
@@ -642,6 +684,7 @@ Expression *Parser::read_binary_expression(Expression *lhs, int min_precedence) 
 }
 
 Expression *Parser::read_parenthesis_expression() {
+    debug("read_parenthesis_expression");
     return_if_false(skip_token(Token::OpenParenthesis));
     auto expression = read_expression(true);
     return_if_false(skip_token(Token::CloseParenthesis));
@@ -688,6 +731,8 @@ Expression *Parser::read_primary_expression() {
 }
 
 Expression *Parser::read_operand_expression(bool parse_comma) {
+    debug("read_operand_expression");
+
     auto left = read_primary_expression();
     return_if_null(left);
 
@@ -724,6 +769,8 @@ Expression *Parser::read_operand_expression(bool parse_comma) {
 }
 
 Parameter *Parser::read_parameter() {
+    debug("read_parameter");
+
     Token token = front_token();
 
     bool inout = is_and_skip_token(Token::InoutKeyword);
@@ -743,30 +790,39 @@ Parameter *Parser::read_parameter() {
     return parameter;
 }
 
-VariableDefinition *Parser::read_variable_definition() {
+Let *Parser::read_let() {
+    debug("read_let");
+
     auto lhs = read_variable_declaration();
     return_if_null(lhs);
+
+    debug("read_assignment");
 
     return_if_false(read_token(Token::Assignment, token));
 
     auto rhs = read_expression(true);
     return_if_null(rhs);
 
-    return_if_false(skip_token(Token::Indent));
+    debug("-> attempting to read body?");
 
-    auto body = read_expression();
-    return_if_null(body);
+    ast::Expression *body = nullptr;
+    if (is_and_skip_token(Token::Indent)) {
+        debug("--> has a body");
+        body = read_expression();
+        return_if_null(body);
+        return_if_false(skip_deindent_and_end_token());
+    } else {
+        debug("--> doesn't have a body");
+    }
 
-    return_if_false(skip_deindent_and_end_token());
-
-    auto definition = new VariableDefinition(lhs->token());
+    auto definition = new Let(lhs->token());
     definition->assignment = new Assignment(token, lhs, rhs);
     definition->set_body(body);
     return definition;
 }
 
 FunctionDefinition *Parser::read_function_definition() {
-    debug("Reading FunctionDefinition...");
+    debug("read_function_definition");
 
     return_if_false(read_token(Token::DefKeyword, token));
 
@@ -781,7 +837,7 @@ FunctionDefinition *Parser::read_function_definition() {
         return nullptr;
     }
 
-    debug("Name: " + definition->name()->value());
+    debug("-> name: " + definition->name()->value());
 
     skip_token(Token::OpenParenthesis);
 
@@ -809,8 +865,6 @@ FunctionDefinition *Parser::read_function_definition() {
     return_if_null(definition->body);
 
     return_if_false(skip_deindent_and_end_token());
-
-    debug("Ending FunctionDefinition!");
 
     return definition;
 }

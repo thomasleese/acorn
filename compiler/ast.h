@@ -351,14 +351,15 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class VariableDefinition : public Expression {
+        class Let : public Expression {
         public:
-            explicit VariableDefinition(Token token);
-            VariableDefinition(Token token, std::string name, Expression *value = nullptr, Expression *body = nullptr);
+            explicit Let(Token token);
+            Let(Token token, std::string name, Expression *value = nullptr, Expression *body = nullptr);
 
             Assignment *assignment;
 
             Expression *body() const;
+            bool has_body() const;
             void set_body(Expression *body);
 
             void accept(Visitor *visitor);
@@ -466,7 +467,7 @@ namespace acorn {
             virtual void visit(Spawn *expression) = 0;
             virtual void visit(Switch *expression) = 0;
             virtual void visit(Parameter *parameter) = 0;
-            virtual void visit(VariableDefinition *definition) = 0;
+            virtual void visit(Let *definition) = 0;
             virtual void visit(FunctionDefinition *definition) = 0;
             virtual void visit(TypeDefinition *definition) = 0;
             virtual void visit(Module *module) = 0;

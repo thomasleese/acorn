@@ -473,11 +473,15 @@ void Inferrer::visit(ast::Parameter *parameter) {
     symbol->type = parameter->type();
 }
 
-void Inferrer::visit(ast::VariableDefinition *definition) {
+void Inferrer::visit(ast::Let *definition) {
     definition->assignment->accept(this);
-    definition->body()->accept(this);
 
-    definition->copy_type_from(definition->body());
+    if (definition->has_body()) {
+        definition->body()->accept(this);
+        definition->copy_type_from(definition->body());
+    } else {
+        definition->copy_type_from(definition->assignment);
+    }
 }
 
 void Inferrer::visit(ast::FunctionDefinition *definition) {
@@ -815,13 +819,17 @@ void Checker::visit(ast::Parameter *parameter) {
     check_not_null(parameter);
 }
 
-void Checker::visit(ast::VariableDefinition *definition) {
+void Checker::visit(ast::Let *definition) {
     check_not_null(definition);
 
     definition->assignment->accept(this);
-    definition->body()->accept(this);
 
-    check_types(definition, definition->body());
+    if (definition->has_body()) {
+        definition->body()->accept(this);
+        check_types(definition, definition->body());
+    } else {
+        check_types(definition, definition->assignment);
+    }
 }
 
 void Checker::visit(ast::FunctionDefinition *definition) {

@@ -1146,9 +1146,12 @@ void CodeGenerator::visit(ast::Parameter *parameter) {
     report(InternalError(parameter, "N/A"));
 }
 
-void CodeGenerator::visit(ast::VariableDefinition *definition) {
+void CodeGenerator::visit(ast::Let *definition) {
     definition->assignment->accept(this);
-    definition->body()->accept(this);
+
+    if (definition->has_body()) {
+        definition->body()->accept(this);
+    }
 }
 
 void CodeGenerator::visit(ast::FunctionDefinition *definition) {

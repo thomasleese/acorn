@@ -15,6 +15,9 @@ using namespace acorn;
 ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space) {
     Lexer lexer(filename);
 
+    /*lexer.debug();
+    return nullptr;*/
+
     Parser parser(lexer);
     auto module = parser.parse(filename);
 

@@ -25,6 +25,8 @@ namespace acorn {
         void debug(std::string line);
 
         Token front_token();
+        bool next_non_newline_token();
+        void collapse_deindent_indent_tokens();
         bool next_token();
         bool fill_token();
         bool read_token(Token::Kind kind, Token &token);
@@ -64,7 +66,7 @@ namespace acorn {
         ast::Expression *read_primary_expression();
         ast::Expression *read_operand_expression(bool parse_comma);
         ast::Parameter *read_parameter();
-        ast::VariableDefinition *read_variable_definition();
+        ast::Let *read_let();
         ast::FunctionDefinition *read_function_definition();
         ast::TypeDefinition *read_type_definition();
         ast::Module *read_module();

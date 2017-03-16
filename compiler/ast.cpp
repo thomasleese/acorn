@@ -140,7 +140,6 @@ Name *VariableDeclaration::given_type() const {
 }
 
 void VariableDeclaration::set_type(types::Type *type) {
-    std::cout << "hi!" << std::endl;
     Expression::set_type(type);
     m_name->set_type(type);
 }
@@ -421,7 +420,7 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-VariableDefinition::VariableDefinition(Token token) :
+Let::Let(Token token) :
         Expression(token),
         assignment(nullptr),
         m_body(nullptr)
@@ -429,7 +428,7 @@ VariableDefinition::VariableDefinition(Token token) :
     // intentionally empty
 }
 
-VariableDefinition::VariableDefinition(Token token, std::string name, Expression *value, Expression *body) :
+Let::Let(Token token, std::string name, Expression *value, Expression *body) :
         Expression(token),
         m_body(body)
 {
@@ -437,15 +436,19 @@ VariableDefinition::VariableDefinition(Token token, std::string name, Expression
     this->assignment = new Assignment(token, variable_declaration, value);
 }
 
-Expression *VariableDefinition::body() const {
+Expression *Let::body() const {
     return m_body.get();
 }
 
-void VariableDefinition::set_body(Expression *body) {
+bool Let::has_body() const {
+    return m_body != nullptr;
+}
+
+void Let::set_body(Expression *body) {
     m_body.reset(body);
 }
 
-void VariableDefinition::accept(Visitor *visitor) {
+void Let::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
