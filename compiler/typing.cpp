@@ -189,7 +189,7 @@ void Inferrer::visit(ast::IntegerLiteral *expression) {
 }
 
 void Inferrer::visit(ast::FloatLiteral *expression) {
-    expression->set_type(instance_type(expression, "Float"));
+    expression->set_type(instance_type(expression, "Float64"));
 }
 
 void Inferrer::visit(ast::ImaginaryLiteral *expression) {
