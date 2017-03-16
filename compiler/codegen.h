@@ -139,6 +139,7 @@ namespace acorn {
             void visit(types::Tuple *type);
             void visit(types::Method *type);
             void visit(types::Function *type);
+            void visit(types::Module *type);
 
             void visit(ast::Block *block);
             void visit(ast::Name *expression);

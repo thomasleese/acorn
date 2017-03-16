@@ -1120,6 +1120,26 @@ void Function::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+std::string Module::name() const {
+    return "Module";
+}
+
+std::string Module::mangled_name() const {
+    return "mod";
+}
+
+TypeType *Module::type() const {
+    return nullptr;
+}
+
+Module *Module::with_parameters(std::vector<Type *> parameters) {
+    return nullptr;
+}
+
+void Module::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Visitor::~Visitor() {
 
 }

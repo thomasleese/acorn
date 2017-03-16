@@ -487,6 +487,17 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
+        class Module : public Type {
+        public:
+            std::string name() const;
+            std::string mangled_name() const;
+
+            TypeType *type() const;
+            Module *with_parameters(std::vector<Type *> parameters);
+
+            void accept(Visitor *visitor);
+        };
+
         class Visitor {
         public:
             virtual ~Visitor();
@@ -516,6 +527,7 @@ namespace acorn {
             virtual void visit(Tuple *type) = 0;
             virtual void visit(Method *type) = 0;
             virtual void visit(Function *type) = 0;
+            virtual void visit(Module *type) = 0;
         };
 
     };

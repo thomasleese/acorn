@@ -699,6 +699,10 @@ void CodeGenerator::visit(types::Function *type) {
     push_llvm_type_and_initialiser(llvm_type, struct_initialiser);
 }
 
+void CodeGenerator::visit(types::Module *type) {
+    push_null_llvm_type_and_initialiser();
+}
+
 void CodeGenerator::visit(ast::Block *block) {
     llvm::Value *last_value = nullptr;
 
