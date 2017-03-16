@@ -5,6 +5,6 @@ def test(a as Int, b as Int)
   a - b
 end
 
-let result = test(b=4, a=10)
+let result = test(b: 4, a: 10)
   exit(result)
 end

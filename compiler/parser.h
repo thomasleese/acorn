@@ -48,6 +48,7 @@ namespace acorn {
         ast::SequenceLiteral *read_sequence_literal();
         ast::MappingLiteral *read_mapping_literal();
         ast::RecordLiteral *read_record_literal();
+        ast::Argument *read_argument();
         ast::Call *read_call(ast::Expression *operand);
         ast::CCall *read_ccall();
         ast::Cast *read_cast(ast::Expression *operand);

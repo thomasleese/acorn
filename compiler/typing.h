@@ -59,6 +59,7 @@ namespace acorn {
             void visit(ast::MappingLiteral *mapping);
             void visit(ast::RecordLiteral *expression);
             void visit(ast::TupleLiteral *expression);
+            void visit(ast::Argument *node);
             void visit(ast::Call *expression);
             void visit(ast::CCall *ccall);
             void visit(ast::Cast *expression);
@@ -106,6 +107,7 @@ namespace acorn {
             void visit(ast::MappingLiteral *mapping);
             void visit(ast::RecordLiteral *expression);
             void visit(ast::TupleLiteral *expression);
+            void visit(ast::Argument *node);
             void visit(ast::Call *expression);
             void visit(ast::CCall *ccall);
             void visit(ast::Cast *expression);
@@ -117,7 +119,6 @@ namespace acorn {
             void visit(ast::Spawn *expression);
             void visit(ast::Switch *expression);
             void visit(ast::Parameter *parameter);
-
             void visit(ast::Let *definition);
             void visit(ast::FunctionDefinition *definition);
             void visit(ast::TypeDefinition *definition);

@@ -385,8 +385,12 @@ void Builder::visit(ast::TupleLiteral *expression) {
 
 }
 
-void Builder::visit(ast::Call *expression) {
+void Builder::visit(ast::Argument *node) {
 
+}
+
+void Builder::visit(ast::Call *expression) {
+    
 }
 
 void Builder::visit(ast::CCall *expression) {

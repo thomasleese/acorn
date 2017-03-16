@@ -137,6 +137,7 @@ namespace acorn {
             void visit(types::UnsafePointer *type);
             void visit(types::Record *type);
             void visit(types::Tuple *type);
+            void visit(types::Argument *type);
             void visit(types::Method *type);
             void visit(types::Function *type);
             void visit(types::Module *type);
@@ -152,6 +153,7 @@ namespace acorn {
             void visit(ast::MappingLiteral *mapping);
             void visit(ast::RecordLiteral *expression);
             void visit(ast::TupleLiteral *expression);
+            void visit(ast::Argument *node);
             void visit(ast::Call *expression);
             void visit(ast::CCall *expression);
             void visit(ast::Cast *cast);

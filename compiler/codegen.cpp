@@ -652,6 +652,10 @@ void CodeGenerator::visit(types::Tuple *type) {
     visit(static_cast<types::Record *>(type));
 }
 
+void CodeGenerator::visit(types::Argument *type) {
+
+}
+
 void CodeGenerator::visit(types::Method *type) {
     auto llvm_return_type = generate_type(nullptr, type->return_type());
     if (llvm_return_type == nullptr) {
@@ -873,14 +877,24 @@ void CodeGenerator::visit(ast::TupleLiteral *expression) {
     push_llvm_value(m_ir_builder->CreateLoad(instance));
 }
 
+void CodeGenerator::visit(ast::Argument *node) {
+    node->value()->accept(this);
+}
+
 void CodeGenerator::visit(ast::Call *expression) {
     expression->operand->accept(this);
 
     auto function_type = dynamic_cast<types::Function *>(expression->operand->type());
 
-    std::vector<types::Type *> argument_types;
+    std::vector<types::Argument *> argument_types;
     for (auto arg : expression->arguments) {
-        argument_types.push_back(arg->type());
+        auto arg_type = dynamic_cast<types::Argument *>(arg->type());
+        if (arg_type == nullptr) {
+            report(InternalError(arg, "Type generated was not an argument!"));
+            push_llvm_value(nullptr);
+            return;
+        }
+        argument_types.push_back(arg_type);
     }
 
     auto method = function_type->find_method(expression, argument_types);

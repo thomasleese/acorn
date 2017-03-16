@@ -245,6 +245,30 @@ void TupleLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+Argument::Argument(Token token, Name *name, Expression *value) : Expression(token), m_name(name), m_value(value) {
+
+}
+
+Argument::Argument(Expression *value) : Argument(value->token(), nullptr, value) {
+
+}
+
+Name *Argument::name() const {
+    return m_name.get();
+}
+
+bool Argument::has_name() const {
+    return m_name != nullptr;
+}
+
+Expression *Argument::value() const {
+    return m_value.get();
+}
+
+void Argument::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Call::Call(Token token) : Expression(token), operand(nullptr) {
 
 }
@@ -257,11 +281,11 @@ Call::Call(Token token, std::string name, Expression *arg1, Expression *arg2) : 
     this->operand = new Name(token, name);
 
     if (arg1) {
-        this->arguments.push_back(arg1);
+        this->arguments.push_back(new Argument(arg1));
     }
 
     if (arg2) {
-        this->arguments.push_back(arg2);
+        this->arguments.push_back(new Argument(arg2));
     }
 }
 
