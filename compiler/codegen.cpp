@@ -731,8 +731,7 @@ void CodeGenerator::visit(ast::VariableDeclaration *node) {
 
         symbol->value = variable;
 
-        auto insert_function = m_module->getFunction("_init_variables_");
-        m_ir_builder->SetInsertPoint(&insert_function->getEntryBlock());
+        m_ir_builder->SetInsertPoint(&m_init_variables_function->getEntryBlock());
     } else {
         auto insert_function = m_ir_builder->GetInsertBlock()->getParent();
         m_ir_builder->SetInsertPoint(&insert_function->getEntryBlock().front());
