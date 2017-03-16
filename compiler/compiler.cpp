@@ -27,8 +27,7 @@ using namespace acorn;
 using namespace acorn::compiler;
 using namespace acorn::diagnostics;
 
-Compiler::Compiler()
-{
+Compiler::Compiler() {
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -39,7 +38,6 @@ Compiler::Compiler()
     llvm::initializeCodeGen(*registry);
     llvm::initializeLoopStrengthReducePass(*registry);
     llvm::initializeLowerIntrinsicsPass(*registry);
-    //llvm::initializeUnreachableBlockElimPass(*registry);
 
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 }

@@ -1,2 +1,4 @@
-let pi = 3.14159265359
-let π = pi
+module Maths
+  let pi = 3.14159265359
+  let π = pi
+end
