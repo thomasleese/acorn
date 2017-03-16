@@ -406,6 +406,20 @@ namespace acorn {
             std::unique_ptr<Name> m_return_type;
         };
 
+        class Module : public Expression {
+        public:
+            Module(Token token, Name *name, Block *body);
+
+            Name *name() const;
+            Block *body() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Name> m_name;
+            std::unique_ptr<Block> m_body;
+        };
+
         class Import : public Expression {
         public:
             Import(Token token, StringLiteral *path);
@@ -455,6 +469,7 @@ namespace acorn {
             virtual void visit(VariableDefinition *definition) = 0;
             virtual void visit(FunctionDefinition *definition) = 0;
             virtual void visit(TypeDefinition *definition) = 0;
+            virtual void visit(Module *module) = 0;
             virtual void visit(Import *Expression) = 0;
             virtual void visit(SourceFile *module) = 0;
         };

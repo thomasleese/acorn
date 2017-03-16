@@ -180,6 +180,8 @@ Expression *Parser::read_expression(bool parse_comma) {
         return read_function_definition();
     } else if (is_token(Token::TypeKeyword)) {
         return read_type_definition();
+    } else if (is_token(Token::ModuleKeyword)) {
+        return read_module();
     } else {
         auto expr = read_unary_expression(parse_comma);
         return_if_null(expr);
@@ -647,7 +649,7 @@ Expression *Parser::read_parenthesis_expression() {
 }
 
 Expression *Parser::read_primary_expression() {
-    debug("Reading primary expression");
+    debug("read_primary_expression");
 
     if (is_token(Token::OpenParenthesis)) {
         return read_parenthesis_expression();
@@ -679,11 +681,10 @@ Expression *Parser::read_primary_expression() {
         return read_record_literal();
     } else if (is_token(Token::Name)) {
         return read_name(true);
-    } else if (!is_token_available()) {
+    } else {
         report(SyntaxError(front_token(), "primary expression"));
+        return nullptr;
     }
-
-    return nullptr;
 }
 
 Expression *Parser::read_operand_expression(bool parse_comma) {
@@ -837,6 +838,20 @@ TypeDefinition *Parser::read_type_definition() {
     }
 
     return definition;
+}
+
+Module *Parser::read_module() {
+    return_if_false(read_token(Token::ModuleKeyword, token));
+
+    auto name = read_name(false);
+    return_if_null(name);
+
+    return_if_false(skip_token(Token::Indent));
+
+    auto body = read_block();
+    return_if_null(name);
+
+    return new Module(token, name, body);
 }
 
 Import *Parser::read_import_expression() {

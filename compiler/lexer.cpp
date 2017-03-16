@@ -219,6 +219,8 @@ bool Lexer::read_keyword(Token &token) const {
         token.kind = Token::ImportKeyword;
     } else if (token.lexeme == "type") {
         token.kind = Token::TypeKeyword;
+    } else if (token.lexeme == "module") {
+        token.kind = Token::ModuleKeyword;
     } else {
         return false;
     }

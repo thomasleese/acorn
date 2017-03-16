@@ -1153,6 +1153,10 @@ void CodeGenerator::visit(ast::TypeDefinition *definition) {
     push_llvm_value(nullptr);
 }
 
+void CodeGenerator::visit(ast::Module *module) {
+    module->body()->accept(this);
+}
+
 void CodeGenerator::visit(ast::Import *statement) {
     report(InternalError(statement, "N/A"));
 }

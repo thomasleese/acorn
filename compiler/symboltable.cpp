@@ -519,6 +519,10 @@ void Builder::visit(ast::TypeDefinition *definition) {
     pop_scope();
 }
 
+void Builder::visit(ast::Module *module) {
+    module->body()->accept(this);
+}
+
 void Builder::visit(ast::Import *statement) {
 
 }

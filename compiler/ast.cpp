@@ -498,6 +498,22 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
+Module::Module(Token token, Name *name, Block *body) : Expression(token), m_name(name), m_body(body) {
+
+}
+
+Name *Module::name() const {
+    return m_name.get();
+}
+
+Block *Module::body() const {
+    return m_body.get();
+}
+
+void Module::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 Import::Import(Token token, StringLiteral *path) : Expression(token) {
     this->path = path;
 }

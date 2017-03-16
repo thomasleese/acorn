@@ -18,7 +18,7 @@ ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space
     Parser parser(lexer);
     auto module = parser.parse(filename);
 
-    if (lexer.has_errors() || parser.has_errors()) {
+    if (lexer.has_errors() || parser.has_errors() || module == nullptr) {
         return nullptr;
     }
 
@@ -62,11 +62,14 @@ int main(int argc, char *argv[]) {
 
     symboltable::Namespace *root_namespace;
     auto module = parse(filename, &root_namespace);
-
-    compiler::Compiler compiler;
-    if (compiler.compile(module, root_namespace, filename)) {
-        return 0;
-    } else {
+    if (module == nullptr) {
         return 1;
     }
+
+    compiler::Compiler compiler;
+    if (!compiler.compile(module, root_namespace, filename)) {
+        return 2;
+    }
+
+    return 0;
 }

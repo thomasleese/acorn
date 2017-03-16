@@ -585,6 +585,11 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
     pop_scope();
 }
 
+void Inferrer::visit(ast::Module *module) {
+    module->body()->accept(this);
+    module->copy_type_from(module->body());
+}
+
 void Inferrer::visit(ast::Import *statement) {
     statement->path->accept(this);
     statement->set_type(new types::Void());
@@ -851,6 +856,11 @@ void Checker::visit(ast::TypeDefinition *definition) {
     }
 
     pop_scope();
+}
+
+void Checker::visit(ast::Module *module) {
+    module->body()->accept(this);
+    check_not_null(module);
 }
 
 void Checker::visit(ast::Import *statement) {

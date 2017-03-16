@@ -355,6 +355,17 @@ void PrettyPrinter::visit(ast::TypeDefinition *definition)
     ss << indentation() << ")\n";
 }
 
+void PrettyPrinter::visit(ast::Module *module) {
+    ss << indentation() << "(Module [" << type_of(module) << "]\n";
+
+    indent++;
+    module->body()->accept(this);
+    module->name()->accept(this);
+    indent--;
+
+    ss << indentation() << ")\n";
+}
+
 void PrettyPrinter::visit(ast::Import *statement)
 {
     ss << indentation() << "(Import [" << type_of(statement) << "]\n";

@@ -67,6 +67,7 @@ namespace acorn {
         ast::VariableDefinition *read_variable_definition();
         ast::FunctionDefinition *read_function_definition();
         ast::TypeDefinition *read_type_definition();
+        ast::Module *read_module();
         ast::Import *read_import_expression();
 
     private:
