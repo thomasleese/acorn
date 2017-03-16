@@ -586,8 +586,15 @@ void Inferrer::visit(ast::TypeDefinition *definition) {
 }
 
 void Inferrer::visit(ast::Module *module) {
+    auto symbol = scope()->lookup(this, module->name());
+    return_if_null(symbol);
+
+    push_scope(symbol);
+
     module->body()->accept(this);
     module->copy_type_from(module->body());
+
+    pop_scope();
 }
 
 void Inferrer::visit(ast::Import *statement) {
@@ -600,8 +607,7 @@ void Inferrer::visit(ast::SourceFile *module) {
     module->copy_type_from(module->code);
 }
 
-Checker::Checker(symboltable::Namespace *root_namespace)
-{
+Checker::Checker(symboltable::Namespace *root_namespace) {
     push_scope(root_namespace);
 }
 
@@ -859,8 +865,15 @@ void Checker::visit(ast::TypeDefinition *definition) {
 }
 
 void Checker::visit(ast::Module *module) {
+    auto symbol = scope()->lookup(this, module->name());
+    return_if_null(symbol);
+
+    push_scope(symbol);
+
     module->body()->accept(this);
     check_not_null(module);
+
+    pop_scope();
 }
 
 void Checker::visit(ast::Import *statement) {

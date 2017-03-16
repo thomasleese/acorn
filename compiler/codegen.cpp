@@ -1154,7 +1154,12 @@ void CodeGenerator::visit(ast::TypeDefinition *definition) {
 }
 
 void CodeGenerator::visit(ast::Module *module) {
+    auto symbol = scope()->lookup(this, module->name());
+    return_and_push_null_if_null(symbol);
+
+    push_scope(symbol);
     module->body()->accept(this);
+    pop_scope();
 }
 
 void CodeGenerator::visit(ast::Import *statement) {

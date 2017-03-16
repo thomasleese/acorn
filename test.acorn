@@ -22,4 +22,6 @@ def modify_integer(n as Int)
   end
 end
 
+exit(give_me_a_five())
+
 exit(modify_integer(9))

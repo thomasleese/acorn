@@ -54,6 +54,7 @@ namespace acorn {
         class Symbol {
         public:
             explicit Symbol(std::string name);
+            explicit Symbol(ast::Name *name);
 
             std::string name;
             types::Type *type;

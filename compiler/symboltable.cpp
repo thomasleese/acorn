@@ -135,11 +135,12 @@ Namespace* Namespace::clone() const {
     return new_namespace;
 }
 
-Symbol::Symbol(std::string name) : value(nullptr) {
+Symbol::Symbol(std::string name) : type(nullptr), value(nullptr), nameSpace(nullptr), node(nullptr), is_builtin(false) {
     this->name = name;
-    this->type = nullptr;
-    this->nameSpace = nullptr;
-    this->is_builtin = false;
+}
+
+Symbol::Symbol(ast::Name *name) : Symbol(name->value()) {
+
 }
 
 bool Symbol::is_function() const {
@@ -520,7 +521,13 @@ void Builder::visit(ast::TypeDefinition *definition) {
 }
 
 void Builder::visit(ast::Module *module) {
+    auto symbol = new Symbol(module->name());
+    symbol->nameSpace = new Namespace(scope());
+    scope()->insert(this, module, symbol);
+
+    push_scope(symbol);
     module->body()->accept(this);
+    pop_scope();
 }
 
 void Builder::visit(ast::Import *statement) {
