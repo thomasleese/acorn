@@ -1023,7 +1023,7 @@ void CodeGenerator::visit(ast::SourceFile *module) {
     llvm::Function *function = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "_init_variables_", m_module);
     llvm::BasicBlock *bb1 = llvm::BasicBlock::Create(m_context, "entry", function);
 
-    fType = llvm::FunctionType::get(llvm::Type::getInt32Ty(m_context), false);
+    fType = llvm::FunctionType::get(m_ir_builder->getInt32Ty(), false);
     llvm::Function *mainFunction = llvm::Function::Create(fType, llvm::Function::ExternalLinkage, "main", m_module);
     llvm::BasicBlock *main_bb = llvm::BasicBlock::Create(m_context, "entry", mainFunction);
 
@@ -1192,14 +1192,12 @@ llvm::Function *CodeGenerator::builtin_create_llvm_function(std::string name, in
       function_symbol->value = variable;
     }
 
-    auto i32 = llvm::IntegerType::getInt32Ty(m_module->getContext());
-
     auto insert_function = m_module->getFunction("_init_builtins");
     m_ir_builder->SetInsertPoint(&insert_function->getEntryBlock());
 
     std::vector<llvm::Value *> indexes;
-    indexes.push_back(llvm::ConstantInt::get(i32, 0));
-    indexes.push_back(llvm::ConstantInt::get(i32, index));
+    indexes.push_back(m_ir_builder->getInt32(0));
+    indexes.push_back(m_ir_builder->getInt32(index));
     auto gep = m_ir_builder->CreateInBoundsGEP(function_symbol->value, indexes, "f");
     m_ir_builder->CreateStore(f, gep);
 
@@ -1219,11 +1217,8 @@ void CodeGenerator::builtin_initialise_boolean_variable(std::string name, bool v
 void CodeGenerator::builtin_initialise_function(llvm::Function *function, int no_arguments) {
     m_args.clear();
 
-    if (!function->arg_empty()) {
-        m_args.push_back(&function->getArgumentList().front());
-        for (size_t i = 1; i < function->arg_size(); i++) {
-            m_args.push_back(function->getArgumentList().getNext(m_args[i - 1]));
-        }
+    for (auto &arg : function->getArgumentList()) {
+        m_args.push_back(&arg);
     }
 
     assert(m_args.size() == function->arg_size());
