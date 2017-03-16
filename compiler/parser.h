@@ -34,7 +34,7 @@ namespace acorn {
         bool is_and_skip_token(Token::Kind kind);
         bool skip_deindent_and_end_token();
 
-        ast::Block *read_block(bool in_switch = false);
+        ast::Block *read_block(bool read_end = true);
         ast::Expression *read_expression(bool parse_comma = true);
         ast::Name *read_name_or_operator(Token::Kind kind, bool accept_parameters);
         ast::Name *read_name(bool accept_parameters);

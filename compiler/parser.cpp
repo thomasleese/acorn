@@ -149,30 +149,30 @@ bool Parser::skip_deindent_and_end_token() {
     return skip_token(Token::Deindent) && skip_token(Token::EndKeyword);
 }
 
-Block *Parser::read_block(bool in_switch) {
-    debug("Reading Block...");
+Block *Parser::read_block(bool read_end) {
+    debug("read_block(read_end=" + std::string(read_end ? "true" : "false") + ")");
 
-    return_if_false(fill_token())
+    return_if_false(read_token(Token::Indent, token));
 
-    auto code = new Block(front_token());
+    auto block = new Block(token);
 
-    while (!is_token(Token::Deindent) && !(in_switch && (is_token(Token::CaseKeyword) || is_token(Token::DefaultKeyword)))) {
+    while (!is_token(Token::Deindent)) {
         auto expression = read_expression();
         return_if_null(expression);
-        code->add_expression(expression);
+        block->add_expression(expression);
     }
 
-    if (in_switch) {
-        assert(is_token(Token::CaseKeyword) || is_token(Token::DefaultKeyword) || is_token(Token::Deindent));
-    } else {
-        return_if_false(skip_deindent_and_end_token());
+    return_if_false(skip_token(Token::Deindent));
+
+    if (read_end) {
+        return_if_false(skip_token(Token::EndKeyword));
     }
 
-    return code;
+    return block;
 }
 
 Expression *Parser::read_expression(bool parse_comma) {
-    debug("Reading expression...");
+    debug("read_expression(parse_comma=" + std::string(parse_comma ? "true" : "false") + ")");
 
     if (is_token(Token::LetKeyword)) {
         return read_variable_definition();
@@ -573,7 +573,7 @@ Case *Parser::read_case() {
     return_if_null(assignment);
     return_if_false(skip_token(Token::Newline));
 
-    auto code = read_block(true);
+    auto code = read_block(false);
     return_if_null(code);
 
     return new Case(token, condition, assignment, code);
@@ -596,11 +596,11 @@ Switch *Parser::read_switch() {
 
     Block *default_block = nullptr;
     if (is_token(Token::DefaultKeyword)) {
-        default_block = read_block(true);
+        default_block = read_block(false);
         return_if_null(default_block);
     }
 
-    return_if_false(skip_token(Token::Deindent));
+    return_if_false(skip_token(Token::EndKeyword));
 
     return new Switch(token, expression, cases, default_block);
 }
@@ -845,8 +845,6 @@ Module *Parser::read_module() {
 
     auto name = read_name(false);
     return_if_null(name);
-
-    return_if_false(skip_token(Token::Indent));
 
     auto body = read_block();
     return_if_null(name);
