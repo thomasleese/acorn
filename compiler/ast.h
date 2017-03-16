@@ -207,6 +207,11 @@ namespace acorn {
             std::vector<std::unique_ptr<Expression> > m_elements;
         };
 
+        class Argument : public Node {
+        public:
+            Argument(Token token, Name *name, Expression *value);
+        };
+
         class Call : public Expression {
         public:
             explicit Call(Token token);
