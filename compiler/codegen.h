@@ -72,6 +72,8 @@ namespace acorn {
             CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout);
             ~CodeGenerator();
 
+            llvm::Module *module() const;
+
             llvm::Type *take_type(ast::Expression *expression);
             llvm::Constant *take_initialiser(ast::Node *node);
 
@@ -80,6 +82,29 @@ namespace acorn {
             types::Type *get_type_parameter(types::ParameterType *key);
             types::Type *get_type_parameter(types::Parameter *key);
 
+            llvm::Type *generate_type(ast::Expression *expression, types::Type *type);
+            llvm::Type *generate_type(ast::Expression *expression);
+
+            llvm::Function *generate_function(ast::FunctionDefinition *definition);
+            llvm::Function *generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *>);
+
+            llvm::BasicBlock *create_basic_block(std::string name) const;
+
+        public:
+            void builtin_generate();
+
+            llvm::Function *builtin_generate_function(std::string name, types::Method *method, std::string llvm_name);
+
+        private:
+            void builtin_generate_sizeof(types::Method *method, llvm::Function *function);
+            void builtin_generate_strideof(types::Method *method, llvm::Function *function);
+
+            llvm::Function *builtin_create_llvm_function(std::string name, int index);
+
+            void builtin_initialise_boolean_variable(std::string name, bool value);
+            void builtin_initialise_function(llvm::Function *function, int no_arguments);
+
+        public:
             void visit_constructor(types::TypeType *type);
 
             void visit(types::ParameterType *type);
@@ -108,18 +133,7 @@ namespace acorn {
             void visit(types::Method *type);
             void visit(types::Function *type);
 
-            llvm::Module *module() const;
-
-            llvm::Type *generate_type(ast::Expression *expression, types::Type *type);
-            llvm::Type *generate_type(ast::Expression *expression);
-
-            llvm::Function *generate_function(ast::FunctionDefinition *definition);
-            llvm::Function *generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *>);
-
-            llvm::BasicBlock *create_basic_block(std::string name) const;
-
             void visit(ast::Block *block);
-
             void visit(ast::Name *expression);
             void visit(ast::VariableDeclaration *node);
             void visit(ast::IntegerLiteral *expression);
@@ -140,30 +154,12 @@ namespace acorn {
             void visit(ast::Return *expression);
             void visit(ast::Spawn *expression);
             void visit(ast::Switch *expression);
-
             void visit(ast::Parameter *parameter);
-
             void visit(ast::VariableDefinition *definition);
             void visit(ast::FunctionDefinition *definition);
             void visit(ast::TypeDefinition *definition);
-
             void visit(ast::Import *statement);
-
             void visit(ast::SourceFile *module);
-
-        public:
-            void builtin_generate();
-
-            llvm::Function *builtin_generate_function(std::string name, types::Method *method, std::string llvm_name);
-
-        private:
-            void builtin_generate_sizeof(types::Method *method, llvm::Function *function);
-            void builtin_generate_strideof(types::Method *method, llvm::Function *function);
-
-            llvm::Function *builtin_create_llvm_function(std::string name, int index);
-
-            void builtin_initialise_boolean_variable(std::string name, bool value);
-            void builtin_initialise_function(llvm::Function *function, int no_arguments);
 
         private:
             llvm::LLVMContext m_context;
@@ -175,6 +171,9 @@ namespace acorn {
             std::vector<llvm::Argument *> m_args;
 
             std::map<types::ParameterType *, types::Type *> m_type_parameters;
+
+            llvm::Function *m_init_builtins_function;
+            llvm::Function *m_init_variables_function;
         };
 
     }
