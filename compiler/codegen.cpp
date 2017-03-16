@@ -30,6 +30,7 @@ using namespace acorn::codegen;
 using namespace acorn::diagnostics;
 
 #define return_if_null(thing) if (thing == nullptr) return;
+#define return_and_push_null_if_null(thing) if (thing == nullptr) { push_llvm_value(nullptr); return; }
 #define return_null_if_null(thing) if (thing == nullptr) return nullptr;
 
 std::string codegen::mangle_method(std::string name, types::Method *type) {
@@ -167,21 +168,28 @@ llvm::Type *CodeGenerator::generate_type(ast::Expression *expression) {
     return generate_type(expression, expression->type());
 }
 
+void CodeGenerator::push_llvm_type_and_initialiser(llvm::Type *type, llvm::Constant *initialiser) {
+    push_llvm_type(type);
+    push_llvm_initialiser(initialiser);
+}
+
+void CodeGenerator::push_null_llvm_type_and_initialiser() {
+    push_llvm_type_and_initialiser(nullptr, nullptr);
+}
+
 llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *definition) {
     std::map<types::ParameterType *, types::Type *> params;
     return generate_function(definition, params);
 }
 
 llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *> type_parameters) {
-    auto &context = m_module->getContext();
-
     auto function_symbol = scope()->lookup(this, definition->name());
     auto function_type = static_cast<types::Function *>(function_symbol->type);
 
     auto method = static_cast<types::Method *>(definition->type());
     auto symbol = function_symbol->nameSpace->lookup_by_node(this, definition);
 
-    std::string llvm_function_name = codegen::mangle_method(function_symbol->name, method);
+    auto llvm_function_name = codegen::mangle_method(function_symbol->name, method);
 
     if (!type_parameters.empty()) {
         llvm_function_name += "_";
@@ -189,9 +197,7 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
             auto t = entry.second;
             while (auto p = dynamic_cast<types::Parameter *>(t)) {
                 t = get_type_parameter(p);
-                if (t == nullptr) {
-                    return nullptr;
-                }
+                return_null_if_null(t);
             }
             llvm_function_name += t->mangled_name();
         }
@@ -203,18 +209,16 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
         push_type_parameter(entry.first, entry.second);
     }
 
-    llvm::Type *llvmType = generate_type(definition);
-    if (llvmType == nullptr) {
-        return nullptr;
-    }
+    auto llvm_type = generate_type(definition);
+    return_null_if_null(llvm_type);
 
-    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(llvmType);
-    llvm::Function *function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
+    auto llvm_function_type = static_cast<llvm::FunctionType *>(llvm_type);
+    auto function = llvm::Function::Create(llvm_function_type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
 
     auto old_insert_point = m_ir_builder->saveIP();
 
-    llvm::BasicBlock *basicBlock = llvm::BasicBlock::Create(context, "entry", function);
-    m_ir_builder->SetInsertPoint(basicBlock);
+    auto entry_bb = create_entry_basic_block(function);
+    m_ir_builder->SetInsertPoint(entry_bb);
 
     for (ast::Name *param : definition->name()->parameters()) {
         auto s = scope()->lookup(this, definition, param->value());
@@ -245,14 +249,9 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
     definition->body->accept(this);
 
     auto value = pop_llvm_value();
-    m_ir_builder->CreateRet(value);
+    return_null_if_null(value);
 
-    std::string str;
-    llvm::raw_string_ostream stream(str);
-    if (llvm::verifyFunction(*function, &stream)) {
-        function->dump();
-        report(InternalError(definition, stream.str()));
-    }
+    m_ir_builder->CreateRet(value);
 
     pop_scope();
 
@@ -262,6 +261,14 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
 
     m_ir_builder->restoreIP(old_insert_point);
 
+    std::string str;
+    llvm::raw_string_ostream stream(str);
+    if (llvm::verifyFunction(*function, &stream)) {
+        function->dump();
+        report(InternalError(definition, stream.str()));
+        return nullptr;
+    }
+
     symbol->value = function;
 
     if (function_symbol->value == nullptr) {
@@ -270,6 +277,7 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
       return_null_if_null(llvm_function_type);
 
       auto llvm_initialiser = take_initialiser(definition);
+      return_null_if_null(llvm_initialiser);
 
       auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
                                                llvm::GlobalValue::InternalLinkage,
@@ -278,37 +286,21 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
       function_symbol->value = variable;
     }
 
-    int index = 0;
-    for (int i = 0; i < function_type->no_methods(); i++) {
-        if (function_type->get_method(i) == method) {
-            index = i;
-        }
-    }
-
-    std::vector<llvm::Value *> indexes;
-    indexes.push_back(m_ir_builder->getInt32(0));
-    indexes.push_back(m_ir_builder->getInt32(index));
-    auto gep = m_ir_builder->CreateInBoundsGEP(function_symbol->value, indexes, "f");
+    int index = function_type->index_of(method);
+    auto gep_index = build_gep_index({ 0, index });
+    auto gep = m_ir_builder->CreateInBoundsGEP(function_symbol->value, gep_index);
     m_ir_builder->CreateStore(function, gep);
 
     return function;
-}
-
-llvm::BasicBlock *CodeGenerator::create_basic_block(std::string name) const {
-    auto parent = m_ir_builder->GetInsertBlock()->getParent();
-    return llvm::BasicBlock::Create(m_module->getContext(), name, parent);
 }
 
 void CodeGenerator::builtin_generate() {
     builtin_initialise_boolean_variable("nil", false);
     builtin_initialise_boolean_variable("true", true);
     builtin_initialise_boolean_variable("false", false);
-    //initialise_boolean_variable(table, "Int32", false);
-    //initialise_boolean_variable(table, "Int64", false);
-    //initialise_boolean_variable(table, "UnsafePointer", false);
 
     // not
-    llvm::Function *f = builtin_create_llvm_function("not", 0);
+    auto f = builtin_create_llvm_function("not", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateNot(m_args[0]));
 
     // multiplication
@@ -359,12 +351,12 @@ void CodeGenerator::builtin_generate() {
 llvm::Function *CodeGenerator::builtin_generate_function(std::string name, types::Method *method, std::string llvm_name) {
     method->accept(this);
 
-    auto type = static_cast<llvm::FunctionType *>(take_type(nullptr));
-    assert(type);
+    auto llvm_function_type = static_cast<llvm::FunctionType *>(take_type(nullptr));
+    return_null_if_null(llvm_function_type);
 
     auto old_insert_point = m_ir_builder->saveIP();
 
-    auto function = llvm::Function::Create(type, llvm::Function::ExternalLinkage, llvm_name, m_module);
+    auto function = llvm::Function::Create(llvm_function_type, llvm::Function::ExternalLinkage, llvm_name, m_module);
     builtin_initialise_function(function, method->parameter_types().size());
 
     if (name == "sizeof") {
@@ -372,9 +364,7 @@ llvm::Function *CodeGenerator::builtin_generate_function(std::string name, types
     } else if (name == "strideof") {
         builtin_generate_strideof(method, function);
     } else {
-        std::vector<llvm::Value *> index_list;
-        index_list.push_back(m_args[1]);
-        auto gep = m_ir_builder->CreateInBoundsGEP(m_args[0], index_list);
+        auto gep = m_ir_builder->CreateInBoundsGEP(m_args[0], { m_args[0] });
 
         if (name == "setindex") {
             m_ir_builder->CreateStore(m_args[2], gep);
@@ -391,8 +381,8 @@ llvm::Function *CodeGenerator::builtin_generate_function(std::string name, types
 
 void CodeGenerator::builtin_generate_sizeof(types::Method *method, llvm::Function *function) {
     auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
-    type->create(nullptr, nullptr)->accept(this);
-    auto llvm_type = take_type(nullptr);
+    auto llvm_type = generate_type(nullptr, type->create(nullptr, nullptr));
+    return_if_null(llvm_type);
 
     uint64_t size = m_data_layout->getTypeStoreSize(llvm_type);
     m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
@@ -400,8 +390,8 @@ void CodeGenerator::builtin_generate_sizeof(types::Method *method, llvm::Functio
 
 void CodeGenerator::builtin_generate_strideof(types::Method *method, llvm::Function *function) {
     auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
-    type->create(nullptr, nullptr)->accept(this);
-    auto llvm_type = take_type(nullptr);
+    auto llvm_type = generate_type(nullptr, type->create(nullptr, nullptr));
+    return_if_null(llvm_type);
 
     uint64_t size = m_data_layout->getTypeAllocSize(llvm_type);
     m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
@@ -410,48 +400,47 @@ void CodeGenerator::builtin_generate_strideof(types::Method *method, llvm::Funct
 llvm::Function *CodeGenerator::builtin_create_llvm_function(std::string name, int index) {
     auto function_symbol = scope()->lookup(nullptr, nullptr, name);
 
-    auto functionType = static_cast<types::Function *>(function_symbol->type);
-    auto methodType = functionType->get_method(index);
+    auto function_type = static_cast<types::Function *>(function_symbol->type);
+    auto method_type = function_type->get_method(index);
 
-    std::string mangled_name = codegen::mangle_method(name, methodType);
+    std::string mangled_name = codegen::mangle_method(name, method_type);
 
-    methodType->accept(this);
+    auto llvm_type = generate_type(nullptr, method_type);
+    auto llvm_type_for_method = static_cast<llvm::FunctionType *>(llvm_type);
+    return_null_if_null(llvm_type_for_method);
 
-    llvm::FunctionType *type = static_cast<llvm::FunctionType *>(take_type(nullptr));
-    assert(type);
-
-    llvm::Function *f = llvm::Function::Create(type, llvm::Function::ExternalLinkage, mangled_name, m_module);
-    f->addFnAttr(llvm::Attribute::AlwaysInline);
+    auto function = llvm::Function::Create(llvm_type_for_method, llvm::Function::ExternalLinkage, mangled_name, m_module);
+    function->addFnAttr(llvm::Attribute::AlwaysInline);
 
     if (function_symbol->value == nullptr) {
-      // check if global symbol is set
-      functionType->accept(this);
+      auto llvm_type_for_function = generate_type(nullptr, function_type);
+      return_null_if_null(llvm_type_for_function);
+      auto llvm_initialiser_for_function = take_initialiser(nullptr);
+      return_null_if_null(llvm_initialiser_for_function);
 
-      auto llvm_function_type = take_type(nullptr);
-      auto llvm_initialiser = take_initialiser(nullptr);
-
-      auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
-                                               llvm::GlobalValue::InternalLinkage,
-                                               llvm_initialiser, name);
+      auto variable = new llvm::GlobalVariable(
+          *m_module, llvm_type_for_function, false,
+          llvm::GlobalValue::InternalLinkage, llvm_initialiser_for_function,
+          name
+      );
 
       function_symbol->value = variable;
     }
 
     m_ir_builder->SetInsertPoint(&m_init_builtins_function->getEntryBlock());
 
-    std::vector<llvm::Value *> indexes;
-    indexes.push_back(m_ir_builder->getInt32(0));
-    indexes.push_back(m_ir_builder->getInt32(index));
-    auto gep = m_ir_builder->CreateInBoundsGEP(function_symbol->value, indexes, "f");
-    m_ir_builder->CreateStore(f, gep);
+    auto gep_index = build_gep_index({ 0, index });
+    auto gep = m_ir_builder->CreateInBoundsGEP(function_symbol->value, gep_index);
+    m_ir_builder->CreateStore(function, gep);
 
-    builtin_initialise_function(f, methodType->parameter_types().size());
+    builtin_initialise_function(function, method_type->parameter_types().size());
 
-    return f;
+    return function;
 }
 
 void CodeGenerator::builtin_initialise_boolean_variable(std::string name, bool value) {
     auto symbol = scope()->lookup(nullptr, nullptr, name);
+    return_if_null(symbol);
     symbol->value = new llvm::GlobalVariable(
         *m_module, m_ir_builder->getInt1Ty(), false,
         llvm::GlobalValue::InternalLinkage, m_ir_builder->getInt1(value), name
@@ -460,23 +449,55 @@ void CodeGenerator::builtin_initialise_boolean_variable(std::string name, bool v
 
 void CodeGenerator::builtin_initialise_function(llvm::Function *function, int no_arguments) {
     m_args.clear();
-
     for (auto &arg : function->getArgumentList()) {
         m_args.push_back(&arg);
     }
 
-    assert(m_args.size() == function->arg_size());
-    assert(m_args.size() == no_arguments);
+    if (static_cast<int>(m_args.size()) != no_arguments) {
+        report(InternalError(nullptr, "Builtin given number of arguments doesn't match actual."));
+        return;
+    }
 
-    auto &context = function->getContext();
-
-    auto basic_block = llvm::BasicBlock::Create(context, "entry", function);
+    auto basic_block = create_entry_basic_block(function);
     m_ir_builder->SetInsertPoint(basic_block);
 }
 
+std::vector<llvm::Value *> CodeGenerator::build_gep_index(std::initializer_list<int> indexes) {
+    std::vector<llvm::Value *> values;
+    for (int index : indexes) {
+        values.push_back(m_ir_builder->getInt32(index));
+    }
+    return values;
+}
+
+llvm::BasicBlock *CodeGenerator::create_basic_block(std::string name, llvm::Function *function) {
+    if (function == nullptr) {
+        function = m_ir_builder->GetInsertBlock()->getParent();
+    }
+
+    return llvm::BasicBlock::Create(m_context, name, function);
+}
+
+llvm::BasicBlock *CodeGenerator::create_entry_basic_block(llvm::Function *function) {
+    return create_basic_block("entry", function);
+}
+
+llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
+    node->accept(this);
+    auto value = pop_llvm_value();
+
+    if (value == nullptr) {
+        report(InternalError(node, "No LLVM value generated!"));
+    }
+
+    return value;
+}
+
 void CodeGenerator::visit_constructor(types::TypeType *type) {
-    push_llvm_type(m_ir_builder->getInt1Ty());
-    push_llvm_initialiser(m_ir_builder->getInt1(0));
+    push_llvm_type_and_initialiser(
+        m_ir_builder->getInt1Ty(),
+        m_ir_builder->getInt1(0)
+    );
 }
 
 void CodeGenerator::visit(types::ParameterType *type) {
@@ -534,33 +555,40 @@ void CodeGenerator::visit(types::TypeDescriptionType *type) {
 void CodeGenerator::visit(types::Parameter *type) {
     auto it = m_type_parameters.find(type->type());
     if (it == m_type_parameters.end()) {
-        push_llvm_type(nullptr);
-        push_llvm_initialiser(nullptr);
+        push_null_llvm_type_and_initialiser();
     } else {
         it->second->accept(this);
     }
 }
 
 void CodeGenerator::visit(types::Void *type) {
-    push_llvm_type(m_ir_builder->getInt1Ty());
-    push_llvm_initialiser(m_ir_builder->getInt1(0));
+    push_llvm_type_and_initialiser(
+        m_ir_builder->getInt1Ty(),
+        m_ir_builder->getInt1(0)
+    );
 }
 
 void CodeGenerator::visit(types::Boolean *type) {
-    push_llvm_type(m_ir_builder->getInt1Ty());
-    push_llvm_initialiser(m_ir_builder->getInt1(0));
+    push_llvm_type_and_initialiser(
+        m_ir_builder->getInt1Ty(),
+        m_ir_builder->getInt1(0)
+    );
 }
 
 void CodeGenerator::visit(types::Integer *type) {
     const unsigned int size = type->size();
-    push_llvm_type(m_ir_builder->getIntNTy(size));
-    push_llvm_initialiser(m_ir_builder->getIntN(size, 0));
+    push_llvm_type_and_initialiser(
+        m_ir_builder->getIntNTy(size),
+        m_ir_builder->getIntN(size, 0)
+    );
 }
 
 void CodeGenerator::visit(types::UnsignedInteger *type) {
     const unsigned int size = type->size();
-    push_llvm_type(m_ir_builder->getIntNTy(size));
-    push_llvm_initialiser(m_ir_builder->getIntN(size, 0));
+    push_llvm_type_and_initialiser(
+        m_ir_builder->getIntNTy(size),
+        m_ir_builder->getIntN(size, 0)
+    );
 }
 
 void CodeGenerator::visit(types::Float *type) {
@@ -579,22 +607,21 @@ void CodeGenerator::visit(types::Float *type) {
             break;
     }
 
-    push_llvm_type(llvm_type);
-    push_llvm_initialiser(llvm::ConstantFP::get(llvm_type, 0));
+    push_llvm_type_and_initialiser(
+        llvm_type, llvm::ConstantFP::get(llvm_type, 0)
+    );
 }
 
 void CodeGenerator::visit(types::UnsafePointer *type) {
-    type->element_type()->accept(this);
-    auto element_type = take_type(nullptr);
-
-    if (element_type) {
-        auto pointer_type = llvm::PointerType::getUnqual(element_type);
-        push_llvm_type(pointer_type);
-        push_llvm_initialiser(llvm::ConstantPointerNull::get(pointer_type));
-    } else {
-        push_llvm_type(nullptr);
-        push_llvm_initialiser(nullptr);
+    auto llvm_element_type = generate_type(nullptr, type->element_type());
+    if (llvm_element_type == nullptr) {
+        push_null_llvm_type_and_initialiser();
+        return;
     }
+
+    auto llvm_pointer_type = llvm::PointerType::getUnqual(llvm_element_type);
+    push_llvm_type(llvm_pointer_type);
+    push_llvm_initialiser(llvm::ConstantPointerNull::get(llvm_pointer_type));
 }
 
 void CodeGenerator::visit(types::Record *type) {
@@ -602,14 +629,11 @@ void CodeGenerator::visit(types::Record *type) {
     std::vector<llvm::Constant *> llvm_initialisers;
 
     for (auto field_type : type->field_types()) {
-        field_type->accept(this);
-
-        llvm::Type *llvm_field_type = take_type(nullptr);
-        llvm::Constant *llvm_field_initialiser = take_initialiser(nullptr);
+        auto llvm_field_type = generate_type(nullptr, field_type);
+        auto llvm_field_initialiser = take_initialiser(nullptr);
 
         if (llvm_field_type == nullptr || llvm_field_initialiser == nullptr) {
-            push_llvm_type(nullptr);
-            push_llvm_initialiser(nullptr);
+            push_null_llvm_type_and_initialiser();
             return;
         }
 
@@ -629,23 +653,17 @@ void CodeGenerator::visit(types::Tuple *type) {
 }
 
 void CodeGenerator::visit(types::Method *type) {
-    type->return_type()->accept(this);
-    auto llvm_return_type = take_type(nullptr);
-
-    if (!llvm_return_type) {
-        push_llvm_type(nullptr);
-        push_llvm_initialiser(nullptr);
+    auto llvm_return_type = generate_type(nullptr, type->return_type());
+    if (llvm_return_type == nullptr) {
+        push_null_llvm_type_and_initialiser();
         return;
     }
 
     std::vector<llvm::Type *> llvm_parameter_types;
     for (auto parameter_type : type->parameter_types()) {
-        parameter_type->accept(this);
-        auto llvm_parameter_type = take_type(nullptr);
-
-        if (!llvm_parameter_type) {
-            push_llvm_type(nullptr);
-            push_llvm_initialiser(nullptr);
+        auto llvm_parameter_type = generate_type(nullptr, parameter_type);
+        if (llvm_parameter_type == nullptr) {
+            push_null_llvm_type_and_initialiser();
             return;
         }
 
@@ -669,9 +687,8 @@ void CodeGenerator::visit(types::Function *type) {
 
     for (int i = 0; i < type->no_methods(); i++) {
         auto method = type->get_method(i);
-        method->accept(this);
-        auto function_type = take_type(nullptr);
-        auto pointer_type = llvm::PointerType::getUnqual(function_type);
+        auto llvm_type_for_method = generate_type(nullptr, method);
+        auto pointer_type = llvm::PointerType::getUnqual(llvm_type_for_method);
         function_types.push_back(pointer_type);
         llvm_initialisers.push_back(llvm::ConstantPointerNull::get(pointer_type));
     }
@@ -679,8 +696,7 @@ void CodeGenerator::visit(types::Function *type) {
     auto llvm_type = llvm::StructType::get(m_context, function_types);
     auto struct_initialiser = llvm::ConstantStruct::get(llvm_type, llvm_initialisers);
 
-    push_llvm_type(llvm_type);
-    push_llvm_initialiser(struct_initialiser);
+    push_llvm_type_and_initialiser(llvm_type, struct_initialiser);
 }
 
 void CodeGenerator::visit(ast::Block *block) {
@@ -689,6 +705,7 @@ void CodeGenerator::visit(ast::Block *block) {
     for (auto expression : block->expressions()) {
         expression->accept(this);
         last_value = pop_llvm_value();
+        // FIXME return_and_push_null_if_null(last_value);
     }
 
     push_llvm_value(last_value);
@@ -696,32 +713,29 @@ void CodeGenerator::visit(ast::Block *block) {
 
 void CodeGenerator::visit(ast::Name *identifier) {
     auto symbol = scope()->lookup(this, identifier);
-    if (symbol == nullptr) {
+    return_and_push_null_if_null(symbol);
+
+    if (symbol->value == nullptr) {
+        report(InternalError(identifier, "The LLVM value of this symbol is null."));
         push_llvm_value(nullptr);
         return;
     }
 
-    if (!symbol->value) {
-        report(InternalError(identifier, "should not be nullptr"));
-        push_llvm_value(nullptr);
-        return;
-    }
-
-    auto result = m_ir_builder->CreateLoad(symbol->value);
-    push_llvm_value(result);
+    auto load = m_ir_builder->CreateLoad(symbol->value);
+    push_llvm_value(load);
 }
 
 void CodeGenerator::visit(ast::VariableDeclaration *node) {
     auto symbol = scope()->lookup(this, node->name());
 
     auto llvm_type = generate_type(node);
-    return_if_null(llvm_type);
+    return_and_push_null_if_null(llvm_type);
 
     auto old_insert_point = m_ir_builder->saveIP();
 
     if (scope()->is_root()) {
         auto llvm_initialiser = take_initialiser(node);
-        return_if_null(llvm_initialiser);
+        return_and_push_null_if_null(llvm_initialiser);
 
         auto variable = new llvm::GlobalVariable(*m_module, llvm_type, false,
                                                  llvm::GlobalValue::CommonLinkage,
@@ -767,38 +781,35 @@ void CodeGenerator::visit(ast::FloatLiteral *expression) {
 }
 
 void CodeGenerator::visit(ast::ImaginaryLiteral *imaginary) {
-    report(InternalError(imaginary, "N/A"));
+    report(InternalError(imaginary, "Not yet implemented."));
     push_llvm_value(nullptr);
 }
 
 void CodeGenerator::visit(ast::StringLiteral *expression) {
-    report(InternalError(expression, "N/A"));
+    report(InternalError(expression, "Not yet implemented."));
     push_llvm_value(nullptr);
 }
 
 void CodeGenerator::visit(ast::SequenceLiteral *sequence) {
     std::vector<llvm::Value *> elements;
-
     for (auto element : sequence->elements) {
         element->accept(this);
-        elements.push_back(pop_llvm_value());
+        auto value = pop_llvm_value();
+        return_and_push_null_if_null(value);
+        elements.push_back(value);
     }
 
-    llvm::StructType *type = static_cast<llvm::StructType *>(generate_type(sequence));
+    auto type = static_cast<llvm::StructType *>(generate_type(sequence));
+    return_and_push_null_if_null(type);
 
-    llvm::Type *length_type = type->elements()[0];
-    llvm::Type *element_type = type->elements()[0];
+    auto length_type = type->elements()[0];
+    auto element_type = type->elements()[1];
 
     // assign length
-    llvm::Value *instance = m_ir_builder->CreateAlloca(type, nullptr, "array");
+    auto instance = m_ir_builder->CreateAlloca(type, nullptr, "array");
 
-    std::vector<llvm::Value *> length_index;
-    length_index.push_back(m_ir_builder->getInt32(0));
-    length_index.push_back(m_ir_builder->getInt32(0));
-
-    std::vector<llvm::Value *> elements_index;
-    elements_index.push_back(m_ir_builder->getInt32(0));
-    elements_index.push_back(m_ir_builder->getInt32(1));
+    auto length_index = build_gep_index({ 0, 0 });
+    auto elements_index = build_gep_index({ 0, 1 });
 
     auto length = m_ir_builder->CreateInBoundsGEP(instance, length_index, "length");
     m_ir_builder->CreateStore(llvm::ConstantInt::get(length_type, elements.size()), length);
@@ -806,9 +817,8 @@ void CodeGenerator::visit(ast::SequenceLiteral *sequence) {
     auto elements_value = m_ir_builder->CreateInBoundsGEP(instance, elements_index, "elements");
     auto elements_instance = m_ir_builder->CreateAlloca(element_type, m_ir_builder->getInt32(elements.size()));
 
-    for (size_t i = 0; i < elements.size(); i++) {
-        std::vector<llvm::Value *> index;
-        index.push_back(m_ir_builder->getInt32(i));
+    for (int i = 0; i < static_cast<int>(elements.size()); i++) {
+        auto index = build_gep_index({ i });
         auto place = m_ir_builder->CreateInBoundsGEP(elements_instance, index);
         m_ir_builder->CreateStore(elements[i], place);
     }
@@ -824,29 +834,17 @@ void CodeGenerator::visit(ast::MappingLiteral *mapping) {
 }
 
 void CodeGenerator::visit(ast::RecordLiteral *expression) {
-    //auto record = dynamic_cast<types::Record *>(expression->type);
-
-    llvm::Type *llvm_type = generate_type(expression);
-    if (llvm_type == nullptr) {
-        push_llvm_value(nullptr);
-        return;
-    }
+    auto llvm_type = generate_type(expression);
+    return_and_push_null_if_null(llvm_type);
 
     auto instance = m_ir_builder->CreateAlloca(llvm_type);
 
-    auto index0 = m_ir_builder->getInt32(0);
-    for (size_t i = 0; i < expression->field_names.size(); i++) {
-        auto index = m_ir_builder->getInt32(i);
-
+    for (int i = 0; i < static_cast<int>(expression->field_names.size()); i++) {
         expression->field_values[i]->accept(this);
-
         auto value = pop_llvm_value();
+        return_and_push_null_if_null(value);
 
-        std::vector<llvm::Value *> indexes;
-        indexes.push_back(index0);
-        indexes.push_back(index);
-
-        auto ptr = m_ir_builder->CreateInBoundsGEP(instance, indexes);
+        auto ptr = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, i }));
         m_ir_builder->CreateStore(value, ptr);
     }
 
@@ -858,18 +856,13 @@ void CodeGenerator::visit(ast::TupleLiteral *expression) {
 
     auto instance = m_ir_builder->CreateAlloca(llvm_type);
 
-    auto index0 = m_ir_builder->getInt32(0);
-
     auto elements = expression->elements();
-    for (size_t i = 0; i < elements.size(); i++) {
+    for (int i = 0; i < static_cast<int>(elements.size()); i++) {
         elements[i]->accept(this);
         auto value = pop_llvm_value();
+        return_if_null(value);
 
-        std::vector<llvm::Value *> indexes;
-        indexes.push_back(index0);
-        indexes.push_back(m_ir_builder->getInt32(i));
-
-        auto ptr = m_ir_builder->CreateInBoundsGEP(instance, indexes);
+        auto ptr = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, i }));
         m_ir_builder->CreateStore(value, ptr);
     }
 
@@ -889,16 +882,13 @@ void CodeGenerator::visit(ast::Call *expression) {
     auto method = function_type->find_method(expression, argument_types);
     assert(method);
 
-    std::cout << "found method: " << method->name() << std::endl;
+    debug("found method: " + method->name());
 
     int index = function_type->index_of(method);
 
     auto ir_function = llvm::dyn_cast<llvm::LoadInst>(pop_llvm_value())->getPointerOperand();
 
-    std::vector<llvm::Value *> indexes;
-    indexes.push_back(m_ir_builder->getInt32(0));
-    indexes.push_back(m_ir_builder->getInt32(index));
-    auto ir_method = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(ir_function, indexes));
+    auto ir_method = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(ir_function, build_gep_index({ 0, index })));
 
     if (ir_method == nullptr) {
         report(InternalError(expression, "No LLVM function was available!"));
@@ -924,29 +914,32 @@ void CodeGenerator::visit(ast::Call *expression) {
         i++;
     }
 
-    std::cout << "here" << std::endl;
+    debug("here");
     ir_method->dump();
-    std::cout << "end here" << std::endl;
+    debug("end here");
 
-    auto value = m_ir_builder->CreateCall(ir_method, arguments);
-    push_llvm_value(value);
+    auto call = m_ir_builder->CreateCall(ir_method, arguments);
+    push_llvm_value(call);
 }
 
 void CodeGenerator::visit(ast::CCall *ccall) {
     std::vector<llvm::Type *> parameters;
-    llvm::Type *returnType = generate_type(ccall);
-
+    auto return_type = generate_type(ccall);
     for (auto parameter : ccall->parameters) {
         parameters.push_back(generate_type(parameter));
     }
 
     std::string name = ccall->name->value();
 
-    llvm::FunctionType *functionType = llvm::FunctionType::get(returnType, parameters, false);
+    auto function_type = llvm::FunctionType::get(
+        return_type, parameters, false
+    );
 
-    llvm::Function *function = m_module->getFunction(name);
+    auto function = m_module->getFunction(name);
     if (!function) {
-        function = llvm::Function::Create(functionType, llvm::Function::ExternalLinkage, name, m_module);
+        function = llvm::Function::Create(
+            function_type, llvm::Function::ExternalLinkage, name, m_module
+        );
     }
 
     // TODO check duplication signature matches
@@ -954,21 +947,21 @@ void CodeGenerator::visit(ast::CCall *ccall) {
     std::vector<llvm::Value *> arguments;
     for (auto argument : ccall->arguments) {
         argument->accept(this);
-
-        auto argValue = pop_llvm_value();
-        arguments.push_back(argValue);
+        auto arg_value = pop_llvm_value();
+        return_and_push_null_if_null(arg_value);
+        arguments.push_back(arg_value);
     }
 
-    llvm::Value *value = m_ir_builder->CreateCall(function, arguments);
-    push_llvm_value(value);
+    auto call = m_ir_builder->CreateCall(function, arguments);
+    push_llvm_value(call);
 }
 
 void CodeGenerator::visit(ast::Cast *cast) {
     cast->operand->accept(this);
     auto value = pop_llvm_value();
 
-    llvm::Type *destination_type = generate_type(cast);
-    llvm::Value *new_value = m_ir_builder->CreateBitCast(value, destination_type);
+    auto destination_type = generate_type(cast);
+    auto new_value = m_ir_builder->CreateBitCast(value, destination_type);
     push_llvm_value(new_value);
 }
 
@@ -1022,13 +1015,8 @@ void CodeGenerator::visit(ast::Selector *expression) {
     // either an enum, or a record
     auto record = dynamic_cast<types::Record *>(selectable);
     if (record) {
-        uint64_t index = record->get_field_index(expression->name->value());
-
-        std::vector<llvm::Value *> indexes;
-        indexes.push_back(m_ir_builder->getInt32(0));
-        indexes.push_back(m_ir_builder->getInt32(index));
-
-        llvm::Value *value = m_ir_builder->CreateInBoundsGEP(instance, indexes);
+        int index = record->get_field_index(expression->name->value());
+        auto value = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, index }));
         push_llvm_value(value);
     } else {
         push_llvm_value(nullptr);
@@ -1036,19 +1024,17 @@ void CodeGenerator::visit(ast::Selector *expression) {
 }
 
 void CodeGenerator::visit(ast::While *expression) {
-    auto function = m_ir_builder->GetInsertBlock()->getParent();
+    auto entry_bb = create_basic_block("while_entry");
+    auto loop_bb = create_basic_block("while_loop");
+    auto join_bb = create_basic_block("while_join");
 
-    auto entry_bb = llvm::BasicBlock::Create(m_module->getContext(), "while_entry", function);
     m_ir_builder->CreateBr(entry_bb);
 
     m_ir_builder->SetInsertPoint(entry_bb);
     expression->condition()->accept(this);
     auto condition = m_ir_builder->CreateICmpEQ(pop_llvm_value(), m_ir_builder->getInt1(true), "while_cond");
+    m_ir_builder->CreateCondBr(condition, loop_bb, join_bb);
 
-    auto loop_bb = llvm::BasicBlock::Create(m_context, "while_loop", function);
-    auto else_bb = llvm::BasicBlock::Create(m_context, "while_else", function);
-
-    m_ir_builder->CreateCondBr(condition, loop_bb, else_bb);
     m_ir_builder->SetInsertPoint(loop_bb);
 
     expression->body()->accept(this);
@@ -1056,52 +1042,47 @@ void CodeGenerator::visit(ast::While *expression) {
     push_llvm_value(then_value);
     m_ir_builder->CreateBr(entry_bb);
 
-    m_ir_builder->SetInsertPoint(else_bb);
+    m_ir_builder->SetInsertPoint(join_bb);
 }
 
 void CodeGenerator::visit(ast::If *expression) {
-    expression->condition->accept(this);
-    auto condition = pop_llvm_value();
+    auto condition = generate_llvm_value(expression->condition);
+    return_and_push_null_if_null(condition);
 
-    condition = m_ir_builder->CreateICmpEQ(condition, llvm::ConstantInt::get(llvm::Type::getInt1Ty(m_module->getContext()), 1), "ifcond");
+    condition = m_ir_builder->CreateICmpEQ(condition, m_ir_builder->getTrue(), "if_cond");
 
-    llvm::Function *function = m_ir_builder->GetInsertBlock()->getParent();
-
-    llvm::BasicBlock *then_bb = llvm::BasicBlock::Create(m_context, "then", function);
-    llvm::BasicBlock *else_bb = llvm::BasicBlock::Create(m_context, "else");
-    llvm::BasicBlock *merge_bb = llvm::BasicBlock::Create(m_context, "ifcont");
+    auto then_bb = create_basic_block("if_then");
+    auto else_bb = create_basic_block("if_else");
+    auto join_bb = create_basic_block("if_join");
 
     m_ir_builder->CreateCondBr(condition, then_bb, else_bb);
     m_ir_builder->SetInsertPoint(then_bb);
 
-    expression->true_case->accept(this);
-    auto then_value = pop_llvm_value();
-
-    m_ir_builder->CreateBr(merge_bb);
+    auto then_value = generate_llvm_value(expression->true_case);
+    return_and_push_null_if_null(then_value);
+    m_ir_builder->CreateBr(join_bb);
 
     then_bb = m_ir_builder->GetInsertBlock();
 
-    function->getBasicBlockList().push_back(else_bb);
     m_ir_builder->SetInsertPoint(else_bb);
 
     llvm::Value *else_value = nullptr;
     if (expression->false_case) {
-        expression->false_case->accept(this);
-        else_value = pop_llvm_value();
+        else_value = generate_llvm_value(expression->false_case);
     } else {
         else_value = m_ir_builder->getInt1(false);
     }
-
-    m_ir_builder->CreateBr(merge_bb);
+    return_and_push_null_if_null(else_value);
+    m_ir_builder->CreateBr(join_bb);
 
     else_bb = m_ir_builder->GetInsertBlock();
 
-    function->getBasicBlockList().push_back(merge_bb);
-    m_ir_builder->SetInsertPoint(merge_bb);
+    m_ir_builder->SetInsertPoint(join_bb);
 
-    llvm::Type *type = generate_type(expression);
-    llvm::PHINode *phi = m_ir_builder->CreatePHI(type, 2, "iftmp");
+    auto type = generate_type(expression);
+    return_and_push_null_if_null(type);
 
+    auto phi = m_ir_builder->CreatePHI(type, 2, "iftmp");
     phi->addIncoming(then_value, then_bb);
     phi->addIncoming(else_value, else_bb);
 
@@ -1109,9 +1090,8 @@ void CodeGenerator::visit(ast::If *expression) {
 }
 
 void CodeGenerator::visit(ast::Return *expression) {
-    expression->expression->accept(this);
-    auto value = pop_llvm_value();
-
+    auto value = generate_llvm_value(expression->expression);
+    return_and_push_null_if_null(value);
     push_llvm_value(m_ir_builder->CreateRet(value));
 }
 
@@ -1183,21 +1163,21 @@ void CodeGenerator::visit(ast::SourceFile *module) {
     auto void_function_type = llvm::FunctionType::get(m_ir_builder->getVoidTy(), false);
 
     m_init_builtins_function = llvm::Function::Create(void_function_type, llvm::Function::ExternalLinkage, "_init_builtins_", m_module);
-    auto init_builtins_bb = llvm::BasicBlock::Create(m_context, "entry", m_init_builtins_function);
+    auto init_builtins_bb = create_entry_basic_block(m_init_builtins_function);
     m_ir_builder->SetInsertPoint(init_builtins_bb);
     builtin_generate();
     m_ir_builder->SetInsertPoint(init_builtins_bb);
     m_ir_builder->CreateRetVoid();
 
     m_init_variables_function = llvm::Function::Create(void_function_type, llvm::Function::ExternalLinkage, "_init_variables_", m_module);
-    auto init_variables_bb = llvm::BasicBlock::Create(m_context, "entry", m_init_variables_function);
+    auto init_variables_bb = create_entry_basic_block(m_init_variables_function);
 
     auto user_code_function = llvm::Function::Create(void_function_type, llvm::Function::ExternalLinkage, "_user_code_", m_module);
-    auto user_code_bb = llvm::BasicBlock::Create(m_context, "entry", user_code_function);
+    auto user_code_bb = create_entry_basic_block(user_code_function);
 
     auto int32_function_type = llvm::FunctionType::get(m_ir_builder->getInt32Ty(), false);
     auto main_function = llvm::Function::Create(int32_function_type, llvm::Function::ExternalLinkage, "main", m_module);
-    auto main_bb = llvm::BasicBlock::Create(m_context, "entry", main_function);
+    auto main_bb = create_entry_basic_block(main_function);
 
     m_ir_builder->SetInsertPoint(user_code_bb);
     module->code->accept(this);

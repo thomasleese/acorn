@@ -85,10 +85,11 @@ namespace acorn {
             llvm::Type *generate_type(ast::Expression *expression, types::Type *type);
             llvm::Type *generate_type(ast::Expression *expression);
 
+            void push_llvm_type_and_initialiser(llvm::Type *type, llvm::Constant *initialiser);
+            void push_null_llvm_type_and_initialiser();
+
             llvm::Function *generate_function(ast::FunctionDefinition *definition);
             llvm::Function *generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *>);
-
-            llvm::BasicBlock *create_basic_block(std::string name) const;
 
         public:
             void builtin_generate();
@@ -103,6 +104,12 @@ namespace acorn {
 
             void builtin_initialise_boolean_variable(std::string name, bool value);
             void builtin_initialise_function(llvm::Function *function, int no_arguments);
+
+        private:
+            std::vector<llvm::Value *> build_gep_index(std::initializer_list<int> indexes);
+            llvm::BasicBlock *create_basic_block(std::string name, llvm::Function *function = nullptr);
+            llvm::BasicBlock *create_entry_basic_block(llvm::Function *function = nullptr);
+            llvm::Value *generate_llvm_value(ast::Node *node);
 
         public:
             void visit_constructor(types::TypeType *type);

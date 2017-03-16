@@ -1,5 +1,13 @@
 import 'base/os'
 
+def test(n as Int)
+  if n == 10
+    0
+  else
+    n
+  end
+end
+
 def modify_integer(n as Int)
   let i = n * 2
     let j = i * 2
