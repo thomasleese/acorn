@@ -524,9 +524,14 @@ void Builder::visit(ast::TypeDefinition *definition) {
 }
 
 void Builder::visit(ast::Module *module) {
-    auto symbol = new Symbol(module->name());
-    symbol->nameSpace = new Namespace(scope());
-    scope()->insert(this, module, symbol);
+    symboltable::Symbol *symbol;
+    if (scope()->has(module->name()->value())) {
+        symbol = scope()->lookup(this, module->name());
+    } else {
+        symbol = new Symbol(module->name());
+        symbol->nameSpace = new Namespace(scope());
+        scope()->insert(this, module, symbol);
+    }
 
     push_scope(symbol);
     module->body()->accept(this);

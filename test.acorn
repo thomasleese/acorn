@@ -3,7 +3,9 @@ import 'base/os'
 module Maths
   let pi = 3.141
   let π = pi
+end
 
+module Maths
   def give_me_a_five()
     5
   end
@@ -26,4 +28,5 @@ def modify_integer(n as Int)
 end
 
 exit(to_integer(Maths.π))
+exit(Maths.give_me_a_five())
 exit(modify_integer(9))
