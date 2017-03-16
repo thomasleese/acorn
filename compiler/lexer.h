@@ -32,6 +32,9 @@ namespace acorn {
         void debug();
 
     private:
+        int get();
+        void unget();
+
         Token make_token(Token::Kind kind = Token::EndOfFile) const;
 
         unsigned int skip_whitespace();
@@ -42,7 +45,7 @@ namespace acorn {
 
         void update_indentation(Token &token);
 
-        bool read_identifier(Token &token);
+        bool read_name(Token &token);
         bool read_keyword(Token &token) const;
         bool read_number(Token &token);
         bool read_string(Token &token);
@@ -50,9 +53,10 @@ namespace acorn {
         bool read_operator(Token &token);
 
     private:
-        std::ifstream m_stream;
+        std::string m_data;
         std::deque<int> m_indentation;
         std::deque<Token> m_token_buffer;
+        int m_pos;
 
         std::string m_filename;
         int m_current_column;

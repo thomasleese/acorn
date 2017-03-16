@@ -6,6 +6,9 @@
 #include <fstream>
 #include <sstream>
 
+#include <unicode/unistr.h>
+#include <boost/regex/icu.hpp>
+
 #include "lexer.h"
 
 using namespace acorn;
@@ -13,7 +16,14 @@ using namespace acorn::diagnostics;
 
 Lexer::Lexer(std::string filename)
 {
-    m_stream.open(filename.c_str());
+    std::ifstream stream;
+    stream.open(filename.c_str());
+
+    std::stringstream ss;
+    ss << stream.rdbuf();
+
+    m_data = ss.str();
+    m_pos = 0;
 
     m_current_line_number = 0;
     next_line();
@@ -31,7 +41,7 @@ bool Lexer::next_token(Token &token) {
         return true;
     }
 
-    if (!m_stream.good()) {
+    if (m_pos >= static_cast<int>(m_data.size())) {
         token = make_token();
         token.kind = Token::EndOfFile;
         return true;
@@ -42,19 +52,19 @@ bool Lexer::next_token(Token &token) {
         skip_comment();
 
         // read line continuations
-        int ch = m_stream.get();
+        int ch = get();
         if (ch == '\\') {
             skip_whitespace();
             skip_comment();
 
-            int ch2 = m_stream.get();
+            int ch2 = get();
             if (ch2 != '\n') {
                 return false;
             }
 
             next_line();
         } else {
-            m_stream.unget();
+            unget();
             break;
         }
     }
@@ -62,7 +72,7 @@ bool Lexer::next_token(Token &token) {
     // update line and column details
     token = make_token();
 
-    if (read_identifier(token)) {
+    if (read_name(token)) {
         // do nothing :)
     } else if (read_number(token)) {
         // do nothing :)
@@ -91,6 +101,16 @@ void Lexer::debug() {
     std::cout << "END DEBUG TOKENS" << std::endl;
 }
 
+int Lexer::get() {
+    int c = m_data[m_pos];
+    m_pos++;
+    return c;
+}
+
+void Lexer::unget() {
+    m_pos--;
+}
+
 Token Lexer::make_token(Token::Kind kind) const {
     Token token;
     token.kind = kind;
@@ -104,13 +124,13 @@ Token Lexer::make_token(Token::Kind kind) const {
 unsigned int Lexer::skip_whitespace() {
     unsigned int count = 1;
 
-    int c = m_stream.get();
+    int c = get();
     while (c == ' ' || c == '\t' || c == '\f') {
-        c = m_stream.get();
+        c = get();
         count++;
     }
 
-    m_stream.unget();
+    unget();
     count--;
 
     m_current_column += count;
@@ -119,16 +139,16 @@ unsigned int Lexer::skip_whitespace() {
 }
 
 void Lexer::skip_comment() {
-    int c = m_stream.get();
+    int c = get();
     if (c != '#') {
         // obviously not a comment
-        m_stream.unget();
+        unget();
         return;
     }
 
     // read until the end of the line
     while (c != '\n') {
-        c = m_stream.get();
+        c = get();
 
         // no more comment as there is no more anything
         if (c == EOF) {
@@ -137,7 +157,7 @@ void Lexer::skip_comment() {
     }
 
     // return \n character to stream
-    m_stream.unget();
+    unget();
 }
 
 void Lexer::next_line() {
@@ -147,9 +167,7 @@ void Lexer::next_line() {
 }
 
 void Lexer::update_current_line() {
-    long long int pos = m_stream.tellg();
-    std::getline(m_stream, m_current_line);
-    m_stream.seekg(pos);
+    std::getline(std::istringstream(m_data.substr(m_pos, m_data.size())), m_current_line);
 }
 
 void Lexer::update_indentation(Token &token) {
@@ -172,28 +190,28 @@ void Lexer::update_indentation(Token &token) {
     }
 }
 
-bool Lexer::read_identifier(Token &token) {
-    int ch = m_stream.get();
+bool Lexer::read_name(Token &token) {
+    std::string buffer = m_data.substr(m_pos, m_data.size());
 
-    if (!isalpha(ch) && ch != '_') {
-        m_stream.unget();
-        return false;
+    boost::smatch matcher;
+    boost::u32regex pattern = boost::make_u32regex("^([_[:L*:]][_[:L*:][:N*:]]*)");
+
+    if (boost::u32regex_search(buffer, matcher, pattern)) {
+        std::string value = matcher.str(1);
+        if (buffer.substr(0, value.size()) == value) {
+            token.lexeme = value;
+            m_current_column += icu::UnicodeString::fromUTF8(value).countChar32();
+            m_pos += token.lexeme.size();
+
+            if (!read_keyword(token)) {
+                token.kind = Token::Name;
+            }
+
+            return true;
+        }
     }
 
-    while (isalpha(ch) || isdigit(ch) || ch == '_') {
-        token.lexeme.append(1, ch);
-        ch = m_stream.get();
-    }
-
-    m_stream.unget();
-
-    m_current_column += token.lexeme.size();
-
-    if (!read_keyword(token)) {
-        token.kind = Token::Name;
-    }
-
-    return true;
+    return false;
 }
 
 bool Lexer::read_keyword(Token &token) const {
@@ -229,10 +247,10 @@ bool Lexer::read_keyword(Token &token) const {
 }
 
 bool Lexer::read_number(Token &token) {
-    int ch = m_stream.get();
+    int ch = get();
 
     if (!isdigit(ch)) {
-        m_stream.unget();
+        unget();
         return false;
     }
 
@@ -240,7 +258,7 @@ bool Lexer::read_number(Token &token) {
 
     while (isdigit(ch) || ch == '.') {
         token.lexeme.append(1, ch);
-        ch = m_stream.get();
+        ch = get();
         m_current_column++;
 
         if (ch == '.') {
@@ -248,7 +266,7 @@ bool Lexer::read_number(Token &token) {
         }
     }
 
-    m_stream.unget();
+    unget();
 
     return true;
 }
@@ -258,19 +276,19 @@ bool is_quote_char(int ch) {
 }
 
 bool Lexer::read_string(Token &token) {
-    int ch = m_stream.get();
+    int ch = get();
 
     if (!is_quote_char(ch)) {
-        m_stream.unget();
+        unget();
         return false;
     }
 
     token.kind = Token::StringLiteral;
 
-    ch = m_stream.get();
+    ch = get();
     while (!is_quote_char(ch) && ch != EOF) {
         token.lexeme.append(1, ch);
-        ch = m_stream.get();
+        ch = get();
         m_current_column++;
     }
 
@@ -278,7 +296,7 @@ bool Lexer::read_string(Token &token) {
 }
 
 bool Lexer::read_delimiter(Token &token) {
-    int ch = m_stream.get();
+    int ch = get();
 
     // the following two lines are reversed in the default case below
     token.lexeme.append(1, ch);
@@ -340,7 +358,7 @@ bool Lexer::read_delimiter(Token &token) {
             return true;
 
         default:
-            m_stream.unget();
+            unget();
             token.lexeme.clear();
             m_current_column--;
             return false;
@@ -356,8 +374,8 @@ bool is_two_char_operator(char c1, char c2) {
 }
 
 bool Lexer::read_operator(Token &token) {
-    int ch = m_stream.get();
-    int ch2 = m_stream.get();
+    int ch = get();
+    int ch2 = get();
 
     if (is_two_char_operator(ch, ch2)) {
         token.kind = Token::Operator;
@@ -366,7 +384,7 @@ bool Lexer::read_operator(Token &token) {
         m_current_column += 2;
         return true;
     } else {
-        m_stream.unget();
+        unget();
     }
 
     // TODO check unicode class
@@ -389,6 +407,6 @@ bool Lexer::read_operator(Token &token) {
             break;
     }
 
-    m_stream.unget();
+    unget();
     return false;
 }
