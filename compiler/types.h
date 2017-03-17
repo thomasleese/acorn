@@ -437,27 +437,6 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class Argument : public Type {
-        public:
-            Argument(std::string name, Type *type);
-
-            std::string name() const;
-            std::string mangled_name() const;
-
-            TypeType *type() const;
-
-            std::string arg_name() const;
-            Type *arg_type() const;
-
-            Argument *with_parameters(std::vector<Type *> parameters);
-
-            void accept(Visitor *visitor);
-
-        private:
-            std::string m_name;
-            Type *m_type;
-        };
-
         class Method : public Type {
         public:
             Method(std::vector<Type *> parameter_types, Type *return_type);
@@ -476,7 +455,7 @@ namespace acorn {
 
             std::vector<Type *> parameter_types() const;
             Type *return_type() const;
-            bool could_be_called_with(std::vector<Argument *> arguments);
+            bool could_be_called_with(std::vector<Type *> arguments);
 
             void set_parameter_inout(Type *type, bool inout);
             bool is_parameter_inout(Type *type);
@@ -498,7 +477,7 @@ namespace acorn {
             FunctionType *type() const;
 
             void add_method(Method *method);
-            Method *find_method(ast::Node *node, std::vector<Argument *> arguments) const;
+            Method *find_method(ast::Node *node, std::vector<Type *> arguments) const;
             Method *get_method(int index) const;
             int no_methods() const;
             int index_of(Method *method) const;
@@ -545,7 +524,6 @@ namespace acorn {
             virtual void visit(UnsafePointer *type) = 0;
             virtual void visit(Record *type) = 0;
             virtual void visit(Tuple *type) = 0;
-            virtual void visit(Argument *type) = 0;
             virtual void visit(Method *type) = 0;
             virtual void visit(Function *type) = 0;
             virtual void visit(Module *type) = 0;

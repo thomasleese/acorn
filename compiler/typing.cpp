@@ -262,12 +262,7 @@ void Inferrer::visit(ast::Argument *node) {
     node->value()->accept(this);
 
     if (node->value()->has_type()) {
-        std::string name;
-        if (node->has_name()) {
-            name = node->name()->value();
-        }
-
-        node->set_type(new types::Argument(name, node->value()->type()));
+        node->set_type(node->value()->type());
     }
 }
 
@@ -275,18 +270,10 @@ void Inferrer::visit(ast::Call *expression) {
     expression->operand->accept(this);
     return_if_null_type(expression->operand);
 
-    std::vector<types::Argument *> argument_types;
-    std::vector<types::Type *> argument_types_types;
+    std::vector<types::Type *> argument_types;
     for (auto arg : expression->arguments) {
         arg->accept(this);
-
-        auto arg_type = dynamic_cast<types::Argument *>(arg->type());
-        if (arg_type == nullptr) {
-            return;
-        }
-
-        argument_types.push_back(arg_type);
-        argument_types_types.push_back(arg_type->arg_type());
+        argument_types.push_back(arg->type());
     }
 
     types::Function *function = dynamic_cast<types::Function *>(expression->operand->type());
@@ -313,7 +300,7 @@ void Inferrer::visit(ast::Call *expression) {
         return;
     }
 
-    if (!infer_call_type_parameters(expression, method->parameter_types(), argument_types_types)) {
+    if (!infer_call_type_parameters(expression, method->parameter_types(), argument_types)) {
         report(InternalError(expression, "Could not infer type parameters."));
         return;
     }

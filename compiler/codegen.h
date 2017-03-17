@@ -137,7 +137,6 @@ namespace acorn {
             void visit(types::UnsafePointer *type);
             void visit(types::Record *type);
             void visit(types::Tuple *type);
-            void visit(types::Argument *type);
             void visit(types::Method *type);
             void visit(types::Function *type);
             void visit(types::Module *type);

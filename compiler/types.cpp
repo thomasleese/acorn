@@ -935,42 +935,6 @@ void Tuple::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Argument::Argument(std::string name, Type *type) : m_name(name), m_type(type) {
-
-}
-
-std::string Argument::name() const {
-    if (m_name.empty()) {
-        return "Argument{" + m_type->name() + "}";
-    } else {
-        return "Argument{" + m_name + ": " + m_type->name() + "}";
-    }
-}
-
-std::string Argument::mangled_name() const {
-    return "arg" + m_type->mangled_name();
-}
-
-TypeType *Argument::type() const {
-    return nullptr;
-}
-
-std::string Argument::arg_name() const {
-    return m_name;
-}
-
-Type *Argument::arg_type() const {
-    return m_type;
-}
-
-Argument *Argument::with_parameters(std::vector<Type *> parameters) {
-    return new Argument(m_name, parameters[1]);
-}
-
-void Argument::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 Method::Method(std::vector<Type *> parameter_types, Type *return_type) {
     m_parameters.push_back(return_type);
     for (auto p : parameter_types) {
@@ -1044,7 +1008,7 @@ Type *Method::return_type() const {
     return m_parameters[0];
 }
 
-bool Method::could_be_called_with(std::vector<Argument *> arguments) {
+bool Method::could_be_called_with(std::vector<Type *> arguments) {
     auto parameters = parameter_types();
 
     if (arguments.size() != parameters.size()) {
@@ -1052,7 +1016,7 @@ bool Method::could_be_called_with(std::vector<Argument *> arguments) {
     }
 
     for (unsigned long i = 0; i < arguments.size(); i++) {
-        bool compatible = parameters[i]->is_compatible(arguments[i]->arg_type());
+        bool compatible = parameters[i]->is_compatible(arguments[i]);
         if (!compatible) {
             return false;
         }
@@ -1113,7 +1077,7 @@ void Function::add_method(Method *method) {
     m_parameters.push_back(method);
 }
 
-Method *Function::find_method(ast::Node *node, std::vector<Argument *> arguments) const {
+Method *Function::find_method(ast::Node *node, std::vector<Type *> arguments) const {
     for (auto p : m_parameters) {
         auto method = dynamic_cast<Method *>(p);
         assert(method);
