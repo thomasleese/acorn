@@ -1,0 +1,10 @@
+import 'base/os'
+
+type Vector2
+    x as Int
+    y as Int
+end
+
+let v = Vector2.new(y: 10, x: 0)
+    exit(v.x)
+end
