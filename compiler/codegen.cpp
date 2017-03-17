@@ -873,22 +873,16 @@ void CodeGenerator::visit(ast::TupleLiteral *expression) {
     push_llvm_value(m_ir_builder->CreateLoad(instance));
 }
 
-void CodeGenerator::visit(ast::Argument *node) {
-    node->value()->accept(this);
-}
-
 void CodeGenerator::visit(ast::Call *expression) {
     expression->operand->accept(this);
 
     auto function_type = dynamic_cast<types::Function *>(expression->operand->type());
 
-    std::vector<types::Type *> argument_types;
-    for (auto arg : expression->arguments) {
-        argument_types.push_back(arg->type());
-    }
+    std::map<std::string, types::Type *> keyword_argument_types;
 
-    auto method = function_type->find_method(expression, argument_types);
-    assert(method);
+    auto method = function_type->find_method(
+      expression, expression->positional_argument_types(), keyword_argument_types
+    );
 
     debug("found method: " + method->name());
 
@@ -906,7 +900,7 @@ void CodeGenerator::visit(ast::Call *expression) {
 
     std::vector<llvm::Value *> arguments;
     int i = 0;
-    for (auto argument : expression->arguments) {
+    for (auto argument : expression->positional_arguments()) {
         argument->accept(this);
 
         auto value = pop_llvm_value();

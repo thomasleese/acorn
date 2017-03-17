@@ -9,6 +9,7 @@
 
 #include "ast.h"
 
+using namespace acorn;
 using namespace acorn::ast;
 
 Node::Node(Token token) : m_token(token) {
@@ -245,30 +246,6 @@ void TupleLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Argument::Argument(Token token, Name *name, Expression *value) : Expression(token), m_name(name), m_value(value) {
-
-}
-
-Argument::Argument(Expression *value) : Argument(value->token(), nullptr, value) {
-
-}
-
-Name *Argument::name() const {
-    return m_name.get();
-}
-
-bool Argument::has_name() const {
-    return m_name != nullptr;
-}
-
-Expression *Argument::value() const {
-    return m_value.get();
-}
-
-void Argument::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 Call::Call(Token token) : Expression(token), operand(nullptr) {
 
 }
@@ -281,12 +258,32 @@ Call::Call(Token token, std::string name, Expression *arg1, Expression *arg2) : 
     this->operand = new Name(token, name);
 
     if (arg1) {
-        this->arguments.push_back(new Argument(arg1));
+        m_positional_arguments.push_back(std::unique_ptr<Expression>(arg1));
     }
 
     if (arg2) {
-        this->arguments.push_back(new Argument(arg2));
+        m_positional_arguments.push_back(std::unique_ptr<Expression>(arg2));
     }
+}
+
+std::vector<Expression *> Call::positional_arguments() const {
+    std::vector<Expression *> args;
+    for (auto &arg : m_positional_arguments) {
+        args.push_back(arg.get());
+    }
+    return args;
+}
+
+std::vector<types::Type *> Call::positional_argument_types() const {
+    std::vector<types::Type *> types;
+    for (auto &arg : m_positional_arguments) {
+        types.push_back(arg->type());
+    }
+    return types;
+}
+
+void Call::add_positional_argument(Expression *argument) {
+    m_positional_arguments.push_back(std::unique_ptr<Expression>(argument));
 }
 
 void Call::accept(Visitor *visitor) {

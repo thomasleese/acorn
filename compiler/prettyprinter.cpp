@@ -143,20 +143,6 @@ void PrettyPrinter::visit(ast::TupleLiteral *expression)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Argument *node) {
-    ss << indentation() << "(Argument [" << type_of(node) << "]\n";
-    indent++;
-
-    if (node->has_name()) {
-        node->name()->accept(this);
-    }
-
-    node->value()->accept(this);
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
 void PrettyPrinter::visit(ast::Call *expression)
 {
     ss << indentation() << "(Call [" << type_of(expression) << "]\n";
@@ -164,7 +150,7 @@ void PrettyPrinter::visit(ast::Call *expression)
 
     expression->operand->accept(this);
 
-    for (auto argument : expression->arguments) {
+    for (auto argument : expression->positional_arguments()) {
         argument->accept(this);
     }
 

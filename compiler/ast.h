@@ -207,23 +207,6 @@ namespace acorn {
             std::vector<std::unique_ptr<Expression> > m_elements;
         };
 
-        class Argument : public Expression {
-        public:
-            Argument(Token token, Name *name, Expression *value);
-            explicit Argument(Expression *value);
-
-            Name *name() const;
-            bool has_name() const;
-
-            Expression *value() const;
-
-            void accept(Visitor *visitor);
-
-        private:
-            std::unique_ptr<Name> m_name;
-            std::unique_ptr<Expression> m_value;
-        };
-
         class Call : public Expression {
         public:
             explicit Call(Token token);
@@ -231,10 +214,16 @@ namespace acorn {
             Call(Token token, std::string name, Expression *arg1 = nullptr, Expression *arg2 = nullptr);
 
             Expression *operand;
-            std::vector<Argument *> arguments;
             std::map<types::ParameterType *, types::Type *> inferred_type_parameters;
 
+            std::vector<Expression *> positional_arguments() const;
+            std::vector<types::Type *> positional_argument_types() const;
+            void add_positional_argument(Expression *argument);
+
             void accept(Visitor *visitor);
+
+        private:
+            std::vector<std::unique_ptr<Expression> > m_positional_arguments;
         };
 
         class CCall : public Expression {
@@ -473,7 +462,6 @@ namespace acorn {
             virtual void visit(MappingLiteral *expression) = 0;
             virtual void visit(RecordLiteral *expression) = 0;
             virtual void visit(TupleLiteral *expression) = 0;
-            virtual void visit(Argument *node) = 0;
             virtual void visit(Call *expression) = 0;
             virtual void visit(CCall *expression) = 0;
             virtual void visit(Cast *expression) = 0;

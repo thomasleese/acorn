@@ -342,27 +342,6 @@ RecordLiteral *Parser::read_record_literal() {
     return literal;
 }
 
-Argument *Parser::read_argument() {
-    debug("read_argument");
-
-    auto saved_token = front_token();
-
-    ast::Name *name = nullptr;
-    auto expression = read_expression();
-
-    if (is_and_skip_token(Token::Colon)) {
-        name = dynamic_cast<Name *>(expression);
-        if (name == nullptr) {
-            report(SyntaxError(saved_token, Token::Name));
-            return nullptr;
-        }
-
-        expression = read_expression(false);
-    }
-
-    return new Argument(saved_token, name, expression);
-}
-
 Call *Parser::read_call(Expression *operand) {
     debug("read_call");
 
@@ -371,10 +350,24 @@ Call *Parser::read_call(Expression *operand) {
     auto call = new Call(token, operand);
 
     while (!is_token(Token::CloseParenthesis)) {
-        auto argument = read_argument();
-        return_if_null(argument);
+        auto saved_token = front_token();
 
-        call->arguments.push_back(argument);
+        ast::Name *name = nullptr;
+        auto expression = read_expression();
+
+        if (is_and_skip_token(Token::Colon)) {
+            name = dynamic_cast<Name *>(expression);
+            if (name == nullptr) {
+                report(SyntaxError(saved_token, Token::Name));
+                return nullptr;
+            }
+
+            expression = read_expression(false);
+        }
+
+        return_if_null(expression);
+
+        call->add_positional_argument(expression);
 
         if (!is_and_skip_token(Token::Comma)) {
             break;
@@ -455,13 +448,13 @@ Call *Parser::read_index(Expression *operand) {
     return_if_false(read_token(Token::OpenBracket, token));
 
     auto call = new Call(token);
-    call->arguments.push_back(new Argument(operand));
-    call->arguments.push_back(new Argument(read_expression(true)));
+    call->add_positional_argument(operand);
+    call->add_positional_argument(read_expression(true));
 
     return_if_false(skip_token(Token::CloseBracket));
 
     if (is_and_skip_token(Token::Assignment)) {
-        call->arguments.push_back(new Argument(read_expression(true)));
+        call->add_positional_argument(read_expression(true));
         call->operand = new Name(token, "setindex");
     } else {
         call->operand = new Name(token, "getindex");
@@ -673,7 +666,7 @@ Expression *Parser::read_unary_expression(bool parse_comma) {
         return_if_null(operand);
 
         auto call = new Call(front_token(), operand);
-        call->arguments.push_back(new Argument(read_unary_expression(false)));
+        call->add_positional_argument(read_unary_expression(false));
         return call;
     } else {
         return read_operand_expression(parse_comma);
@@ -696,8 +689,8 @@ Expression *Parser::read_binary_expression(Expression *lhs, int min_precedence) 
         }
 
         auto call = new Call(saved_token, op);
-        call->arguments.push_back(new Argument(lhs));
-        call->arguments.push_back(new Argument(rhs));
+        call->add_positional_argument(lhs);
+        call->add_positional_argument(rhs);
 
         lhs = call;
     }

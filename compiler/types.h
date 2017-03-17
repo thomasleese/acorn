@@ -14,6 +14,7 @@ namespace acorn {
 
     namespace ast {
         class Node;
+        class Call;
     }
 
     namespace diagnostics {
@@ -455,7 +456,7 @@ namespace acorn {
 
             std::vector<Type *> parameter_types() const;
             Type *return_type() const;
-            bool could_be_called_with(std::vector<Type *> arguments);
+            bool could_be_called_with(std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments);
 
             void set_parameter_inout(Type *type, bool inout);
             bool is_parameter_inout(Type *type);
@@ -477,7 +478,8 @@ namespace acorn {
             FunctionType *type() const;
 
             void add_method(Method *method);
-            Method *find_method(ast::Node *node, std::vector<Type *> arguments) const;
+            Method *find_method(ast::Node *node, std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments) const;
+            Method *find_method(ast::Call *call) const;
             Method *get_method(int index) const;
             int no_methods() const;
             int index_of(Method *method) const;

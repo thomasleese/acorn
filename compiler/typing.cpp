@@ -258,22 +258,15 @@ void Inferrer::visit(ast::TupleLiteral *expression) {
     expression->set_type(new types::Tuple(element_types));
 }
 
-void Inferrer::visit(ast::Argument *node) {
-    node->value()->accept(this);
-
-    if (node->value()->has_type()) {
-        node->set_type(node->value()->type());
-    }
-}
-
 void Inferrer::visit(ast::Call *expression) {
     expression->operand->accept(this);
     return_if_null_type(expression->operand);
 
-    std::vector<types::Type *> argument_types;
-    for (auto arg : expression->arguments) {
+    for (auto arg : expression->positional_arguments()) {
         arg->accept(this);
-        argument_types.push_back(arg->type());
+        if (!arg->has_type()) {
+            return;
+        }
     }
 
     types::Function *function = dynamic_cast<types::Function *>(expression->operand->type());
@@ -286,21 +279,13 @@ void Inferrer::visit(ast::Call *expression) {
         return;
     }
 
-    auto method = function->find_method(expression, argument_types);
+    auto method = function->find_method(expression);
     if (method == nullptr) {
-        std::stringstream ss;
-        for (auto type : argument_types) {
-            ss << type->name();
-            if (type != argument_types.back()) {
-                ss << ", ";
-            }
-        }
-
-        report(UndefinedError(expression, "Method with " + ss.str() + " types"));
+        report(UndefinedError(expression, "Method for these types not available."));
         return;
     }
 
-    if (!infer_call_type_parameters(expression, method->parameter_types(), argument_types)) {
+    if (!infer_call_type_parameters(expression, method->parameter_types(), expression->positional_argument_types())) {
         report(InternalError(expression, "Could not infer type parameters."));
         return;
     }
@@ -727,15 +712,10 @@ void Checker::visit(ast::TupleLiteral *expression) {
     check_not_null(expression);
 }
 
-void Checker::visit(ast::Argument *node) {
-    node->value()->accept(this);
-    check_not_null(node);
-}
-
 void Checker::visit(ast::Call *expression) {
     expression->operand->accept(this);
 
-    for (auto arg : expression->arguments) {
+    for (auto arg : expression->positional_arguments()) {
         arg->accept(this);
     }
 

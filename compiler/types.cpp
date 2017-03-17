@@ -1008,8 +1008,11 @@ Type *Method::return_type() const {
     return m_parameters[0];
 }
 
-bool Method::could_be_called_with(std::vector<Type *> arguments) {
+bool Method::could_be_called_with(std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments) {
     auto parameters = parameter_types();
+
+    auto arguments = positional_arguments;
+    // FIXME load in keyword arguments
 
     if (arguments.size() != parameters.size()) {
         return false;
@@ -1077,16 +1080,21 @@ void Function::add_method(Method *method) {
     m_parameters.push_back(method);
 }
 
-Method *Function::find_method(ast::Node *node, std::vector<Type *> arguments) const {
+Method *Function::find_method(ast::Node *node, std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments) const {
     for (auto p : m_parameters) {
         auto method = dynamic_cast<Method *>(p);
         assert(method);
-        if (method->could_be_called_with(arguments)) {
+        if (method->could_be_called_with(positional_arguments, keyword_arguments)) {
             return method;
         }
     }
 
     return nullptr;
+}
+
+Method *Function::find_method(ast::Call *call) const {
+    std::map<std::string, Type *> t;
+    return find_method(call, call->positional_argument_types(), t);
 }
 
 Method *Function::get_method(int index) const {
