@@ -905,10 +905,9 @@ TypeDefinition *Parser::read_type_definition() {
             definition->field_names.push_back(read_name(false));
             skip_token(Token::AsKeyword);
             definition->field_types.push_back(read_name(true));
-            return_if_false(skip_token(Token::Newline));
         }
 
-        return_if_false(skip_token(Token::Deindent));
+        return_if_false(skip_deindent_and_end_token());
     }
 
     return definition;

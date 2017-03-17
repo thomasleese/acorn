@@ -61,9 +61,6 @@ namespace acorn {
             virtual Type *child_type(std::string name) = 0;
         };
 
-        /* actual type definitions go here */
-        class Parameter;
-
         // type "type"s -- i.e. the type of concrete types
         class TypeType : public Type {
         public:

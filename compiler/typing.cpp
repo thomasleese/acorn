@@ -370,7 +370,7 @@ void Inferrer::visit(ast::Selector *expression) {
     } else {
         auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type());
         if (selectable == nullptr) {
-            report(TypeMismatchError(expression->operand, expression));
+            report(TypeMismatchError(expression->operand, expression->operand->type()->name(), "selectable"));
             return;
         }
 
