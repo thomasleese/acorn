@@ -6,8 +6,6 @@ type Vector2
   y as Int
 end
 
-#let result = Vector2.new(x: 10, y: 10)
-#  exit(result.x)
-#end
-
-exit(1)
+let result = Vector2.new(y: 10, x: 5)
+  exit(result.x)
+end

@@ -1043,16 +1043,26 @@ void CodeGenerator::visit(ast::Selector *expression) {
         push_scope(symbol);
         expression->name->accept(this);
         pop_scope();
-    //} else if (record_type_type) {
+    } else if (record_type_type) {
+        expression->operand->accept(this);
+        auto instance = pop_llvm_value();
 
+        if (expression->name->value() == "new") {
+            push_llvm_value(instance);
+        } else {
+            report(InternalError(expression, "unsupported selector"));
+            push_llvm_value(nullptr);
+        }
     } else if (record_type) {
         expression->operand->accept(this);
         auto instance = pop_llvm_value();
 
+        auto actual_thing = llvm::dyn_cast<llvm::LoadInst>(instance)->getPointerOperand();
+
         auto record = dynamic_cast<types::Record *>(expression->operand->type());
 
         int index = record->get_field_index(expression->name->value());
-        auto value = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, index }));
+        auto value = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(actual_thing, build_gep_index({ 0, index })));
         push_llvm_value(value);
     } else {
         report(InternalError(expression, "unsupported selector"));
@@ -1190,10 +1200,12 @@ void CodeGenerator::visit(ast::TypeDefinition *definition) {
         new_symbol->value = old_symbol->value;
         push_llvm_value(new_symbol->value);
     } else {
+        auto node_type = dynamic_cast<types::RecordType *>(definition->type());
+
         auto symbol = scope()->lookup(this, definition->name());
         return_and_push_null_if_null(symbol);
 
-        auto llvm_type = generate_type(definition);
+        auto llvm_type = generate_type(definition, node_type->constructor());
         return_and_push_null_if_null(llvm_type);
 
         auto llvm_initialiser = take_initialiser(definition);
@@ -1208,7 +1220,41 @@ void CodeGenerator::visit(ast::TypeDefinition *definition) {
         symbol->value = variable;
 
         // create constructor function
+        auto function_type = node_type->constructor();
+        auto method_type = function_type->get_method(0);
 
+        std::string mangled_name = codegen::mangle_method(definition->name()->value(), method_type);
+
+        auto llvm_type_for_method = static_cast<llvm::FunctionType *>(generate_type(nullptr, method_type));
+        return_and_push_null_if_null(llvm_type_for_method);
+
+        auto method = llvm::Function::Create(
+            llvm_type_for_method, llvm::Function::ExternalLinkage,
+            mangled_name, m_module
+        );
+
+        method->addFnAttr(llvm::Attribute::AlwaysInline);
+
+        auto function = variable;
+        create_store_method_to_function(method, function, 0);
+
+        auto old_insert_point = m_ir_builder->saveIP();
+
+        auto entry_bb = create_entry_basic_block(method);
+        m_ir_builder->SetInsertPoint(entry_bb);
+
+        auto instance = m_ir_builder->CreateAlloca(llvm_type_for_method->getReturnType());
+
+        int i = 0;
+        for (auto &arg : method->getArgumentList()) {
+            auto ptr = create_inbounds_gep(instance, { 0, i });
+            m_ir_builder->CreateStore(&arg, ptr);
+            i++;
+        }
+
+        m_ir_builder->CreateRet(m_ir_builder->CreateLoad(instance));
+
+        m_ir_builder->restoreIP(old_insert_point);
 
         push_llvm_value(variable);
     }
