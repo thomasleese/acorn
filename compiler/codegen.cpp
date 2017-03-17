@@ -252,7 +252,7 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
     auto entry_bb = create_entry_basic_block(function);
     m_ir_builder->SetInsertPoint(entry_bb);
 
-    for (ast::Name *param : definition->name()->parameters()) {
+    for (auto param : definition->name()->parameters()) {
         auto s = scope()->lookup(this, definition, param->value());
         auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
         m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
@@ -734,18 +734,17 @@ void CodeGenerator::visit(ast::Block *block) {
     push_llvm_value(last_value);
 }
 
-void CodeGenerator::visit(ast::Name *identifier) {
-    auto symbol = scope()->lookup(this, identifier);
+void CodeGenerator::visit(ast::Name *name) {
+    auto symbol = scope()->lookup(this, name);
     return_and_push_null_if_null(symbol);
 
     if (symbol->value == nullptr) {
-        report(InternalError(identifier, "The LLVM value of this symbol is null."));
+        report(InternalError(name, "The LLVM value of this symbol is null."));
         push_llvm_value(nullptr);
         return;
     }
 
-    auto load = m_ir_builder->CreateLoad(symbol->value);
-    push_llvm_value(load);
+    push_llvm_value(m_ir_builder->CreateLoad(symbol->value));
 }
 
 void CodeGenerator::visit(ast::VariableDeclaration *node) {

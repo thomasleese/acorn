@@ -15,9 +15,6 @@ using namespace acorn;
 ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space) {
     Lexer lexer(filename);
 
-    /*lexer.debug();
-    return nullptr;*/
-
     Parser parser(lexer);
     auto module = parser.parse(filename);
 
@@ -40,10 +37,9 @@ ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space
     typing::Inferrer inferrer(root_namespace);
     module->accept(&inferrer);
 
-    std::cout << root_namespace->to_string() << std::endl;
-
-    module->accept(&pp);
-    pp.print();
+    //std::cout << root_namespace->to_string() << std::endl;
+    //module->accept(&pp);
+    //pp.print();
 
     if (inferrer.has_errors()) {
         return nullptr;
