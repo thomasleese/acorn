@@ -66,7 +66,22 @@ namespace acorn {
             std::vector<llvm::Constant *> m_llvm_initialiser_stack;
         };
 
-        class CodeGenerator : public ast::Visitor, public types::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower, public TypeFollower, public InitialiserFollower {
+        class IrBuilder {
+        public:
+            explicit IrBuilder(llvm::LLVMContext &context);
+
+            llvm::BasicBlock *create_basic_block(std::string name, llvm::Function *function = nullptr);
+            llvm::BasicBlock *create_entry_basic_block(llvm::Function *function = nullptr);
+
+            std::vector<llvm::Value *> build_gep_index(std::initializer_list<int> indexes);
+            llvm::Value *create_inbounds_gep(llvm::Value *value, std::initializer_list<int> indexes);
+            llvm::Value *create_store_method_to_function(llvm::Function *method, llvm::Value *function, int index);
+
+        protected:
+            llvm::IRBuilder<> *m_ir_builder;
+        };
+
+        class CodeGenerator : public ast::Visitor, public types::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower, public TypeFollower, public InitialiserFollower, public IrBuilder {
 
         public:
             CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout);
@@ -106,9 +121,6 @@ namespace acorn {
             void builtin_initialise_function(llvm::Function *function, int no_arguments);
 
         private:
-            std::vector<llvm::Value *> build_gep_index(std::initializer_list<int> indexes);
-            llvm::BasicBlock *create_basic_block(std::string name, llvm::Function *function = nullptr);
-            llvm::BasicBlock *create_entry_basic_block(llvm::Function *function = nullptr);
             llvm::Value *generate_llvm_value(ast::Node *node);
 
         public:
@@ -173,7 +185,6 @@ namespace acorn {
         private:
             llvm::LLVMContext m_context;
             llvm::Module *m_module;
-            llvm::IRBuilder<> *m_ir_builder;
             llvm::MDBuilder *m_md_builder;
             llvm::DataLayout *m_data_layout;
 

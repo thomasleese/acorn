@@ -52,15 +52,6 @@ namespace acorn {
             std::vector<Type *> m_parameters;
         };
 
-        /* useful type interfaces go here */
-        class Selectable {
-        public:
-            virtual ~Selectable();
-
-            virtual bool has_child(std::string name) = 0;
-            virtual Type *child_type(std::string name) = 0;
-        };
-
         // type "type"s -- i.e. the type of concrete types
         class TypeType : public Type {
         public:
@@ -203,6 +194,8 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
+        class Function;
+
         class RecordType : public TypeType {
 
         public:
@@ -217,6 +210,8 @@ namespace acorn {
 
             std::string name() const;
 
+            Function *constructor() const;
+
             Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
             RecordType *with_parameters(std::vector<TypeType *> parameters);
@@ -224,9 +219,12 @@ namespace acorn {
             void accept(Visitor *visitor);
 
         private:
+            void create_builtin_constructor();
+
             std::vector<ParameterType *> m_input_parameters;
             std::vector<std::string> m_field_names;
             std::vector<TypeType *> m_field_types;
+            Function *m_constructor;
 
         };
 
@@ -402,7 +400,7 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class Record : public Type, public Selectable {
+        class Record : public Type {
         public:
             Record(std::vector<std::string> field_names, std::vector<Type *> field_types);
 

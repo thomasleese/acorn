@@ -38,10 +38,6 @@ std::vector<types::Type *> Type::parameters() const {
     return m_parameters;
 }
 
-Selectable::~Selectable() {
-
-}
-
 TypeType::TypeType() {
 
 }
@@ -369,7 +365,7 @@ void MethodType::accept(Visitor *visitor) {
 }
 
 RecordType::RecordType() {
-
+    m_constructor = new Function();
 }
 
 RecordType::RecordType(std::vector<ParameterType *> input_parameters,
@@ -379,7 +375,8 @@ RecordType::RecordType(std::vector<ParameterType *> input_parameters,
         m_field_names(field_names),
         m_field_types(field_types)
 {
-
+    m_constructor = new Function();
+    create_builtin_constructor();
 }
 
 RecordType::RecordType(std::vector<ParameterType *> input_parameters,
@@ -391,7 +388,8 @@ RecordType::RecordType(std::vector<ParameterType *> input_parameters,
         m_field_names(field_names),
         m_field_types(field_types)
 {
-
+    m_constructor = new Function();
+    create_builtin_constructor();
 }
 
 std::string RecordType::name() const {
@@ -402,6 +400,10 @@ std::string RecordType::name() const {
     }
     ss << "}";
     return ss.str();
+}
+
+Function *RecordType::constructor() const {
+    return m_constructor;
 }
 
 TypeType *replace_parameters(TypeType *type, std::map<ParameterType *, TypeType *> mapping) {
@@ -456,6 +458,23 @@ RecordType *RecordType::with_parameters(std::vector<TypeType *> parameters) {
 
 void RecordType::accept(Visitor *visitor) {
     visitor->visit(this);
+}
+
+void RecordType::create_builtin_constructor() {
+    std::vector<Type *> field_types;
+
+    for (auto &type : m_field_types) {
+        auto result = type->create(nullptr, nullptr);
+        field_types.push_back(result);
+    }
+
+    auto method = new Method(field_types, this->create(nullptr, nullptr));
+
+    for (int i = 0; i < m_field_names.size(); i++) {
+        method->set_parameter_name(i, m_field_names[i]);
+    }
+
+    m_constructor->add_method(method);
 }
 
 TupleType::TupleType() {

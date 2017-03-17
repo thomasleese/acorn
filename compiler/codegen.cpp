@@ -94,10 +94,42 @@ llvm::Constant *InitialiserFollower::llvm_initialiser() const {
     return m_llvm_initialiser_stack.back();
 }
 
-CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout) {
+IrBuilder::IrBuilder(llvm::LLVMContext &context) : m_ir_builder(new llvm::IRBuilder<>(context)) {
+
+}
+
+llvm::BasicBlock *IrBuilder::create_basic_block(std::string name, llvm::Function *function) {
+    if (function == nullptr) {
+        function = m_ir_builder->GetInsertBlock()->getParent();
+    }
+
+    return llvm::BasicBlock::Create(function->getContext(), name, function);
+}
+
+llvm::BasicBlock *IrBuilder::create_entry_basic_block(llvm::Function *function) {
+    return create_basic_block("entry", function);
+}
+
+std::vector<llvm::Value *> IrBuilder::build_gep_index(std::initializer_list<int> indexes) {
+    std::vector<llvm::Value *> values;
+    for (int index : indexes) {
+        values.push_back(m_ir_builder->getInt32(index));
+    }
+    return values;
+}
+
+llvm::Value *IrBuilder::create_inbounds_gep(llvm::Value *value, std::initializer_list<int> indexes) {
+    return m_ir_builder->CreateInBoundsGEP(value, build_gep_index(indexes));
+}
+
+llvm::Value *IrBuilder::create_store_method_to_function(llvm::Function *method, llvm::Value *function, int index) {
+    auto method_holder = create_inbounds_gep(function, { 0, index });
+    return m_ir_builder->CreateStore(method, method_holder);
+}
+
+CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout) : IrBuilder(m_context) {
     push_scope(scope);
 
-    m_ir_builder = new llvm::IRBuilder<>(m_context);
     m_md_builder = new llvm::MDBuilder(m_context);
     m_data_layout = data_layout;
 }
@@ -287,9 +319,7 @@ llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *defini
     }
 
     int index = function_type->index_of(method);
-    auto gep_index = build_gep_index({ 0, index });
-    auto gep = m_ir_builder->CreateInBoundsGEP(function_symbol->value, gep_index);
-    m_ir_builder->CreateStore(function, gep);
+    create_store_method_to_function(function, function_symbol->value, index);
 
     return function;
 }
@@ -429,9 +459,7 @@ llvm::Function *CodeGenerator::builtin_create_llvm_function(std::string name, in
 
     m_ir_builder->SetInsertPoint(&m_init_builtins_function->getEntryBlock());
 
-    auto gep_index = build_gep_index({ 0, index });
-    auto gep = m_ir_builder->CreateInBoundsGEP(function_symbol->value, gep_index);
-    m_ir_builder->CreateStore(function, gep);
+    create_store_method_to_function(function, function_symbol->value, index);
 
     builtin_initialise_function(function, method_type->parameter_types().size());
 
@@ -460,26 +488,6 @@ void CodeGenerator::builtin_initialise_function(llvm::Function *function, int no
 
     auto basic_block = create_entry_basic_block(function);
     m_ir_builder->SetInsertPoint(basic_block);
-}
-
-std::vector<llvm::Value *> CodeGenerator::build_gep_index(std::initializer_list<int> indexes) {
-    std::vector<llvm::Value *> values;
-    for (int index : indexes) {
-        values.push_back(m_ir_builder->getInt32(index));
-    }
-    return values;
-}
-
-llvm::BasicBlock *CodeGenerator::create_basic_block(std::string name, llvm::Function *function) {
-    if (function == nullptr) {
-        function = m_ir_builder->GetInsertBlock()->getParent();
-    }
-
-    return llvm::BasicBlock::Create(m_context, name, function);
-}
-
-llvm::BasicBlock *CodeGenerator::create_entry_basic_block(llvm::Function *function) {
-    return create_basic_block("entry", function);
 }
 
 llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
@@ -537,7 +545,18 @@ void CodeGenerator::visit(types::MethodType *type) {
 }
 
 void CodeGenerator::visit(types::RecordType *type) {
-    visit_constructor(type);
+    type->constructor()->accept(this);
+
+    std::vector<llvm::Type *> struct_fields;
+    struct_fields.push_back(pop_llvm_type());
+
+    std::vector<llvm::Constant *> struct_initialisers;
+    struct_initialisers.push_back(pop_llvm_initialiser());
+
+    auto llvm_type = llvm::StructType::get(m_context, struct_fields);
+    auto llvm_initialiser = llvm::ConstantStruct::get(llvm_type, struct_initialisers);
+
+    push_llvm_type_and_initialiser(llvm_type, llvm_initialiser);
 }
 
 void CodeGenerator::visit(types::TupleType *type) {
@@ -1012,6 +1031,9 @@ void CodeGenerator::visit(ast::Assignment *expression) {
 
 void CodeGenerator::visit(ast::Selector *expression) {
     auto module_type = dynamic_cast<types::Module *>(expression->operand->type());
+    auto record_type_type = dynamic_cast<types::RecordType *>(expression->operand->type());
+    auto record_type = dynamic_cast<types::Record *>(expression->operand->type());
+
     if (module_type) {
         auto module_name = static_cast<ast::Name *>(expression->operand);
 
@@ -1021,22 +1043,20 @@ void CodeGenerator::visit(ast::Selector *expression) {
         push_scope(symbol);
         expression->name->accept(this);
         pop_scope();
-    } else {
+    //} else if (record_type_type) {
+
+    } else if (record_type) {
         expression->operand->accept(this);
         auto instance = pop_llvm_value();
 
-        auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type());
-        assert(selectable);
+        auto record = dynamic_cast<types::Record *>(expression->operand->type());
 
-        // either an enum, or a record
-        auto record = dynamic_cast<types::Record *>(selectable);
-        if (record) {
-            int index = record->get_field_index(expression->name->value());
-            auto value = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, index }));
-            push_llvm_value(value);
-        } else {
-            push_llvm_value(nullptr);
-        }
+        int index = record->get_field_index(expression->name->value());
+        auto value = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, index }));
+        push_llvm_value(value);
+    } else {
+        report(InternalError(expression, "unsupported selector"));
+        push_llvm_value(nullptr);
     }
 }
 
@@ -1168,9 +1188,30 @@ void CodeGenerator::visit(ast::TypeDefinition *definition) {
         auto new_symbol = scope()->lookup(this, definition->name());
         auto old_symbol = scope()->lookup(this, definition->alias);
         new_symbol->value = old_symbol->value;
-    }
+        push_llvm_value(new_symbol->value);
+    } else {
+        auto symbol = scope()->lookup(this, definition->name());
+        return_and_push_null_if_null(symbol);
 
-    push_llvm_value(nullptr);
+        auto llvm_type = generate_type(definition);
+        return_and_push_null_if_null(llvm_type);
+
+        auto llvm_initialiser = take_initialiser(definition);
+        return_and_push_null_if_null(llvm_initialiser);
+
+        // variable to hold the type
+        auto variable = new llvm::GlobalVariable(
+            *m_module, llvm_type, false, llvm::GlobalValue::InternalLinkage,
+            llvm_initialiser, definition->name()->value()
+        );
+
+        symbol->value = variable;
+
+        // create constructor function
+
+
+        push_llvm_value(variable);
+    }
 }
 
 void CodeGenerator::visit(ast::Module *module) {

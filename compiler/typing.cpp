@@ -357,6 +357,9 @@ void Inferrer::visit(ast::Selector *expression) {
     return_if_null_type(expression->operand);
 
     auto module = dynamic_cast<types::Module *>(expression->operand->type());
+    auto record_type = dynamic_cast<types::RecordType *>(expression->operand->type());
+    auto record = dynamic_cast<types::Record *>(expression->operand->type());
+
     if (module) {
         auto module_name = static_cast<ast::Name *>(expression->operand);
 
@@ -367,20 +370,21 @@ void Inferrer::visit(ast::Selector *expression) {
         return_if_null(child_symbol);
 
         expression->set_type(child_symbol->type);
-    } else {
-        auto selectable = dynamic_cast<types::Selectable *>(expression->operand->type());
-        if (selectable == nullptr) {
-            report(TypeMismatchError(expression->operand, expression->operand->type()->name(), "selectable"));
-            return;
+    } else if (record_type) {
+        if (expression->name->value() == "new") {
+            expression->set_type(record_type->constructor());
+        } else {
+            report(UndefinedError(expression->name, "new"));
         }
-
-        auto field_type = selectable->child_type(expression->name->value());
-        if (field_type == nullptr) {
+    } else if (record) {
+        auto field_type = record->child_type(expression->name->value());
+        if (field_type != nullptr) {
+            expression->set_type(field_type);
+        } else {
             report(UndefinedError(expression->name, expression->name->value()));
-            return;
         }
-
-        expression->set_type(field_type);
+    } else {
+        report(TypeMismatchError(expression->operand, expression->operand->type()->name(), "module, record type or record"));
     }
 }
 

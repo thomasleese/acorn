@@ -508,16 +508,14 @@ void Builder::visit(ast::TypeDefinition *definition) {
     for (auto parameter : definition->name()->parameters()) {
         Symbol *sym = new Symbol(parameter->value());
         sym->type = new types::ParameterType();
-        scope()->insert(this, definition, sym);
+        scope()->insert(this, parameter, sym);
     }
 
     if (definition->alias) {
         // do nothing
     } else {
-        for (auto name : definition->field_names) {
-            Symbol *sym = new Symbol(name->value());
-            scope()->insert(this, name, sym);
-        }
+        auto constructor_symbol = new Symbol("new");
+        scope()->insert(this, definition, constructor_symbol);
     }
 
     pop_scope();
