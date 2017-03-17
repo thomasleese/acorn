@@ -220,10 +220,15 @@ namespace acorn {
             std::vector<types::Type *> positional_argument_types() const;
             void add_positional_argument(Expression *argument);
 
+            std::map<std::string, Expression *> keyword_arguments() const;
+            std::map<std::string, types::Type *> keyword_argument_types() const;
+            void add_keyword_argument(std::string name, Expression *argument);
+
             void accept(Visitor *visitor);
 
         private:
             std::vector<std::unique_ptr<Expression> > m_positional_arguments;
+            std::map<std::string, std::unique_ptr<Expression> > m_keyword_arguments;
         };
 
         class CCall : public Expression {

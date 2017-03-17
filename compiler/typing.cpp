@@ -269,6 +269,13 @@ void Inferrer::visit(ast::Call *expression) {
         }
     }
 
+    for (auto const &entry : expression->keyword_arguments()) {
+        entry.second->accept(this);
+        if (!entry.second->has_type()) {
+            return;
+        }
+    }
+
     types::Function *function = dynamic_cast<types::Function *>(expression->operand->type());
     if (function == nullptr) {
         expression->set_type(new types::Function());
@@ -285,10 +292,10 @@ void Inferrer::visit(ast::Call *expression) {
         return;
     }
 
-    if (!infer_call_type_parameters(expression, method->parameter_types(), expression->positional_argument_types())) {
+    /*if (!infer_call_type_parameters(expression, method->parameter_types(), expression->positional_argument_types())) {
         report(InternalError(expression, "Could not infer type parameters."));
         return;
-    }
+    }*/
 
     auto return_type = replace_type_parameters(method->return_type(),
                                                expression->inferred_type_parameters);
@@ -523,6 +530,10 @@ void Inferrer::visit(ast::FunctionDefinition *definition) {
         }
     }
 
+    for (size_t i = 0; i < definition->parameters.size(); i++) {
+        method->set_parameter_name(i, definition->parameters[i]->name->value());
+    }
+
     method->set_is_generic(definition->name()->has_parameters());
     function->add_method(method);
 
@@ -717,6 +728,10 @@ void Checker::visit(ast::Call *expression) {
 
     for (auto arg : expression->positional_arguments()) {
         arg->accept(this);
+    }
+
+    for (auto const &entry : expression->keyword_arguments()) {
+        entry.second->accept(this);
     }
 
     check_not_null(expression);

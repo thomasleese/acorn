@@ -878,11 +878,7 @@ void CodeGenerator::visit(ast::Call *expression) {
 
     auto function_type = dynamic_cast<types::Function *>(expression->operand->type());
 
-    std::map<std::string, types::Type *> keyword_argument_types;
-
-    auto method = function_type->find_method(
-      expression, expression->positional_argument_types(), keyword_argument_types
-    );
+    auto method = function_type->find_method(expression);
 
     debug("found method: " + method->name());
 
@@ -900,7 +896,8 @@ void CodeGenerator::visit(ast::Call *expression) {
 
     std::vector<llvm::Value *> arguments;
     int i = 0;
-    for (auto argument : expression->positional_arguments()) {
+    bool valid;
+    for (auto argument : method->ordered_arguments(expression, &valid)) {
         argument->accept(this);
 
         auto value = pop_llvm_value();
@@ -914,6 +911,12 @@ void CodeGenerator::visit(ast::Call *expression) {
 
         arguments.push_back(value);
         i++;
+    }
+
+    if (!valid) {
+        report(InternalError(expression, "Could not order arguments!"));
+        push_llvm_value(nullptr);
+        return;
     }
 
     debug("here");

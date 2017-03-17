@@ -14,6 +14,7 @@ namespace acorn {
 
     namespace ast {
         class Node;
+        class Expression;
         class Call;
     }
 
@@ -455,11 +456,18 @@ namespace acorn {
             bool is_generic() const;
 
             std::vector<Type *> parameter_types() const;
+            int parameter_index(std::string name) const;
             Type *return_type() const;
+
+            std::vector<ast::Expression *> ordered_arguments(std::vector<ast::Expression *> positional_arguments, std::map<std::string, ast::Expression *> keyword_arguments, bool *valid);
+            std::vector<ast::Expression *> ordered_arguments(ast::Call *call, bool *valid);
+
             bool could_be_called_with(std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments);
 
             void set_parameter_inout(Type *type, bool inout);
             bool is_parameter_inout(Type *type);
+
+            void set_parameter_name(int index, std::string name);
 
             Method *with_parameters(std::vector<Type *> parameters);
 
@@ -467,6 +475,7 @@ namespace acorn {
 
         private:
             std::map<Type *, bool> m_inouts;
+            std::map<std::string, int> m_names;
             bool m_is_generic;
         };
 

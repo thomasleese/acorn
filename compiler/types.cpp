@@ -1004,21 +1004,101 @@ std::vector<Type *> Method::parameter_types() const {
     return parameters;
 }
 
+int Method::parameter_index(std::string name) const {
+    auto it = m_names.find(name);
+    if (it != m_names.end()) {
+        return it->second;
+    } else {
+        return -1;
+    }
+}
+
 Type *Method::return_type() const {
     return m_parameters[0];
+}
+
+std::vector<ast::Expression *> Method::ordered_arguments(std::vector<ast::Expression *> positional_arguments, std::map<std::string, ast::Expression *> keyword_arguments, bool *valid) {
+    auto no_parameters = m_parameters.size() - 1;
+
+    std::vector<ast::Expression *> ordered_arguments;
+
+    if ((positional_arguments.size() + keyword_arguments.size()) != no_parameters) {
+        *valid = false;
+        return ordered_arguments;
+    }
+
+    ordered_arguments.resize(no_parameters, nullptr);
+
+    // fill in keyword arguments
+    for (auto const &entry : keyword_arguments) {
+        int index = parameter_index(entry.first);
+        if (index == -1) {
+            *valid = false;
+            return ordered_arguments;
+        }
+
+        ordered_arguments[index] = entry.second;
+    }
+
+    // fill in positional arguments
+    int i = 0;
+    for (auto &arg : positional_arguments) {
+        while (ordered_arguments[i] != nullptr) {
+            i++;
+        }
+        ordered_arguments[i] = arg;
+    }
+
+    for (auto &arg : ordered_arguments) {
+        if (arg == nullptr) {
+            *valid = false;
+        }
+    }
+
+    *valid = true;
+    return ordered_arguments;
+}
+
+std::vector<ast::Expression *> Method::ordered_arguments(ast::Call *call, bool *valid) {
+    return ordered_arguments(call->positional_arguments(), call->keyword_arguments(), valid);
 }
 
 bool Method::could_be_called_with(std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments) {
     auto parameters = parameter_types();
 
-    auto arguments = positional_arguments;
-    // FIXME load in keyword arguments
+    // FIXME use ordered_arguments from above
 
-    if (arguments.size() != parameters.size()) {
+    if ((positional_arguments.size() + keyword_arguments.size()) != parameters.size()) {
         return false;
     }
 
+    std::vector<Type *> arguments;
+    arguments.resize(parameters.size(), nullptr);
+
+    // fill in keyword arguments
+    for (auto const &entry : keyword_arguments) {
+        int index = parameter_index(entry.first);
+        if (index == -1) {
+            return false;
+        }
+
+        arguments[index] = entry.second;
+    }
+
+    // fill in positional arguments
+    int i = 0;
+    for (auto &arg : positional_arguments) {
+        while (arguments[i] != nullptr) {
+            i++;
+        }
+        arguments[i] = arg;
+    }
+
     for (unsigned long i = 0; i < arguments.size(); i++) {
+        if (arguments[i] == nullptr) {
+            return false;
+        }
+
         bool compatible = parameters[i]->is_compatible(arguments[i]);
         if (!compatible) {
             return false;
@@ -1039,6 +1119,10 @@ bool Method::is_parameter_inout(Type *type) {
     }
 
     return it->second;
+}
+
+void Method::set_parameter_name(int index, std::string name) {
+    m_names[name] = index;
 }
 
 Method *Method::with_parameters(std::vector<Type *> parameters) {
@@ -1093,8 +1177,11 @@ Method *Function::find_method(ast::Node *node, std::vector<Type *> positional_ar
 }
 
 Method *Function::find_method(ast::Call *call) const {
-    std::map<std::string, Type *> t;
-    return find_method(call, call->positional_argument_types(), t);
+    return find_method(
+        call,
+        call->positional_argument_types(),
+        call->keyword_argument_types()
+    );
 }
 
 Method *Function::get_method(int index) const {

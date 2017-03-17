@@ -286,6 +286,26 @@ void Call::add_positional_argument(Expression *argument) {
     m_positional_arguments.push_back(std::unique_ptr<Expression>(argument));
 }
 
+std::map<std::string, Expression *> Call::keyword_arguments() const {
+    std::map<std::string, Expression *> args;
+    for (auto const &entry : m_keyword_arguments) {
+        args[entry.first] = entry.second.get();
+    }
+    return args;
+}
+
+std::map<std::string, types::Type *> Call::keyword_argument_types() const {
+  std::map<std::string, types::Type *> types;
+  for (auto const &entry : m_keyword_arguments) {
+      types[entry.first] = entry.second->type();
+  }
+  return types;
+}
+
+void Call::add_keyword_argument(std::string name, Expression *argument) {
+    m_keyword_arguments[name] = std::unique_ptr<Expression>(argument);
+}
+
 void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }

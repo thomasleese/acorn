@@ -367,7 +367,12 @@ Call *Parser::read_call(Expression *operand) {
 
         return_if_null(expression);
 
-        call->add_positional_argument(expression);
+        if (name == nullptr) {
+            call->add_positional_argument(expression);
+        } else {
+            call->add_keyword_argument(name->value(), expression);
+            delete name;
+        }
 
         if (!is_and_skip_token(Token::Comma)) {
             break;
