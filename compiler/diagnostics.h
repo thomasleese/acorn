@@ -100,6 +100,7 @@ namespace acorn {
         public:
             TypeMismatchError(ast::Expression *node1, ast::Expression *node2);
             TypeMismatchError(ast::Node *node, types::Type *type1, types::Type *type2);
+            TypeMismatchError(ast::Node *node, std::string type1, std::string type2);
         };
 
         class TypeInferenceError : public CompilerError {

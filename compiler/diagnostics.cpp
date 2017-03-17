@@ -143,27 +143,20 @@ InvalidTypeParameters::InvalidTypeParameters(ast::Node *node, unsigned long give
     m_message = ss.str();
 }
 
-TypeMismatchError::TypeMismatchError(ast::Expression *node1, ast::Expression *node2) :
-        TypeMismatchError(node1, node1->type(), node2 ? node2->type() : nullptr)
-{
+TypeMismatchError::TypeMismatchError(ast::Expression *node1, ast::Expression *node2) : TypeMismatchError(node1, node1->type(), node2 ? node2->type() : nullptr) {
 
 }
 
-TypeMismatchError::TypeMismatchError(ast::Node *node, types::Type *type1, types::Type *type2) :
-        CompilerError(node)
-{
+TypeMismatchError::TypeMismatchError(ast::Node *node, types::Type *type1, types::Type *type2) : TypeMismatchError(node, type1->name(), type2->name()) {
+
+}
+
+TypeMismatchError::TypeMismatchError(ast::Node *node, std::string type1, std::string type2) : CompilerError(node) {
     m_prefix = "Invalid types";
 
     std::stringstream ss;
-
-    if (type1) {
-        ss << "Got: " << type1->name() << "\n";
-    }
-
-    if (type2) {
-        ss << "Expected: " << type2->name();
-    }
-
+    ss << "Got: " << type1 << "\n";
+    ss << "Expected: " << type2;
     m_message = ss.str();
 }
 

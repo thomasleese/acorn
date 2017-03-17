@@ -1,10 +1,11 @@
 import 'base/os'
 import 'maths/constants'
 
-def test(a as Int, b as Int)
-  a - b
+type Vector2
+  x as Int
+  y as Int
 end
 
-let result = test(b: 4, a: 10)
-  exit(result)
+let result = Vector2.new(y: 10, x: 5)
+  exit(result.x)
 end
