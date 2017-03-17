@@ -1017,10 +1017,11 @@ Type *Method::return_type() const {
     return m_parameters[0];
 }
 
-std::vector<ast::Expression *> Method::ordered_arguments(std::vector<ast::Expression *> positional_arguments, std::map<std::string, ast::Expression *> keyword_arguments, bool *valid) {
+template<typename T>
+std::vector<T> Method::ordered_arguments(std::vector<T> positional_arguments, std::map<std::string, T> keyword_arguments, bool *valid) {
     auto no_parameters = m_parameters.size() - 1;
 
-    std::vector<ast::Expression *> ordered_arguments;
+    std::vector<T> ordered_arguments;
 
     if ((positional_arguments.size() + keyword_arguments.size()) != no_parameters) {
         *valid = false;
@@ -1063,43 +1064,20 @@ std::vector<ast::Expression *> Method::ordered_arguments(ast::Call *call, bool *
     return ordered_arguments(call->positional_arguments(), call->keyword_arguments(), valid);
 }
 
+std::vector<Type *> Method::ordered_argument_types(ast::Call *call, bool *valid) {
+    return ordered_arguments(call->positional_argument_types(), call->keyword_argument_types(), valid);
+}
+
 bool Method::could_be_called_with(std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments) {
-    auto parameters = parameter_types();
+    bool valid;
+    auto arguments = ordered_arguments(positional_arguments, keyword_arguments, &valid);
 
-    // FIXME use ordered_arguments from above
-
-    if ((positional_arguments.size() + keyword_arguments.size()) != parameters.size()) {
+    if (!valid) {
         return false;
     }
 
-    std::vector<Type *> arguments;
-    arguments.resize(parameters.size(), nullptr);
-
-    // fill in keyword arguments
-    for (auto const &entry : keyword_arguments) {
-        int index = parameter_index(entry.first);
-        if (index == -1) {
-            return false;
-        }
-
-        arguments[index] = entry.second;
-    }
-
-    // fill in positional arguments
-    int i = 0;
-    for (auto &arg : positional_arguments) {
-        while (arguments[i] != nullptr) {
-            i++;
-        }
-        arguments[i] = arg;
-    }
-
     for (unsigned long i = 0; i < arguments.size(); i++) {
-        if (arguments[i] == nullptr) {
-            return false;
-        }
-
-        bool compatible = parameters[i]->is_compatible(arguments[i]);
+        bool compatible = m_parameters[i + 1]->is_compatible(arguments[i]);
         if (!compatible) {
             return false;
         }
