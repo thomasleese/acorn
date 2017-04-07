@@ -810,20 +810,20 @@ FunctionDefinition *Parser::read_function_definition() {
         return nullptr;
     }
 
-    skip_token(Token::OpenParenthesis);
+    if (is_and_skip_token(Token::OpenParenthesis)) {
+        while (!is_token(Token::CloseParenthesis)) {
+            auto parameter = read_parameter();
+            return_if_null(parameter);
 
-    while (!is_token(Token::CloseParenthesis)) {
-        auto parameter = read_parameter();
-        return_if_null(parameter);
+            definition->parameters.push_back(parameter);
 
-        definition->parameters.push_back(parameter);
-
-        if (!is_and_skip_token(Token::Comma)) {
-            break;
+            if (!is_and_skip_token(Token::Comma)) {
+                break;
+            }
         }
-    }
 
-    return_if_false(skip_token(Token::CloseParenthesis));
+        return_if_false(skip_token(Token::CloseParenthesis));
+    }
 
     if (is_and_skip_token(Token::AsKeyword)) {
         definition->given_return_type = read_name(true);

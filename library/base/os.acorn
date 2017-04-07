@@ -9,6 +9,6 @@ def exit(code as Int)
 end
 
 ## Abort the program.
-def abort()
+def abort
   ccall abort() as Void
 end
