@@ -1,4 +1,4 @@
-import 'base/os'
+import "base/os"
 
 def get_a_zero(x as Int)
     10

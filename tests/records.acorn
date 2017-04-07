@@ -1,4 +1,4 @@
-import 'base/os'
+import "base/os"
 
 type Vector2
     x as Int

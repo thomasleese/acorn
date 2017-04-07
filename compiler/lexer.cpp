@@ -272,7 +272,7 @@ bool Lexer::read_number(Token &token) {
 }
 
 bool is_quote_char(int ch) {
-    return ch == '"' || ch == '\'';
+    return ch == '"';
 }
 
 bool Lexer::read_string(Token &token) {

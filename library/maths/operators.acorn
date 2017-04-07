@@ -1,4 +1,4 @@
-import 'maths/constants'
+import "maths/constants"
 
 def sqrt(x as Float) as Float
     x

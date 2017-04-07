@@ -1,4 +1,4 @@
-import 'base/os'
+import "base/os"
 
 let a = 0
     exit(a)
