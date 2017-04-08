@@ -1,4 +1,3 @@
-def random() as Float
-    return 0
+def random as Float
+  0
 end
-

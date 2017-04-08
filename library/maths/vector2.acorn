@@ -1,0 +1,22 @@
+module Maths
+  type Vector2{T}
+    x as T
+    y as T
+  end
+end
+
+def +{T}(a as Vector2{T}, b as Vector2{T}) as Vector2{T}
+  Vector2.new(x: a.x + b.x, y: a.y + b.y)
+end
+
+def angle{T}(vector as Vector2{T}) as T
+  atan2(y: vec.y, x: vec.x)
+end
+
+def length2{T}(vector as Vector2{T}) as T
+  vec.x ^ 2 + vec.y ^ 2
+end
+
+def length{T}(vector as Vector2{T}) as T
+  sqrt(length2(vector))
+end

@@ -1,0 +1,7 @@
+module GC
+  def allocate{T}(type as Type{T}, amount as Int) as UnsafePointer{Int8}
+    let size = strideof(type) * amount
+      ccall malloc(Int) as UnsafePointer{Int8} using size
+    end
+  end
+end

@@ -1,0 +1,46 @@
+type Array{T}
+  elements as UnsafePointer{T}
+  length as Int
+  capacity as Int
+end
+
+def Array.new{T}(type as Type{T}, capacity as Int) as Array{T}
+  Array.new(
+    elements: GC.allocate(type, capacity),
+    length: 0,
+    capacity: capacity
+  )
+end
+
+def setindex{T}(inout array as Array{T}, key as Int, value as T)
+  array.elements[key] = value
+end
+
+def getindex{T}(array as Array{T}, key as Int) as T
+  return array.elements[key]
+end
+
+def append{T}(inout array as Array{T}, value as T)
+  array.length = array.length + 1
+  array[array.length - 1] = value
+end
+
+type ArrayIterator{T}
+  array as Array{T}
+  state as Int
+end
+
+def iterate{T}(array as Array{T}) as ArrayIterator{T}
+  ArrayIterator.new(array: array, state: 0)
+end
+
+def next{T}(iterator as ArrayIterator{T}) as Maybe{T}
+  if iterator.state >= iterator.array.length
+    Nothing
+  else
+    do
+      iterator.state += 1
+      iterator.array[iterator.state]
+    end
+  end
+end

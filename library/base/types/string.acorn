@@ -1,0 +1,5 @@
+type UnicodeScalar as UInt32
+
+type Character as Array{UnicodeScalar}
+
+type String as Array{Character}

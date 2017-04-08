@@ -1,0 +1,28 @@
+type Range
+  start as Int
+  stop as Int
+end
+
+def Range.new(stop as Int) as Range
+  Range.new(start: 0, stop: stop)
+end
+
+type RangeIterator
+  range as Range
+  index as Int
+end
+
+def iterate(range as Range) as RangeIterator
+  RangeIterator(range: range, index: range.start)
+end
+
+def next(iterator as RangeIterator) as Maybe{Int}:
+  if range.index >= range.stop:
+    Nothing
+  else
+    do
+      range.index += 1
+      range.index
+    end
+  end
+end
