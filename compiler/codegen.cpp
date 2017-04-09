@@ -175,22 +175,6 @@ llvm::Constant *CodeGenerator::take_initialiser(ast::Node *node) {
     }
 }
 
-void CodeGenerator::push_type_parameter(types::ParameterType *key, types::Type *value) {
-    m_type_parameters[key] = value;
-}
-
-void CodeGenerator::pop_type_parameter(types::ParameterType *key) {
-    m_type_parameters.erase(key);
-}
-
-types::Type *CodeGenerator::get_type_parameter(types::ParameterType *key) {
-    return m_type_parameters[key];
-}
-
-types::Type *CodeGenerator::get_type_parameter(types::Parameter *key) {
-    return get_type_parameter(key->type());
-}
-
 llvm::Type *CodeGenerator::generate_type(ast::Expression *expression, types::Type *type) {
     type->accept(this);
     return take_type(expression);
@@ -207,121 +191,6 @@ void CodeGenerator::push_llvm_type_and_initialiser(llvm::Type *type, llvm::Const
 
 void CodeGenerator::push_null_llvm_type_and_initialiser() {
     push_llvm_type_and_initialiser(nullptr, nullptr);
-}
-
-llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *definition) {
-    std::map<types::ParameterType *, types::Type *> params;
-    return generate_function(definition, params);
-}
-
-llvm::Function *CodeGenerator::generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *> type_parameters) {
-    auto function_symbol = scope()->lookup(this, definition->name());
-    auto function_type = static_cast<types::Function *>(function_symbol->type);
-
-    auto method = static_cast<types::Method *>(definition->type());
-    auto symbol = function_symbol->nameSpace->lookup_by_node(this, definition);
-
-    auto llvm_function_name = codegen::mangle_method(function_symbol->name, method);
-
-    if (!type_parameters.empty()) {
-        llvm_function_name += "_";
-        for (auto entry : type_parameters) {
-            auto t = entry.second;
-            while (auto p = dynamic_cast<types::Parameter *>(t)) {
-                t = get_type_parameter(p);
-                return_null_if_null(t);
-            }
-            llvm_function_name += t->mangled_name();
-        }
-    }
-
-    push_scope(symbol);
-
-    for (auto entry : type_parameters) {
-        push_type_parameter(entry.first, entry.second);
-    }
-
-    auto llvm_type = generate_type(definition);
-    return_null_if_null(llvm_type);
-
-    auto llvm_function_type = static_cast<llvm::FunctionType *>(llvm_type);
-    auto function = llvm::Function::Create(llvm_function_type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
-
-    auto old_insert_point = m_ir_builder->saveIP();
-
-    auto entry_bb = create_entry_basic_block(function);
-    m_ir_builder->SetInsertPoint(entry_bb);
-
-    for (auto param : definition->name()->parameters()) {
-        auto s = scope()->lookup(this, definition, param->value());
-        auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
-        m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
-        s->value = alloca;
-    }
-
-    int i = 0;
-    for (auto &arg : function->args()) {
-        std::string arg_name = definition->parameters[i]->name->value();
-        arg.setName(arg_name);
-
-        llvm::Value *value = &arg;
-
-        if (!definition->parameters[i]->inout) {
-            auto alloca = m_ir_builder->CreateAlloca(arg.getType(), 0, arg_name);
-            m_ir_builder->CreateStore(&arg, alloca);
-            value = alloca;
-        }
-
-        auto arg_symbol = scope()->lookup(this, definition, arg_name);
-        arg_symbol->value = value;
-
-        i++;
-    }
-
-    definition->body->accept(this);
-
-    auto value = pop_llvm_value();
-    return_null_if_null(value);
-
-    m_ir_builder->CreateRet(value);
-
-    pop_scope();
-
-    for (auto entry : type_parameters) {
-        pop_type_parameter(entry.first);
-    }
-
-    m_ir_builder->restoreIP(old_insert_point);
-
-    std::string str;
-    llvm::raw_string_ostream stream(str);
-    if (llvm::verifyFunction(*function, &stream)) {
-        function->dump();
-        report(InternalError(definition, stream.str()));
-        return nullptr;
-    }
-
-    symbol->value = function;
-
-    if (function_symbol->value == nullptr) {
-      // check if global symbol is set
-      auto llvm_function_type = generate_type(definition, function_type);
-      return_null_if_null(llvm_function_type);
-
-      auto llvm_initialiser = take_initialiser(definition);
-      return_null_if_null(llvm_initialiser);
-
-      auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
-                                               llvm::GlobalValue::InternalLinkage,
-                                               llvm_initialiser, definition->name()->value());
-
-      function_symbol->value = variable;
-    }
-
-    int index = function_type->index_of(method);
-    create_store_method_to_function(function, function_symbol->value, index);
-
-    return function;
 }
 
 void CodeGenerator::builtin_generate() {
@@ -572,12 +441,7 @@ void CodeGenerator::visit(types::TypeDescriptionType *type) {
 }
 
 void CodeGenerator::visit(types::Parameter *type) {
-    auto it = m_type_parameters.find(type->type());
-    if (it == m_type_parameters.end()) {
-        push_null_llvm_type_and_initialiser();
-    } else {
-        it->second->accept(this);
-    }
+    push_null_llvm_type_and_initialiser();
 }
 
 void CodeGenerator::visit(types::Void *type) {
@@ -1185,11 +1049,100 @@ void CodeGenerator::visit(ast::Let *definition) {
 }
 
 void CodeGenerator::visit(ast::FunctionDefinition *definition) {
-    if (!definition->name()->has_parameters()) {
-        generate_function(definition);
+    if (definition->name()->has_parameters()) {
+        report(InternalError(definition, "Function should not have definitions."));
+        push_llvm_value(nullptr);
+        return;
     }
 
-    push_llvm_value(nullptr);
+    auto function_symbol = scope()->lookup(this, definition->name());
+    auto function_type = static_cast<types::Function *>(function_symbol->type);
+
+    auto method = static_cast<types::Method *>(definition->type());
+    auto symbol = function_symbol->nameSpace->lookup_by_node(this, definition);
+
+    auto llvm_function_name = codegen::mangle_method(function_symbol->name, method);
+
+    push_scope(symbol);
+
+    auto llvm_type = generate_type(definition);
+    return_and_push_null_if_null(llvm_type);
+
+    auto llvm_function_type = static_cast<llvm::FunctionType *>(llvm_type);
+    auto function = llvm::Function::Create(llvm_function_type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
+
+    auto old_insert_point = m_ir_builder->saveIP();
+
+    auto entry_bb = create_entry_basic_block(function);
+    m_ir_builder->SetInsertPoint(entry_bb);
+
+    for (auto param : definition->name()->parameters()) {
+        auto s = scope()->lookup(this, definition, param->value());
+        auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
+        m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
+        s->value = alloca;
+    }
+
+    int i = 0;
+    for (auto &arg : function->args()) {
+        std::string arg_name = definition->parameters[i]->name->value();
+        arg.setName(arg_name);
+
+        llvm::Value *value = &arg;
+
+        if (!definition->parameters[i]->inout) {
+            auto alloca = m_ir_builder->CreateAlloca(arg.getType(), 0, arg_name);
+            m_ir_builder->CreateStore(&arg, alloca);
+            value = alloca;
+        }
+
+        auto arg_symbol = scope()->lookup(this, definition, arg_name);
+        arg_symbol->value = value;
+
+        i++;
+    }
+
+    definition->body->accept(this);
+
+    auto value = pop_llvm_value();
+    return_and_push_null_if_null(value);
+
+    m_ir_builder->CreateRet(value);
+
+    pop_scope();
+
+    m_ir_builder->restoreIP(old_insert_point);
+
+    std::string str;
+    llvm::raw_string_ostream stream(str);
+    if (llvm::verifyFunction(*function, &stream)) {
+        function->dump();
+        report(InternalError(definition, stream.str()));
+        push_llvm_value(nullptr);
+        return;
+    }
+
+    symbol->value = function;
+
+    if (function_symbol->value == nullptr) {
+      // check if global symbol is set
+      auto llvm_function_type = generate_type(definition, function_type);
+      return_and_push_null_if_null(llvm_function_type);
+
+      auto llvm_initialiser = take_initialiser(definition);
+      return_and_push_null_if_null(llvm_initialiser);
+
+      auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
+                                               llvm::GlobalValue::InternalLinkage,
+                                               llvm_initialiser, definition->name()->value());
+
+      function_symbol->value = variable;
+    }
+
+    int index = function_type->index_of(method);
+    create_store_method_to_function(function, function_symbol->value, index);
+
+    push_llvm_value(function);
 }
 
 void CodeGenerator::visit(ast::TypeDefinition *definition) {

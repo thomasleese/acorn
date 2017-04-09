@@ -92,19 +92,11 @@ namespace acorn {
             llvm::Type *take_type(ast::Expression *expression);
             llvm::Constant *take_initialiser(ast::Node *node);
 
-            void push_type_parameter(types::ParameterType *key, types::Type *value);
-            void pop_type_parameter(types::ParameterType *key);
-            types::Type *get_type_parameter(types::ParameterType *key);
-            types::Type *get_type_parameter(types::Parameter *key);
-
             llvm::Type *generate_type(ast::Expression *expression, types::Type *type);
             llvm::Type *generate_type(ast::Expression *expression);
 
             void push_llvm_type_and_initialiser(llvm::Type *type, llvm::Constant *initialiser);
             void push_null_llvm_type_and_initialiser();
-
-            llvm::Function *generate_function(ast::FunctionDefinition *definition);
-            llvm::Function *generate_function(ast::FunctionDefinition *definition, std::map<types::ParameterType *, types::Type *>);
 
         public:
             void builtin_generate();
@@ -189,8 +181,6 @@ namespace acorn {
             llvm::DataLayout *m_data_layout;
 
             std::vector<llvm::Argument *> m_args;
-
-            std::map<types::ParameterType *, types::Type *> m_type_parameters;
 
             llvm::Function *m_init_builtins_function;
             llvm::Function *m_init_variables_function;
