@@ -4,10 +4,14 @@ def sqrt(x as Float) as Float
   x
 end
 
-def sum{E, T}(sequence as E) as T
-  let result as T = 0
+protocol Iterator{T, E}
+  def next(iterator as T) as E
+end
+
+def sum{T, E}(iterator as Iterator{T, E}) as E
+  let result = next(iterator)
     do
-      for element in sequence
+      for element in iterator
         result += element
       end
       result
