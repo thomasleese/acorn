@@ -184,23 +184,23 @@ void Inferrer::visit(ast::VariableDeclaration *node) {
     }
 }
 
-void Inferrer::visit(ast::IntegerLiteral *expression) {
+void Inferrer::visit(ast::Int *expression) {
     expression->set_type(instance_type(expression, "Int64"));
 }
 
-void Inferrer::visit(ast::FloatLiteral *expression) {
+void Inferrer::visit(ast::Float *expression) {
     expression->set_type(instance_type(expression, "Float64"));
 }
 
-void Inferrer::visit(ast::ImaginaryLiteral *expression) {
+void Inferrer::visit(ast::Complex *expression) {
     expression->set_type(instance_type(expression, "Complex"));
 }
 
-void Inferrer::visit(ast::StringLiteral *expression) {
+void Inferrer::visit(ast::String *expression) {
     expression->set_type(instance_type(expression, "String"));
 }
 
-void Inferrer::visit(ast::SequenceLiteral *sequence) {
+void Inferrer::visit(ast::List *sequence) {
     for (auto element : sequence->elements) {
         element->accept(this);
     }
@@ -231,11 +231,11 @@ void Inferrer::visit(ast::SequenceLiteral *sequence) {
     }
 }
 
-void Inferrer::visit(ast::MappingLiteral *mapping) {
+void Inferrer::visit(ast::Dictionary *mapping) {
     report(TypeInferenceError(mapping));
 }
 
-void Inferrer::visit(ast::TupleLiteral *expression) {
+void Inferrer::visit(ast::Tuple *expression) {
     std::vector<types::Type *> element_types;
 
     for (auto value : expression->elements()) {
@@ -539,7 +539,7 @@ void Inferrer::visit(ast::Def *definition) {
     pop_scope();
 }
 
-void Inferrer::visit(ast::TypeDefinition *definition) {
+void Inferrer::visit(ast::Type *definition) {
     auto symbol = scope()->lookup(this, definition, definition->name()->value());
 
     push_scope(symbol);
@@ -661,23 +661,23 @@ void Checker::visit(ast::VariableDeclaration *node) {
     check_not_null(node);
 }
 
-void Checker::visit(ast::IntegerLiteral *expression) {
+void Checker::visit(ast::Int *expression) {
     check_not_null(expression);
 }
 
-void Checker::visit(ast::FloatLiteral *expression) {
+void Checker::visit(ast::Float *expression) {
     check_not_null(expression);
 }
 
-void Checker::visit(ast::ImaginaryLiteral *imaginary) {
+void Checker::visit(ast::Complex *imaginary) {
     check_not_null(imaginary);
 }
 
-void Checker::visit(ast::StringLiteral *expression) {
+void Checker::visit(ast::String *expression) {
     check_not_null(expression);
 }
 
-void Checker::visit(ast::SequenceLiteral *sequence) {
+void Checker::visit(ast::List *sequence) {
     for (auto element : sequence->elements) {
         element->accept(this);
     }
@@ -685,7 +685,7 @@ void Checker::visit(ast::SequenceLiteral *sequence) {
     check_not_null(sequence);
 }
 
-void Checker::visit(ast::MappingLiteral *mapping) {
+void Checker::visit(ast::Dictionary *mapping) {
     for (size_t i = 0; i < mapping->keys.size(); i++) {
         mapping->keys[i]->accept(this);
         mapping->values[i]->accept(this);
@@ -694,7 +694,7 @@ void Checker::visit(ast::MappingLiteral *mapping) {
     check_not_null(mapping);
 }
 
-void Checker::visit(ast::TupleLiteral *expression) {
+void Checker::visit(ast::Tuple *expression) {
     for (auto element : expression->elements()) {
         element->accept(this);
     }
@@ -845,7 +845,7 @@ void Checker::visit(ast::Def *definition) {
     pop_scope();
 }
 
-void Checker::visit(ast::TypeDefinition *definition) {
+void Checker::visit(ast::Type *definition) {
     check_not_null(definition);
 
     definition->name()->accept(this);

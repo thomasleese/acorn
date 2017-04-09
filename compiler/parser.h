@@ -42,11 +42,11 @@ namespace acorn {
         ast::Name *read_name(bool accept_parameters);
         ast::Name *read_operator(bool accept_parameters);
         ast::VariableDeclaration *read_variable_declaration();
-        ast::IntegerLiteral *read_integer_literal();
-        ast::FloatLiteral *read_float_literal();
-        ast::StringLiteral *read_string_literal();
-        ast::SequenceLiteral *read_sequence_literal();
-        ast::MappingLiteral *read_mapping_literal();
+        ast::Int *read_int();
+        ast::Float *read_float();
+        ast::String *read_string();
+        ast::List *read_list();
+        ast::Dictionary *read_dictionary();
         ast::Call *read_call(ast::Expression *operand);
         ast::CCall *read_ccall();
         ast::Cast *read_cast(ast::Expression *operand);
@@ -67,7 +67,7 @@ namespace acorn {
         ast::Parameter *read_parameter();
         ast::Let *read_let();
         ast::Def *read_def();
-        ast::TypeDefinition *read_type_definition();
+        ast::Type *read_type();
         ast::Module *read_module();
         ast::Import *read_import_expression();
 

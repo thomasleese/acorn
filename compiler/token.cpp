@@ -97,11 +97,11 @@ std::string Token::as_string(Token::Kind kind)
             return "default";
         case ModuleKeyword:
             return "module";
-        case IntegerLiteral:
+        case Int:
             return "integer";
-        case FloatLiteral:
+        case Float:
             return "float";
-        case StringLiteral:
+        case String:
             return "string";
         case OpenBracket:
             return "[";

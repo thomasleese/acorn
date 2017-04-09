@@ -67,29 +67,29 @@ void PrettyPrinter::visit(ast::VariableDeclaration *node)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::IntegerLiteral *expression)
+void PrettyPrinter::visit(ast::Int *expression)
 {
-    ss << indentation() << "(IntegerLiteral " << expression->value() << " [" << type_of(expression) << "])\n";
+    ss << indentation() << "(Int " << expression->value() << " [" << type_of(expression) << "])\n";
 }
 
-void PrettyPrinter::visit(ast::FloatLiteral *expression)
+void PrettyPrinter::visit(ast::Float *expression)
 {
-    ss << indentation() << "(FloatLiteral " << expression->value() << " [" << type_of(expression) << "])\n";
+    ss << indentation() << "(Float " << expression->value() << " [" << type_of(expression) << "])\n";
 }
 
-void PrettyPrinter::visit(ast::ImaginaryLiteral *imaginary)
+void PrettyPrinter::visit(ast::Complex *imaginary)
 {
-    ss << indentation() << "(ImaginaryLiteral " << imaginary->value << ")\n";
+    ss << indentation() << "(Complex " << imaginary->value << ")\n";
 }
 
-void PrettyPrinter::visit(ast::StringLiteral *expression)
+void PrettyPrinter::visit(ast::String *expression)
 {
-    ss << indentation() << "(StringLiteral " << expression->value() << ")\n";
+    ss << indentation() << "(String " << expression->value() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::SequenceLiteral *sequence)
+void PrettyPrinter::visit(ast::List *sequence)
 {
-    ss << indentation() << "(SequenceLiteral\n";
+    ss << indentation() << "(List\n";
     indent++;
 
     for (auto element : sequence->elements) {
@@ -100,9 +100,9 @@ void PrettyPrinter::visit(ast::SequenceLiteral *sequence)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::MappingLiteral *mapping)
+void PrettyPrinter::visit(ast::Dictionary *mapping)
 {
-    ss << indentation() << "(MappingLiteral\n";
+    ss << indentation() << "(Dictionary\n";
     indent++;
 
     for (unsigned long i = 0; i < mapping->keys.size(); i++) {
@@ -114,9 +114,9 @@ void PrettyPrinter::visit(ast::MappingLiteral *mapping)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::TupleLiteral *expression)
+void PrettyPrinter::visit(ast::Tuple *expression)
 {
-    ss << indentation() << "(TupleLiteral\n";
+    ss << indentation() << "(Tuple\n";
     indent++;
 
     for (auto element : expression->elements()) {
@@ -322,9 +322,9 @@ void PrettyPrinter::visit(ast::Def *definition)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::TypeDefinition *definition)
+void PrettyPrinter::visit(ast::Type *definition)
 {
-    ss << indentation() << "(TypeDefinition\n";
+    ss << indentation() << "(Type\n";
     indent++;
 
     definition->name()->accept(this);

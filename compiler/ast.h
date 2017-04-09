@@ -120,9 +120,9 @@ namespace acorn {
             std::unique_ptr<Name> m_name;
         };
 
-        class IntegerLiteral : public Expression {
+        class Int : public Expression {
         public:
-            IntegerLiteral(Token token, std::string value);
+            Int(Token token, std::string value);
 
             std::string value() const;
 
@@ -132,9 +132,9 @@ namespace acorn {
             std::string m_value;
         };
 
-        class FloatLiteral : public Expression {
+        class Float : public Expression {
         public:
-            FloatLiteral(Token token, std::string value);
+            Float(Token token, std::string value);
 
             std::string value() const;
 
@@ -144,7 +144,7 @@ namespace acorn {
             std::string m_value;
         };
 
-        class ImaginaryLiteral : public Expression {
+        class Complex : public Expression {
         public:
             using Expression::Expression;
 
@@ -153,9 +153,9 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class StringLiteral : public Expression {
+        class String : public Expression {
         public:
-            StringLiteral(Token token, std::string value);
+            String(Token token, std::string value);
 
             std::string value() const;
 
@@ -165,7 +165,7 @@ namespace acorn {
             std::string m_value;
         };
 
-        class SequenceLiteral : public Expression {
+        class List : public Expression {
         public:
             using Expression::Expression;
 
@@ -174,7 +174,7 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class MappingLiteral : public Expression {
+        class Dictionary : public Expression {
         public:
             using Expression::Expression;
 
@@ -184,9 +184,9 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class TupleLiteral : public Expression {
+        class Tuple : public Expression {
         public:
-            TupleLiteral(Token token, std::vector<Expression *> elements);
+            Tuple(Token token, std::vector<Expression *> elements);
 
             std::vector<Expression *> elements();
 
@@ -394,9 +394,9 @@ namespace acorn {
             std::unique_ptr<Name> m_given_return_type;
         };
 
-        class TypeDefinition : public Definition {
+        class Type : public Definition {
         public:
-            TypeDefinition(Token token);
+            Type(Token token);
 
             Name *alias;
 
@@ -438,9 +438,9 @@ namespace acorn {
 
         class Import : public Expression {
         public:
-            Import(Token token, StringLiteral *path);
+            Import(Token token, String *path);
 
-            StringLiteral *path;
+            String *path;
 
             void accept(Visitor *visitor);
         };
@@ -463,13 +463,13 @@ namespace acorn {
             virtual void visit(Block *block) = 0;
             virtual void visit(Name *identifier) = 0;
             virtual void visit(VariableDeclaration *node) = 0;
-            virtual void visit(IntegerLiteral *expression) = 0;
-            virtual void visit(FloatLiteral *expression) = 0;
-            virtual void visit(ImaginaryLiteral *expression) = 0;
-            virtual void visit(StringLiteral *expression) = 0;
-            virtual void visit(SequenceLiteral *expression) = 0;
-            virtual void visit(MappingLiteral *expression) = 0;
-            virtual void visit(TupleLiteral *expression) = 0;
+            virtual void visit(Int *expression) = 0;
+            virtual void visit(Float *expression) = 0;
+            virtual void visit(Complex *expression) = 0;
+            virtual void visit(String *expression) = 0;
+            virtual void visit(List *expression) = 0;
+            virtual void visit(Dictionary *expression) = 0;
+            virtual void visit(Tuple *expression) = 0;
             virtual void visit(Call *expression) = 0;
             virtual void visit(CCall *expression) = 0;
             virtual void visit(Cast *expression) = 0;
@@ -483,7 +483,7 @@ namespace acorn {
             virtual void visit(Parameter *parameter) = 0;
             virtual void visit(Let *definition) = 0;
             virtual void visit(Def *definition) = 0;
-            virtual void visit(TypeDefinition *definition) = 0;
+            virtual void visit(Type *definition) = 0;
             virtual void visit(Module *module) = 0;
             virtual void visit(Import *Expression) = 0;
             virtual void visit(SourceFile *module) = 0;

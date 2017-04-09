@@ -644,7 +644,7 @@ void CodeGenerator::visit(ast::VariableDeclaration *node) {
     push_llvm_value(symbol->value);
 }
 
-void CodeGenerator::visit(ast::IntegerLiteral *expression) {
+void CodeGenerator::visit(ast::Int *expression) {
     auto type = generate_type(expression);
 
     uint64_t integer;
@@ -655,7 +655,7 @@ void CodeGenerator::visit(ast::IntegerLiteral *expression) {
     push_llvm_value(llvm::ConstantInt::get(type, integer, true));
 }
 
-void CodeGenerator::visit(ast::FloatLiteral *expression) {
+void CodeGenerator::visit(ast::Float *expression) {
     auto type = generate_type(expression);
 
     double floatValue;
@@ -666,17 +666,17 @@ void CodeGenerator::visit(ast::FloatLiteral *expression) {
     push_llvm_value(llvm::ConstantFP::get(type, floatValue));
 }
 
-void CodeGenerator::visit(ast::ImaginaryLiteral *imaginary) {
+void CodeGenerator::visit(ast::Complex *imaginary) {
     report(InternalError(imaginary, "Not yet implemented."));
     push_llvm_value(nullptr);
 }
 
-void CodeGenerator::visit(ast::StringLiteral *expression) {
+void CodeGenerator::visit(ast::String *expression) {
     report(InternalError(expression, "Not yet implemented."));
     push_llvm_value(nullptr);
 }
 
-void CodeGenerator::visit(ast::SequenceLiteral *sequence) {
+void CodeGenerator::visit(ast::List *sequence) {
     std::vector<llvm::Value *> elements;
     for (auto element : sequence->elements) {
         element->accept(this);
@@ -714,12 +714,12 @@ void CodeGenerator::visit(ast::SequenceLiteral *sequence) {
     push_llvm_value(m_ir_builder->CreateLoad(instance));
 }
 
-void CodeGenerator::visit(ast::MappingLiteral *mapping) {
+void CodeGenerator::visit(ast::Dictionary *mapping) {
     report(InternalError(mapping, "N/A"));
     push_llvm_value(nullptr);
 }
 
-void CodeGenerator::visit(ast::TupleLiteral *expression) {
+void CodeGenerator::visit(ast::Tuple *expression) {
     auto llvm_type = generate_type(expression);
 
     auto instance = m_ir_builder->CreateAlloca(llvm_type);
@@ -1127,7 +1127,7 @@ void CodeGenerator::visit(ast::Def *definition) {
     push_llvm_value(function);
 }
 
-void CodeGenerator::visit(ast::TypeDefinition *definition) {
+void CodeGenerator::visit(ast::Type *definition) {
     if (definition->alias) {
         auto new_symbol = scope()->lookup(this, definition->name());
         auto old_symbol = scope()->lookup(this, definition->alias);

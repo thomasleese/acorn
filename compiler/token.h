@@ -63,9 +63,9 @@ namespace acorn {
             ModuleKeyword,
 
             // literals
-            StringLiteral,
-            FloatLiteral,
-            IntegerLiteral,
+            String,
+            Float,
+            Int,
 
             // delimiters
             OpenBracket,

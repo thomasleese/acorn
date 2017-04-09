@@ -254,7 +254,7 @@ bool Lexer::read_number(Token &token) {
         return false;
     }
 
-    token.kind = Token::IntegerLiteral;
+    token.kind = Token::Int;
 
     while (isdigit(ch) || ch == '.') {
         token.lexeme.append(1, ch);
@@ -262,7 +262,7 @@ bool Lexer::read_number(Token &token) {
         m_current_column++;
 
         if (ch == '.') {
-            token.kind = Token::FloatLiteral;
+            token.kind = Token::Float;
         }
     }
 
@@ -283,7 +283,7 @@ bool Lexer::read_string(Token &token) {
         return false;
     }
 
-    token.kind = Token::StringLiteral;
+    token.kind = Token::String;
 
     ch = get();
     while (!is_quote_char(ch) && ch != EOF) {

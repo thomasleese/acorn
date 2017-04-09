@@ -353,31 +353,31 @@ void Builder::visit(ast::VariableDeclaration *node) {
     scope()->insert(this, node, symbol);
 }
 
-void Builder::visit(ast::IntegerLiteral *expression) {
+void Builder::visit(ast::Int *expression) {
 
 }
 
-void Builder::visit(ast::FloatLiteral *expression) {
+void Builder::visit(ast::Float *expression) {
 
 }
 
-void Builder::visit(ast::ImaginaryLiteral *imaginary) {
+void Builder::visit(ast::Complex *imaginary) {
 
 }
 
-void Builder::visit(ast::StringLiteral *expression) {
+void Builder::visit(ast::String *expression) {
 
 }
 
-void Builder::visit(ast::SequenceLiteral *sequence) {
+void Builder::visit(ast::List *sequence) {
 
 }
 
-void Builder::visit(ast::MappingLiteral *mapping) {
+void Builder::visit(ast::Dictionary *mapping) {
 
 }
 
-void Builder::visit(ast::TupleLiteral *expression) {
+void Builder::visit(ast::Tuple *expression) {
 
 }
 
@@ -493,7 +493,7 @@ void Builder::visit(ast::Def *definition) {
     pop_scope();
 }
 
-void Builder::visit(ast::TypeDefinition *definition) {
+void Builder::visit(ast::Type *definition) {
     Symbol *symbol = new Symbol(definition->name()->value());
     scope()->insert(this, definition, symbol);
 

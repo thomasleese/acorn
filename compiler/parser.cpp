@@ -195,7 +195,7 @@ Expression *Parser::read_expression(bool parse_comma) {
     } else if (is_token(Token::DefKeyword)) {
         return read_def();
     } else if (is_token(Token::TypeKeyword)) {
-        return read_type_definition();
+        return read_type();
     } else if (is_token(Token::ModuleKeyword)) {
         return read_module();
     } else {
@@ -252,25 +252,25 @@ ast::VariableDeclaration *Parser::read_variable_declaration() {
     return new VariableDeclaration(token, name, type);
 }
 
-IntegerLiteral *Parser::read_integer_literal() {
-    return_if_false(read_token(Token::IntegerLiteral, token));
-    return new IntegerLiteral(token, token.lexeme);
+Int *Parser::read_int() {
+    return_if_false(read_token(Token::Int, token));
+    return new Int(token, token.lexeme);
 }
 
-FloatLiteral *Parser::read_float_literal() {
-    return_if_false(read_token(Token::FloatLiteral, token));
-    return new FloatLiteral(token, token.lexeme);
+Float *Parser::read_float() {
+    return_if_false(read_token(Token::Float, token));
+    return new Float(token, token.lexeme);
 }
 
-StringLiteral *Parser::read_string_literal() {
-    return_if_false(read_token(Token::StringLiteral, token));
-    return new StringLiteral(token, token.lexeme);
+String *Parser::read_string() {
+    return_if_false(read_token(Token::String, token));
+    return new String(token, token.lexeme);
 }
 
-SequenceLiteral *Parser::read_sequence_literal() {
+List *Parser::read_list() {
     return_if_false(read_token(Token::OpenBracket, token));
 
-    auto literal = new SequenceLiteral(token);
+    auto literal = new List(token);
 
     while (!is_token(Token::CloseBracket)) {
         literal->elements.push_back(read_expression(false));
@@ -284,10 +284,10 @@ SequenceLiteral *Parser::read_sequence_literal() {
     return literal;
 }
 
-MappingLiteral *Parser::read_mapping_literal() {
+Dictionary *Parser::read_dictionary() {
     return_if_false(read_token(Token::OpenBrace, token));
 
-    auto literal = new MappingLiteral(token);
+    auto literal = new Dictionary(token);
 
     while (!is_token(Token::CloseBrace)) {
         auto key = read_expression(false);
@@ -393,8 +393,8 @@ Selector *Parser::read_selector(Expression *operand) {
 
     Name *name = nullptr;
 
-    if (is_token(Token::IntegerLiteral)) {
-        auto il = read_integer_literal();
+    if (is_token(Token::Int)) {
+        auto il = read_int();
         name = new Name(il->token(), il->value());
         delete il;
     } else {
@@ -660,16 +660,16 @@ Expression *Parser::read_parenthesis_expression() {
 Expression *Parser::read_primary_expression() {
     if (is_token(Token::OpenParenthesis)) {
         return read_parenthesis_expression();
-    } else if (is_token(Token::IntegerLiteral)) {
-        return read_integer_literal();
-    } else if (is_token(Token::FloatLiteral)) {
-        return read_float_literal();
-    } else if (is_token(Token::StringLiteral)) {
-        return read_string_literal();
+    } else if (is_token(Token::Int)) {
+        return read_int();
+    } else if (is_token(Token::Float)) {
+        return read_float();
+    } else if (is_token(Token::String)) {
+        return read_string();
     } else if (is_token(Token::OpenBracket)) {
-        return read_sequence_literal();
+        return read_list();
     } else if (is_token(Token::OpenBrace)) {
-        return read_mapping_literal();
+        return read_dictionary();
     } else if (is_token(Token::WhileKeyword)) {
         return read_while();
     } else if (is_token(Token::ForKeyword)) {
@@ -711,7 +711,7 @@ Expression *Parser::read_operand_expression(bool parse_comma) {
 
             elements.push_back(left);
 
-            if (auto tuple = dynamic_cast<TupleLiteral *>(rhs)) {
+            if (auto tuple = dynamic_cast<Tuple *>(rhs)) {
                 for (auto e : tuple->elements()) {
                     elements.push_back(e);
                 }
@@ -719,7 +719,7 @@ Expression *Parser::read_operand_expression(bool parse_comma) {
                 elements.push_back(rhs);
             }
 
-            left = new TupleLiteral(left->token(), elements);
+            left = new Tuple(left->token(), elements);
         } else {
             break;
         }
@@ -816,10 +816,10 @@ Def *Parser::read_def() {
     return new Def(def_token, name, parameters, body, given_return_type);
 }
 
-TypeDefinition *Parser::read_type_definition() {
+Type *Parser::read_type() {
     return_if_false(read_token(Token::TypeKeyword, token));
 
-    auto definition = new TypeDefinition(token);
+    auto definition = new Type(token);
 
     definition->set_name(read_name(true));
 
@@ -854,7 +854,7 @@ Module *Parser::read_module() {
 
 Import *Parser::read_import_expression() {
     return_if_false(read_token(Token::ImportKeyword, token));
-    auto path = read_string_literal();
+    auto path = read_string();
     return_if_null(path);
     return new Import(token, path);
 }

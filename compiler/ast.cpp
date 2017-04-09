@@ -174,55 +174,55 @@ void Definition::set_type(types::Type *type) {
     m_name->set_type(type);
 }
 
-IntegerLiteral::IntegerLiteral(Token token, std::string value) : Expression(token), m_value(value) {
+Int::Int(Token token, std::string value) : Expression(token), m_value(value) {
 
 }
 
-std::string IntegerLiteral::value() const {
+std::string Int::value() const {
     return m_value;
 }
 
-void IntegerLiteral::accept(Visitor *visitor) {
+void Int::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-FloatLiteral::FloatLiteral(Token token, std::string value) : Expression(token), m_value(value) {
+Float::Float(Token token, std::string value) : Expression(token), m_value(value) {
 
 }
 
-std::string FloatLiteral::value() const {
+std::string Float::value() const {
     return m_value;
 }
 
-void FloatLiteral::accept(Visitor *visitor) {
+void Float::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-void ImaginaryLiteral::accept(Visitor *visitor) {
+void Complex::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-StringLiteral::StringLiteral(Token token, std::string value) : Expression(token), m_value(value) {
+String::String(Token token, std::string value) : Expression(token), m_value(value) {
 
 }
 
-std::string StringLiteral::value() const {
+std::string String::value() const {
     return m_value;
 }
 
-void StringLiteral::accept(Visitor *visitor) {
+void String::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-void SequenceLiteral::accept(Visitor *visitor) {
+void List::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-void MappingLiteral::accept(Visitor *visitor) {
+void Dictionary::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-TupleLiteral::TupleLiteral(Token token, std::vector<Expression *> elements) :
+Tuple::Tuple(Token token, std::vector<Expression *> elements) :
         Expression(token)
 {
     for (auto e : elements) {
@@ -230,7 +230,7 @@ TupleLiteral::TupleLiteral(Token token, std::vector<Expression *> elements) :
     }
 }
 
-std::vector<Expression *> TupleLiteral::elements() {
+std::vector<Expression *> Tuple::elements() {
     std::vector<Expression *> elements;
     for (auto &e : m_elements) {
         elements.push_back(e.get());
@@ -238,7 +238,7 @@ std::vector<Expression *> TupleLiteral::elements() {
     return elements;
 }
 
-void TupleLiteral::accept(Visitor *visitor) {
+void Tuple::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -539,11 +539,11 @@ void Def::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-TypeDefinition::TypeDefinition(Token token) : Definition(token) {
+Type::Type(Token token) : Definition(token) {
     this->alias = nullptr;
 }
 
-void TypeDefinition::accept(Visitor *visitor) {
+void Type::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -593,7 +593,7 @@ void Module::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Import::Import(Token token, StringLiteral *path) : Expression(token) {
+Import::Import(Token token, String *path) : Expression(token) {
     this->path = path;
 }
 
