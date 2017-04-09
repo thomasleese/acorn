@@ -274,9 +274,6 @@ void Builder::add_builtin_functions() {
     auto not_ = add_builtin_function("not");
     add_builtin_method(not_, new types::Method(new types::Boolean(), new types::Boolean()));
 
-    auto multiplication = add_builtin_function("*");
-    add_builtin_method(multiplication, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
-
     auto addition = add_builtin_function("+");
     add_builtin_method(addition, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
     add_builtin_method(addition, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::UnsignedInteger(64)));
@@ -488,7 +485,9 @@ void Builder::visit(ast::Def *definition) {
         parameter->accept(this);
     }
 
-    definition->body()->accept(this);
+    if (!definition->builtin()) {
+        definition->body()->accept(this);
+    }
 
     pop_scope();
 }

@@ -107,17 +107,20 @@ namespace acorn {
 
         class Definition : public Expression {
         public:
-            explicit Definition(Token token);
-            Definition(Token token, Name *name);
-            Definition(Token token, std::string name);
+            Definition(Token token, Name *name = nullptr, bool builtin = false);
+            Definition(Token token, std::string name, bool builtin = false);
 
             Name *name() const;
             void set_name(Name *name);
+
+            bool builtin() const;
+            void set_builtin(bool builtin);
 
             void set_type(types::Type *type) override;
 
         private:
             std::unique_ptr<Name> m_name;
+            bool m_builtin;
         };
 
         class Int : public Expression {
@@ -389,7 +392,7 @@ namespace acorn {
 
         class Def : public Definition {
         public:
-            Def(Token token, Name *name, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type = nullptr);
+            Def(Token token, Name *name, bool builtin, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type = nullptr);
 
             std::vector<Parameter *> parameters() const;
             Parameter *get_parameter(size_t index) const;

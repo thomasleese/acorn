@@ -97,6 +97,8 @@ std::string Token::as_string(Token::Kind kind)
             return "default";
         case ModuleKeyword:
             return "module";
+        case BuiltinKeyword:
+            return "builtin";
         case Int:
             return "integer";
         case Float:

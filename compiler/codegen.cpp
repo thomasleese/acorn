@@ -202,10 +202,6 @@ void CodeGenerator::builtin_generate() {
     auto f = builtin_create_llvm_function("not", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateNot(m_args[0]));
 
-    // multiplication
-    f = builtin_create_llvm_function("*", 0);
-    m_ir_builder->CreateRet(m_ir_builder->CreateMul(m_args[0], m_args[1]));
-
     // addition
     f = builtin_create_llvm_function("+", 0);
     m_ir_builder->CreateRet(m_ir_builder->CreateAdd(m_args[0], m_args[1]));
@@ -1084,7 +1080,13 @@ void CodeGenerator::visit(ast::Def *definition) {
         i++;
     }
 
-    definition->body()->accept(this);
+    if (definition->builtin()) {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, definition, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, definition, "b")->value);
+        push_llvm_value(m_ir_builder->CreateMul(a_value, b_value, "multiplication"));
+    } else {
+        definition->body()->accept(this);
+    }
 
     auto value = pop_llvm_value();
     return_and_push_null_if_null(value);

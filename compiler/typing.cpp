@@ -496,10 +496,12 @@ void Inferrer::visit(ast::Def *definition) {
         parameter_types.push_back(parameter->type());
     }
 
-    definition->body()->accept(this);
+    if (!definition->builtin()) {
+        definition->body()->accept(this);
+    }
 
     types::Type *return_type = nullptr;
-    if (definition->has_given_return_type()) {
+    if (definition->builtin() || definition->has_given_return_type()) {
         definition->given_return_type()->accept(this);
         return_type = instance_type(definition->given_return_type());
     } else {
@@ -832,7 +834,7 @@ void Checker::visit(ast::Def *definition) {
         p->accept(this);
     }
 
-    if (definition->has_given_return_type()) {
+    if (definition->builtin() || definition->has_given_return_type()) {
         definition->given_return_type()->accept(this);
     }
 
@@ -840,7 +842,9 @@ void Checker::visit(ast::Def *definition) {
         p->accept(this);
     }
 
-    definition->body()->accept(this);
+    if (!definition->builtin()) {
+        definition->body()->accept(this);
+    }
 
     pop_scope();
 }

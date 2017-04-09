@@ -780,6 +780,11 @@ Def *Parser::read_def() {
     Token def_token;
     return_if_false(read_token(Token::DefKeyword, def_token));
 
+    bool builtin = false;
+    if (is_and_skip_token(Token::BuiltinKeyword)) {
+        builtin = true;
+    }
+
     Name *name = nullptr;
 
     if (is_token(Token::Name)) {
@@ -811,19 +816,25 @@ Def *Parser::read_def() {
     }
 
     Name *given_return_type = nullptr;
-    if (is_and_skip_token(Token::AsKeyword)) {
+    if (builtin) {
+        return_if_false(skip_token(Token::AsKeyword));
+        given_return_type = read_name(true);
+        return_if_null(given_return_type);
+    } else if (is_and_skip_token(Token::AsKeyword)) {
         given_return_type = read_name(true);
         return_if_null(given_return_type);
     }
 
-    return_if_false(skip_token(Token::Indent));
+    Expression *body = nullptr;
 
-    auto body = read_expression();
-    return_if_null(body);
+    if (!builtin) {
+        return_if_false(skip_token(Token::Indent));
+        body = read_expression();
+        return_if_null(body);
+        return_if_false(skip_deindent_and_end_token());
+    }
 
-    return_if_false(skip_deindent_and_end_token());
-
-    return new Def(def_token, name, parameters, body, given_return_type);
+    return new Def(def_token, name, builtin, parameters, body, given_return_type);
 }
 
 Type *Parser::read_type() {

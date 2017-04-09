@@ -61,6 +61,7 @@ namespace acorn {
             CaseKeyword,
             DefaultKeyword,
             ModuleKeyword,
+            BuiltinKeyword,
 
             // literals
             String,

@@ -150,15 +150,11 @@ void VariableDeclaration::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Definition::Definition(Token token) : Expression(token) {
+Definition::Definition(Token token, Name *name, bool builtin) : Expression(token), m_name(name), m_builtin(builtin) {
 
 }
 
-Definition::Definition(Token token, Name *name) : Expression(token), m_name(name) {
-
-}
-
-Definition::Definition(Token token, std::string name) : Expression(token), m_name(new Name(token, name)) {
+Definition::Definition(Token token, std::string name, bool builtin) : Expression(token), m_name(new Name(token, name)), m_builtin(builtin) {
 
 }
 
@@ -173,6 +169,14 @@ void Definition::set_name(Name *name) {
 void Definition::set_type(types::Type *type) {
     Expression::set_type(type);
     m_name->set_type(type);
+}
+
+bool Definition::builtin() const {
+    return m_builtin;
+}
+
+void Definition::set_builtin(bool builtin) {
+    m_builtin = builtin;
 }
 
 Int::Int(Token token, std::string value) : Expression(token), m_value(value) {
@@ -565,7 +569,7 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Def::Def(Token token, Name *name, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type) : Definition(token, name), m_body(body), m_given_return_type(given_return_type) {
+Def::Def(Token token, Name *name, bool builtin, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type) : Definition(token, name, builtin), m_body(body), m_given_return_type(given_return_type) {
     for (auto parameter : parameters) {
         m_parameters.push_back(std::unique_ptr<Parameter>(parameter));
     }

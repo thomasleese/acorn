@@ -316,7 +316,11 @@ void PrettyPrinter::visit(ast::Def *definition)
         definition->given_return_type()->accept(this);
     }
 
-    definition->body()->accept(this);
+    if (definition->builtin()) {
+        ss << "<builtin>";
+    } else {
+        definition->body()->accept(this);
+    }
 
     indent--;
     ss << indentation() << ")\n";
