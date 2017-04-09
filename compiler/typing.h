@@ -71,14 +71,14 @@ namespace acorn {
             void visit(ast::Switch *expression);
             void visit(ast::Parameter *parameter);
             void visit(ast::Let *definition);
-            void visit(ast::FunctionDefinition *definition);
+            void visit(ast::Def *definition);
             void visit(ast::TypeDefinition *definition);
             void visit(ast::Module *module);
             void visit(ast::Import *statement);
             void visit(ast::SourceFile *module);
 
         private:
-            std::vector<ast::FunctionDefinition *> m_functionStack;
+            std::vector<ast::Def *> m_functionStack;
             bool m_in_if;
             bool m_as_type;
 
@@ -118,7 +118,7 @@ namespace acorn {
             void visit(ast::Switch *expression);
             void visit(ast::Parameter *parameter);
             void visit(ast::Let *definition);
-            void visit(ast::FunctionDefinition *definition);
+            void visit(ast::Def *definition);
             void visit(ast::TypeDefinition *definition);
             void visit(ast::Module *module);
             void visit(ast::Import *statement);

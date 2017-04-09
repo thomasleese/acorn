@@ -379,9 +379,9 @@ namespace acorn {
             std::unique_ptr<Expression> m_body;
         };
 
-        class FunctionDefinition : public Definition {
+        class Def : public Definition {
         public:
-            explicit FunctionDefinition(Token token);
+            explicit Def(Token token);
 
             std::vector<Parameter *> parameters;
             Expression *body;
@@ -479,7 +479,7 @@ namespace acorn {
             virtual void visit(Switch *expression) = 0;
             virtual void visit(Parameter *parameter) = 0;
             virtual void visit(Let *definition) = 0;
-            virtual void visit(FunctionDefinition *definition) = 0;
+            virtual void visit(Def *definition) = 0;
             virtual void visit(TypeDefinition *definition) = 0;
             virtual void visit(Module *module) = 0;
             virtual void visit(Import *Expression) = 0;

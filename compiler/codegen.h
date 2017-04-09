@@ -168,7 +168,7 @@ namespace acorn {
             void visit(ast::Switch *expression);
             void visit(ast::Parameter *parameter);
             void visit(ast::Let *definition);
-            void visit(ast::FunctionDefinition *definition);
+            void visit(ast::Def *definition);
             void visit(ast::TypeDefinition *definition);
             void visit(ast::Module *module);
             void visit(ast::Import *statement);

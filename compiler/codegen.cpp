@@ -1048,7 +1048,7 @@ void CodeGenerator::visit(ast::Let *definition) {
     }
 }
 
-void CodeGenerator::visit(ast::FunctionDefinition *definition) {
+void CodeGenerator::visit(ast::Def *definition) {
     if (definition->name()->has_parameters()) {
         report(InternalError(definition, "Function should not have definitions."));
         push_llvm_value(nullptr);

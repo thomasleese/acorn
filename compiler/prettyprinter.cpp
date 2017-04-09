@@ -317,9 +317,9 @@ void PrettyPrinter::visit(ast::Let *definition)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::FunctionDefinition *definition)
+void PrettyPrinter::visit(ast::Def *definition)
 {
-    ss << indentation() << "(FunctionDefinition [" << type_of(definition) << "]\n";
+    ss << indentation() << "(Def [" << type_of(definition) << "]\n";
     indent++;
 
     definition->name()->accept(this);

@@ -796,10 +796,10 @@ Let *Parser::read_let() {
     return definition;
 }
 
-FunctionDefinition *Parser::read_function_definition() {
+Def *Parser::read_function_definition() {
     return_if_false(read_token(Token::DefKeyword, token));
 
-    auto definition = new FunctionDefinition(token);
+    auto definition = new Def(token);
 
     if (is_token(Token::Name)) {
         definition->set_name(read_name(true));

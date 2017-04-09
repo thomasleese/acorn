@@ -493,14 +493,14 @@ void Let::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-FunctionDefinition::FunctionDefinition(Token token) :
+Def::Def(Token token) :
         Definition(token),
         given_return_type(nullptr)
 {
     // intentionally empty
 }
 
-void FunctionDefinition::accept(Visitor *visitor) {
+void Def::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

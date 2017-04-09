@@ -456,7 +456,7 @@ void Builder::visit(ast::Let *definition) {
     }
 }
 
-void Builder::visit(ast::FunctionDefinition *definition) {
+void Builder::visit(ast::Def *definition) {
     Symbol *functionSymbol;
     if (scope()->has(definition->name()->value(), false)) {
         // we don't want to look in any parent scope when we're

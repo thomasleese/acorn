@@ -484,7 +484,7 @@ void Inferrer::visit(ast::Let *definition) {
     }
 }
 
-void Inferrer::visit(ast::FunctionDefinition *definition) {
+void Inferrer::visit(ast::Def *definition) {
     auto functionSymbol = scope()->lookup(this, definition->name());
     auto function = static_cast<types::Function *>(functionSymbol->type);
 
@@ -840,7 +840,7 @@ void Checker::visit(ast::Let *definition) {
     }
 }
 
-void Checker::visit(ast::FunctionDefinition *definition) {
+void Checker::visit(ast::Def *definition) {
     check_not_null(definition);
 
     auto functionSymbol = scope()->lookup(this, definition->name());
