@@ -454,11 +454,14 @@ namespace acorn {
             int parameter_index(std::string name) const;
             Type *return_type() const;
 
-            template<typename T> std::vector<T> ordered_arguments(std::vector<T> positional_arguments, std::map<std::string, T> keyword_arguments, bool *valid);
-            std::vector<ast::Expression *> ordered_arguments(ast::Call *call, bool *valid);
-            std::vector<Type *> ordered_argument_types(ast::Call *call, bool *valid);
+            template<typename T> std::vector<T> ordered_arguments(std::vector<T> positional_arguments, std::map<std::string, T> keyword_arguments, bool *valid = nullptr);
+            std::vector<ast::Expression *> ordered_arguments(ast::Call *call, bool *valid = nullptr);
+            std::vector<Type *> ordered_argument_types(ast::Call *call, bool *valid = nullptr);
 
             bool could_be_called_with(std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments);
+
+            void add_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation);
+            std::vector<std::map<types::ParameterType *, types::Type *> > generic_specialisations();
 
             void set_parameter_inout(Type *type, bool inout);
             bool is_parameter_inout(Type *type);
@@ -473,6 +476,7 @@ namespace acorn {
             std::map<Type *, bool> m_inouts;
             std::map<std::string, int> m_names;
             bool m_is_generic;
+            std::vector<std::map<types::ParameterType *, types::Type *> > m_specialisations;
         };
 
         class Function : public Type {

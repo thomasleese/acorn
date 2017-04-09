@@ -246,51 +246,51 @@ void Inferrer::visit(ast::Tuple *expression) {
     expression->set_type(new types::Tuple(element_types));
 }
 
-void Inferrer::visit(ast::Call *expression) {
-    expression->operand->accept(this);
-    return_if_null_type(expression->operand);
+void Inferrer::visit(ast::Call *node) {
+    node->operand->accept(this);
+    return_if_null_type(node->operand);
 
-    for (auto arg : expression->positional_arguments()) {
+    for (auto arg : node->positional_arguments()) {
         arg->accept(this);
         if (!arg->has_type()) {
             return;
         }
     }
 
-    for (auto const &entry : expression->keyword_arguments()) {
+    for (auto const &entry : node->keyword_arguments()) {
         entry.second->accept(this);
         if (!entry.second->has_type()) {
             return;
         }
     }
 
-    types::Function *function = dynamic_cast<types::Function *>(expression->operand->type());
+    auto function = dynamic_cast<types::Function *>(node->operand->type());
     if (function == nullptr) {
-        expression->set_type(new types::Function());
-        report(TypeMismatchError(expression->operand, expression));
-        delete expression->type();
-        expression->set_type(nullptr);
+        node->set_type(new types::Function());
+        report(TypeMismatchError(node->operand, node));
+        delete node->type();
+        node->set_type(nullptr);
         // FIXME make the construct accept a type directly
         return;
     }
 
-    auto method = function->find_method(expression);
+    auto method = function->find_method(node);
     if (method == nullptr) {
-        report(UndefinedError(expression, "Method for these types not available."));
+        report(UndefinedError(node, "Method for these types not available."));
         return;
     }
 
-    /*if (!infer_call_type_parameters(expression, method->parameter_types(), expression->positional_argument_types())) {
-        report(InternalError(expression, "Could not infer type parameters."));
+    if (!infer_call_type_parameters(node, method->parameter_types(), method->ordered_argument_types(node))) {
+        report(InternalError(node, "Could not infer type parameters."));
         return;
-    }*/
+    }
 
     auto return_type = replace_type_parameters(method->return_type(),
-                                               expression->inferred_type_parameters);
+                                               node->inferred_type_parameters);
 
-    std::cout << "call " << return_type << std::endl;
+    method->add_generic_specialisation(node->inferred_type_parameters);
 
-    expression->set_type(return_type);
+    node->set_type(return_type);
 }
 
 void Inferrer::visit(ast::CCall *ccall) {

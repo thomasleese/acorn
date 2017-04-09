@@ -1027,11 +1027,11 @@ void CodeGenerator::visit(ast::Let *definition) {
 }
 
 void CodeGenerator::visit(ast::Def *definition) {
-    if (definition->name()->has_parameters()) {
+    /*if (definition->name()->has_parameters()) {
         report(InternalError(definition, "Function should not have definitions."));
         push_llvm_value(nullptr);
         return;
-    }
+    }*/
 
     auto function_symbol = scope()->lookup(this, definition->name());
     auto function_type = static_cast<types::Function *>(function_symbol->type);
@@ -1042,6 +1042,10 @@ void CodeGenerator::visit(ast::Def *definition) {
     auto llvm_function_name = codegen::mangle_method(function_symbol->name, method);
 
     push_scope(symbol);
+
+    if (method->is_generic()) {
+        std::cout << method->generic_specialisations().size() << std::endl;
+    }
 
     auto llvm_type = generate_type(definition);
     return_and_push_null_if_null(llvm_type);

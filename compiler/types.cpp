@@ -1043,7 +1043,7 @@ std::vector<T> Method::ordered_arguments(std::vector<T> positional_arguments, st
     std::vector<T> ordered_arguments;
 
     if ((positional_arguments.size() + keyword_arguments.size()) != no_parameters) {
-        *valid = false;
+        if (valid) { *valid = false; }
         return ordered_arguments;
     }
 
@@ -1053,7 +1053,7 @@ std::vector<T> Method::ordered_arguments(std::vector<T> positional_arguments, st
     for (auto const &entry : keyword_arguments) {
         int index = parameter_index(entry.first);
         if (index == -1) {
-            *valid = false;
+            if (valid) { *valid = false; }
             return ordered_arguments;
         }
 
@@ -1071,11 +1071,11 @@ std::vector<T> Method::ordered_arguments(std::vector<T> positional_arguments, st
 
     for (auto &arg : ordered_arguments) {
         if (arg == nullptr) {
-            *valid = false;
+            if (valid) { *valid = false; }
         }
     }
 
-    *valid = true;
+    if (valid) { *valid = true; }
     return ordered_arguments;
 }
 
@@ -1103,6 +1103,14 @@ bool Method::could_be_called_with(std::vector<Type *> positional_arguments, std:
     }
 
     return true;
+}
+
+void Method::add_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation) {
+    m_specialisations.push_back(specialisation);
+}
+
+std::vector<std::map<types::ParameterType *, types::Type *> > Method::generic_specialisations() {
+    return m_specialisations;
 }
 
 void Method::set_parameter_inout(Type *type, bool inout) {
