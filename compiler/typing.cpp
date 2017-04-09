@@ -201,12 +201,12 @@ void Inferrer::visit(ast::String *expression) {
 }
 
 void Inferrer::visit(ast::List *sequence) {
-    for (auto element : sequence->elements) {
+    for (auto element : sequence->elements()) {
         element->accept(this);
     }
 
     std::vector<types::Type *> types;
-    for (auto element : sequence->elements) {
+    for (auto element : sequence->elements()) {
         bool inList = false;
         for (auto type : types) {
             if (type->is_compatible(element->type())) {
@@ -678,20 +678,20 @@ void Checker::visit(ast::String *expression) {
 }
 
 void Checker::visit(ast::List *sequence) {
-    for (auto element : sequence->elements) {
+    for (auto element : sequence->elements()) {
         element->accept(this);
     }
 
     check_not_null(sequence);
 }
 
-void Checker::visit(ast::Dictionary *mapping) {
-    for (size_t i = 0; i < mapping->keys.size(); i++) {
-        mapping->keys[i]->accept(this);
-        mapping->values[i]->accept(this);
+void Checker::visit(ast::Dictionary *dict) {
+    for (size_t i = 0; i < dict->no_elements(); i++) {
+        dict->get_key(i)->accept(this);
+        dict->get_value(i)->accept(this);
     }
 
-    check_not_null(mapping);
+    check_not_null(dict);
 }
 
 void Checker::visit(ast::Tuple *expression) {

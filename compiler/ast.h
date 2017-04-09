@@ -167,21 +167,35 @@ namespace acorn {
 
         class List : public Expression {
         public:
-            using Expression::Expression;
+            List(Token token, std::vector<Expression *> elements);
 
-            std::vector<Expression *> elements;
+            std::vector<Expression *> elements() const;
+            Expression *get_element(size_t index) const;
+            size_t no_elements() const;
 
             void accept(Visitor *visitor);
+
+        private:
+            std::vector<std::unique_ptr<Expression> > m_elements;
         };
 
         class Dictionary : public Expression {
         public:
-            using Expression::Expression;
+            Dictionary(Token token, std::vector<Expression *> keys, std::vector<Expression *> values);
 
-            std::vector<Expression *> keys;
-            std::vector<Expression *> values;
+            std::vector<Expression *> keys() const;
+            Expression *get_key(size_t index) const;
+
+            std::vector<Expression *> values() const;
+            Expression *get_value(size_t index) const;
+
+            size_t no_elements() const;
 
             void accept(Visitor *visitor);
+
+        private:
+            std::vector<std::unique_ptr<Expression> > m_keys;
+            std::vector<std::unique_ptr<Expression> > m_values;
         };
 
         class Tuple : public Expression {

@@ -2,6 +2,7 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
+#include <cassert>
 #include <iostream>
 #include <sstream>
 
@@ -214,8 +215,71 @@ void String::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+List::List(Token token, std::vector<Expression *> elements) : Expression(token) {
+    for (auto &element : elements) {
+        m_elements.push_back(std::unique_ptr<Expression>(element));
+    }
+}
+
+std::vector<Expression *> List::elements() const {
+    std::vector<Expression *> elements;
+    for (auto &element : m_elements) {
+        elements.push_back(element.get());
+    }
+    return elements;
+}
+
+Expression *List::get_element(size_t index) const {
+    return m_elements[index].get();
+}
+
+size_t List::no_elements() const {
+    return m_elements.size();
+}
+
 void List::accept(Visitor *visitor) {
     visitor->visit(this);
+}
+
+Dictionary::Dictionary(Token token, std::vector<Expression *> keys, std::vector<Expression *> values) : Expression(token) {
+    assert(keys.size() == values.size());
+
+    for (auto &key : keys) {
+        m_keys.push_back(std::unique_ptr<Expression>(key));
+    }
+
+    for (auto &value : values) {
+        m_values.push_back(std::unique_ptr<Expression>(value));
+    }
+}
+
+std::vector<Expression *> Dictionary::keys() const {
+    std::vector<Expression *> keys;
+    for (auto &key : m_keys) {
+        keys.push_back(key.get());
+    }
+    return keys;
+}
+
+Expression *Dictionary::get_key(size_t index) const {
+    return m_keys[index].get();
+}
+
+std::vector<Expression *> Dictionary::values() const {
+    std::vector<Expression *> values;
+    for (auto &value : m_values) {
+        values.push_back(value.get());
+    }
+    return values;
+}
+
+Expression *Dictionary::get_value(size_t index) const {
+    return m_values[index].get();
+}
+
+size_t Dictionary::no_elements() const {
+    assert(m_keys.size() == m_values.size());
+    return m_keys.size();
 }
 
 void Dictionary::accept(Visitor *visitor) {

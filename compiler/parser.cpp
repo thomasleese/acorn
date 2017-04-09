@@ -268,12 +268,17 @@ String *Parser::read_string() {
 }
 
 List *Parser::read_list() {
-    return_if_false(read_token(Token::OpenBracket, token));
+    Token list_token;
+    return_if_false(read_token(Token::OpenBracket, list_token));
 
-    auto literal = new List(token);
+    std::vector<Expression *> elements;
 
     while (!is_token(Token::CloseBracket)) {
-        literal->elements.push_back(read_expression(false));
+        auto element = read_expression(false);
+        return_if_null(element);
+
+        elements.push_back(element);
+
         if (!is_and_skip_token(Token::Comma)) {
             break;
         }
@@ -281,21 +286,26 @@ List *Parser::read_list() {
 
     return_if_false(skip_token(Token::CloseBracket));
 
-    return literal;
+    return new List(list_token, elements);
 }
 
 Dictionary *Parser::read_dictionary() {
-    return_if_false(read_token(Token::OpenBrace, token));
+    Token dict_token;
+    return_if_false(read_token(Token::OpenBrace, dict_token));
 
-    auto literal = new Dictionary(token);
+    std::vector<Expression *> keys;
+    std::vector<Expression *> values;
 
     while (!is_token(Token::CloseBrace)) {
         auto key = read_expression(false);
-        return_if_false(skip_token(Token::Colon));
-        auto value = read_expression(false);
+        return_if_null(key);
+        keys.push_back(key);
 
-        literal->keys.push_back(key);
-        literal->values.push_back(value);
+        return_if_false(skip_token(Token::Colon));
+
+        auto value = read_expression(false);
+        return_if_null(value);
+        values.push_back(value);
 
         if (!is_and_skip_token(Token::Comma)) {
             break;
@@ -304,7 +314,7 @@ Dictionary *Parser::read_dictionary() {
 
     return_if_false(skip_token(Token::CloseBrace));
 
-    return literal;
+    return new Dictionary(dict_token, keys, values);
 }
 
 Call *Parser::read_call(Expression *operand) {

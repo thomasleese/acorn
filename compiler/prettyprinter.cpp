@@ -92,7 +92,7 @@ void PrettyPrinter::visit(ast::List *sequence)
     ss << indentation() << "(List\n";
     indent++;
 
-    for (auto element : sequence->elements) {
+    for (auto element : sequence->elements()) {
         element->accept(this);
     }
 
@@ -100,14 +100,14 @@ void PrettyPrinter::visit(ast::List *sequence)
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Dictionary *mapping)
+void PrettyPrinter::visit(ast::Dictionary *dict)
 {
     ss << indentation() << "(Dictionary\n";
     indent++;
 
-    for (unsigned long i = 0; i < mapping->keys.size(); i++) {
-        mapping->keys[i]->accept(this);
-        mapping->values[i]->accept(this);
+    for (size_t i = 0; i < dict->no_elements(); i++) {
+        dict->get_key(i)->accept(this);
+        dict->get_value(i)->accept(this);
     }
 
     indent--;

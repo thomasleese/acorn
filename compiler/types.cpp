@@ -470,7 +470,7 @@ void RecordType::create_builtin_constructor() {
 
     auto method = new Method(field_types, this->create(nullptr, nullptr));
 
-    for (int i = 0; i < m_field_names.size(); i++) {
+    for (size_t i = 0; i < m_field_names.size(); i++) {
         method->set_parameter_name(i, m_field_names[i]);
     }
 

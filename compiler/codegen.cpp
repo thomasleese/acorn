@@ -678,7 +678,7 @@ void CodeGenerator::visit(ast::String *expression) {
 
 void CodeGenerator::visit(ast::List *sequence) {
     std::vector<llvm::Value *> elements;
-    for (auto element : sequence->elements) {
+    for (auto element : sequence->elements()) {
         element->accept(this);
         auto value = pop_llvm_value();
         return_and_push_null_if_null(value);
