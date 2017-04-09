@@ -37,6 +37,12 @@ std::string Token::as_string(Token::Kind kind)
             return "if";
         case ElseKeyword:
             return "else";
+        case NotKeyword:
+            return "not";
+        case AndKeyword:
+            return "and";
+        case OrKeyword:
+            return "or";
         case ContinueKeyword:
             return "continue";
         case BreakKeyword:
@@ -61,6 +67,8 @@ std::string Token::as_string(Token::Kind kind)
             return "yield";
         case AsyncKeyword:
             return "async";
+        case AwaitKeyword:
+            return "await";
         case RepeatKeyword:
             return "repeat";
         case UnlessKeyword:
