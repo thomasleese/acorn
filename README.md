@@ -1,4 +1,4 @@
-# Acorn
+![Acorn - Elegant and Simple Programming Language](logo.png)
 
 > Acorn is a elegant, minimalistic, high-level programming language implemented
 > in C++ with LLVM. It borrows ideas from MATLAB, Julia, Python, Ruby and many
