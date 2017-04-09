@@ -52,6 +52,13 @@ ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space
         return nullptr;
     }
 
+    generics::Expander expander(root_namespace);
+    module->accept(&expander);
+
+    if (expander.has_errors()) {
+        return nullptr;
+    }
+
     *name_space = root_namespace;
     return module;
 }

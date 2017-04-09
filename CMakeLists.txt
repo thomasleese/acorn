@@ -21,6 +21,7 @@ set(SOURCE_FILES compiler/ast.cpp
                  compiler/codegen.cpp
                  compiler/compiler.cpp
                  compiler/diagnostics.cpp
+                 compiler/generics.cpp
                  compiler/lexer.cpp
                  compiler/main.cpp
                  compiler/parser.cpp
