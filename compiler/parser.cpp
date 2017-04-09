@@ -193,7 +193,7 @@ Expression *Parser::read_expression(bool parse_comma) {
     if (is_token(Token::LetKeyword)) {
         return read_let();
     } else if (is_token(Token::DefKeyword)) {
-        return read_function_definition();
+        return read_def();
     } else if (is_token(Token::TypeKeyword)) {
         return read_type_definition();
     } else if (is_token(Token::ModuleKeyword)) {
@@ -755,7 +755,7 @@ Expression *Parser::read_operand_expression(bool parse_comma) {
 }
 
 Parameter *Parser::read_parameter() {
-    Token token = front_token();
+    auto token = front_token();
 
     bool inout = is_and_skip_token(Token::InoutKeyword);
 
@@ -792,8 +792,9 @@ Let *Parser::read_let() {
     return definition;
 }
 
-Def *Parser::read_function_definition() {
-    return_if_false(read_token(Token::DefKeyword, token));
+Def *Parser::read_def() {
+    Token def_token;
+    return_if_false(read_token(Token::DefKeyword, def_token));
 
     Name *name = nullptr;
 
@@ -838,7 +839,7 @@ Def *Parser::read_function_definition() {
 
     return_if_false(skip_deindent_and_end_token());
 
-    return new Def(token, name, parameters, body, given_return_type);
+    return new Def(def_token, name, parameters, body, given_return_type);
 }
 
 TypeDefinition *Parser::read_type_definition() {

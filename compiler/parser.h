@@ -67,7 +67,7 @@ namespace acorn {
         ast::Expression *read_operand_expression(bool parse_comma);
         ast::Parameter *read_parameter();
         ast::Let *read_let();
-        ast::Def *read_function_definition();
+        ast::Def *read_def();
         ast::TypeDefinition *read_type_definition();
         ast::Module *read_module();
         ast::Import *read_import_expression();
