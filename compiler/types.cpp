@@ -1113,6 +1113,10 @@ std::vector<std::map<types::ParameterType *, types::Type *> > Method::generic_sp
     return m_specialisations;
 }
 
+size_t Method::no_generic_specialisation() const {
+    return m_specialisations.size();
+}
+
 void Method::set_parameter_inout(Type *type, bool inout) {
     m_inouts[type] = inout;
 }

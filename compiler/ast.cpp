@@ -370,6 +370,22 @@ void Call::add_keyword_argument(std::string name, Expression *argument) {
     m_keyword_arguments[name] = std::unique_ptr<Expression>(argument);
 }
 
+void Call::set_method_index(int index) {
+    m_method_index = index;
+}
+
+int Call::get_method_index() const {
+    return m_method_index;
+}
+
+void Call::set_method_generic_specialisation_index(int index) {
+    m_method_generic_specialisation_index = index;
+}
+
+int Call::get_method_generic_specialisation_index() const {
+    return m_method_generic_specialisation_index;
+}
+
 void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }

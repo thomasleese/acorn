@@ -280,6 +280,8 @@ void Inferrer::visit(ast::Call *node) {
         return;
     }
 
+    node->set_method_index(function->index_of(method));
+
     if (!infer_call_type_parameters(node, method->parameter_types(), method->ordered_argument_types(node))) {
         report(InternalError(node, "Could not infer type parameters."));
         return;
@@ -288,7 +290,10 @@ void Inferrer::visit(ast::Call *node) {
     auto return_type = replace_type_parameters(method->return_type(),
                                                node->inferred_type_parameters);
 
-    method->add_generic_specialisation(node->inferred_type_parameters);
+    if (method->is_generic()) {
+        node->set_method_generic_specialisation_index(method->no_generic_specialisation());
+        method->add_generic_specialisation(node->inferred_type_parameters);
+    }
 
     node->set_type(return_type);
 }

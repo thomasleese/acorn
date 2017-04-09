@@ -230,11 +230,20 @@ namespace acorn {
             std::map<std::string, types::Type *> keyword_argument_types() const;
             void add_keyword_argument(std::string name, Expression *argument);
 
+            void set_method_index(int index);
+            int get_method_index() const;
+
+            void set_method_generic_specialisation_index(int index);
+            int get_method_generic_specialisation_index() const;
+
             void accept(Visitor *visitor);
 
         private:
             std::vector<std::unique_ptr<Expression> > m_positional_arguments;
             std::map<std::string, std::unique_ptr<Expression> > m_keyword_arguments;
+
+            int m_method_index;
+            int m_method_generic_specialisation_index;
         };
 
         class CCall : public Expression {

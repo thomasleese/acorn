@@ -733,23 +733,24 @@ void CodeGenerator::visit(ast::Tuple *expression) {
     push_llvm_value(m_ir_builder->CreateLoad(instance));
 }
 
-void CodeGenerator::visit(ast::Call *expression) {
-    expression->operand->accept(this);
+void CodeGenerator::visit(ast::Call *node) {
+    node->operand->accept(this);
 
-    auto function_type = dynamic_cast<types::Function *>(expression->operand->type());
+    auto function_type = dynamic_cast<types::Function *>(node->operand->type());
 
-    auto method = function_type->find_method(expression);
+    auto method_index = node->get_method_index();
+    auto method = function_type->get_method(method_index);
 
-    debug("found method: " + method->name());
-
-    int index = function_type->index_of(method);
+    if (method->is_generic()) {
+        method_index += node->get_method_generic_specialisation_index();
+    }
 
     auto ir_function = llvm::dyn_cast<llvm::LoadInst>(pop_llvm_value())->getPointerOperand();
 
-    auto ir_method = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(ir_function, build_gep_index({ 0, index })));
+    auto ir_method = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(ir_function, build_gep_index({ 0, method_index })));
 
     if (ir_method == nullptr) {
-        report(InternalError(expression, "No LLVM function was available!"));
+        report(InternalError(node, "No LLVM function was available!"));
         push_llvm_value(nullptr);
         return;
     }
@@ -757,7 +758,7 @@ void CodeGenerator::visit(ast::Call *expression) {
     std::vector<llvm::Value *> arguments;
     int i = 0;
     bool valid;
-    for (auto argument : method->ordered_arguments(expression, &valid)) {
+    for (auto argument : method->ordered_arguments(node, &valid)) {
         argument->accept(this);
 
         auto value = pop_llvm_value();
@@ -774,7 +775,7 @@ void CodeGenerator::visit(ast::Call *expression) {
     }
 
     if (!valid) {
-        report(InternalError(expression, "Could not order arguments!"));
+        report(InternalError(node, "Could not order arguments!"));
         push_llvm_value(nullptr);
         return;
     }
