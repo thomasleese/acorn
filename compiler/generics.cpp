@@ -7,114 +7,119 @@
 #include <sstream>
 
 #include "generics.h"
+#include "symboltable.h"
 
 using namespace acorn;
 using namespace acorn::generics;
 
-void Expander::visit(ast::Block *node) {
+Reification::Reification(symboltable::Namespace *scope) {
+    push_scope(scope);
+}
+
+void Reification::visit(ast::Block *node) {
 
 }
 
-void Expander::visit(ast::Name *node) {
+void Reification::visit(ast::Name *node) {
 
 }
 
-void Expander::visit(ast::VariableDeclaration *node) {
+void Reification::visit(ast::VariableDeclaration *node) {
 
 }
 
-void Expander::visit(ast::Int *node) {
+void Reification::visit(ast::Int *node) {
 
 }
 
-void Expander::visit(ast::Float *node) {
+void Reification::visit(ast::Float *node) {
 
 }
 
-void Expander::visit(ast::Complex *node) {
+void Reification::visit(ast::Complex *node) {
 
 }
 
-void Expander::visit(ast::String *node) {
+void Reification::visit(ast::String *node) {
 
 }
 
-void Expander::visit(ast::List *node) {
+void Reification::visit(ast::List *node) {
 
 }
 
-void Expander::visit(ast::Dictionary *node) {
+void Reification::visit(ast::Dictionary *node) {
 
 }
 
-void Expander::visit(ast::Tuple *node) {
+void Reification::visit(ast::Tuple *node) {
 
 }
 
-void Expander::visit(ast::Call *node) {
+void Reification::visit(ast::Call *node) {
 
 }
 
-void Expander::visit(ast::CCall *node) {
+void Reification::visit(ast::CCall *node) {
 
 }
 
-void Expander::visit(ast::Cast *node) {
+void Reification::visit(ast::Cast *node) {
 
 }
 
-void Expander::visit(ast::Assignment *node) {
+void Reification::visit(ast::Assignment *node) {
 
 }
 
-void Expander::visit(ast::Selector *node) {
+void Reification::visit(ast::Selector *node) {
 
 }
 
-void Expander::visit(ast::While *node) {
+void Reification::visit(ast::While *node) {
 
 }
 
-void Expander::visit(ast::If *node) {
+void Reification::visit(ast::If *node) {
 
 }
 
-void Expander::visit(ast::Return *node) {
+void Reification::visit(ast::Return *node) {
 
 }
 
-void Expander::visit(ast::Spawn *node) {
+void Reification::visit(ast::Spawn *node) {
 
 }
 
-void Expander::visit(ast::Switch *node) {
+void Reification::visit(ast::Switch *node) {
 
 }
 
-void Expander::visit(ast::Parameter *node) {
+void Reification::visit(ast::Parameter *node) {
 
 }
 
-void Expander::visit(ast::Let *node) {
+void Reification::visit(ast::Let *node) {
 
 }
 
-void Expander::visit(ast::Def *node) {
+void Reification::visit(ast::Def *node) {
 
 }
 
-void Expander::visit(ast::Type *node) {
+void Reification::visit(ast::Type *node) {
 
 }
 
-void Expander::visit(ast::Module *node) {
+void Reification::visit(ast::Module *node) {
 
 }
 
-void Expander::visit(ast::Import *node) {
+void Reification::visit(ast::Import *node) {
 
 }
 
-void Expander::visit(ast::SourceFile *node) {
+void Reification::visit(ast::SourceFile *node) {
 
 }

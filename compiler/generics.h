@@ -8,14 +8,18 @@
 #include <string>
 
 #include "ast.h"
+#include "diagnostics.h"
+#include "symboltable.h"
 
 namespace acorn {
 
     namespace generics {
 
-        class Expander : public ast::Visitor {
+        class Reification : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower {
 
         public:
+            Reification(symboltable::Namespace *scope);
+
             void visit(ast::Block *node);
             void visit(ast::Name *node);
             void visit(ast::VariableDeclaration *node);

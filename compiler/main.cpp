@@ -4,6 +4,7 @@
 #include "codegen.h"
 #include "compiler.h"
 #include "diagnostics.h"
+#include "generics.h"
 #include "lexer.h"
 #include "parser.h"
 #include "prettyprinter.h"
@@ -52,10 +53,10 @@ ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space
         return nullptr;
     }
 
-    generics::Expander expander(root_namespace);
-    module->accept(&expander);
+    generics::Reification reification(root_namespace);
+    module->accept(&reification);
 
-    if (expander.has_errors()) {
+    if (reification.has_errors()) {
         return nullptr;
     }
 
