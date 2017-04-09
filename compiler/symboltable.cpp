@@ -127,14 +127,6 @@ std::string Namespace::to_string(int indent) const {
     return ss.str();
 }
 
-Namespace* Namespace::clone() const {
-    Namespace *new_namespace = new Namespace(m_parent);
-    for (auto entry : m_symbols) {
-        new_namespace->m_symbols[entry.first] = entry.second->clone();
-    }
-    return new_namespace;
-}
-
 Symbol::Symbol(std::string name) : type(nullptr), value(nullptr), nameSpace(nullptr), node(nullptr), is_builtin(false) {
     this->name = name;
 }
@@ -173,14 +165,6 @@ std::string Symbol::to_string(int indent) const {
     }
 
     return ss.str();
-}
-
-Symbol* Symbol::clone() const {
-    auto new_symbol = new Symbol(this->name);
-    if (this->nameSpace) {
-        new_symbol->nameSpace = this->nameSpace->clone();
-    }
-    return new_symbol;
 }
 
 void ScopeFollower::push_scope(symboltable::Symbol *symbol) {

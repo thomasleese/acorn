@@ -44,8 +44,6 @@ namespace acorn {
 
             std::string to_string(int indent = 0) const;
 
-            Namespace *clone() const;
-
         private:
             Namespace *m_parent;
             std::map<std::string, Symbol *> m_symbols;
@@ -70,8 +68,6 @@ namespace acorn {
             void copy_type_from(ast::Expression *expression);
 
             std::string to_string(int indent = 0) const;
-
-            Symbol *clone() const;
         };
 
         class ScopeFollower {
