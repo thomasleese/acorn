@@ -295,8 +295,8 @@ void PrettyPrinter::visit(ast::Parameter *parameter)
     ss << indentation() << "(Parameter\n";
     indent++;
 
-    parameter->name->accept(this);
-    parameter->typeNode->accept(this);
+    parameter->name()->accept(this);
+    parameter->given_type()->accept(this);
 
     indent--;
     ss << indentation() << ")\n";
@@ -324,15 +324,15 @@ void PrettyPrinter::visit(ast::Def *definition)
 
     definition->name()->accept(this);
 
-    for (auto parameter : definition->parameters) {
+    for (auto parameter : definition->parameters()) {
         parameter->accept(this);
     }
 
-    if (definition->given_return_type) {
-        definition->given_return_type->accept(this);
+    if (definition->has_given_return_type()) {
+        definition->given_return_type()->accept(this);
     }
 
-    definition->body->accept(this);
+    definition->body()->accept(this);
 
     indent--;
     ss << indentation() << ")\n";

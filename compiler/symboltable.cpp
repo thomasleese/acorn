@@ -444,7 +444,7 @@ void Builder::visit(ast::Switch *expression) {
 }
 
 void Builder::visit(ast::Parameter *parameter) {
-    Symbol *symbol = new Symbol(parameter->name->value());
+    auto symbol = new Symbol(parameter->name()->value());
     scope()->insert(this, parameter, symbol);
 }
 
@@ -488,11 +488,11 @@ void Builder::visit(ast::Def *definition) {
         scope()->insert(this, parameter, sym);
     }
 
-    for (auto parameter : definition->parameters) {
+    for (auto parameter : definition->parameters()) {
         parameter->accept(this);
     }
 
-    definition->body->accept(this);
+    definition->body()->accept(this);
 
     pop_scope();
 }

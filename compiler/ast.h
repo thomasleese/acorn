@@ -351,17 +351,6 @@ namespace acorn {
             std::unique_ptr<Expression> m_default_case;
         };
 
-        class Parameter : public Expression {
-        public:
-            explicit Parameter(Token token);
-
-            bool inout;
-            Name *name;
-            Name *typeNode;
-
-            void accept(Visitor *visitor);
-        };
-
         class Let : public Expression {
         public:
             explicit Let(Token token);
@@ -379,15 +368,41 @@ namespace acorn {
             std::unique_ptr<Expression> m_body;
         };
 
-        class Def : public Definition {
+        class Parameter : public Expression {
         public:
-            explicit Def(Token token);
+            explicit Parameter(Token token, bool inout, Name *name, Name *given_type);
 
-            std::vector<Parameter *> parameters;
-            Expression *body;
-            Name *given_return_type;
+            bool inout() const;
+            Name *name() const;
+            Name *given_type() const;
 
             void accept(Visitor *visitor);
+
+        private:
+            bool m_inout;
+            std::unique_ptr<Name> m_name;
+            std::unique_ptr<Name> m_given_type;
+        };
+
+        class Def : public Definition {
+        public:
+            Def(Token token, Name *name, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type = nullptr);
+
+            std::vector<Parameter *> parameters() const;
+            Parameter *get_parameter(size_t index) const;
+            size_t no_parameters() const;
+
+            Expression *body() const;
+
+            Name *given_return_type() const;
+            bool has_given_return_type() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::vector<std::unique_ptr<Parameter> > m_parameters;
+            std::unique_ptr<Expression> m_body;
+            std::unique_ptr<Name> m_given_return_type;
         };
 
         class TypeDefinition : public Definition {

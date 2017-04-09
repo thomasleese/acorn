@@ -453,14 +453,6 @@ void Switch::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Parameter::Parameter(Token token) : Expression(token), inout(false), name(nullptr), typeNode(nullptr) {
-
-}
-
-void Parameter::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 Let::Let(Token token) :
         Expression(token),
         assignment(nullptr),
@@ -493,11 +485,58 @@ void Let::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Def::Def(Token token) :
-        Definition(token),
-        given_return_type(nullptr)
-{
-    // intentionally empty
+Parameter::Parameter(Token token, bool inout, Name *name, Name *given_type) : Expression(token), m_inout(inout), m_name(name), m_given_type(given_type) {
+
+}
+
+bool Parameter::inout() const {
+    return m_inout;
+}
+
+Name *Parameter::name() const {
+    return m_name.get();
+}
+
+Name *Parameter::given_type() const {
+    return m_given_type.get();
+}
+
+void Parameter::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+Def::Def(Token token, Name *name, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type) : Definition(token, name), m_body(body), m_given_return_type(given_return_type) {
+    for (auto parameter : parameters) {
+        m_parameters.push_back(std::unique_ptr<Parameter>(parameter));
+    }
+}
+
+std::vector<Parameter *> Def::parameters() const {
+    std::vector<Parameter *> parameters;
+    for (auto &parameter : m_parameters) {
+        parameters.push_back(parameter.get());
+    }
+    return parameters;
+}
+
+Parameter *Def::get_parameter(size_t index) const {
+    return m_parameters[index].get();
+}
+
+size_t Def::no_parameters() const {
+    return m_parameters.size();
+}
+
+Expression *Def::body() const {
+    return m_body.get();
+}
+
+Name *Def::given_return_type() const {
+    return m_given_return_type.get();
+}
+
+bool Def::has_given_return_type() const {
+    return m_given_return_type != nullptr;
 }
 
 void Def::accept(Visitor *visitor) {

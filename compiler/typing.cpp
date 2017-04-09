@@ -419,7 +419,7 @@ void Inferrer::visit(ast::Return *expression) {
         return_if_null(method);
 
         if (!method->return_type()->is_compatible(expression->expression->type())) {
-            report(TypeMismatchError(expression->expression, def->given_return_type));
+            report(TypeMismatchError(expression->expression, def->given_return_type()));
             return;
         }
     } else {
@@ -460,14 +460,13 @@ void Inferrer::visit(ast::Switch *expression) {
 }
 
 void Inferrer::visit(ast::Parameter *parameter) {
-    auto symbol = scope()->lookup(this, parameter,
-                                      parameter->name->value());
-
+    auto symbol = scope()->lookup(this, parameter, parameter->name()->value());
     return_if_null(symbol);
 
-    parameter->typeNode->accept(this);
+    parameter->given_type()->accept(this);
+    return_if_null(parameter->given_type());
 
-    parameter->set_type(instance_type(parameter->typeNode));
+    parameter->set_type(instance_type(parameter->given_type()));
     return_if_null_type(parameter);
 
     symbol->type = parameter->type();
@@ -497,9 +496,8 @@ void Inferrer::visit(ast::Def *definition) {
         p->accept(this);
     }
 
-    std::vector<types::Type *> parameterTypes;
-    std::vector<std::string> officialParameterOrder;
-    for (auto parameter : definition->parameters) {
+    std::vector<types::Type *> parameter_types;
+    for (auto parameter : definition->parameters()) {
         parameter->accept(this);
 
         if (!parameter->has_type()) {
@@ -507,18 +505,17 @@ void Inferrer::visit(ast::Def *definition) {
             return;
         }
 
-        parameterTypes.push_back(parameter->type());
-        officialParameterOrder.push_back(parameter->name->value());
+        parameter_types.push_back(parameter->type());
     }
 
-    definition->body->accept(this);
+    definition->body()->accept(this);
 
-    types::Type *return_type;
-    if (definition->given_return_type) {
-        definition->given_return_type->accept(this);
-        return_type = instance_type(definition->given_return_type);
+    types::Type *return_type = nullptr;
+    if (definition->has_given_return_type()) {
+        definition->given_return_type()->accept(this);
+        return_type = instance_type(definition->given_return_type());
     } else {
-        return_type = definition->body->type();
+        return_type = definition->body()->type();
     }
 
     if (return_type == nullptr) {
@@ -526,16 +523,16 @@ void Inferrer::visit(ast::Def *definition) {
         return;
     }
 
-    auto method = new types::Method(parameterTypes, return_type);
+    auto method = new types::Method(parameter_types, return_type);
 
-    for (size_t i = 0; i < parameterTypes.size(); i++) {
-        if (definition->parameters[i]->inout) {
-            method->set_parameter_inout(parameterTypes[i], true);
+    for (size_t i = 0; i < parameter_types.size(); i++) {
+        if (definition->get_parameter(i)->inout()) {
+            method->set_parameter_inout(parameter_types[i], true);
         }
     }
 
-    for (size_t i = 0; i < definition->parameters.size(); i++) {
-        method->set_parameter_name(i, definition->parameters[i]->name->value());
+    for (size_t i = 0; i < definition->no_parameters(); i++) {
+        method->set_parameter_name(i, definition->get_parameter(i)->name()->value());
     }
 
     method->set_is_generic(definition->name()->has_parameters());
@@ -822,7 +819,7 @@ void Checker::visit(ast::Switch *expression) {
 }
 
 void Checker::visit(ast::Parameter *parameter) {
-    parameter->typeNode->accept(this);
+    parameter->given_type()->accept(this);
 
     check_not_null(parameter);
 }
@@ -857,15 +854,15 @@ void Checker::visit(ast::Def *definition) {
         p->accept(this);
     }
 
-    if (definition->given_return_type) {
-        definition->given_return_type->accept(this);
+    if (definition->has_given_return_type()) {
+        definition->given_return_type()->accept(this);
     }
 
-    for (auto p : definition->parameters) {
+    for (auto p : definition->parameters()) {
         p->accept(this);
     }
 
-    definition->body->accept(this);
+    definition->body()->accept(this);
 
     pop_scope();
 }

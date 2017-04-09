@@ -1085,12 +1085,12 @@ void CodeGenerator::visit(ast::Def *definition) {
 
     int i = 0;
     for (auto &arg : function->args()) {
-        std::string arg_name = definition->parameters[i]->name->value();
+        std::string arg_name = definition->get_parameter(i)->name()->value();
         arg.setName(arg_name);
 
         llvm::Value *value = &arg;
 
-        if (!definition->parameters[i]->inout) {
+        if (!definition->get_parameter(i)->inout()) {
             auto alloca = m_ir_builder->CreateAlloca(arg.getType(), 0, arg_name);
             m_ir_builder->CreateStore(&arg, alloca);
             value = alloca;
@@ -1102,7 +1102,7 @@ void CodeGenerator::visit(ast::Def *definition) {
         i++;
     }
 
-    definition->body->accept(this);
+    definition->body()->accept(this);
 
     auto value = pop_llvm_value();
     return_and_push_null_if_null(value);

@@ -767,11 +767,7 @@ Parameter *Parser::read_parameter() {
     auto given_type = read_name(true);
     return_if_null(given_type);
 
-    auto parameter = new Parameter(token);
-    parameter->inout = inout;
-    parameter->name = name;
-    parameter->typeNode = given_type;
-    return parameter;
+    return new Parameter(token, inout, name, given_type);
 }
 
 Let *Parser::read_let() {
@@ -799,23 +795,27 @@ Let *Parser::read_let() {
 Def *Parser::read_function_definition() {
     return_if_false(read_token(Token::DefKeyword, token));
 
-    auto definition = new Def(token);
+    Name *name = nullptr;
 
     if (is_token(Token::Name)) {
-        definition->set_name(read_name(true));
+        name = read_name(true);
     } else if (is_token(Token::Operator)) {
-        definition->set_name(read_operator(true));
+        name = read_operator(true);
     } else {
         report(SyntaxError(front_token(), "identifier or operator"));
         return nullptr;
     }
+
+    return_if_null(name);
+
+    std::vector<Parameter *> parameters;
 
     if (is_and_skip_token(Token::OpenParenthesis)) {
         while (!is_token(Token::CloseParenthesis)) {
             auto parameter = read_parameter();
             return_if_null(parameter);
 
-            definition->parameters.push_back(parameter);
+            parameters.push_back(parameter);
 
             if (!is_and_skip_token(Token::Comma)) {
                 break;
@@ -825,19 +825,20 @@ Def *Parser::read_function_definition() {
         return_if_false(skip_token(Token::CloseParenthesis));
     }
 
+    Name *given_return_type = nullptr;
     if (is_and_skip_token(Token::AsKeyword)) {
-        definition->given_return_type = read_name(true);
-        return_if_null(definition->given_return_type);
+        given_return_type = read_name(true);
+        return_if_null(given_return_type);
     }
 
     return_if_false(skip_token(Token::Indent));
 
-    definition->body = read_expression();
-    return_if_null(definition->body);
+    auto body = read_expression();
+    return_if_null(body);
 
     return_if_false(skip_deindent_and_end_token());
 
-    return definition;
+    return new Def(token, name, parameters, body, given_return_type);
 }
 
 TypeDefinition *Parser::read_type_definition() {
