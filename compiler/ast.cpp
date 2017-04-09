@@ -222,10 +222,6 @@ void MappingLiteral::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-void RecordLiteral::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 TupleLiteral::TupleLiteral(Token token, std::vector<Expression *> elements) :
         Expression(token)
 {

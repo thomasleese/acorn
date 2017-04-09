@@ -307,30 +307,6 @@ MappingLiteral *Parser::read_mapping_literal() {
     return literal;
 }
 
-RecordLiteral *Parser::read_record_literal() {
-    return_if_false(read_token(Token::NewKeyword, token));
-
-    auto literal = new RecordLiteral(token);
-
-    literal->name = read_name(true);
-
-    return_if_false(skip_token(Token::OpenParenthesis));
-
-    while (!is_token(Token::CloseParenthesis)) {
-        literal->field_names.push_back(read_name(false));
-        skip_token(Token::Colon);
-        literal->field_values.push_back(read_expression(false));
-
-        if (!is_and_skip_token(Token::Comma)) {
-            break;
-        }
-    }
-
-    return_if_false(skip_token(Token::CloseParenthesis));
-
-    return literal;
-}
-
 Call *Parser::read_call(Expression *operand) {
     return_if_false(read_token(Token::OpenParenthesis, token));
 
@@ -708,8 +684,6 @@ Expression *Parser::read_primary_expression() {
         return read_spawn();
     } else if (is_token(Token::CCallKeyword)) {
         return read_ccall();
-    } else if (is_token(Token::NewKeyword)) {
-        return read_record_literal();
     } else if (is_token(Token::Name)) {
         return read_name(true);
     } else {

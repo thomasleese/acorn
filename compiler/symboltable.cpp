@@ -377,10 +377,6 @@ void Builder::visit(ast::MappingLiteral *mapping) {
 
 }
 
-void Builder::visit(ast::RecordLiteral *expression) {
-
-}
-
 void Builder::visit(ast::TupleLiteral *expression) {
 
 }

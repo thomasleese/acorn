@@ -719,24 +719,6 @@ void CodeGenerator::visit(ast::MappingLiteral *mapping) {
     push_llvm_value(nullptr);
 }
 
-void CodeGenerator::visit(ast::RecordLiteral *expression) {
-    auto llvm_type = generate_type(expression);
-    return_and_push_null_if_null(llvm_type);
-
-    auto instance = m_ir_builder->CreateAlloca(llvm_type);
-
-    for (int i = 0; i < static_cast<int>(expression->field_names.size()); i++) {
-        expression->field_values[i]->accept(this);
-        auto value = pop_llvm_value();
-        return_and_push_null_if_null(value);
-
-        auto ptr = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, i }));
-        m_ir_builder->CreateStore(value, ptr);
-    }
-
-    push_llvm_value(m_ir_builder->CreateLoad(instance));
-}
-
 void CodeGenerator::visit(ast::TupleLiteral *expression) {
     auto llvm_type = generate_type(expression);
 

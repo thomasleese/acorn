@@ -235,18 +235,6 @@ void Inferrer::visit(ast::MappingLiteral *mapping) {
     report(TypeInferenceError(mapping));
 }
 
-void Inferrer::visit(ast::RecordLiteral *expression) {
-    expression->name->accept(this);
-
-    for (auto value : expression->field_values) {
-        value->accept(this);
-    }
-
-    expression->set_type(instance_type(expression->name));
-
-    // TODO check matches definition of record
-}
-
 void Inferrer::visit(ast::TupleLiteral *expression) {
     std::vector<types::Type *> element_types;
 
@@ -704,16 +692,6 @@ void Checker::visit(ast::MappingLiteral *mapping) {
     }
 
     check_not_null(mapping);
-}
-
-void Checker::visit(ast::RecordLiteral *expression) {
-    expression->name->accept(this);
-
-    for (auto value : expression->field_values) {
-        value->accept(this);
-    }
-
-    check_not_null(expression);
 }
 
 void Checker::visit(ast::TupleLiteral *expression) {

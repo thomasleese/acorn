@@ -184,17 +184,6 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class RecordLiteral : public Expression {
-        public:
-            using Expression::Expression;
-
-            Name *name;
-            std::vector<Name *> field_names;
-            std::vector<Expression *> field_values;
-
-            void accept(Visitor *visitor);
-        };
-
         class TupleLiteral : public Expression {
         public:
             TupleLiteral(Token token, std::vector<Expression *> elements);
@@ -480,7 +469,6 @@ namespace acorn {
             virtual void visit(StringLiteral *expression) = 0;
             virtual void visit(SequenceLiteral *expression) = 0;
             virtual void visit(MappingLiteral *expression) = 0;
-            virtual void visit(RecordLiteral *expression) = 0;
             virtual void visit(TupleLiteral *expression) = 0;
             virtual void visit(Call *expression) = 0;
             virtual void visit(CCall *expression) = 0;
