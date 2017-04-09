@@ -494,9 +494,15 @@ namespace acorn {
             int no_methods() const;
             int index_of(Method *method) const;
 
+            void set_llvm_index(Method *method, int index);
+            int get_llvm_index(Method *method);
+
             Function *with_parameters(std::vector<Type *> parameters);
 
             void accept(Visitor *visitor);
+
+        private:
+            std::map<Method *, int> m_llvm_index;
         };
 
         class Module : public Type {

@@ -1214,6 +1214,14 @@ int Function::index_of(Method *method) const {
     return -1;
 }
 
+void Function::set_llvm_index(Method *method, int index) {
+    m_llvm_index[method] = index;
+}
+
+int Function::get_llvm_index(Method *method) {
+    return m_llvm_index[method];
+}
+
 Function *Function::with_parameters(std::vector<Type *> parameters) {
     assert(false);
     return nullptr;
