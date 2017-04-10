@@ -1145,12 +1145,13 @@ void CodeGenerator::visit(ast::Def *node) {
 
     int i = 0;
     for (auto &arg : function->args()) {
-        std::string arg_name = node->get_parameter(i)->name()->value();
+        auto parameter = node->get_parameter(i);
+        std::string arg_name = parameter->name()->value();
         arg.setName(arg_name);
 
         llvm::Value *value = &arg;
 
-        if (!node->get_parameter(i)->inout()) {
+        if (!parameter->inout()) {
             auto alloca = m_ir_builder->CreateAlloca(arg.getType(), 0, arg_name);
             m_ir_builder->CreateStore(&arg, alloca);
             value = alloca;
