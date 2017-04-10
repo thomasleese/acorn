@@ -240,6 +240,18 @@ void CodeGenerator::push_null_llvm_type_and_initialiser() {
     push_llvm_type_and_initialiser(nullptr, nullptr);
 }
 
+bool CodeGenerator::verify_function(ast::Node *node, llvm::Function *function) {
+    std::string str;
+    llvm::raw_string_ostream stream(str);
+    if (llvm::verifyFunction(*function, &stream)) {
+        function->dump();
+        report(InternalError(node, stream.str()));
+        return false;
+    } else {
+        return true;
+    }
+}
+
 void CodeGenerator::builtin_generate() {
     builtin_initialise_boolean_variable("nil", false);
     builtin_initialise_boolean_variable("true", true);
@@ -1167,14 +1179,9 @@ void CodeGenerator::visit(ast::Def *node) {
     m_ir_builder->CreateRet(value);
 
     pop_scope();
-
     pop_insert_point();
 
-    std::string str;
-    llvm::raw_string_ostream stream(str);
-    if (llvm::verifyFunction(*function, &stream)) {
-        function->dump();
-        report(InternalError(node, stream.str()));
+    if (!verify_function(node, function)) {
         push_llvm_value(nullptr);
         return;
     }

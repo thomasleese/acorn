@@ -112,6 +112,8 @@ namespace acorn {
             void push_llvm_type_and_initialiser(llvm::Type *type, llvm::Constant *initialiser);
             void push_null_llvm_type_and_initialiser();
 
+            bool verify_function(ast::Node *node, llvm::Function *function);
+
         public:
             void builtin_generate();
 
