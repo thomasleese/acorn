@@ -70,6 +70,10 @@ namespace acorn {
         public:
             explicit IrBuilder(llvm::LLVMContext &context);
 
+            void push_insert_point();
+            void pop_insert_point();
+            llvm::IRBuilderBase::InsertPoint insert_point() const;
+
             llvm::BasicBlock *create_basic_block(std::string name, llvm::Function *function = nullptr, bool set_insert_point = false);
             llvm::BasicBlock *create_entry_basic_block(llvm::Function *function = nullptr, bool set_insert_point = false);
 
@@ -79,6 +83,9 @@ namespace acorn {
 
         protected:
             llvm::IRBuilder<> *m_ir_builder;
+
+        private:
+            std::vector<llvm::IRBuilderBase::InsertPoint> m_insert_points;
         };
 
         class CodeGenerator : public ast::Visitor, public types::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower, public TypeFollower, public InitialiserFollower, public IrBuilder {
@@ -97,7 +104,7 @@ namespace acorn {
 
             void push_replacement_type_parameter(types::ParameterType *key, types::Type *value);
             void pop_replacement_type_parameter(types::ParameterType *key);
-            void push_replacemenet_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation);
+            void push_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation);
             void pop_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation);
             types::Type *get_replacement_type_parameter(types::ParameterType *key);
             types::Type *get_replacement_type_parameter(types::Parameter *key);

@@ -98,6 +98,19 @@ IrBuilder::IrBuilder(llvm::LLVMContext &context) : m_ir_builder(new llvm::IRBuil
 
 }
 
+void IrBuilder::push_insert_point() {
+    m_insert_points.push_back(m_ir_builder->saveIP());
+}
+
+void IrBuilder::pop_insert_point() {
+    m_ir_builder->restoreIP(insert_point());
+    m_insert_points.pop_back();
+}
+
+llvm::IRBuilderBase::InsertPoint IrBuilder::insert_point() const {
+    return m_insert_points.back();
+}
+
 llvm::BasicBlock *IrBuilder::create_basic_block(std::string name, llvm::Function *function, bool set_insert_point) {
     if (function == nullptr) {
         function = m_ir_builder->GetInsertBlock()->getParent();
@@ -198,15 +211,15 @@ void CodeGenerator::pop_replacement_type_parameter(types::ParameterType *key) {
     m_replacement_type_parameters.erase(key);
 }
 
-void CodeGenerator::push_replacemenet_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation) {
+void CodeGenerator::push_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation) {
     for (auto const &entry : specialisation) {
-        push_replacement_type_parameter(entry->first, entry->second);
+        push_replacement_type_parameter(entry.first, entry.second);
     }
 }
 
 void CodeGenerator::pop_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation) {
     for (auto const &entry : specialisation) {
-        pop_replacement_type_parameter(entry->first, entry->second);
+        pop_replacement_type_parameter(entry.first);
     }
 }
 
@@ -283,7 +296,7 @@ llvm::Function *CodeGenerator::builtin_generate_function(std::string name, types
     auto llvm_function_type = static_cast<llvm::FunctionType *>(take_type(nullptr));
     return_null_if_null(llvm_function_type);
 
-    auto old_insert_point = m_ir_builder->saveIP();
+    push_insert_point();
 
     auto function = llvm::Function::Create(llvm_function_type, llvm::Function::ExternalLinkage, llvm_name, m_module);
     builtin_initialise_function(function, method->parameter_types().size());
@@ -303,7 +316,7 @@ llvm::Function *CodeGenerator::builtin_generate_function(std::string name, types
         }
     }
 
-    m_ir_builder->restoreIP(old_insert_point);
+    pop_insert_point();
 
     return function;
 }
@@ -470,8 +483,8 @@ void CodeGenerator::visit(types::TypeDescriptionType *type) {
 }
 
 void CodeGenerator::visit(types::Parameter *type) {
-    auto it = m_type_parameters.find(type->type());
-    if (it == m_type_parameters.end()) {
+    auto it = m_replacement_type_parameters.find(type->type());
+    if (it == m_replacement_type_parameters.end()) {
         push_null_llvm_type_and_initialiser();
     } else {
         it->second->accept(this);
@@ -612,12 +625,12 @@ void CodeGenerator::visit(types::Function *type) {
             llvm_initialisers.push_back(llvm::ConstantPointerNull::get(null_pointer_type));
 
             for (auto specialisation : method->generic_specialisations()) {
-                push_replacemenet_generic_specialisation(specialisation);
+                push_replacement_generic_specialisation(specialisation);
                 auto llvm_type_for_method = generate_type(nullptr, method);
                 auto pointer_type = llvm::PointerType::getUnqual(llvm_type_for_method);
                 function_types.push_back(pointer_type);
                 llvm_initialisers.push_back(llvm::ConstantPointerNull::get(pointer_type));
-                pop_replacemenet_generic_specialisation(specialisation);
+                pop_replacement_generic_specialisation(specialisation);
             }
         } else {
             auto llvm_type_for_method = generate_type(nullptr, method);
@@ -668,7 +681,7 @@ void CodeGenerator::visit(ast::VariableDeclaration *node) {
     auto llvm_type = generate_type(node);
     return_and_push_null_if_null(llvm_type);
 
-    auto old_insert_point = m_ir_builder->saveIP();
+    push_insert_point();
 
     if (scope()->is_root()) {
         auto llvm_initialiser = take_initialiser(node);
@@ -690,7 +703,7 @@ void CodeGenerator::visit(ast::VariableDeclaration *node) {
         symbol->value = m_ir_builder->CreateAlloca(llvm_type, 0, node->name()->value());
     }
 
-    m_ir_builder->restoreIP(old_insert_point);
+    pop_insert_point();
 
     push_llvm_value(symbol->value);
 }
@@ -1071,51 +1084,51 @@ void CodeGenerator::visit(ast::Switch *expression) {
     push_llvm_value(nullptr);
 }
 
-void CodeGenerator::visit(ast::Parameter *parameter) {
-    report(InternalError(parameter, "N/A"));
+void CodeGenerator::visit(ast::Parameter *node) {
+    report(InternalError(node, "N/A"));
 }
 
-void CodeGenerator::visit(ast::Let *definition) {
-    definition->assignment->accept(this);
+void CodeGenerator::visit(ast::Let *node) {
+    node->assignment->accept(this);
 
-    if (definition->has_body()) {
-        definition->body()->accept(this);
+    if (node->has_body()) {
+        node->body()->accept(this);
     }
 }
 
-void CodeGenerator::visit(ast::Def *definition) {
-    auto function_symbol = scope()->lookup(this, definition->name());
+void CodeGenerator::visit(ast::Def *node) {
+    auto function_symbol = scope()->lookup(this, node->name());
 
     auto function_type = static_cast<types::Function *>(function_symbol->type);
-    auto method = static_cast<types::Method *>(definition->type());
+    auto method = static_cast<types::Method *>(node->type());
 
-    auto symbol = function_symbol->nameSpace->lookup_by_node(this, definition);
+    auto symbol = function_symbol->nameSpace->lookup_by_node(this, node);
 
     auto llvm_function_name = codegen::mangle_method(function_symbol->name, method);
 
     push_scope(symbol);
 
-    if (method->is_generic()) {
+    /*if (method->is_generic()) {
         int i = 0;
         for (auto specialisation : method->generic_specialisations()) {
-            push_replacemenet_generic_specialisation(specialisation);
-            pop_replacemenet_generic_specialisation(specialisation);
+            push_replacement_generic_specialisation(specialisation);
+            pop_replacement_generic_specialisation(specialisation);
             i++;
         }
-    }
+    }*/
 
-    auto llvm_type = generate_type(definition);
+    auto llvm_type = generate_type(node);
     return_and_push_null_if_null(llvm_type);
 
     auto llvm_function_type = static_cast<llvm::FunctionType *>(llvm_type);
     auto function = llvm::Function::Create(llvm_function_type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
 
-    auto old_insert_point = m_ir_builder->saveIP();
+    push_insert_point();
 
-    auto entry_bb = create_entry_basic_block(function, true);
+    create_entry_basic_block(function, true);
 
-    for (auto param : definition->name()->parameters()) {
-        auto s = scope()->lookup(this, definition, param->value());
+    for (auto param : node->name()->parameters()) {
+        auto s = scope()->lookup(this, node, param->value());
         auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
         m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
         s->value = alloca;
@@ -1123,29 +1136,29 @@ void CodeGenerator::visit(ast::Def *definition) {
 
     int i = 0;
     for (auto &arg : function->args()) {
-        std::string arg_name = definition->get_parameter(i)->name()->value();
+        std::string arg_name = node->get_parameter(i)->name()->value();
         arg.setName(arg_name);
 
         llvm::Value *value = &arg;
 
-        if (!definition->get_parameter(i)->inout()) {
+        if (!node->get_parameter(i)->inout()) {
             auto alloca = m_ir_builder->CreateAlloca(arg.getType(), 0, arg_name);
             m_ir_builder->CreateStore(&arg, alloca);
             value = alloca;
         }
 
-        auto arg_symbol = scope()->lookup(this, definition, arg_name);
+        auto arg_symbol = scope()->lookup(this, node, arg_name);
         arg_symbol->value = value;
 
         i++;
     }
 
-    if (definition->builtin()) {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, definition, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, definition, "b")->value);
+    if (node->builtin()) {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
         push_llvm_value(m_ir_builder->CreateMul(a_value, b_value, "multiplication"));
     } else {
-        definition->body()->accept(this);
+        node->body()->accept(this);
     }
 
     auto value = pop_llvm_value();
@@ -1155,13 +1168,13 @@ void CodeGenerator::visit(ast::Def *definition) {
 
     pop_scope();
 
-    m_ir_builder->restoreIP(old_insert_point);
+    pop_insert_point();
 
     std::string str;
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
         function->dump();
-        report(InternalError(definition, stream.str()));
+        report(InternalError(node, stream.str()));
         push_llvm_value(nullptr);
         return;
     }
@@ -1170,22 +1183,22 @@ void CodeGenerator::visit(ast::Def *definition) {
 
     if (function_symbol->value == nullptr) {
       // check if global symbol is set
-      auto llvm_function_type = generate_type(definition, function_type);
+      auto llvm_function_type = generate_type(node, function_type);
       return_and_push_null_if_null(llvm_function_type);
 
-      auto llvm_initialiser = take_initialiser(definition);
+      auto llvm_initialiser = take_initialiser(node);
       return_and_push_null_if_null(llvm_initialiser);
 
       auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
                                                llvm::GlobalValue::InternalLinkage,
-                                               llvm_initialiser, definition->name()->value());
+                                               llvm_initialiser, node->name()->value());
 
       function_symbol->value = variable;
     }
 
     int llvm_method_index = function_type->get_llvm_index(method);
 
-    llvm_method_index += (specialisation + 1)
+    //llvm_method_index += (specialisation + 1)
 
     create_store_method_to_function(function, function_symbol->value, llvm_method_index);
 
@@ -1237,9 +1250,9 @@ void CodeGenerator::visit(ast::Type *definition) {
         auto function = variable;
         create_store_method_to_function(method, function, 0);
 
-        auto old_insert_point = m_ir_builder->saveIP();
+        push_insert_point();
 
-        auto entry_bb = create_entry_basic_block(method, true);
+        create_entry_basic_block(method, true);
 
         auto instance = m_ir_builder->CreateAlloca(llvm_type_for_method->getReturnType());
 
@@ -1252,7 +1265,7 @@ void CodeGenerator::visit(ast::Type *definition) {
 
         m_ir_builder->CreateRet(m_ir_builder->CreateLoad(instance));
 
-        m_ir_builder->restoreIP(old_insert_point);
+        pop_insert_point();
 
         push_llvm_value(variable);
     }
