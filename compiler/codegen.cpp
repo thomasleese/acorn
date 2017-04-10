@@ -98,16 +98,22 @@ IrBuilder::IrBuilder(llvm::LLVMContext &context) : m_ir_builder(new llvm::IRBuil
 
 }
 
-llvm::BasicBlock *IrBuilder::create_basic_block(std::string name, llvm::Function *function) {
+llvm::BasicBlock *IrBuilder::create_basic_block(std::string name, llvm::Function *function, bool set_insert_point) {
     if (function == nullptr) {
         function = m_ir_builder->GetInsertBlock()->getParent();
     }
 
-    return llvm::BasicBlock::Create(function->getContext(), name, function);
+    auto bb = llvm::BasicBlock::Create(function->getContext(), name, function);
+
+    if (set_insert_point) {
+        m_ir_builder->SetInsertPoint(bb);
+    }
+
+    return bb;
 }
 
-llvm::BasicBlock *IrBuilder::create_entry_basic_block(llvm::Function *function) {
-    return create_basic_block("entry", function);
+llvm::BasicBlock *IrBuilder::create_entry_basic_block(llvm::Function *function, bool set_insert_point) {
+    return create_basic_block("entry", function, set_insert_point);
 }
 
 std::vector<llvm::Value *> IrBuilder::build_gep_index(std::initializer_list<int> indexes) {
@@ -379,8 +385,7 @@ void CodeGenerator::builtin_initialise_function(llvm::Function *function, int no
         return;
     }
 
-    auto basic_block = create_entry_basic_block(function);
-    m_ir_builder->SetInsertPoint(basic_block);
+    create_entry_basic_block(function, true);
 }
 
 llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
@@ -1080,9 +1085,10 @@ void CodeGenerator::visit(ast::Let *definition) {
 
 void CodeGenerator::visit(ast::Def *definition) {
     auto function_symbol = scope()->lookup(this, definition->name());
-    auto function_type = static_cast<types::Function *>(function_symbol->type);
 
+    auto function_type = static_cast<types::Function *>(function_symbol->type);
     auto method = static_cast<types::Method *>(definition->type());
+
     auto symbol = function_symbol->nameSpace->lookup_by_node(this, definition);
 
     auto llvm_function_name = codegen::mangle_method(function_symbol->name, method);
@@ -1106,8 +1112,7 @@ void CodeGenerator::visit(ast::Def *definition) {
 
     auto old_insert_point = m_ir_builder->saveIP();
 
-    auto entry_bb = create_entry_basic_block(function);
-    m_ir_builder->SetInsertPoint(entry_bb);
+    auto entry_bb = create_entry_basic_block(function, true);
 
     for (auto param : definition->name()->parameters()) {
         auto s = scope()->lookup(this, definition, param->value());
@@ -1234,8 +1239,7 @@ void CodeGenerator::visit(ast::Type *definition) {
 
         auto old_insert_point = m_ir_builder->saveIP();
 
-        auto entry_bb = create_entry_basic_block(method);
-        m_ir_builder->SetInsertPoint(entry_bb);
+        auto entry_bb = create_entry_basic_block(method, true);
 
         auto instance = m_ir_builder->CreateAlloca(llvm_type_for_method->getReturnType());
 
@@ -1273,8 +1277,7 @@ void CodeGenerator::visit(ast::SourceFile *module) {
     auto void_function_type = llvm::FunctionType::get(m_ir_builder->getVoidTy(), false);
 
     m_init_builtins_function = llvm::Function::Create(void_function_type, llvm::Function::ExternalLinkage, "_init_builtins_", m_module);
-    auto init_builtins_bb = create_entry_basic_block(m_init_builtins_function);
-    m_ir_builder->SetInsertPoint(init_builtins_bb);
+    auto init_builtins_bb = create_entry_basic_block(m_init_builtins_function, true);
     builtin_generate();
     m_ir_builder->SetInsertPoint(init_builtins_bb);
     m_ir_builder->CreateRetVoid();

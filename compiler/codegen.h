@@ -70,8 +70,8 @@ namespace acorn {
         public:
             explicit IrBuilder(llvm::LLVMContext &context);
 
-            llvm::BasicBlock *create_basic_block(std::string name, llvm::Function *function = nullptr);
-            llvm::BasicBlock *create_entry_basic_block(llvm::Function *function = nullptr);
+            llvm::BasicBlock *create_basic_block(std::string name, llvm::Function *function = nullptr, bool set_insert_point = false);
+            llvm::BasicBlock *create_entry_basic_block(llvm::Function *function = nullptr, bool set_insert_point = false);
 
             std::vector<llvm::Value *> build_gep_index(std::initializer_list<int> indexes);
             llvm::Value *create_inbounds_gep(llvm::Value *value, std::initializer_list<int> indexes);
