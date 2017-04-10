@@ -252,6 +252,15 @@ bool CodeGenerator::verify_function(ast::Node *node, llvm::Function *function) {
     }
 }
 
+llvm::Function *CodeGenerator::create_function(llvm::Type *type, std::string name) const {
+    return_null_if_null(type);
+
+    auto function_type = llvm::cast<llvm::FunctionType>(type);
+    return llvm::Function::Create(
+        function_type, llvm::Function::ExternalLinkage, name, m_module
+    );
+}
+
 void CodeGenerator::builtin_generate() {
     builtin_initialise_boolean_variable("nil", false);
     builtin_initialise_boolean_variable("true", true);
@@ -310,7 +319,7 @@ llvm::Function *CodeGenerator::builtin_generate_function(std::string name, types
 
     push_insert_point();
 
-    auto function = llvm::Function::Create(llvm_function_type, llvm::Function::ExternalLinkage, llvm_name, m_module);
+    auto function = create_function(llvm_function_type, llvm_name);
     builtin_initialise_function(function, method->parameter_types().size());
 
     if (name == "sizeof") {
@@ -363,7 +372,7 @@ llvm::Function *CodeGenerator::builtin_create_llvm_function(std::string name, in
     auto llvm_type_for_method = static_cast<llvm::FunctionType *>(llvm_type);
     return_null_if_null(llvm_type_for_method);
 
-    auto function = llvm::Function::Create(llvm_type_for_method, llvm::Function::ExternalLinkage, mangled_name, m_module);
+    auto function = create_function(llvm_type_for_method, mangled_name);
     function->addFnAttr(llvm::Attribute::AlwaysInline);
 
     if (function_symbol->value == nullptr) {
@@ -882,14 +891,7 @@ void CodeGenerator::visit(ast::CCall *ccall) {
         return_type, parameters, false
     );
 
-    auto function = m_module->getFunction(name);
-    if (!function) {
-        function = llvm::Function::Create(
-            function_type, llvm::Function::ExternalLinkage, name, m_module
-        );
-    }
-
-    // TODO check duplication signature matches
+    auto function = m_module->getOrInsertFunction(name, function_type);
 
     std::vector<llvm::Value *> arguments;
     for (auto argument : ccall->arguments) {
@@ -1118,6 +1120,7 @@ void CodeGenerator::visit(ast::Def *node) {
     auto llvm_function_name = codegen::mangle_method(function_symbol->name, method);
 
     push_scope(symbol);
+    push_insert_point();
 
     /*if (method->is_generic()) {
         int i = 0;
@@ -1128,17 +1131,8 @@ void CodeGenerator::visit(ast::Def *node) {
         }
     }*/
 
-    auto llvm_function_type = static_cast<llvm::FunctionType *>(generate_type(node));
-    return_and_push_null_if_null(llvm_function_type);
-
-    auto function = llvm::Function::Create(
-        llvm_function_type,
-        llvm::Function::ExternalLinkage,
-        llvm_function_name,
-        m_module
-    );
-
-    push_insert_point();
+    auto function = create_function(generate_type(node), llvm_function_name);
+    return_and_push_null_if_null(function);
 
     create_entry_basic_block(function, true);
 
@@ -1178,11 +1172,10 @@ void CodeGenerator::visit(ast::Def *node) {
 
     auto value = pop_llvm_value();
     return_and_push_null_if_null(value);
-
     m_ir_builder->CreateRet(value);
 
-    pop_scope();
     pop_insert_point();
+    pop_scope();
 
     if (!verify_function(node, function)) {
         push_llvm_value(nullptr);
@@ -1192,7 +1185,6 @@ void CodeGenerator::visit(ast::Def *node) {
     symbol->value = function;
 
     if (function_symbol->value == nullptr) {
-      // check if global symbol is set
       auto llvm_function_type = generate_type(node, function_type);
       return_and_push_null_if_null(llvm_function_type);
 
@@ -1250,10 +1242,7 @@ void CodeGenerator::visit(ast::Type *definition) {
         auto llvm_type_for_method = static_cast<llvm::FunctionType *>(generate_type(nullptr, method_type));
         return_and_push_null_if_null(llvm_type_for_method);
 
-        auto method = llvm::Function::Create(
-            llvm_type_for_method, llvm::Function::ExternalLinkage,
-            mangled_name, m_module
-        );
+        auto method = create_function(llvm_type_for_method, mangled_name);
 
         method->addFnAttr(llvm::Attribute::AlwaysInline);
 
@@ -1299,20 +1288,20 @@ void CodeGenerator::visit(ast::SourceFile *module) {
 
     auto void_function_type = llvm::FunctionType::get(m_ir_builder->getVoidTy(), false);
 
-    m_init_builtins_function = llvm::Function::Create(void_function_type, llvm::Function::ExternalLinkage, "_init_builtins_", m_module);
+    m_init_builtins_function = create_function(void_function_type, "_init_builtins_");
     auto init_builtins_bb = create_entry_basic_block(m_init_builtins_function, true);
     builtin_generate();
     m_ir_builder->SetInsertPoint(init_builtins_bb);
     m_ir_builder->CreateRetVoid();
 
-    m_init_variables_function = llvm::Function::Create(void_function_type, llvm::Function::ExternalLinkage, "_init_variables_", m_module);
+    m_init_variables_function = create_function(void_function_type, "_init_variables_");
     auto init_variables_bb = create_entry_basic_block(m_init_variables_function);
 
-    auto user_code_function = llvm::Function::Create(void_function_type, llvm::Function::ExternalLinkage, "_user_code_", m_module);
+    auto user_code_function = create_function(void_function_type, "_user_code_");
     auto user_code_bb = create_entry_basic_block(user_code_function);
 
     auto int32_function_type = llvm::FunctionType::get(m_ir_builder->getInt32Ty(), false);
-    auto main_function = llvm::Function::Create(int32_function_type, llvm::Function::ExternalLinkage, "main", m_module);
+    auto main_function = create_function(int32_function_type, "main");
     auto main_bb = create_entry_basic_block(main_function);
 
     m_ir_builder->SetInsertPoint(user_code_bb);

@@ -114,6 +114,8 @@ namespace acorn {
 
             bool verify_function(ast::Node *node, llvm::Function *function);
 
+            llvm::Function *create_function(llvm::Type *type, std::string name) const;
+
         public:
             void builtin_generate();
 
