@@ -95,6 +95,13 @@ namespace acorn {
             llvm::Type *generate_type(ast::Expression *expression, types::Type *type);
             llvm::Type *generate_type(ast::Expression *expression);
 
+            void push_replacement_type_parameter(types::ParameterType *key, types::Type *value);
+            void pop_replacement_type_parameter(types::ParameterType *key);
+            void push_replacemenet_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation);
+            void pop_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation);
+            types::Type *get_replacement_type_parameter(types::ParameterType *key);
+            types::Type *get_replacement_type_parameter(types::Parameter *key);
+
             void push_llvm_type_and_initialiser(llvm::Type *type, llvm::Constant *initialiser);
             void push_null_llvm_type_and_initialiser();
 
@@ -180,6 +187,7 @@ namespace acorn {
             llvm::DataLayout *m_data_layout;
 
             std::vector<llvm::Argument *> m_args;
+            std::map<types::ParameterType *, types::Type *> m_replacement_type_parameters;
 
             llvm::Function *m_init_builtins_function;
             llvm::Function *m_init_variables_function;

@@ -184,6 +184,34 @@ llvm::Type *CodeGenerator::generate_type(ast::Expression *expression) {
     return generate_type(expression, expression->type());
 }
 
+void CodeGenerator::push_replacement_type_parameter(types::ParameterType *key, types::Type *value) {
+    m_replacement_type_parameters[key] = value;
+}
+
+void CodeGenerator::pop_replacement_type_parameter(types::ParameterType *key) {
+    m_replacement_type_parameters.erase(key);
+}
+
+void CodeGenerator::push_replacemenet_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation) {
+    for (auto const &entry : specialisation) {
+        push_replacement_type_parameter(entry->first, entry->second);
+    }
+}
+
+void CodeGenerator::pop_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation) {
+    for (auto const &entry : specialisation) {
+        pop_replacement_type_parameter(entry->first, entry->second);
+    }
+}
+
+types::Type *CodeGenerator::get_replacement_type_parameter(types::ParameterType *key) {
+    return m_replacement_type_parameters[key];
+}
+
+types::Type *CodeGenerator::get_replacement_type_parameter(types::Parameter *key) {
+    return get_replacement_type_parameter(key->type());
+}
+
 void CodeGenerator::push_llvm_type_and_initialiser(llvm::Type *type, llvm::Constant *initialiser) {
     push_llvm_type(type);
     push_llvm_initialiser(initialiser);
@@ -437,7 +465,12 @@ void CodeGenerator::visit(types::TypeDescriptionType *type) {
 }
 
 void CodeGenerator::visit(types::Parameter *type) {
-    push_null_llvm_type_and_initialiser();
+    auto it = m_type_parameters.find(type->type());
+    if (it == m_type_parameters.end()) {
+        push_null_llvm_type_and_initialiser();
+    } else {
+        it->second->accept(this);
+    }
 }
 
 void CodeGenerator::visit(types::Void *type) {
@@ -574,10 +607,12 @@ void CodeGenerator::visit(types::Function *type) {
             llvm_initialisers.push_back(llvm::ConstantPointerNull::get(null_pointer_type));
 
             for (auto specialisation : method->generic_specialisations()) {
+                push_replacemenet_generic_specialisation(specialisation);
                 auto llvm_type_for_method = generate_type(nullptr, method);
                 auto pointer_type = llvm::PointerType::getUnqual(llvm_type_for_method);
                 function_types.push_back(pointer_type);
                 llvm_initialisers.push_back(llvm::ConstantPointerNull::get(pointer_type));
+                pop_replacemenet_generic_specialisation(specialisation);
             }
         } else {
             auto llvm_type_for_method = generate_type(nullptr, method);
@@ -1044,12 +1079,6 @@ void CodeGenerator::visit(ast::Let *definition) {
 }
 
 void CodeGenerator::visit(ast::Def *definition) {
-    /*if (definition->name()->has_parameters()) {
-        report(InternalError(definition, "Function should not have definitions."));
-        push_llvm_value(nullptr);
-        return;
-    }*/
-
     auto function_symbol = scope()->lookup(this, definition->name());
     auto function_type = static_cast<types::Function *>(function_symbol->type);
 
@@ -1061,7 +1090,12 @@ void CodeGenerator::visit(ast::Def *definition) {
     push_scope(symbol);
 
     if (method->is_generic()) {
-        std::cout << method->generic_specialisations().size() << std::endl;
+        int i = 0;
+        for (auto specialisation : method->generic_specialisations()) {
+            push_replacemenet_generic_specialisation(specialisation);
+            pop_replacemenet_generic_specialisation(specialisation);
+            i++;
+        }
     }
 
     auto llvm_type = generate_type(definition);
@@ -1146,7 +1180,7 @@ void CodeGenerator::visit(ast::Def *definition) {
 
     int llvm_method_index = function_type->get_llvm_index(method);
 
-    // llvm_method_index += (specialisation + 1)
+    llvm_method_index += (specialisation + 1)
 
     create_store_method_to_function(function, function_symbol->value, llvm_method_index);
 
