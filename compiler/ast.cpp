@@ -685,8 +685,7 @@ void Import::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-SourceFile::SourceFile(Token token, std::string name) : Expression(token) {
-    this->name = name;
+SourceFile::SourceFile(Token token, std::string name) : Expression(token), name(name) {
     this->code = new Block(token);
 }
 

@@ -899,8 +899,7 @@ void CodeGenerator::visit(ast::CCall *ccall) {
         arguments.push_back(arg_value);
     }
 
-    auto call = m_ir_builder->CreateCall(function, arguments);
-    push_llvm_value(call);
+    push_llvm_value(m_ir_builder->CreateCall(function, arguments));
 }
 
 void CodeGenerator::visit(ast::Cast *cast) {
@@ -1059,8 +1058,8 @@ void CodeGenerator::visit(ast::If *expression) {
     push_llvm_value(phi);
 }
 
-void CodeGenerator::visit(ast::Return *expression) {
-    auto value = generate_llvm_value(expression->expression);
+void CodeGenerator::visit(ast::Return *node) {
+    auto value = generate_llvm_value(node->expression);
     return_and_push_null_if_null(value);
     push_llvm_value(m_ir_builder->CreateRet(value));
 }
@@ -1129,11 +1128,15 @@ void CodeGenerator::visit(ast::Def *node) {
         }
     }*/
 
-    auto llvm_type = generate_type(node);
-    return_and_push_null_if_null(llvm_type);
+    auto llvm_function_type = static_cast<llvm::FunctionType *>(generate_type(node));
+    return_and_push_null_if_null(llvm_function_type);
 
-    auto llvm_function_type = static_cast<llvm::FunctionType *>(llvm_type);
-    auto function = llvm::Function::Create(llvm_function_type, llvm::Function::ExternalLinkage, llvm_function_name, m_module);
+    auto function = llvm::Function::Create(
+        llvm_function_type,
+        llvm::Function::ExternalLinkage,
+        llvm_function_name,
+        m_module
+    );
 
     push_insert_point();
 
