@@ -97,7 +97,6 @@ namespace acorn {
 
             void add_builtin_types();
             void add_builtin_variables();
-            void add_builtin_functions();
 
         public:
             void add_builtins();

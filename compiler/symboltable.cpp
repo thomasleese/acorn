@@ -254,67 +254,9 @@ void Builder::add_builtin_variables() {
     add_builtin_symbol("false", new types::Boolean());
 }
 
-void Builder::add_builtin_functions() {
-    auto not_ = add_builtin_function("not");
-    add_builtin_method(not_, new types::Method(new types::Boolean(), new types::Boolean()));
-
-    auto addition = add_builtin_function("+");
-    add_builtin_method(addition, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
-    add_builtin_method(addition, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::UnsignedInteger(64)));
-    add_builtin_method(addition, new types::Method(new types::Float(64), new types::Float(64), new types::Float(64)));
-
-    auto subtraction = add_builtin_function("-");
-    add_builtin_method(subtraction, new types::Method(new types::Integer(64), new types::Integer(64), new types::Integer(64)));
-
-    auto equality = add_builtin_function("==");
-    add_builtin_method(equality, new types::Method(new types::Boolean(), new types::Boolean(), new types::Boolean()));
-    add_builtin_method(equality, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
-    add_builtin_method(equality, new types::Method(new types::UnsignedInteger(64), new types::UnsignedInteger(64), new types::Boolean()));
-
-    auto not_equality = add_builtin_function("!=");
-    add_builtin_method(not_equality, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
-
-    auto less_than = add_builtin_function("<");
-    add_builtin_method(less_than, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
-
-    auto gte = add_builtin_function(">=");
-    add_builtin_method(gte, new types::Method(new types::Integer(64), new types::Integer(64), new types::Boolean()));
-
-    auto to_integer = add_builtin_function("to_integer");
-    add_builtin_method(to_integer, new types::Method(new types::Float(64), new types::Integer(64)));
-
-    auto to_float = add_builtin_function("to_float");
-    add_builtin_method(to_float, new types::Method(new types::Integer(64), new types::Float(64)));
-
-    auto getindex = add_builtin_function("getindex");
-    auto pc = new types::ParameterType();
-    auto method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc));
-    method->set_is_generic(true);
-    add_builtin_method(getindex, method);
-
-    auto setindex = add_builtin_function("setindex");
-    pc = new types::ParameterType();
-    method = new types::Method(new types::UnsafePointer(new types::Parameter(pc)), new types::Integer(64), new types::Parameter(pc), new types::Void());
-    method->set_is_generic(true);
-    add_builtin_method(setindex, method);
-
-    auto sizeof_ = add_builtin_function("sizeof");
-    pc = new types::ParameterType();
-    method = new types::Method(pc, new types::Integer(64));
-    method->set_is_generic(true);
-    add_builtin_method(sizeof_, method);
-
-    auto strideof_ = add_builtin_function("strideof");
-    pc = new types::ParameterType();
-    method = new types::Method(pc, new types::Integer(64));
-    method->set_is_generic(true);
-    add_builtin_method(strideof_, method);
-}
-
 void Builder::add_builtins() {
     add_builtin_types();
     add_builtin_variables();
-    add_builtin_functions();
 }
 
 void Builder::visit(ast::Block *block) {

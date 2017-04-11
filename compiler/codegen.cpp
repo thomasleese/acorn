@@ -312,134 +312,6 @@ void CodeGenerator::builtin_generate() {
     builtin_initialise_boolean_variable("nil", false);
     builtin_initialise_boolean_variable("true", true);
     builtin_initialise_boolean_variable("false", false);
-
-    // not
-    auto f = builtin_create_llvm_function("not", 0);
-    m_ir_builder->CreateRet(m_ir_builder->CreateNot(m_args[0]));
-
-    // addition
-    f = builtin_create_llvm_function("+", 0);
-    m_ir_builder->CreateRet(m_ir_builder->CreateAdd(m_args[0], m_args[1]));
-
-    f = builtin_create_llvm_function("+", 1);
-    m_ir_builder->CreateRet(m_ir_builder->CreateAdd(m_args[0], m_args[1]));
-
-    f = builtin_create_llvm_function("+", 2);
-    m_ir_builder->CreateRet(m_ir_builder->CreateFAdd(m_args[0], m_args[1]));
-
-    // subtraction
-    f = builtin_create_llvm_function("-", 0);
-    m_ir_builder->CreateRet(m_ir_builder->CreateSub(m_args[0], m_args[1]));
-
-    // equality
-    for (int i = 0; i < 3; i++) {
-        f = builtin_create_llvm_function("==", i);
-        m_ir_builder->CreateRet(m_ir_builder->CreateICmpEQ(m_args[0], m_args[1]));
-    }
-
-    // not equality
-    f = builtin_create_llvm_function("!=", 0);
-    m_ir_builder->CreateRet(m_ir_builder->CreateICmpNE(m_args[0], m_args[1]));
-
-    // less than
-    f = builtin_create_llvm_function("<", 0);
-    m_ir_builder->CreateRet(m_ir_builder->CreateICmpSLT(m_args[0], m_args[1]));
-
-    // greater than or equal to
-    f = builtin_create_llvm_function(">=", 0);
-    m_ir_builder->CreateRet(m_ir_builder->CreateICmpSGE(m_args[0], m_args[1]));
-
-    // to integer
-    f = builtin_create_llvm_function("to_integer", 0);
-    m_ir_builder->CreateRet(m_ir_builder->CreateFPToSI(m_args[0], f->getReturnType()));
-
-    // to float
-    f = builtin_create_llvm_function("to_float", 0);
-    m_ir_builder->CreateRet(m_ir_builder->CreateSIToFP(m_args[0], f->getReturnType()));
-}
-
-llvm::Function *CodeGenerator::builtin_generate_function(std::string name, types::Method *method, std::string llvm_name) {
-    method->accept(this);
-
-    auto llvm_function_type = static_cast<llvm::FunctionType *>(take_type(nullptr));
-    return_null_if_null(llvm_function_type);
-
-    push_insert_point();
-
-    auto function = create_function(llvm_function_type, llvm_name);
-    builtin_initialise_function(function, method->parameter_types().size());
-
-    if (name == "sizeof") {
-        builtin_generate_sizeof(method, function);
-    } else if (name == "strideof") {
-        builtin_generate_strideof(method, function);
-    } else {
-        auto gep = m_ir_builder->CreateInBoundsGEP(m_args[0], { m_args[0] });
-
-        if (name == "setindex") {
-            m_ir_builder->CreateStore(m_args[2], gep);
-            m_ir_builder->CreateRet(m_ir_builder->getInt1(false));
-        } else {
-            m_ir_builder->CreateRet(m_ir_builder->CreateLoad(gep));
-        }
-    }
-
-    pop_insert_point();
-
-    return function;
-}
-
-void CodeGenerator::builtin_generate_sizeof(types::Method *method, llvm::Function *function) {
-    auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
-    auto llvm_type = generate_type(nullptr, type->create(nullptr, nullptr));
-    return_if_null(llvm_type);
-
-    uint64_t size = m_data_layout->getTypeStoreSize(llvm_type);
-    m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
-}
-
-void CodeGenerator::builtin_generate_strideof(types::Method *method, llvm::Function *function) {
-    auto type = dynamic_cast<types::TypeType *>(method->parameter_types()[0]);
-    auto llvm_type = generate_type(nullptr, type->create(nullptr, nullptr));
-    return_if_null(llvm_type);
-
-    uint64_t size = m_data_layout->getTypeAllocSize(llvm_type);
-    m_ir_builder->CreateRet(m_ir_builder->getInt64(size));
-}
-
-llvm::Function *CodeGenerator::builtin_create_llvm_function(std::string name, int index) {
-    auto function_symbol = scope()->lookup(nullptr, nullptr, name);
-
-    auto function_type = static_cast<types::Function *>(function_symbol->type);
-    auto method_type = function_type->get_method(index);
-
-    std::string mangled_name = codegen::mangle_method(name, method_type);
-
-    auto llvm_type = generate_type(nullptr, method_type);
-    auto llvm_type_for_method = static_cast<llvm::FunctionType *>(llvm_type);
-    return_null_if_null(llvm_type_for_method);
-
-    auto function = create_function(llvm_type_for_method, mangled_name);
-    function->addFnAttr(llvm::Attribute::AlwaysInline);
-
-    if (function_symbol->value == nullptr) {
-      auto llvm_type_for_function = generate_type(nullptr, function_type);
-      return_null_if_null(llvm_type_for_function);
-      auto llvm_initialiser_for_function = take_initialiser(nullptr);
-      return_null_if_null(llvm_initialiser_for_function);
-
-      auto variable = create_global_variable(llvm_type_for_function, llvm_initialiser_for_function, name);
-
-      function_symbol->value = variable;
-    }
-
-    m_ir_builder->SetInsertPoint(&m_init_builtins_function->getEntryBlock());
-
-    create_store_method_to_function(function, function_symbol->value, index);
-
-    builtin_initialise_function(function, method_type->parameter_types().size());
-
-    return function;
 }
 
 void CodeGenerator::builtin_initialise_boolean_variable(std::string name, bool value) {
@@ -450,18 +322,58 @@ void CodeGenerator::builtin_initialise_boolean_variable(std::string name, bool v
     );
 }
 
-void CodeGenerator::builtin_initialise_function(llvm::Function *function, int no_arguments) {
-    m_args.clear();
-    for (auto &arg : function->getArgumentList()) {
-        m_args.push_back(&arg);
-    }
+void CodeGenerator::generate_builtin_method_body(ast::Def *node, llvm::Function *function) {
+    std::string name = node->name()->value();
 
-    if (static_cast<int>(m_args.size()) != no_arguments) {
-        report(InternalError(nullptr, "Builtin given number of arguments doesn't match actual."));
-        return;
+    if (name == "*") {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        push_llvm_value(m_ir_builder->CreateMul(a_value, b_value, "multiplication"));
+    } else if (name == "+") {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        if (a_value->getType()->isFloatingPointTy()) {
+            push_llvm_value(m_ir_builder->CreateFAdd(a_value, b_value, "addition"));
+        } else {
+            push_llvm_value(m_ir_builder->CreateAdd(a_value, b_value, "addition"));
+        }
+    } else if (name == "-") {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        push_llvm_value(m_ir_builder->CreateSub(a_value, b_value, "subtraction"));
+    } else if (name == "==") {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        push_llvm_value(m_ir_builder->CreateICmpEQ(a_value, b_value, "eq"));
+    } else if (name == "!=") {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        push_llvm_value(m_ir_builder->CreateICmpNE(a_value, b_value, "neq"));
+    } else if (name == "<") {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        push_llvm_value(m_ir_builder->CreateICmpSLT(a_value, b_value, "lt"));
+    } else if (name == ">") {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        push_llvm_value(m_ir_builder->CreateICmpSGT(a_value, b_value, "gt"));
+    } else if (name == ">=") {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        push_llvm_value(m_ir_builder->CreateICmpSGE(a_value, b_value, "gte"));
+    } else if (name == "<=") {
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        push_llvm_value(m_ir_builder->CreateICmpSLE(a_value, b_value, "lte"));
+    } else if (name == "to_float") {
+        auto value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "self")->value);
+        push_llvm_value(m_ir_builder->CreateSIToFP(value, function->getReturnType(), "float"));
+    } else if (name == "to_int") {
+        auto value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "self")->value);
+        push_llvm_value(m_ir_builder->CreateFPToSI(value, function->getReturnType(), "int"));
+    } else {
+        report(InternalError(node, "Unknown builtin definition."));
     }
-
-    create_entry_basic_block(function, true);
 }
 
 llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
@@ -1181,9 +1093,7 @@ void CodeGenerator::visit(ast::Def *node) {
     prepare_method_parameters(node, function);
 
     if (node->builtin()) {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
-        push_llvm_value(m_ir_builder->CreateMul(a_value, b_value, "multiplication"));
+        generate_builtin_method_body(node, function);
     } else {
         node->body()->accept(this);
     }

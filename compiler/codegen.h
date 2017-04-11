@@ -121,16 +121,10 @@ namespace acorn {
         public:
             void builtin_generate();
 
-            llvm::Function *builtin_generate_function(std::string name, types::Method *method, std::string llvm_name);
-
         private:
-            void builtin_generate_sizeof(types::Method *method, llvm::Function *function);
-            void builtin_generate_strideof(types::Method *method, llvm::Function *function);
-
-            llvm::Function *builtin_create_llvm_function(std::string name, int index);
-
             void builtin_initialise_boolean_variable(std::string name, bool value);
-            void builtin_initialise_function(llvm::Function *function, int no_arguments);
+
+            void generate_builtin_method_body(ast::Def *node, llvm::Function *function);
 
         private:
             llvm::Value *generate_llvm_value(ast::Node *node);
