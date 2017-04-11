@@ -261,6 +261,35 @@ llvm::Function *CodeGenerator::create_function(llvm::Type *type, std::string nam
     );
 }
 
+void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *function) {
+    for (auto param : node->name()->parameters()) {
+        auto symbol = scope()->lookup(this, node, param->value());
+        auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
+        m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
+        symbol->value = alloca;
+    }
+
+    int i = 0;
+    for (auto &arg : function->args()) {
+        auto parameter = node->get_parameter(i);
+        std::string arg_name = parameter->name()->value();
+        arg.setName(arg_name);
+
+        llvm::Value *value = &arg;
+
+        if (!parameter->inout()) {
+            auto alloca = m_ir_builder->CreateAlloca(arg.getType(), 0, arg_name);
+            m_ir_builder->CreateStore(&arg, alloca);
+            value = alloca;
+        }
+
+        auto symbol = scope()->lookup(this, node, arg_name);
+        symbol->value = value;
+
+        i++;
+    }
+}
+
 void CodeGenerator::builtin_generate() {
     builtin_initialise_boolean_variable("nil", false);
     builtin_initialise_boolean_variable("true", true);
@@ -1135,33 +1164,7 @@ void CodeGenerator::visit(ast::Def *node) {
     return_and_push_null_if_null(function);
 
     create_entry_basic_block(function, true);
-
-    for (auto param : node->name()->parameters()) {
-        auto s = scope()->lookup(this, node, param->value());
-        auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
-        m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
-        s->value = alloca;
-    }
-
-    int i = 0;
-    for (auto &arg : function->args()) {
-        auto parameter = node->get_parameter(i);
-        std::string arg_name = parameter->name()->value();
-        arg.setName(arg_name);
-
-        llvm::Value *value = &arg;
-
-        if (!parameter->inout()) {
-            auto alloca = m_ir_builder->CreateAlloca(arg.getType(), 0, arg_name);
-            m_ir_builder->CreateStore(&arg, alloca);
-            value = alloca;
-        }
-
-        auto arg_symbol = scope()->lookup(this, node, arg_name);
-        arg_symbol->value = value;
-
-        i++;
-    }
+    prepare_method_parameters(node, function);
 
     if (node->builtin()) {
         auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
