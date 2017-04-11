@@ -240,6 +240,11 @@ Name *Parser::read_operator(bool accept_parameters) {
 ast::VariableDeclaration *Parser::read_variable_declaration() {
     return_if_false(read_token(Token::LetKeyword, token));
 
+    bool builtin = false;
+    if (is_and_skip_token(Token::BuiltinKeyword)) {
+        builtin = true;
+    }
+
     auto name = read_name(false);
     return_if_null(name);
 
@@ -249,7 +254,7 @@ ast::VariableDeclaration *Parser::read_variable_declaration() {
         return_if_null(type);
     }
 
-    return new VariableDeclaration(token, name, type);
+    return new VariableDeclaration(token, name, type, builtin);
 }
 
 Int *Parser::read_int() {
@@ -500,7 +505,7 @@ Block *Parser::read_for() {
     auto next_state_variable = new Let(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
     loop_code->insert_expression(0, next_state_variable);
     loop_code->insert_expression(1, new Assignment(token, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "1")));
-    loop_code->insert_expression(1, new Assignment(token, new VariableDeclaration(token, new Name(token, next_state_variable_name)), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0")));
+    loop_code->insert_expression(1, new Assignment(token, new VariableDeclaration(token, new Name(token, next_state_variable_name), nullptr, false), new Selector(token, static_cast<ast::VariableDeclaration *>(next_state_variable->assignment->lhs)->name(), "0")));
 
     code_block->add_expression(while_code);
 
@@ -758,10 +763,14 @@ Let *Parser::read_let() {
     auto lhs = read_variable_declaration();
     return_if_null(lhs);
 
-    return_if_false(read_token(Token::Assignment, token));
+    ast::Expression *rhs = nullptr;
 
-    auto rhs = read_expression(true);
-    return_if_null(rhs);
+    if (!lhs->builtin()) {
+        return_if_false(read_token(Token::Assignment, token));
+
+        rhs = read_expression(true);
+        return_if_null(rhs);
+    }
 
     ast::Expression *body = nullptr;
     if (is_and_skip_token(Token::Indent)) {

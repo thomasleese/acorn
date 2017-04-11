@@ -124,8 +124,8 @@ bool Block::empty() const {
     return m_expressions.empty();
 }
 
-VariableDeclaration::VariableDeclaration(Token token, Name *name, Name *type) :
-        Expression(token), m_name(name), m_given_type(type) {
+VariableDeclaration::VariableDeclaration(Token token, Name *name, Name *type, bool builtin) :
+        Expression(token), m_name(name), m_given_type(type), m_builtin(builtin) {
 
 }
 
@@ -139,6 +139,10 @@ bool VariableDeclaration::has_given_type() {
 
 Name *VariableDeclaration::given_type() const {
     return m_given_type.get();
+}
+
+bool VariableDeclaration::builtin() const {
+    return m_builtin;
 }
 
 void VariableDeclaration::set_type(types::Type *type) {
@@ -417,6 +421,10 @@ Assignment::Assignment(Token token, VariableDeclaration *lhs, Expression *rhs) :
     this->rhs = rhs;
 }
 
+bool Assignment::builtin() const {
+    return lhs->builtin();
+}
+
 void Assignment::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -545,7 +553,7 @@ Let::Let(Token token, std::string name, Expression *value, Expression *body) :
         Expression(token),
         m_body(body)
 {
-    auto variable_declaration = new VariableDeclaration(token, new Name(token, name));
+    auto variable_declaration = new VariableDeclaration(token, new Name(token, name), nullptr, false);
     this->assignment = new Assignment(token, variable_declaration, value);
 }
 

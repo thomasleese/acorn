@@ -89,12 +89,14 @@ namespace acorn {
 
         class VariableDeclaration : public Expression {
         public:
-            VariableDeclaration(Token token, Name *name = nullptr, Name *type = nullptr);
+            VariableDeclaration(Token token, Name *name, Name *type = nullptr, bool builtin = false);
 
             Name *name() const;
 
             bool has_given_type();
             Name *given_type() const;
+
+            bool builtin() const;
 
             void set_type(types::Type *type) override;
 
@@ -103,6 +105,7 @@ namespace acorn {
         private:
             std::unique_ptr<Name> m_name;
             std::unique_ptr<Name> m_given_type;
+            bool m_builtin;
         };
 
         class Definition : public Expression {
@@ -271,10 +274,12 @@ namespace acorn {
 
         class Assignment : public Expression {
         public:
-            explicit Assignment(Token token, VariableDeclaration *lhs, Expression *rhs);
+            Assignment(Token token, VariableDeclaration *lhs, Expression *rhs);
 
             VariableDeclaration *lhs;
             Expression *rhs;
+
+            bool builtin() const;
 
             void accept(Visitor *visitor);
         };

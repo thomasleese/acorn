@@ -118,18 +118,11 @@ namespace acorn {
             llvm::GlobalVariable *create_global_variable(llvm::Type *type, llvm::Constant *initialiser, std::string name);
             void prepare_method_parameters(ast::Def *node, llvm::Function *function);
 
-        public:
-            void builtin_generate();
-
-        private:
-            void builtin_initialise_boolean_variable(std::string name, bool value);
-
+            llvm::Value *generate_builtin_variable(ast::VariableDeclaration *node);
             void generate_builtin_method_body(ast::Def *node, llvm::Function *function);
 
-        private:
             llvm::Value *generate_llvm_value(ast::Node *node);
 
-        public:
             void visit_constructor(types::TypeType *type);
 
             void visit(types::ParameterType *type);
@@ -196,7 +189,6 @@ namespace acorn {
             std::vector<llvm::Argument *> m_args;
             std::map<types::ParameterType *, types::Type *> m_replacement_type_parameters;
 
-            llvm::Function *m_init_builtins_function;
             llvm::Function *m_init_variables_function;
         };
 

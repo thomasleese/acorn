@@ -308,18 +308,12 @@ void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *fu
     }
 }
 
-void CodeGenerator::builtin_generate() {
-    builtin_initialise_boolean_variable("nil", false);
-    builtin_initialise_boolean_variable("true", true);
-    builtin_initialise_boolean_variable("false", false);
-}
-
-void CodeGenerator::builtin_initialise_boolean_variable(std::string name, bool value) {
-    auto symbol = scope()->lookup(nullptr, nullptr, name);
-    return_if_null(symbol);
-    symbol->value = create_global_variable(
-        m_ir_builder->getInt1Ty(), m_ir_builder->getInt1(value), name
-    );
+llvm::Value *CodeGenerator::generate_builtin_variable(ast::VariableDeclaration *node) {
+    if (node->name()->value() == "true") {
+        return m_ir_builder->getInt1(1);
+    } else {
+        return m_ir_builder->getInt1(0);
+    }
 }
 
 void CodeGenerator::generate_builtin_method_body(ast::Def *node, llvm::Function *function) {
@@ -868,41 +862,19 @@ void CodeGenerator::visit(ast::Cast *cast) {
     push_llvm_value(new_value);
 }
 
-void CodeGenerator::visit(ast::Assignment *expression) {
-    expression->rhs->accept(this);
-    auto rhs_value = pop_llvm_value();
+void CodeGenerator::visit(ast::Assignment *node) {
+    llvm::Value *rhs_value = nullptr;
+
+    if (node->builtin()) {
+        rhs_value = generate_builtin_variable(node->lhs);
+    } else {
+        rhs_value = generate_llvm_value(node->rhs);
+    }
+
     return_if_null(rhs_value);
 
-    expression->lhs->accept(this);
+    node->lhs->accept(this);
     auto lhs_pointer = pop_llvm_value();
-
-    /*} else if (rhs_union_type && !lhs_union_type) {
-        bool ok;
-        uint8_t index_we_want = rhs_union_type->type_index(expression->lhs->type, &ok);
-        assert(ok);  // type checker should catch this
-
-        std::vector<llvm::Value *> indexes;
-        indexes.push_back(m_ir_builder->getInt32(0));
-        indexes.push_back(m_ir_builder->getInt32(0));
-
-        assert(rhs_variable_pointer);
-
-        auto index_we_have_gep = m_ir_builder->CreateInBoundsGEP(rhs_variable_pointer, indexes, "union_index_ptr");
-        auto index_we_have = m_ir_builder->CreateLoad(index_we_have_gep, "union_index");
-
-        indexes.clear();
-        indexes.push_back(m_ir_builder->getInt32(0));
-        indexes.push_back(m_ir_builder->getInt32(1 + index_we_want));
-
-        auto holder_gep = m_ir_builder->CreateInBoundsGEP(rhs_variable_pointer, indexes, "union_index_value_ptr");
-        m_ir_builder->CreateStore(m_ir_builder->CreateLoad(holder_gep, "union_index"), variable_pointer);
-
-        auto icmp = m_ir_builder->CreateICmpEQ(m_ir_builder->getInt8(index_we_want), index_we_have, "check_union_type");
-        push_llvm_value(icmp);
-    } else {*/
-
-    lhs_pointer->dump();
-    rhs_value->dump();
 
     m_ir_builder->CreateStore(rhs_value, lhs_pointer);
     push_llvm_value(rhs_value);
@@ -1205,12 +1177,6 @@ void CodeGenerator::visit(ast::SourceFile *module) {
 
     auto void_function_type = llvm::FunctionType::get(m_ir_builder->getVoidTy(), false);
 
-    m_init_builtins_function = create_function(void_function_type, "_init_builtins_");
-    auto init_builtins_bb = create_entry_basic_block(m_init_builtins_function, true);
-    builtin_generate();
-    m_ir_builder->SetInsertPoint(init_builtins_bb);
-    m_ir_builder->CreateRetVoid();
-
     m_init_variables_function = create_function(void_function_type, "_init_variables_");
     auto init_variables_bb = create_entry_basic_block(m_init_variables_function);
 
@@ -1226,7 +1192,6 @@ void CodeGenerator::visit(ast::SourceFile *module) {
     m_ir_builder->CreateRetVoid();
 
     m_ir_builder->SetInsertPoint(main_bb);
-    m_ir_builder->CreateCall(m_init_builtins_function);
     m_ir_builder->CreateCall(m_init_variables_function);
     m_ir_builder->CreateCall(user_code_function);
     m_ir_builder->CreateRet(m_ir_builder->getInt32(0));

@@ -94,7 +94,6 @@ namespace acorn {
             Symbol *add_builtin_symbol(std::string name, types::Type *type);
 
             void add_builtin_types();
-            void add_builtin_variables();
 
         public:
             void add_builtins();

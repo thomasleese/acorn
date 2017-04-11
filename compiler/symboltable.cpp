@@ -230,15 +230,8 @@ void Builder::add_builtin_types() {
     add_builtin_symbol("Type", new types::TypeDescriptionType());
 }
 
-void Builder::add_builtin_variables() {
-    add_builtin_symbol("nil", new types::Void());
-    add_builtin_symbol("true", new types::Boolean());
-    add_builtin_symbol("false", new types::Boolean());
-}
-
 void Builder::add_builtins() {
     add_builtin_types();
-    add_builtin_variables();
 }
 
 void Builder::visit(ast::Block *block) {
@@ -298,9 +291,12 @@ void Builder::visit(ast::Cast *expression) {
 
 }
 
-void Builder::visit(ast::Assignment *expression) {
-    expression->lhs->accept(this);
-    expression->rhs->accept(this);
+void Builder::visit(ast::Assignment *node) {
+    node->lhs->accept(this);
+
+    if (!node->builtin()) {
+        node->rhs->accept(this);
+    }
 }
 
 void Builder::visit(ast::Selector *expression) {

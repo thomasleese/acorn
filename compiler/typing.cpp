@@ -326,8 +326,10 @@ void Inferrer::visit(ast::Assignment *expression) {
     auto symbol = scope()->lookup(this, expression->lhs->name());
     return_if_null(symbol);
 
-    expression->rhs->accept(this);
-    return_if_null_type(expression->rhs);
+    if (!expression->builtin()) {
+        expression->rhs->accept(this);
+        return_if_null_type(expression->rhs);
+    }
 
     expression->lhs->accept(this);
     if (!expression->lhs->has_type()) {
@@ -336,9 +338,11 @@ void Inferrer::visit(ast::Assignment *expression) {
 
     return_if_null_type(expression->lhs);
 
-    if (!expression->lhs->has_compatible_type_with(expression->rhs)) {
-        report(TypeMismatchError(expression->lhs, expression->rhs));
-        return;
+    if (!expression->builtin()) {
+        if (!expression->lhs->has_compatible_type_with(expression->rhs)) {
+            report(TypeMismatchError(expression->lhs, expression->rhs));
+            return;
+        }
     }
 
     expression->copy_type_from(expression->lhs);
@@ -746,15 +750,19 @@ void Checker::visit(ast::Cast *cast) {
     check_not_null(cast);
 }
 
-void Checker::visit(ast::Assignment *expression) {
-    expression->lhs->accept(this);
-    expression->rhs->accept(this);
-    check_not_null(expression);
+void Checker::visit(ast::Assignment *node) {
+    node->lhs->accept(this);
+
+    if (!node->builtin()) {
+        node->rhs->accept(this);
+    }
+
+    check_not_null(node);
 }
 
-void Checker::visit(ast::Selector *expression) {
-    expression->operand->accept(this);
-    check_not_null(expression);
+void Checker::visit(ast::Selector *node) {
+    node->operand->accept(this);
+    check_not_null(node);
 }
 
 void Checker::visit(ast::While *expression) {

@@ -181,7 +181,10 @@ void PrettyPrinter::visit(ast::Assignment *expression)
     indent++;
 
     expression->lhs->accept(this);
-    expression->rhs->accept(this);
+
+    if (!expression->builtin()) {
+        expression->rhs->accept(this);
+    }
 
     indent--;
     ss << indentation() << ")\n";
