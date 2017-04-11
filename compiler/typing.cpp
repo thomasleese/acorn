@@ -344,8 +344,6 @@ void Inferrer::visit(ast::Call *node) {
     if (method->is_generic()) {
         node->set_method_specialisation_index(method->no_generic_specialisation());
         method->add_generic_specialisation(node->inferred_type_parameters);
-    } else {
-        node->set_method_specialisation_index(0);
     }
 
     node->set_type(return_type);
@@ -594,6 +592,7 @@ void Inferrer::visit(ast::Def *definition) {
     }
 
     method->set_is_generic(definition->name()->has_parameters());
+
     function->add_method(method);
 
     functionSymbol->nameSpace->rename(this, symbol, method->mangled_name());

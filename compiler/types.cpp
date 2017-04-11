@@ -1009,6 +1009,10 @@ TypeType *Method::type() const {
 
 void Method::set_is_generic(bool is_generic) {
     m_is_generic = is_generic;
+
+    if (!is_generic) {
+        add_empty_specialisation();
+    }
 }
 
 bool Method::is_generic() const {
@@ -1115,6 +1119,11 @@ std::vector<std::map<types::ParameterType *, types::Type *> > Method::generic_sp
 
 size_t Method::no_generic_specialisation() const {
     return m_specialisations.size();
+}
+
+void Method::add_empty_specialisation() {
+    std::map<types::ParameterType *, types::Type *> empty_specialisation;
+    add_generic_specialisation(empty_specialisation);
 }
 
 void Method::set_parameter_inout(Type *type, bool inout) {

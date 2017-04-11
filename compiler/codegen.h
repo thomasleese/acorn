@@ -31,6 +31,7 @@ namespace acorn {
 
     namespace codegen {
 
+        std::string mangle(std::string name);
         std::string mangle_method(std::string name, types::Method *type);
 
         class ValueFollower {
@@ -122,6 +123,8 @@ namespace acorn {
             void generate_builtin_method_body(ast::Def *node, llvm::Function *function);
 
             llvm::Value *generate_llvm_value(ast::Node *node);
+
+            llvm::FunctionType *generate_function_type_for_method(types::Method *method);
 
             void visit_constructor(types::TypeType *type);
 

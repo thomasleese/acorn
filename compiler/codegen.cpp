@@ -33,8 +33,12 @@ using namespace acorn::diagnostics;
 #define return_and_push_null_if_null(thing) if (thing == nullptr) { push_llvm_value(nullptr); return; }
 #define return_null_if_null(thing) if (thing == nullptr) return nullptr;
 
+std::string codegen::mangle(std::string name) {
+    return "_A_" + name;
+}
+
 std::string codegen::mangle_method(std::string name, types::Method *type) {
-    return "_A_" + name + "_" + type->mangled_name();
+    return mangle(name + "_" + type->mangled_name());
 }
 
 void ValueFollower::push_llvm_value(llvm::Value *value) {
@@ -268,7 +272,7 @@ llvm::GlobalVariable *CodeGenerator::create_global_variable(llvm::Type *type, ll
 
     auto variable = new llvm::GlobalVariable(
         *m_module, type, false,
-        llvm::GlobalValue::InternalLinkage, initialiser, name
+        llvm::GlobalValue::InternalLinkage, initialiser, mangle(name)
     );
 
     variable->setAlignment(4);
@@ -379,6 +383,27 @@ llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
     }
 
     return value;
+}
+
+llvm::FunctionType *CodeGenerator::generate_function_type_for_method(types::Method *method) {
+    auto llvm_return_type = generate_type(nullptr, method->return_type());
+    return_null_if_null(llvm_return_type);
+
+    std::vector<llvm::Type *> llvm_parameter_types;
+    for (auto parameter_type : method->parameter_types()) {
+        auto llvm_parameter_type = generate_type(nullptr, parameter_type);
+        return_null_if_null(llvm_parameter_type);
+
+        if (method->is_parameter_inout(parameter_type)) {
+            llvm_parameter_type = llvm::PointerType::getUnqual(llvm_parameter_type);
+        }
+
+        llvm_parameter_types.push_back(llvm_parameter_type);
+    }
+
+    return llvm::FunctionType::get(
+        llvm_return_type, llvm_parameter_types, false
+    );
 }
 
 void CodeGenerator::visit_constructor(types::TypeType *type) {
@@ -552,40 +577,27 @@ void CodeGenerator::visit(types::Tuple *type) {
 }
 
 void CodeGenerator::visit(types::Method *type) {
-    auto llvm_return_type = generate_type(nullptr, type->return_type());
-    if (llvm_return_type == nullptr) {
-        push_null_llvm_type_and_initialiser();
-        return;
-    }
+    std::vector<llvm::Type *> specialised_method_types;
+    std::vector<llvm::Constant *> specialised_method_initialisers;
 
-    std::vector<llvm::Type *> llvm_parameter_types;
-    for (auto parameter_type : type->parameter_types()) {
-        auto llvm_parameter_type = generate_type(nullptr, parameter_type);
-        if (llvm_parameter_type == nullptr) {
+    for (auto specialisation : type->generic_specialisations()) {
+        push_replacement_generic_specialisation(specialisation);
+        auto llvm_type = generate_function_type_for_method(type);
+        if (llvm_type == nullptr) {
             push_null_llvm_type_and_initialiser();
             return;
         }
 
-        if (type->is_parameter_inout(parameter_type)) {
-            llvm_parameter_type = llvm::PointerType::getUnqual(llvm_parameter_type);
-        }
-
-        llvm_parameter_types.push_back(llvm_parameter_type);
+        auto pointer_to_function = llvm::PointerType::getUnqual(llvm_type);
+        specialised_method_types.push_back(pointer_to_function);
+        specialised_method_initialisers.push_back(llvm::ConstantPointerNull::get(pointer_to_function));
+        pop_replacement_generic_specialisation(specialisation);
     }
 
-    auto llvm_type = llvm::FunctionType::get(
-        llvm_return_type, llvm_parameter_types, false
-    );
+    auto struct_type = llvm::StructType::get(m_context, specialised_method_types);
+    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, specialised_method_initialisers);
 
-    //push_llvm_type_and_initialiser(llvm_type, nullptr);
-
-    auto pointer_to_function = llvm::PointerType::getUnqual(llvm_type);
-
-    auto struct_type = llvm::StructType::get(pointer_to_function, nullptr);
-    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm::ConstantPointerNull::get(pointer_to_function));
-
-    push_llvm_type(struct_type);
-    push_llvm_initialiser(struct_initialiser);
+    push_llvm_type_and_initialiser(struct_type, struct_initialiser);
 }
 
 void CodeGenerator::visit(types::Function *type) {
@@ -1019,28 +1031,38 @@ void CodeGenerator::visit(ast::Let *node) {
 
 void CodeGenerator::visit(ast::Def *node) {
     auto function_symbol = scope()->lookup(this, node->name());
-
     auto function_type = static_cast<types::Function *>(function_symbol->type);
+
+    if (function_symbol->value == nullptr) {
+        auto llvm_function_type = generate_type(node, function_type);
+        auto llvm_initialiser = take_initialiser(node);
+        function_symbol->value = create_global_variable(
+            llvm_function_type, llvm_initialiser, node->name()->value()
+        );
+    }
+
     auto method = static_cast<types::Method *>(node->type());
 
     auto symbol = function_symbol->nameSpace->lookup_by_node(this, node);
 
     auto llvm_function_name = codegen::mangle_method(function_symbol->name, method);
 
+    auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(node));
+
+    int specialisation_index = 0;
+    /*for (auto specialisation : type->generic_specialisations()) {
+        push_replacement_generic_specialisation(specialisation);
+
+
+
+        pop_replacement_generic_specialisation(specialisation);
+        specialisation_index += 1;
+    }*/
+
     push_scope(symbol);
     push_insert_point();
 
-    /*if (method->is_generic()) {
-        int i = 0;
-        for (auto specialisation : method->generic_specialisations()) {
-            push_replacement_generic_specialisation(specialisation);
-            pop_replacement_generic_specialisation(specialisation);
-            i++;
-        }
-    }*/
-
-    auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(node));
-    auto llvm_specialised_method_type = llvm::cast<llvm::PointerType>(llvm_method_type->getElementType(0))->getElementType();
+    auto llvm_specialised_method_type = llvm::cast<llvm::PointerType>(llvm_method_type->getElementType(specialisation_index))->getElementType();
 
     auto function = create_function(llvm_specialised_method_type, llvm_function_name);
     return_and_push_null_if_null(function);
@@ -1066,23 +1088,13 @@ void CodeGenerator::visit(ast::Def *node) {
         return;
     }
 
+    // FIXME return something better, like a load to the GEP pointer
     symbol->value = function;
 
-    if (function_symbol->value == nullptr) {
-      auto llvm_function_type = generate_type(node, function_type);
-      auto llvm_initialiser = take_initialiser(node);
-      auto variable = create_global_variable(llvm_function_type, llvm_initialiser, node->name()->value());
-      return_and_push_null_if_null(variable);
-      function_symbol->value = variable;
-    }
-
     int llvm_method_index = function_type->get_llvm_index(method);
+    create_store_method_to_function(function, function_symbol->value, llvm_method_index, specialisation_index);
 
-    //llvm_method_index += (specialisation + 1)
-
-    create_store_method_to_function(function, function_symbol->value, llvm_method_index, 0);
-
-    push_llvm_value(function);
+    push_llvm_value(symbol->value);
 }
 
 void CodeGenerator::visit(ast::Type *definition) {

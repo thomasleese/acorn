@@ -463,6 +463,7 @@ namespace acorn {
             void add_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation);
             std::vector<std::map<types::ParameterType *, types::Type *> > generic_specialisations();
             size_t no_generic_specialisation() const;
+            void add_empty_specialisation();
 
             void set_parameter_inout(Type *type, bool inout);
             bool is_parameter_inout(Type *type);
