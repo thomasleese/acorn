@@ -257,8 +257,26 @@ llvm::Function *CodeGenerator::create_function(llvm::Type *type, std::string nam
 
     auto function_type = llvm::cast<llvm::FunctionType>(type);
     return llvm::Function::Create(
-        function_type, llvm::Function::ExternalLinkage, name, m_module
+        function_type, llvm::Function::ExternalLinkage,
+        name, m_module
     );
+}
+
+llvm::GlobalVariable *CodeGenerator::create_global_variable(llvm::Type *type, llvm::Constant *initialiser, std::string name) {
+    return_null_if_null(type);
+    return_null_if_null(initialiser);
+
+    auto variable = new llvm::GlobalVariable(
+        *m_module, type, false,
+        llvm::GlobalValue::InternalLinkage, initialiser, name
+    );
+
+    variable->setAlignment(4);
+    variable->setVisibility(
+        llvm::GlobalValue::DefaultVisibility
+    );
+
+    return variable;
 }
 
 void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *function) {
@@ -410,11 +428,7 @@ llvm::Function *CodeGenerator::builtin_create_llvm_function(std::string name, in
       auto llvm_initialiser_for_function = take_initialiser(nullptr);
       return_null_if_null(llvm_initialiser_for_function);
 
-      auto variable = new llvm::GlobalVariable(
-          *m_module, llvm_type_for_function, false,
-          llvm::GlobalValue::InternalLinkage, llvm_initialiser_for_function,
-          name
-      );
+      auto variable = create_global_variable(llvm_type_for_function, llvm_initialiser_for_function, name);
 
       function_symbol->value = variable;
     }
@@ -431,9 +445,8 @@ llvm::Function *CodeGenerator::builtin_create_llvm_function(std::string name, in
 void CodeGenerator::builtin_initialise_boolean_variable(std::string name, bool value) {
     auto symbol = scope()->lookup(nullptr, nullptr, name);
     return_if_null(symbol);
-    symbol->value = new llvm::GlobalVariable(
-        *m_module, m_ir_builder->getInt1Ty(), false,
-        llvm::GlobalValue::InternalLinkage, m_ir_builder->getInt1(value), name
+    symbol->value = create_global_variable(
+        m_ir_builder->getInt1Ty(), m_ir_builder->getInt1(value), name
     );
 }
 
@@ -737,12 +750,7 @@ void CodeGenerator::visit(ast::VariableDeclaration *node) {
         auto llvm_initialiser = take_initialiser(node);
         return_and_push_null_if_null(llvm_initialiser);
 
-        auto variable = new llvm::GlobalVariable(*m_module, llvm_type, false,
-                                                 llvm::GlobalValue::CommonLinkage,
-                                                 llvm_initialiser, node->name()->value());
-        variable->setAlignment(4);
-        variable->setVisibility(llvm::GlobalValue::DefaultVisibility);
-
+        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
         symbol->value = variable;
 
         m_ir_builder->SetInsertPoint(&m_init_variables_function->getEntryBlock());
@@ -1190,15 +1198,9 @@ void CodeGenerator::visit(ast::Def *node) {
 
     if (function_symbol->value == nullptr) {
       auto llvm_function_type = generate_type(node, function_type);
-      return_and_push_null_if_null(llvm_function_type);
-
       auto llvm_initialiser = take_initialiser(node);
-      return_and_push_null_if_null(llvm_initialiser);
-
-      auto variable = new llvm::GlobalVariable(*m_module, llvm_function_type, false,
-                                               llvm::GlobalValue::InternalLinkage,
-                                               llvm_initialiser, node->name()->value());
-
+      auto variable = create_global_variable(llvm_function_type, llvm_initialiser, node->name()->value());
+      return_and_push_null_if_null(variable);
       function_symbol->value = variable;
     }
 
@@ -1224,16 +1226,11 @@ void CodeGenerator::visit(ast::Type *definition) {
         return_and_push_null_if_null(symbol);
 
         auto llvm_type = generate_type(definition, node_type->constructor());
-        return_and_push_null_if_null(llvm_type);
-
         auto llvm_initialiser = take_initialiser(definition);
-        return_and_push_null_if_null(llvm_initialiser);
 
         // variable to hold the type
-        auto variable = new llvm::GlobalVariable(
-            *m_module, llvm_type, false, llvm::GlobalValue::InternalLinkage,
-            llvm_initialiser, definition->name()->value()
-        );
+        auto variable = create_global_variable(llvm_type, llvm_initialiser, definition->name()->value());
+        return_and_push_null_if_null(variable);
 
         symbol->value = variable;
 

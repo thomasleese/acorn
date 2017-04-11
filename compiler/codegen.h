@@ -115,6 +115,7 @@ namespace acorn {
             bool verify_function(ast::Node *node, llvm::Function *function);
 
             llvm::Function *create_function(llvm::Type *type, std::string name) const;
+            llvm::GlobalVariable *create_global_variable(llvm::Type *type, llvm::Constant *initialiser, std::string name);
             void prepare_method_parameters(ast::Def *node, llvm::Function *function);
 
         public:
