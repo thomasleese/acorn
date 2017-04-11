@@ -372,6 +372,12 @@ bool Lexer::read_delimiter(Token &token) {
 bool is_two_char_operator(char c1, char c2) {
     if (c1 == '=' && c2 == '=') {
         return true;
+    } else if (c1 == '!' && c2 == '=') {
+        return true;
+    } else if (c1 == '<' && c2 == '=') {
+        return true;
+    } else if (c1 == '>' && c2 == '=') {
+        return true;
     } else {
         return false;
     }
