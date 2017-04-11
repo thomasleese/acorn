@@ -206,24 +206,6 @@ Symbol *Builder::add_builtin_symbol(std::string name, types::Type *type) {
     return symbol;
 }
 
-Symbol *Builder::add_builtin_function(std::string name) {
-    auto symbol = add_builtin_symbol(name, new types::Function());
-    symbol->nameSpace = new Namespace(scope());
-    return symbol;
-}
-
-Symbol *Builder::add_builtin_method(symboltable::Symbol *function, types::Method *method) {
-    auto symbol = new Symbol(method->mangled_name());
-    symbol->type = method;
-    symbol->nameSpace = new Namespace(function->nameSpace);
-    function->nameSpace->insert(nullptr, nullptr, symbol);
-
-    auto function_type = static_cast<types::Function *>(function->type);
-    function_type->add_method(method);
-
-    return symbol;
-}
-
 void Builder::add_builtin_types() {
     add_builtin_symbol("Void", new types::VoidType());
     add_builtin_symbol("Bool", new types::BooleanType());
