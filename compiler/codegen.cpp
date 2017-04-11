@@ -769,11 +769,7 @@ void CodeGenerator::visit(ast::Call *node) {
     auto llvm_method_index = function_type->get_llvm_index(method);
     auto llvm_specialisation_index = node->get_method_specialisation_index();
 
-    std::cout << llvm_specialisation_index << std::endl;
-
     auto ir_function = llvm::dyn_cast<llvm::LoadInst>(pop_llvm_value())->getPointerOperand();
-
-    ir_function->dump();
 
     auto ir_method = m_ir_builder->CreateLoad(create_inbounds_gep(ir_function, { 0, llvm_method_index, llvm_specialisation_index }));
 
@@ -807,10 +803,6 @@ void CodeGenerator::visit(ast::Call *node) {
         push_llvm_value(nullptr);
         return;
     }
-
-    debug("here");
-    ir_method->dump();
-    debug("end here");
 
     auto call = m_ir_builder->CreateCall(ir_method, arguments);
     push_llvm_value(call);
@@ -1068,8 +1060,6 @@ void CodeGenerator::visit(ast::Def *node) {
 
     pop_insert_point();
     pop_scope();
-
-    function->dump();
 
     if (!verify_function(node, function)) {
         push_llvm_value(nullptr);
