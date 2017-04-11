@@ -342,8 +342,10 @@ void Inferrer::visit(ast::Call *node) {
                                                node->inferred_type_parameters);
 
     if (method->is_generic()) {
-        node->set_method_generic_specialisation_index(method->no_generic_specialisation());
+        node->set_method_specialisation_index(method->no_generic_specialisation());
         method->add_generic_specialisation(node->inferred_type_parameters);
+    } else {
+        node->set_method_specialisation_index(0);
     }
 
     node->set_type(return_type);

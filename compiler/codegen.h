@@ -79,7 +79,7 @@ namespace acorn {
 
             std::vector<llvm::Value *> build_gep_index(std::initializer_list<int> indexes);
             llvm::Value *create_inbounds_gep(llvm::Value *value, std::initializer_list<int> indexes);
-            llvm::Value *create_store_method_to_function(llvm::Function *method, llvm::Value *function, int index);
+            llvm::Value *create_store_method_to_function(llvm::Function *method, llvm::Value *function, int method_index, int specialisation_index);
 
         protected:
             llvm::IRBuilder<> *m_ir_builder;

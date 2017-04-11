@@ -141,8 +141,8 @@ llvm::Value *IrBuilder::create_inbounds_gep(llvm::Value *value, std::initializer
     return m_ir_builder->CreateInBoundsGEP(value, build_gep_index(indexes));
 }
 
-llvm::Value *IrBuilder::create_store_method_to_function(llvm::Function *method, llvm::Value *function, int index) {
-    auto method_holder = create_inbounds_gep(function, { 0, index });
+llvm::Value *IrBuilder::create_store_method_to_function(llvm::Function *method, llvm::Value *function, int method_index, int specialisation_index) {
+    auto method_holder = create_inbounds_gep(function, { 0, method_index, specialisation_index });
     return m_ir_builder->CreateStore(method, method_holder);
 }
 
@@ -577,45 +577,33 @@ void CodeGenerator::visit(types::Method *type) {
         llvm_return_type, llvm_parameter_types, false
     );
 
-    /*auto struct_type = llvm::StructType::get(llvm_type);
-    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
+    //push_llvm_type_and_initialiser(llvm_type, nullptr);
+
+    auto pointer_to_function = llvm::PointerType::getUnqual(llvm_type);
+
+    auto struct_type = llvm::StructType::get(pointer_to_function, nullptr);
+    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm::ConstantPointerNull::get(pointer_to_function));
 
     push_llvm_type(struct_type);
-    push_llvm_initialiser(struct_initialiser);*/
-
-    push_llvm_type_and_initialiser(llvm_type, nullptr);
+    push_llvm_initialiser(struct_initialiser);
 }
 
 void CodeGenerator::visit(types::Function *type) {
-    std::vector<llvm::Type *> function_types;
+    std::vector<llvm::Type *> llvm_types;
     std::vector<llvm::Constant *> llvm_initialisers;
 
     for (int i = 0; i < type->no_methods(); i++) {
         auto method = type->get_method(i);
         type->set_llvm_index(method, i);
 
-        if (method->is_generic()) {
-            auto null_pointer_type = llvm::PointerType::getUnqual(m_ir_builder->getVoidTy());
-            function_types.push_back(null_pointer_type);
-            llvm_initialisers.push_back(llvm::ConstantPointerNull::get(null_pointer_type));
+        auto llvm_type_for_method = generate_type(nullptr, method);
+        auto llvm_initialiser_for_method = pop_llvm_initialiser();
 
-            for (auto specialisation : method->generic_specialisations()) {
-                push_replacement_generic_specialisation(specialisation);
-                auto llvm_type_for_method = generate_type(nullptr, method);
-                auto pointer_type = llvm::PointerType::getUnqual(llvm_type_for_method);
-                function_types.push_back(pointer_type);
-                llvm_initialisers.push_back(llvm::ConstantPointerNull::get(pointer_type));
-                pop_replacement_generic_specialisation(specialisation);
-            }
-        } else {
-            auto llvm_type_for_method = generate_type(nullptr, method);
-            auto pointer_type = llvm::PointerType::getUnqual(llvm_type_for_method);
-            function_types.push_back(pointer_type);
-            llvm_initialisers.push_back(llvm::ConstantPointerNull::get(pointer_type));
-        }
+        llvm_types.push_back(llvm_type_for_method);
+        llvm_initialisers.push_back(llvm_initialiser_for_method);
     }
 
-    auto llvm_type = llvm::StructType::get(m_context, function_types);
+    auto llvm_type = llvm::StructType::get(m_context, llvm_types);
     auto struct_initialiser = llvm::ConstantStruct::get(llvm_type, llvm_initialisers);
 
     push_llvm_type_and_initialiser(llvm_type, struct_initialiser);
@@ -779,14 +767,15 @@ void CodeGenerator::visit(ast::Call *node) {
     auto method_index = node->get_method_index();
     auto method = function_type->get_method(method_index);
     auto llvm_method_index = function_type->get_llvm_index(method);
+    auto llvm_specialisation_index = node->get_method_specialisation_index();
 
-    if (method->is_generic()) {
-        llvm_method_index += node->get_method_generic_specialisation_index() + 1;
-    }
+    std::cout << llvm_specialisation_index << std::endl;
 
     auto ir_function = llvm::dyn_cast<llvm::LoadInst>(pop_llvm_value())->getPointerOperand();
 
-    auto ir_method = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(ir_function, build_gep_index({ 0, llvm_method_index })));
+    ir_function->dump();
+
+    auto ir_method = m_ir_builder->CreateLoad(create_inbounds_gep(ir_function, { 0, llvm_method_index, llvm_specialisation_index }));
 
     if (ir_method == nullptr) {
         report(InternalError(node, "No LLVM function was available!"));
@@ -1058,7 +1047,10 @@ void CodeGenerator::visit(ast::Def *node) {
         }
     }*/
 
-    auto function = create_function(generate_type(node), llvm_function_name);
+    auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(node));
+    auto llvm_specialised_method_type = llvm::cast<llvm::PointerType>(llvm_method_type->getElementType(0))->getElementType();
+
+    auto function = create_function(llvm_specialised_method_type, llvm_function_name);
     return_and_push_null_if_null(function);
 
     create_entry_basic_block(function, true);
@@ -1076,6 +1068,8 @@ void CodeGenerator::visit(ast::Def *node) {
 
     pop_insert_point();
     pop_scope();
+
+    function->dump();
 
     if (!verify_function(node, function)) {
         push_llvm_value(nullptr);
@@ -1096,7 +1090,7 @@ void CodeGenerator::visit(ast::Def *node) {
 
     //llvm_method_index += (specialisation + 1)
 
-    create_store_method_to_function(function, function_symbol->value, llvm_method_index);
+    create_store_method_to_function(function, function_symbol->value, llvm_method_index, 0);
 
     push_llvm_value(function);
 }
@@ -1134,21 +1128,21 @@ void CodeGenerator::visit(ast::Type *definition) {
 
         std::string mangled_name = codegen::mangle_method(definition->name()->value(), method_type);
 
-        auto llvm_type_for_method = static_cast<llvm::FunctionType *>(generate_type(nullptr, method_type));
-        return_and_push_null_if_null(llvm_type_for_method);
+        auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(definition, method_type));
+        auto llvm_specialised_method_type = llvm::cast<llvm::FunctionType>(llvm::cast<llvm::PointerType>(llvm_method_type->getElementType(0))->getElementType());
 
-        auto method = create_function(llvm_type_for_method, mangled_name);
+        auto method = create_function(llvm_specialised_method_type, mangled_name);
 
         method->addFnAttr(llvm::Attribute::AlwaysInline);
 
         auto function = variable;
-        create_store_method_to_function(method, function, 0);
+        create_store_method_to_function(method, function, 0, 0);
 
         push_insert_point();
 
         create_entry_basic_block(method, true);
 
-        auto instance = m_ir_builder->CreateAlloca(llvm_type_for_method->getReturnType());
+        auto instance = m_ir_builder->CreateAlloca(llvm_specialised_method_type->getReturnType());
 
         int i = 0;
         for (auto &arg : method->getArgumentList()) {

@@ -218,8 +218,7 @@ namespace acorn {
 
         class Call : public Expression {
         public:
-            explicit Call(Token token);
-            Call(Token token, Expression *operand);
+            Call(Token token, Expression *operand = nullptr);
             Call(Token token, std::string name, Expression *arg1 = nullptr, Expression *arg2 = nullptr);
 
             Expression *operand;
@@ -236,8 +235,8 @@ namespace acorn {
             void set_method_index(int index);
             int get_method_index() const;
 
-            void set_method_generic_specialisation_index(int index);
-            int get_method_generic_specialisation_index() const;
+            void set_method_specialisation_index(int index);
+            int get_method_specialisation_index() const;
 
             void accept(Visitor *visitor);
 
@@ -246,7 +245,7 @@ namespace acorn {
             std::map<std::string, std::unique_ptr<Expression> > m_keyword_arguments;
 
             int m_method_index;
-            int m_method_generic_specialisation_index;
+            int m_method_specialisation_index;
         };
 
         class CCall : public Expression {

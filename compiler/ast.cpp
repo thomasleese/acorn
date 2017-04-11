@@ -314,17 +314,11 @@ void Tuple::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Call::Call(Token token) : Expression(token), operand(nullptr) {
-
-}
-
-Call::Call(Token token, Expression *operand) : Expression(token) {
+Call::Call(Token token, Expression *operand) : Expression(token), m_method_index(0), m_method_specialisation_index(0) {
     this->operand = operand;
 }
 
-Call::Call(Token token, std::string name, Expression *arg1, Expression *arg2) : Call(token) {
-    this->operand = new Name(token, name);
-
+Call::Call(Token token, std::string name, Expression *arg1, Expression *arg2) : Call(token, new Name(token, name)) {
     if (arg1) {
         m_positional_arguments.push_back(std::unique_ptr<Expression>(arg1));
     }
@@ -363,11 +357,11 @@ std::map<std::string, Expression *> Call::keyword_arguments() const {
 }
 
 std::map<std::string, types::Type *> Call::keyword_argument_types() const {
-  std::map<std::string, types::Type *> types;
-  for (auto const &entry : m_keyword_arguments) {
-      types[entry.first] = entry.second->type();
-  }
-  return types;
+    std::map<std::string, types::Type *> types;
+    for (auto const &entry : m_keyword_arguments) {
+        types[entry.first] = entry.second->type();
+    }
+    return types;
 }
 
 void Call::add_keyword_argument(std::string name, Expression *argument) {
@@ -382,12 +376,12 @@ int Call::get_method_index() const {
     return m_method_index;
 }
 
-void Call::set_method_generic_specialisation_index(int index) {
-    m_method_generic_specialisation_index = index;
+void Call::set_method_specialisation_index(int index) {
+    m_method_specialisation_index = index;
 }
 
-int Call::get_method_generic_specialisation_index() const {
-    return m_method_generic_specialisation_index;
+int Call::get_method_specialisation_index() const {
+    return m_method_specialisation_index;
 }
 
 void Call::accept(Visitor *visitor) {
