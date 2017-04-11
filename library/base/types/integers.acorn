@@ -1,3 +1,15 @@
+type builtin Int8
+type builtin Int16
+type builtin Int32
+type builtin Int64
+type builtin Int128
+
+type builtin UInt8
+type builtin UInt16
+type builtin UInt32
+type builtin UInt64
+type builtin UInt128
+
 type Int as Int64
 type UInt as UInt64
 
@@ -24,5 +36,3 @@ def builtin +(a as UInt8, b as UInt8) as UInt8
 def builtin +(a as UInt16, b as UInt16) as UInt16
 def builtin +(a as UInt32, b as UInt32) as UInt32
 def builtin +(a as UInt64, b as UInt64) as UInt64
-
-def builtin to_float(self as Int64) as Float64

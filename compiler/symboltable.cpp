@@ -186,8 +186,6 @@ symboltable::Namespace *ScopeFollower::scope() const {
 Builder::Builder() {
     m_root = new Namespace(nullptr);
     push_scope(m_root);
-
-    add_builtins();
 }
 
 bool Builder::is_at_root() const {
@@ -196,42 +194,6 @@ bool Builder::is_at_root() const {
 
 Namespace *Builder::root_namespace() {
     return m_root;
-}
-
-Symbol *Builder::add_builtin_symbol(std::string name, types::Type *type) {
-    auto symbol = new Symbol(name);
-    symbol->type = type;
-    symbol->is_builtin = true;
-    scope()->insert(nullptr, nullptr, symbol);
-    return symbol;
-}
-
-void Builder::add_builtin_types() {
-    add_builtin_symbol("Void", new types::VoidType());
-    add_builtin_symbol("Bool", new types::BooleanType());
-    add_builtin_symbol("Int8", new types::IntegerType(8));
-    add_builtin_symbol("Int16", new types::IntegerType(16));
-    add_builtin_symbol("Int32", new types::IntegerType(32));
-    add_builtin_symbol("Int64", new types::IntegerType(64));
-    add_builtin_symbol("Int128", new types::IntegerType(128));
-    add_builtin_symbol("UInt8", new types::UnsignedIntegerType(8));
-    add_builtin_symbol("UInt16", new types::UnsignedIntegerType(16));
-    add_builtin_symbol("UInt32", new types::UnsignedIntegerType(32));
-    add_builtin_symbol("UInt64", new types::UnsignedIntegerType(64));
-    add_builtin_symbol("UInt128", new types::UnsignedIntegerType(128));
-    add_builtin_symbol("Float16", new types::FloatType(16));
-    add_builtin_symbol("Float32", new types::FloatType(32));
-    add_builtin_symbol("Float64", new types::FloatType(64));
-    add_builtin_symbol("Float128", new types::FloatType(128));
-    add_builtin_symbol("UnsafePointer", new types::UnsafePointerType());
-    add_builtin_symbol("Function", new types::FunctionType());
-    add_builtin_symbol("Method", new types::MethodType());
-    add_builtin_symbol("Tuple", new types::TupleType());
-    add_builtin_symbol("Type", new types::TypeDescriptionType());
-}
-
-void Builder::add_builtins() {
-    add_builtin_types();
 }
 
 void Builder::visit(ast::Block *block) {
@@ -248,6 +210,7 @@ void Builder::visit(ast::VariableDeclaration *node) {
     assert(!node->name()->has_parameters());
 
     Symbol *symbol = new Symbol(node->name()->value());
+    symbol->is_builtin = node->builtin();
     scope()->insert(this, node, symbol);
 }
 
@@ -362,7 +325,6 @@ void Builder::visit(ast::Def *definition) {
         functionSymbol = scope()->lookup(this, definition->name());
     } else {
         functionSymbol = new Symbol(definition->name()->value());
-        functionSymbol->type = new types::Function();
         functionSymbol->nameSpace = new Namespace(scope());
         scope()->insert(this, definition, functionSymbol);
         functionSymbol->node = nullptr;  // explicit no node for function symbols
@@ -373,15 +335,15 @@ void Builder::visit(ast::Def *definition) {
     std::stringstream ss;
     ss << pointer_location;
 
-    Symbol *symbol = new Symbol(ss.str());
+    auto symbol = new Symbol(ss.str());
+    symbol->is_builtin = definition->builtin();
     symbol->nameSpace = new Namespace(scope());
     functionSymbol->nameSpace->insert(this, definition, symbol);
 
     push_scope(symbol);
 
     for (auto parameter : definition->name()->parameters()) {
-        Symbol *sym = new Symbol(parameter->value());
-        sym->type = new types::ParameterType();
+        auto sym = new Symbol(parameter->value());
         scope()->insert(this, parameter, sym);
     }
 
@@ -397,7 +359,8 @@ void Builder::visit(ast::Def *definition) {
 }
 
 void Builder::visit(ast::Type *definition) {
-    Symbol *symbol = new Symbol(definition->name()->value());
+    auto symbol = new Symbol(definition->name()->value());
+    symbol->is_builtin = definition->builtin();
     scope()->insert(this, definition, symbol);
 
     symbol->nameSpace = new Namespace(scope());
@@ -406,7 +369,6 @@ void Builder::visit(ast::Type *definition) {
 
     for (auto parameter : definition->name()->parameters()) {
         Symbol *sym = new Symbol(parameter->value());
-        sym->type = new types::ParameterType();
         scope()->insert(this, parameter, sym);
     }
 

@@ -1102,6 +1102,12 @@ void CodeGenerator::visit(ast::Def *node) {
 }
 
 void CodeGenerator::visit(ast::Type *definition) {
+    if (definition->builtin()) {
+        // FIXME create a type thingy
+        push_llvm_value(nullptr);
+        return;
+    }
+
     if (definition->alias) {
         auto new_symbol = scope()->lookup(this, definition->name());
         auto old_symbol = scope()->lookup(this, definition->alias);

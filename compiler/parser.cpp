@@ -849,22 +849,29 @@ Def *Parser::read_def() {
 Type *Parser::read_type() {
     return_if_false(read_token(Token::TypeKeyword, token));
 
-    auto definition = new Type(token);
+    bool builtin = false;
+    if (is_and_skip_token(Token::BuiltinKeyword)) {
+        builtin = true;
+    }
 
-    definition->set_name(read_name(true));
+    auto name = read_name(true);
 
-    if (is_and_skip_token(Token::AsKeyword)) {
-        definition->alias = read_name(true);
-    } else {
-        return_if_false(skip_token(Token::Indent));
+    auto definition = new Type(token, name, builtin);
 
-        while (!is_token(Token::Deindent)) {
-            definition->field_names.push_back(read_name(false));
-            skip_token(Token::AsKeyword);
-            definition->field_types.push_back(read_name(true));
+    if (!builtin) {
+        if (is_and_skip_token(Token::AsKeyword)) {
+            definition->alias = read_name(true);
+        } else {
+            return_if_false(skip_token(Token::Indent));
+
+            while (!is_token(Token::Deindent)) {
+                definition->field_names.push_back(read_name(false));
+                skip_token(Token::AsKeyword);
+                definition->field_types.push_back(read_name(true));
+            }
+
+            return_if_false(skip_deindent_and_end_token());
         }
-
-        return_if_false(skip_deindent_and_end_token());
     }
 
     return definition;

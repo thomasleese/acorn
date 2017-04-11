@@ -90,14 +90,6 @@ namespace acorn {
             bool is_at_root() const;
             Namespace *root_namespace();
 
-        private:
-            Symbol *add_builtin_symbol(std::string name, types::Type *type);
-
-            void add_builtin_types();
-
-        public:
-            void add_builtins();
-
             void visit(ast::Block *block);
             void visit(ast::Name *identifier);
             void visit(ast::VariableDeclaration *node);

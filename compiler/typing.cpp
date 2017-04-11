@@ -79,6 +79,57 @@ types::Type *Inferrer::instance_type(ast::Name *identifier) {
     return instance_type(identifier, identifier->value(), identifier->parameters());
 }
 
+types::Type *Inferrer::builtin_type_from_name(ast::Name *node) {
+    std::string name = node->value();
+
+    if (name == "Void") {
+        return new types::VoidType();
+    } else if (name == "Bool") {
+        return new types::BooleanType();
+    } else if (name == "Int8") {
+        return new types::IntegerType(8);
+    } else if (name == "Int16") {
+        return new types::IntegerType(16);
+    } else if (name == "Int32") {
+        return new types::IntegerType(32);
+    } else if (name == "Int64") {
+        return new types::IntegerType(64);
+    } else if (name == "Int128") {
+        return new types::IntegerType(128);
+    } else if (name == "UInt8") {
+        return new types::UnsignedIntegerType(8);
+    } else if (name == "UInt16") {
+        return new types::UnsignedIntegerType(16);
+    } else if (name == "UInt32") {
+        return new types::UnsignedIntegerType(32);
+    } else if (name == "UInt64") {
+        return new types::UnsignedIntegerType(64);
+    } else if (name == "UInt128") {
+        return new types::UnsignedIntegerType(128);
+    } else if (name == "Float16") {
+        return new types::FloatType(16);
+    } else if (name == "Float32") {
+        return new types::FloatType(32);
+    } else if (name == "Float64") {
+        return new types::FloatType(64);
+    } else if (name == "Float128") {
+        return new types::FloatType(128);
+    } else if (name == "UnsafePointer") {
+        return new types::UnsafePointerType();
+    } else if (name == "Function") {
+        return new types::FunctionType();
+    } else if (name == "Method") {
+        return new types::MethodType();
+    } else if (name == "Tuple") {
+        return new types::TupleType();
+    } else if (name == "Type") {
+        return new types::TypeDescriptionType();
+    } else {
+        report(InternalError(node, "Unknown builtin type."));
+        return nullptr;
+    }
+}
+
 bool Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Type *> parameter_types, std::vector<types::Type *> argument_types) {
     assert(parameter_types.size() == argument_types.size());
 
@@ -482,6 +533,10 @@ void Inferrer::visit(ast::Let *definition) {
 
 void Inferrer::visit(ast::Def *definition) {
     auto functionSymbol = scope()->lookup(this, definition->name());
+    if (functionSymbol->type == nullptr) {
+        functionSymbol->type = new types::Function();
+    }
+
     auto function = static_cast<types::Function *>(functionSymbol->type);
 
     auto symbol = functionSymbol->nameSpace->lookup_by_node(this,
@@ -490,6 +545,8 @@ void Inferrer::visit(ast::Def *definition) {
     push_scope(symbol);
 
     for (auto p : definition->name()->parameters()) {
+        auto sym = scope()->lookup(this, p);
+        sym->type = new types::ParameterType();
         p->accept(this);
     }
 
@@ -553,10 +610,19 @@ void Inferrer::visit(ast::Def *definition) {
 void Inferrer::visit(ast::Type *definition) {
     auto symbol = scope()->lookup(this, definition, definition->name()->value());
 
+    if (definition->builtin()) {
+        definition->set_type(builtin_type_from_name(definition->name()));
+        symbol->copy_type_from(definition);
+        return;
+    }
+
     push_scope(symbol);
 
     std::vector<types::ParameterType *> input_parameters;
     for (auto t : definition->name()->parameters()) {
+        auto sym = scope()->lookup(this, t);
+        sym->type = new types::ParameterType();
+
         t->accept(this);
 
         auto param = dynamic_cast<types::ParameterType *>(t->type());

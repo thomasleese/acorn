@@ -1,3 +1,5 @@
+type builtin Bool
+
 let builtin true as Bool
 let builtin false as Bool
 

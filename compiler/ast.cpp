@@ -631,8 +631,8 @@ void Def::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Type::Type(Token token) : Definition(token) {
-    this->alias = nullptr;
+Type::Type(Token token, Name *name, bool builtin) : Definition(token, name, builtin), alias(nullptr) {
+
 }
 
 void Type::accept(Visitor *visitor) {

@@ -427,7 +427,7 @@ namespace acorn {
 
         class Type : public Definition {
         public:
-            Type(Token token);
+            Type(Token token, Name *name, bool builtin);
 
             Name *alias;
 
