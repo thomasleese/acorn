@@ -16,6 +16,8 @@ using namespace acorn::diagnostics;
 
 Lexer::Lexer(std::string filename)
 {
+    m_filename = filename;
+
     std::ifstream stream;
     stream.open(filename.c_str());
 
