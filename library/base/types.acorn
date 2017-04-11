@@ -1,2 +1,3 @@
+import "base/types/booleans"
 import "base/types/integers"
 import "base/types/floats"

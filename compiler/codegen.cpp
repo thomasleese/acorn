@@ -667,11 +667,17 @@ void CodeGenerator::visit(types::Method *type) {
         llvm_parameter_types.push_back(llvm_parameter_type);
     }
 
-    auto llvm_type = llvm::FunctionType::get(llvm_return_type,
-                                             llvm_parameter_types,
-                                             false);
-    push_llvm_type(llvm_type);
-    push_llvm_initialiser(nullptr);
+    auto llvm_type = llvm::FunctionType::get(
+        llvm_return_type, llvm_parameter_types, false
+    );
+
+    /*auto struct_type = llvm::StructType::get(llvm_type);
+    auto struct_initialiser = llvm::ConstantStruct::get(struct_type, llvm_initialisers);
+
+    push_llvm_type(struct_type);
+    push_llvm_initialiser(struct_initialiser);*/
+
+    push_llvm_type_and_initialiser(llvm_type, nullptr);
 }
 
 void CodeGenerator::visit(types::Function *type) {
