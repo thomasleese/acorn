@@ -1050,49 +1050,47 @@ void CodeGenerator::visit(ast::Def *node) {
     auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(node));
 
     int specialisation_index = 0;
-    /*for (auto specialisation : type->generic_specialisations()) {
+    for (auto specialisation : method->generic_specialisations()) {
         push_replacement_generic_specialisation(specialisation);
 
+        push_scope(symbol);
+        push_insert_point();
 
+        auto llvm_specialised_method_type = llvm::cast<llvm::PointerType>(llvm_method_type->getElementType(specialisation_index))->getElementType();
+
+        auto function = create_function(llvm_specialised_method_type, llvm_function_name);
+        return_and_push_null_if_null(function);
+
+        create_entry_basic_block(function, true);
+        prepare_method_parameters(node, function);
+
+        if (node->builtin()) {
+            generate_builtin_method_body(node, function);
+        } else {
+            node->body()->accept(this);
+        }
+
+        auto value = pop_llvm_value();
+        return_and_push_null_if_null(value);
+        m_ir_builder->CreateRet(value);
+
+        pop_insert_point();
+        pop_scope();
+
+        if (!verify_function(node, function)) {
+            push_llvm_value(nullptr);
+            return;
+        }
+
+        // FIXME return something better, like a load to the GEP pointer
+        symbol->value = function;
+
+        int llvm_method_index = function_type->get_llvm_index(method);
+        create_store_method_to_function(function, function_symbol->value, llvm_method_index, specialisation_index);
 
         pop_replacement_generic_specialisation(specialisation);
         specialisation_index += 1;
-    }*/
-
-    push_scope(symbol);
-    push_insert_point();
-
-    auto llvm_specialised_method_type = llvm::cast<llvm::PointerType>(llvm_method_type->getElementType(specialisation_index))->getElementType();
-
-    auto function = create_function(llvm_specialised_method_type, llvm_function_name);
-    return_and_push_null_if_null(function);
-
-    create_entry_basic_block(function, true);
-    prepare_method_parameters(node, function);
-
-    if (node->builtin()) {
-        generate_builtin_method_body(node, function);
-    } else {
-        node->body()->accept(this);
     }
-
-    auto value = pop_llvm_value();
-    return_and_push_null_if_null(value);
-    m_ir_builder->CreateRet(value);
-
-    pop_insert_point();
-    pop_scope();
-
-    if (!verify_function(node, function)) {
-        push_llvm_value(nullptr);
-        return;
-    }
-
-    // FIXME return something better, like a load to the GEP pointer
-    symbol->value = function;
-
-    int llvm_method_index = function_type->get_llvm_index(method);
-    create_store_method_to_function(function, function_symbol->value, llvm_method_index, specialisation_index);
 
     push_llvm_value(symbol->value);
 }

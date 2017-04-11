@@ -1,0 +1,24 @@
+import "base"
+
+# protocol Absable{T}
+#   def <(a as T, b as T) as T
+#   def -(self as T) as T
+# end
+#
+# def abs{T}(x as Absable{T}) as T
+#   if x < 0
+#     -x
+#   else
+#     x
+#   end
+# end
+
+def test{T}(x as T) as T
+  x
+end
+
+let a = test(0)
+    let b = test(10.4)
+        exit(a)
+    end
+end
