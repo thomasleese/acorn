@@ -403,9 +403,13 @@ namespace acorn {
             std::unique_ptr<Name> m_given_type;
         };
 
-        class Def : public Definition {
+        class Def : public Expression {
         public:
-            Def(Token token, Name *name, bool builtin, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type = nullptr);
+            Def(Token token, Expression *name, bool builtin, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type = nullptr);
+
+            Expression *name() const;
+
+            bool builtin() const;
 
             std::vector<Parameter *> parameters() const;
             Parameter *get_parameter(size_t index) const;
@@ -416,9 +420,13 @@ namespace acorn {
             Name *given_return_type() const;
             bool has_given_return_type() const;
 
-            void accept(Visitor *visitor);
+            void set_type(types::Type *type) override;
+
+            void accept(Visitor *visitor) override;
 
         private:
+            std::unique_ptr<Expression> m_name;
+            bool m_builtin;
             std::vector<std::unique_ptr<Parameter> > m_parameters;
             std::unique_ptr<Expression> m_body;
             std::unique_ptr<Name> m_given_return_type;

@@ -531,30 +531,32 @@ void Inferrer::visit(ast::Let *definition) {
     }
 }
 
-void Inferrer::visit(ast::Def *definition) {
-    auto functionSymbol = scope()->lookup(this, definition->name());
-    if (functionSymbol->type == nullptr) {
-        functionSymbol->type = new types::Function();
+void Inferrer::visit(ast::Def *node) {
+    auto name = static_cast<ast::Name *>(node->name());
+
+    auto function_symbol = scope()->lookup(this, name);
+    if (function_symbol->type == nullptr) {
+        function_symbol->type = new types::Function();
     }
 
-    auto function = static_cast<types::Function *>(functionSymbol->type);
+    push_scope(function_symbol);
 
-    auto symbol = functionSymbol->nameSpace->lookup_by_node(this,
-                                                            definition);
+    auto symbol = scope()->lookup_by_node(this, node);
 
     push_scope(symbol);
 
-    for (auto p : definition->name()->parameters()) {
-        auto sym = scope()->lookup(this, p);
-        sym->type = new types::ParameterType();
-        p->accept(this);
+    for (auto parameter : name->parameters()) {
+        auto parameter_symbol = scope()->lookup(this, parameter);
+        parameter_symbol->type = new types::ParameterType();
+        parameter->accept(this);
     }
 
     std::vector<types::Type *> parameter_types;
-    for (auto parameter : definition->parameters()) {
+    for (auto parameter : node->parameters()) {
         parameter->accept(this);
 
         if (!parameter->has_type()) {
+            pop_scope();
             pop_scope();
             return;
         }
@@ -562,19 +564,20 @@ void Inferrer::visit(ast::Def *definition) {
         parameter_types.push_back(parameter->type());
     }
 
-    if (!definition->builtin()) {
-        definition->body()->accept(this);
+    if (!node->builtin()) {
+        node->body()->accept(this);
     }
 
     types::Type *return_type = nullptr;
-    if (definition->builtin() || definition->has_given_return_type()) {
-        definition->given_return_type()->accept(this);
-        return_type = instance_type(definition->given_return_type());
+    if (node->builtin() || node->has_given_return_type()) {
+        node->given_return_type()->accept(this);
+        return_type = instance_type(node->given_return_type());
     } else {
-        return_type = definition->body()->type();
+        return_type = node->body()->type();
     }
 
     if (return_type == nullptr) {
+        pop_scope();
         pop_scope();
         return;
     }
@@ -582,27 +585,25 @@ void Inferrer::visit(ast::Def *definition) {
     auto method = new types::Method(parameter_types, return_type);
 
     for (size_t i = 0; i < parameter_types.size(); i++) {
-        if (definition->get_parameter(i)->inout()) {
-            method->set_parameter_inout(parameter_types[i], true);
-        }
+        auto parameter = node->get_parameter(i);
+        method->set_parameter_inout(parameter_types[i], parameter->inout());
+        method->set_parameter_name(i, parameter->name()->value());
     }
 
-    for (size_t i = 0; i < definition->no_parameters(); i++) {
-        method->set_parameter_name(i, definition->get_parameter(i)->name()->value());
-    }
+    method->set_is_generic(name->has_parameters());
 
-    method->set_is_generic(definition->name()->has_parameters());
+    auto function_type = static_cast<types::Function *>(function_symbol->type);
+    function_type->add_method(method);
 
-    function->add_method(method);
+    pop_scope();
 
-    functionSymbol->nameSpace->rename(this, symbol, method->mangled_name());
+    scope()->rename(this, symbol, method->mangled_name());
 
-    symbol->type = method;
-    definition->set_type(method);
+    node->set_type(method);
+    symbol->copy_type_from(node);
 
-    m_functionStack.push_back(definition);
+    m_functionStack.push_back(node);
 
-    assert(m_functionStack.back() == definition);
     m_functionStack.pop_back();
 
     pop_scope();
@@ -897,35 +898,40 @@ void Checker::visit(ast::Let *definition) {
     }
 }
 
-void Checker::visit(ast::Def *definition) {
-    check_not_null(definition);
+void Checker::visit(ast::Def *node) {
+    check_not_null(node);
 
-    auto functionSymbol = scope()->lookup(this, definition->name());
+    auto name = static_cast<ast::Name *>(node->name());
 
-    auto method = static_cast<types::Method *>(definition->type());
+    auto function_symbol = scope()->lookup(this, name);
 
-    auto symbol = functionSymbol->nameSpace->lookup(this, definition, method->mangled_name());
+    push_scope(function_symbol);
+
+    auto method = static_cast<types::Method *>(node->type());
+
+    auto symbol = scope()->lookup(this, node, method->mangled_name());
 
     push_scope(symbol);
 
-    definition->name()->accept(this);
+    node->name()->accept(this);
 
-    for (auto p : definition->name()->parameters()) {
+    for (auto p : name->parameters()) {
         p->accept(this);
     }
 
-    if (definition->builtin() || definition->has_given_return_type()) {
-        definition->given_return_type()->accept(this);
+    if (node->builtin() || node->has_given_return_type()) {
+        node->given_return_type()->accept(this);
     }
 
-    for (auto p : definition->parameters()) {
+    for (auto p : node->parameters()) {
         p->accept(this);
     }
 
-    if (!definition->builtin()) {
-        definition->body()->accept(this);
+    if (!node->builtin()) {
+        node->body()->accept(this);
     }
 
+    pop_scope();
     pop_scope();
 }
 

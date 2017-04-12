@@ -316,45 +316,50 @@ void Builder::visit(ast::Let *definition) {
     }
 }
 
-void Builder::visit(ast::Def *definition) {
-    Symbol *functionSymbol;
-    if (scope()->has(definition->name()->value(), false)) {
+void Builder::visit(ast::Def *node) {
+    auto name = static_cast<ast::Name *>(node->name());
+
+    Symbol *function_symbol;
+    if (scope()->has(name->value(), false)) {
         // we don't want to look in any parent scope when we're
         // defining a new function; it should follow the notion of
         // variables, i.e. we are hiding the previous binding
-        functionSymbol = scope()->lookup(this, definition->name());
+        function_symbol = scope()->lookup(this, name);
     } else {
-        functionSymbol = new Symbol(definition->name()->value());
-        functionSymbol->nameSpace = new Namespace(scope());
-        scope()->insert(this, definition, functionSymbol);
-        functionSymbol->node = nullptr;  // explicit no node for function symbols
+        function_symbol = new Symbol(name->value());
+        function_symbol->nameSpace = new Namespace(scope());
+        scope()->insert(this, node, function_symbol);
+        function_symbol->node = nullptr;  // explicit no node for function symbols
     }
 
     // this is really hacky...
-    auto pointer_location = reinterpret_cast<std::uintptr_t>(definition);
+    auto pointer_location = reinterpret_cast<std::uintptr_t>(node);
     std::stringstream ss;
     ss << pointer_location;
 
+    push_scope(function_symbol);
+
     auto symbol = new Symbol(ss.str());
-    symbol->is_builtin = definition->builtin();
+    symbol->is_builtin = node->builtin();
     symbol->nameSpace = new Namespace(scope());
-    functionSymbol->nameSpace->insert(this, definition, symbol);
+    scope()->insert(this, node, symbol);
 
     push_scope(symbol);
 
-    for (auto parameter : definition->name()->parameters()) {
+    for (auto parameter : name->parameters()) {
         auto sym = new Symbol(parameter->value());
         scope()->insert(this, parameter, sym);
     }
 
-    for (auto parameter : definition->parameters()) {
+    for (auto parameter : node->parameters()) {
         parameter->accept(this);
     }
 
-    if (!definition->builtin()) {
-        definition->body()->accept(this);
+    if (!node->builtin()) {
+        node->body()->accept(this);
     }
 
+    pop_scope();
     pop_scope();
 }
 

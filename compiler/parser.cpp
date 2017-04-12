@@ -400,7 +400,7 @@ Cast *Parser::read_cast(Expression *operand) {
     return new Cast(token, operand, new_type);
 }
 
-Selector *Parser::read_selector(Expression *operand) {
+Selector *Parser::read_selector(Expression *operand, bool allow_operators) {
     return_if_false(read_token(Token::Dot, token));
 
     Name *name = nullptr;
@@ -410,7 +410,11 @@ Selector *Parser::read_selector(Expression *operand) {
         name = new Name(il->token(), il->value());
         delete il;
     } else {
-        name = read_name(true);
+        if (allow_operators && is_token(Token::Operator)) {
+            name = read_operator(true);
+        } else {
+            name = read_name(true);
+        }
     }
 
     return_if_null(name);
@@ -788,7 +792,7 @@ Def *Parser::read_def() {
 
     bool builtin = is_and_skip_token(Token::BuiltinKeyword);
 
-    Name *name = nullptr;
+    Expression *name = nullptr;
 
     if (is_token(Token::Name)) {
         name = read_name(true);
@@ -797,6 +801,10 @@ Def *Parser::read_def() {
     } else {
         report(SyntaxError(front_token(), "identifier or operator"));
         return nullptr;
+    }
+
+    while (is_token(Token::Dot)) {
+        name = read_selector(name, true);
     }
 
     return_if_null(name);

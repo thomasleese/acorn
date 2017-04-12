@@ -587,10 +587,18 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Def::Def(Token token, Name *name, bool builtin, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type) : Definition(token, name, builtin), m_body(body), m_given_return_type(given_return_type) {
+Def::Def(Token token, Expression *name, bool builtin, std::vector<Parameter *> parameters, Expression *body, Name *given_return_type) : Expression(token), m_name(name), m_builtin(builtin), m_body(body), m_given_return_type(given_return_type) {
     for (auto parameter : parameters) {
         m_parameters.push_back(std::unique_ptr<Parameter>(parameter));
     }
+}
+
+Expression *Def::name() const {
+    return m_name.get();
+}
+
+bool Def::builtin() const {
+    return m_builtin;
 }
 
 std::vector<Parameter *> Def::parameters() const {
@@ -619,6 +627,11 @@ Name *Def::given_return_type() const {
 
 bool Def::has_given_return_type() const {
     return m_given_return_type != nullptr;
+}
+
+void Def::set_type(types::Type *type) {
+    Expression::set_type(type);
+    m_name->set_type(type);
 }
 
 void Def::accept(Visitor *visitor) {

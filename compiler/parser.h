@@ -50,7 +50,7 @@ namespace acorn {
         ast::Call *read_call(ast::Expression *operand);
         ast::CCall *read_ccall();
         ast::Cast *read_cast(ast::Expression *operand);
-        ast::Selector *read_selector(ast::Expression *operand);
+        ast::Selector *read_selector(ast::Expression *operand, bool allow_operators = false);
         ast::Call *read_index(ast::Expression *operand);
         ast::While *read_while();
         ast::Block *read_for();

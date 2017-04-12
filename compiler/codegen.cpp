@@ -284,7 +284,9 @@ llvm::GlobalVariable *CodeGenerator::create_global_variable(llvm::Type *type, ll
 }
 
 void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *function) {
-    for (auto param : node->name()->parameters()) {
+    auto name = static_cast<ast::Name *>(node->name());
+
+    for (auto param : name->parameters()) {
         auto symbol = scope()->lookup(this, node, param->value());
         auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
         m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
@@ -321,7 +323,7 @@ llvm::Value *CodeGenerator::generate_builtin_variable(ast::VariableDeclaration *
 }
 
 void CodeGenerator::generate_builtin_method_body(ast::Def *node, llvm::Function *function) {
-    std::string name = node->name()->value();
+    std::string name = static_cast<ast::Name *>(node->name())->value();
 
     if (name == "*") {
         auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
@@ -1030,14 +1032,14 @@ void CodeGenerator::visit(ast::Let *node) {
 }
 
 void CodeGenerator::visit(ast::Def *node) {
-    auto function_symbol = scope()->lookup(this, node->name());
+    auto function_symbol = scope()->lookup(this, static_cast<ast::Name *>(node->name()));
     auto function_type = static_cast<types::Function *>(function_symbol->type);
 
     if (function_symbol->value == nullptr) {
         auto llvm_function_type = generate_type(node, function_type);
         auto llvm_initialiser = take_initialiser(node);
         function_symbol->value = create_global_variable(
-            llvm_function_type, llvm_initialiser, node->name()->value()
+            llvm_function_type, llvm_initialiser, static_cast<ast::Name *>(node->name())->value()
         );
     }
 
