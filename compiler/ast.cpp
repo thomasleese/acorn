@@ -154,35 +154,6 @@ void VariableDeclaration::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Definition::Definition(Token token, Name *name, bool builtin) : Expression(token), m_name(name), m_builtin(builtin) {
-
-}
-
-Definition::Definition(Token token, std::string name, bool builtin) : Expression(token), m_name(new Name(token, name)), m_builtin(builtin) {
-
-}
-
-Name *Definition::name() const {
-    return m_name.get();
-}
-
-void Definition::set_name(Name *name) {
-    m_name.reset(name);
-}
-
-void Definition::set_type(types::Type *type) {
-    Expression::set_type(type);
-    m_name->set_type(type);
-}
-
-bool Definition::builtin() const {
-    return m_builtin;
-}
-
-void Definition::set_builtin(bool builtin) {
-    m_builtin = builtin;
-}
-
 Int::Int(Token token, std::string value) : Expression(token), m_value(value) {
 
 }
@@ -638,8 +609,29 @@ void Def::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Type::Type(Token token, Name *name, bool builtin) : Definition(token, name, builtin), alias(nullptr) {
+Type::Type(Token token, Name *name, bool builtin) : Expression(token), m_name(name), m_builtin(builtin), alias(nullptr) {
 
+}
+
+Name *Type::name() const {
+    return m_name.get();
+}
+
+void Type::set_name(Name *name) {
+    m_name.reset(name);
+}
+
+void Type::set_type(types::Type *type) {
+    Expression::set_type(type);
+    m_name->set_type(type);
+}
+
+bool Type::builtin() const {
+    return m_builtin;
+}
+
+void Type::set_builtin(bool builtin) {
+    m_builtin = builtin;
 }
 
 void Type::accept(Visitor *visitor) {

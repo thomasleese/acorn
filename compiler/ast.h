@@ -108,24 +108,6 @@ namespace acorn {
             bool m_builtin;
         };
 
-        class Definition : public Expression {
-        public:
-            Definition(Token token, Name *name = nullptr, bool builtin = false);
-            Definition(Token token, std::string name, bool builtin = false);
-
-            Name *name() const;
-            void set_name(Name *name);
-
-            bool builtin() const;
-            void set_builtin(bool builtin);
-
-            void set_type(types::Type *type) override;
-
-        private:
-            std::unique_ptr<Name> m_name;
-            bool m_builtin;
-        };
-
         class Int : public Expression {
         public:
             Int(Token token, std::string value);
@@ -432,16 +414,28 @@ namespace acorn {
             std::unique_ptr<Name> m_given_return_type;
         };
 
-        class Type : public Definition {
+        class Type : public Expression {
         public:
             Type(Token token, Name *name, bool builtin);
+
+            Name *name() const;
+            void set_name(Name *name);
+
+            bool builtin() const;
+            void set_builtin(bool builtin);
+
+            void set_type(types::Type *type) override;
 
             Name *alias;
 
             std::vector<Name *> field_names;
             std::vector<Name *> field_types;
 
-            void accept(Visitor *visitor);
+            void accept(Visitor *visitor) override;
+
+        private:
+            std::unique_ptr<Name> m_name;
+            bool m_builtin;
         };
 
         class MethodSignature : public Node {
