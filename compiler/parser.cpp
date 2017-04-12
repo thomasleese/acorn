@@ -240,10 +240,7 @@ Name *Parser::read_operator(bool accept_parameters) {
 ast::VariableDeclaration *Parser::read_variable_declaration() {
     return_if_false(read_token(Token::LetKeyword, token));
 
-    bool builtin = false;
-    if (is_and_skip_token(Token::BuiltinKeyword)) {
-        builtin = true;
-    }
+    bool builtin = is_and_skip_token(Token::BuiltinKeyword);
 
     auto name = read_name(false);
     return_if_null(name);
@@ -789,10 +786,7 @@ Def *Parser::read_def() {
     Token def_token;
     return_if_false(read_token(Token::DefKeyword, def_token));
 
-    bool builtin = false;
-    if (is_and_skip_token(Token::BuiltinKeyword)) {
-        builtin = true;
-    }
+    bool builtin = is_and_skip_token(Token::BuiltinKeyword);
 
     Name *name = nullptr;
 
@@ -849,10 +843,7 @@ Def *Parser::read_def() {
 Type *Parser::read_type() {
     return_if_false(read_token(Token::TypeKeyword, token));
 
-    bool builtin = false;
-    if (is_and_skip_token(Token::BuiltinKeyword)) {
-        builtin = true;
-    }
+    bool builtin = is_and_skip_token(Token::BuiltinKeyword);
 
     auto name = read_name(true);
 

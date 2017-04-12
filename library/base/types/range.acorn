@@ -13,7 +13,7 @@ type RangeIterator
 end
 
 def iterate(range as Range) as RangeIterator
-  RangeIterator(range: range, index: range.start)
+  RangeIterator.new(range: range, index: range.start)
 end
 
 def next(iterator as RangeIterator) as Maybe{Int}:
