@@ -41,6 +41,11 @@ bool Expression::has_type() const {
     return m_type != nullptr;
 }
 
+void Expression::copy_type_from(Expression &expression) {
+    // TODO set a warning here if the type is null?
+    set_type(expression.type());
+}
+
 void Expression::copy_type_from(Expression *expression) {
     // TODO set a warning here if the type is null?
     set_type(expression->type());
@@ -57,6 +62,14 @@ std::string Expression::type_name() const {
     } else {
         return "null";
     }
+}
+
+Block::Block(Token token) : Expression(token) {
+
+}
+
+Block::Block(Token token, std::vector<Expression *> expressions) : Expression(token), m_expressions(expressions) {
+
 }
 
 void Block::accept(Visitor *visitor) {
@@ -442,20 +455,16 @@ void Selector::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-While::While(Token token, Expression *condition, Expression *body) :
-        Expression(token),
-        m_condition(condition),
-        m_body(body)
-{
-    // intentionally left empty
+While::While(Token token, Expression *condition, std::unique_ptr<Expression> body) : Expression(token), m_condition(condition), m_body(std::move(body)) {
+
 }
 
 Expression *While::condition() const {
     return m_condition.get();
 }
 
-Expression *While::body() const {
-    return m_body.get();
+Expression &While::body() const {
+    return *m_body;
 }
 
 void While::accept(Visitor *visitor) {
@@ -486,8 +495,8 @@ void Spawn::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Case::Case(Token token, Expression *condition, Expression *assignment, Expression *body) :
-        Expression(token), m_condition(condition), m_assignment(assignment), m_body(body)
+Case::Case(Token token, Expression *condition, Expression *assignment, std::unique_ptr<Expression> body) :
+        Expression(token), m_condition(condition), m_assignment(assignment), m_body(std::move(body))
 {
 
 }
@@ -500,16 +509,16 @@ Expression *Case::assignment() const {
     return m_assignment.get();
 }
 
-Expression *Case::body() const {
-    return m_body.get();
+Expression &Case::body() const {
+    return *m_body;
 }
 
 void Case::accept(Visitor *visitor) {
     // visitor->visit(this);
 }
 
-Switch::Switch(Token token, Expression *expression, std::vector<Case *> cases, Expression *default_case) :
-        Expression(token), m_expression(expression), m_default_case(default_case)
+Switch::Switch(Token token, Expression *expression, std::vector<Case *> cases, std::unique_ptr<Expression> default_case) :
+        Expression(token), m_expression(expression), m_default_case(std::move(default_case))
 {
     for (auto entry : cases) {
         m_cases.push_back(std::unique_ptr<Case>(entry));
@@ -528,8 +537,12 @@ std::vector<Case *> Switch::cases() const {
     return cases;
 }
 
-Expression *Switch::default_case() const {
-    return m_default_case.get();
+bool Switch::has_default_case() const {
+    return static_cast<bool>(m_default_case);
+}
+
+Expression &Switch::default_case() const {
+    return *m_default_case;
 }
 
 void Switch::accept(Visitor *visitor) {
@@ -639,7 +652,7 @@ void Def::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Type::Type(Token token, Name *name, bool builtin) : Expression(token), m_name(name), m_builtin(builtin), alias(nullptr) {
+Type::Type(Token token, Name *name, bool builtin) : Expression(token), alias(nullptr), m_name(name), m_builtin(builtin) {
 
 }
 
@@ -698,7 +711,7 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-Module::Module(Token token, Name *name, Block *body) : Expression(token), m_name(name), m_body(body) {
+Module::Module(Token token, Name *name, std::unique_ptr<Block> body) : Expression(token), m_name(name), m_body(std::move(body)) {
 
 }
 
@@ -706,8 +719,8 @@ Name *Module::name() const {
     return m_name.get();
 }
 
-Block *Module::body() const {
-    return m_body.get();
+Block &Module::body() const {
+    return *m_body;
 }
 
 void Module::accept(Visitor *visitor) {

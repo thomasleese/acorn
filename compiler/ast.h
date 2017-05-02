@@ -43,6 +43,7 @@ namespace acorn {
             types::Type *type() const;
             virtual void set_type(types::Type *type);
             bool has_type() const;
+            void copy_type_from(Expression &expression);
             void copy_type_from(Expression *expression);
             bool has_compatible_type_with(Expression *expression) const;
             std::string type_name() const;
@@ -53,7 +54,8 @@ namespace acorn {
 
         class Block : public Expression {
         public:
-            using Expression::Expression;
+            explicit Block(Token token);
+            Block(Token token, std::vector<Expression *> expressions);
 
             std::vector<Expression *> expressions() const;
             void add_expression(Expression *expression);
@@ -284,10 +286,10 @@ namespace acorn {
 
         class While : public Expression {
         public:
-            While(Token token, Expression *condition, Expression *body);
+            While(Token token, Expression *condition, std::unique_ptr<Expression> body);
 
             Expression *condition() const;
-            Expression *body() const;
+            Expression &body() const;
 
             void accept(Visitor *visitor);
 
@@ -328,11 +330,11 @@ namespace acorn {
 
         class Case : public Expression {
         public:
-            Case(Token token, Expression *condition, Expression *assignment, Expression *body);
+            Case(Token token, Expression *condition, Expression *assignment, std::unique_ptr<Expression> body);
 
             Expression *condition() const;
             Expression *assignment() const;
-            Expression *body() const;
+            Expression &body() const;
 
             void accept(Visitor *visitor);
 
@@ -344,11 +346,14 @@ namespace acorn {
 
         class Switch : public Expression {
         public:
-            Switch(Token token, Expression *expression, std::vector<Case *> cases, Expression *default_case = nullptr);
+            Switch(Token token, Expression *expression, std::vector<Case *> cases, std::unique_ptr<Expression> default_case = nullptr);
 
             Expression *expression() const;
+
             std::vector<Case *> cases() const;
-            Expression *default_case() const;
+
+            bool has_default_case() const;
+            Expression &default_case() const;
 
             void accept(Visitor *visitor);
 
@@ -462,10 +467,10 @@ namespace acorn {
 
         class Module : public Expression {
         public:
-            Module(Token token, Name *name, Block *body);
+            Module(Token token, Name *name, std::unique_ptr<Block> body);
 
             Name *name() const;
-            Block *body() const;
+            Block &body() const;
 
             void accept(Visitor *visitor);
 

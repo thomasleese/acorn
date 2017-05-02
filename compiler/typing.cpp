@@ -438,7 +438,7 @@ void Inferrer::visit(ast::Selector *expression) {
 
 void Inferrer::visit(ast::While *expression) {
     expression->condition()->accept(this);
-    expression->body()->accept(this);
+    expression->body().accept(this);
 
     expression->copy_type_from(expression->body());
 }
@@ -493,13 +493,13 @@ void Inferrer::visit(ast::Switch *expression) {
             entry->assignment()->accept(this);
         }
 
-        entry->body()->accept(this);
+        entry->body().accept(this);
 
         entry->copy_type_from(entry->body());
     }
 
-    if (expression->default_case()) {
-        expression->default_case()->accept(this);
+    if (expression->has_default_case()) {
+        expression->default_case().accept(this);
     }
 
     // TODO ensure all cases are the same type
@@ -676,7 +676,7 @@ void Inferrer::visit(ast::Module *module) {
 
     push_scope(symbol);
 
-    module->body()->accept(this);
+    module->body().accept(this);
     module->set_type(new types::Module());
     symbol->copy_type_from(module);
 
@@ -711,8 +711,12 @@ void Checker::check_types(ast::Expression *lhs, ast::Expression *rhs) {
 }
 
 void Checker::check_not_null(ast::Expression *expression) {
-    if (!expression->has_type()) {
-        report(InternalError(expression, "No type given for: " + Token::as_string(expression->token().kind)));
+    check_not_null(*expression);
+}
+
+void Checker::check_not_null(ast::Expression &expression) {
+    if (!expression.has_type()) {
+        report(InternalError(expression, "No type given for: " + Token::as_string(expression.token().kind)));
     }
 }
 
@@ -835,7 +839,7 @@ void Checker::visit(ast::Selector *node) {
 
 void Checker::visit(ast::While *expression) {
     expression->condition()->accept(this);
-    expression->body()->accept(this);
+    expression->body().accept(this);
     check_not_null(expression);
 }
 
@@ -868,11 +872,11 @@ void Checker::visit(ast::Switch *expression) {
             entry->assignment()->accept(this);
         }
 
-        entry->body()->accept(this);
+        entry->body().accept(this);
         check_not_null(entry);
     }
 
-    if (expression->default_case()) {
+    if (expression->has_default_case()) {
         check_not_null(expression->default_case());
     }
 
@@ -965,7 +969,7 @@ void Checker::visit(ast::Module *module) {
 
     push_scope(symbol);
 
-    module->body()->accept(this);
+    module->body().accept(this);
     check_not_null(module);
 
     pop_scope();

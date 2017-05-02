@@ -268,7 +268,7 @@ void Builder::visit(ast::Selector *expression) {
 
 void Builder::visit(ast::While *expression) {
     expression->condition()->accept(this);
-    expression->body()->accept(this);
+    expression->body().accept(this);
 }
 
 void Builder::visit(ast::If *expression) {
@@ -298,8 +298,8 @@ void Builder::visit(ast::Switch *expression) {
         }
     }
 
-    if (expression->default_case()) {
-        expression->default_case()->accept(this);
+    if (expression->has_default_case()) {
+        expression->default_case().accept(this);
     }
 }
 
@@ -398,7 +398,7 @@ void Builder::visit(ast::Module *module) {
     }
 
     push_scope(symbol);
-    module->body()->accept(this);
+    module->body().accept(this);
     pop_scope();
 }
 

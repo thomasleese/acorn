@@ -933,7 +933,7 @@ void CodeGenerator::visit(ast::While *expression) {
 
     m_ir_builder->SetInsertPoint(loop_bb);
 
-    expression->body()->accept(this);
+    expression->body().accept(this);
     auto then_value = pop_llvm_value();
     push_llvm_value(then_value);
     m_ir_builder->CreateBr(entry_bb);
@@ -1169,7 +1169,7 @@ void CodeGenerator::visit(ast::Module *module) {
     return_and_push_null_if_null(symbol);
 
     push_scope(symbol);
-    module->body()->accept(this);
+    module->body().accept(this);
     pop_scope();
 }
 

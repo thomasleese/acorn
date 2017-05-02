@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 #include "ast.h"
@@ -169,15 +170,16 @@ bool Parser::skip_deindent_and_end_token() {
     return skip_token(Token::Deindent) && skip_token(Token::EndKeyword);
 }
 
-Block *Parser::read_block(bool read_end) {
-    return_if_false(read_token(Token::Indent, token));
+std::unique_ptr<Block> Parser::read_block(bool read_end) {
+    Token block_token;
+    return_if_false(read_token(Token::Indent, block_token));
 
-    auto block = new Block(token);
+    std::vector<Expression *> expressions;
 
     while (!is_token(Token::Deindent)) {
         auto expression = read_expression();
         return_if_null(expression);
-        block->add_expression(expression);
+        expressions.push_back(expression);
     }
 
     return_if_false(skip_token(Token::Deindent));
@@ -186,7 +188,7 @@ Block *Parser::read_block(bool read_end) {
         return_if_false(skip_token(Token::EndKeyword));
     }
 
-    return block;
+    return std::make_unique<Block>(block_token, expressions);
 }
 
 Expression *Parser::read_expression(bool parse_comma) {
@@ -466,7 +468,7 @@ While *Parser::read_while() {
     return_if_false(skip_token(Token::Deindent));
     return_if_false(skip_token(Token::EndKeyword));
 
-    return new While(token, condition, body);
+    return new While(token, condition, std::unique_ptr<Expression>(body));
 }
 
 Block *Parser::read_for() {
@@ -511,7 +513,7 @@ Block *Parser::read_for() {
     code_block->add_expression(state_variable);
 
     auto condition = new Call(token, "not", new Call(token, "done", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
-    auto while_code = new While(token, condition, loop_code);
+    auto while_code = new While(token, condition, std::move(loop_code));
 
     auto next_state_variable = new Let(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<ast::VariableDeclaration *>(state_variable->assignment->lhs)->name()));
     loop_code->insert_expression(0, next_state_variable);
@@ -611,7 +613,7 @@ Case *Parser::read_case() {
     auto code = read_block(false);
     return_if_null(code);
 
-    return new Case(token, condition, assignment, code);
+    return new Case(token, condition, assignment, std::move(code));
 }
 
 Switch *Parser::read_switch() {
@@ -629,7 +631,7 @@ Switch *Parser::read_switch() {
         cases.push_back(entry);
     }
 
-    Block *default_block = nullptr;
+    std::unique_ptr<Block> default_block;
     if (is_token(Token::DefaultKeyword)) {
         default_block = read_block(false);
         return_if_null(default_block);
@@ -637,7 +639,7 @@ Switch *Parser::read_switch() {
 
     return_if_false(skip_token(Token::EndKeyword));
 
-    return new Switch(token, expression, cases, default_block);
+    return new Switch(token, expression, cases, std::move(default_block));
 }
 
 Expression *Parser::read_unary_expression(bool parse_comma) {
@@ -895,7 +897,7 @@ Module *Parser::read_module() {
     auto body = read_block();
     return_if_null(name);
 
-    return new Module(token, name, body);
+    return new Module(token, name, std::move(body));
 }
 
 Import *Parser::read_import_expression() {

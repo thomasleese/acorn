@@ -94,6 +94,7 @@ namespace acorn {
         private:
             void check_types(ast::Expression *lhs, ast::Expression *rhs);
             void check_not_null(ast::Expression *expression);
+            void check_not_null(ast::Expression &expression);
 
         public:
             void visit(ast::Block *block);

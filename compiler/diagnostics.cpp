@@ -14,21 +14,19 @@
 using namespace acorn;
 using namespace acorn::diagnostics;
 
-CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) :
-        m_filename(filename), m_lineNumber(lineNumber), m_column(column), m_line(line) {
+CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) : m_filename(filename), m_lineNumber(lineNumber), m_column(column), m_line(line) {
 
 }
 
-CompilerError::CompilerError(const Token &token) :
-        CompilerError(token.filename,
-                      token.line_number,
-                      token.column,
-                      token.line) {
+CompilerError::CompilerError(const Token &token) : CompilerError(token.filename, token.line_number, token.column, token.line) {
 
 }
 
-CompilerError::CompilerError(ast::Node *node) :
-        CompilerError(node->token()) {
+CompilerError::CompilerError(ast::Node *node) : CompilerError(node->token()) {
+
+}
+
+CompilerError::CompilerError(const ast::Node &node) : CompilerError(node.token()) {
 
 }
 
@@ -56,14 +54,17 @@ FileNotFoundError::FileNotFoundError(ast::Node *node) : CompilerError(node) {
     m_prefix = "File not found";
 }
 
-InternalError::InternalError(const Token &token, std::string message) :
-        CompilerError(token) {
+InternalError::InternalError(const Token &token, std::string message) : CompilerError(token) {
     m_prefix = "Internal error";
     m_message = message + "\nNote: You have probably encountered a bug in Acorn, not your code.";
 }
 
-InternalError::InternalError(ast::Node *node, std::string message) :
-        CompilerError(node) {
+InternalError::InternalError(ast::Node *node, std::string message) : CompilerError(node) {
+    m_prefix = "Internal error";
+    m_message = message + "\nNote: You have probably encountered a bug in Acorn, not your code.";
+}
+
+InternalError::InternalError(const ast::Node &node, std::string message) : CompilerError(node) {
     m_prefix = "Internal error";
     m_message = message + "\nNote: You have probably encountered a bug in Acorn, not your code.";
 }

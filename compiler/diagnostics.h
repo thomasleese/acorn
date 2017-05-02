@@ -27,6 +27,7 @@ namespace acorn {
             explicit CompilerError(std::string filename, int lineNumber, int column, std::string line);
             CompilerError(const Token &token);
             CompilerError(ast::Node *node);
+            CompilerError(const ast::Node &node);
 
             void print() const;
 
@@ -51,6 +52,7 @@ namespace acorn {
         public:
             InternalError(const Token &token, std::string message);
             InternalError(ast::Node *node, std::string message);
+            InternalError(const ast::Node &node, std::string message);
         };
 
         class InternalAstError : public InternalError {
