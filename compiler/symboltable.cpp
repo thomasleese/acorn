@@ -38,13 +38,17 @@ bool Namespace::has(std::string name, bool follow_parents) const {
     }
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node *currentNode, std::string name) const {
+Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node *current_node, std::string name) const {
+    return lookup(diagnostics, *current_node, name);
+}
+
+Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node &current_node, std::string name) const {
     auto it = m_symbols.find(name);
     if (it == m_symbols.end()) {
         if (m_parent) {
-            return m_parent->lookup(diagnostics, currentNode, name);
+            return m_parent->lookup(diagnostics, current_node, name);
         } else {
-            diagnostics->report(UndefinedError(currentNode, name));
+            diagnostics->report(UndefinedError(current_node, name));
             return nullptr;
         }
     }
@@ -52,8 +56,12 @@ Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node *currentNode, std::st
     return it->second;
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *identifier) const {
-    return lookup(diagnostics, identifier, identifier->value());
+Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *name) const {
+    return lookup(diagnostics, *name);
+}
+
+Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name &name) const {
+    return lookup(diagnostics, name, name.value());
 }
 
 Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const {
@@ -196,13 +204,13 @@ Namespace *Builder::root_namespace() {
     return m_root;
 }
 
-void Builder::visit(ast::Block *block) {
-    for (auto expression : block->expressions()) {
+void Builder::visit(ast::Block *node) {
+    for (auto &expression : node->expressions()) {
         expression->accept(this);
     }
 }
 
-void Builder::visit(ast::Name *identifier) {
+void Builder::visit(ast::Name *node) {
 
 }
 
@@ -255,10 +263,10 @@ void Builder::visit(ast::Cast *expression) {
 }
 
 void Builder::visit(ast::Assignment *node) {
-    node->lhs->accept(this);
+    node->lhs()->accept(this);
 
     if (!node->builtin()) {
-        node->rhs->accept(this);
+        node->rhs()->accept(this);
     }
 }
 
@@ -266,18 +274,18 @@ void Builder::visit(ast::Selector *expression) {
 
 }
 
-void Builder::visit(ast::While *expression) {
-    expression->condition()->accept(this);
-    expression->body().accept(this);
+void Builder::visit(ast::While *node) {
+    node->condition()->accept(this);
+    node->body()->accept(this);
 }
 
-void Builder::visit(ast::If *expression) {
-    expression->condition->accept(this);
+void Builder::visit(ast::If *node) {
+    node->condition()->accept(this);
 
-    expression->true_case->accept(this);
+    node->true_case()->accept(this);
 
-    if (expression->false_case) {
-        expression->false_case->accept(this);
+    if (node->has_false_case()) {
+        node->false_case()->accept(this);
     }
 }
 
@@ -289,17 +297,17 @@ void Builder::visit(ast::Spawn *expression) {
 
 }
 
-void Builder::visit(ast::Switch *expression) {
-    for (auto entry : expression->cases()) {
+void Builder::visit(ast::Switch *node) {
+    for (auto &entry : node->cases()) {
         entry->condition()->accept(this);
 
-        if (entry->assignment()) {
+        if (entry->has_assignment()) {
             entry->assignment()->accept(this);
         }
     }
 
-    if (expression->has_default_case()) {
-        expression->default_case().accept(this);
+    if (node->has_default_case()) {
+        node->default_case()->accept(this);
     }
 }
 
@@ -308,11 +316,11 @@ void Builder::visit(ast::Parameter *parameter) {
     scope()->insert(this, parameter, symbol);
 }
 
-void Builder::visit(ast::Let *definition) {
-    definition->assignment->accept(this);
+void Builder::visit(ast::Let *node) {
+    node->assignment()->accept(this);
 
-    if (definition->has_body()) {
-        definition->body()->accept(this);
+    if (node->has_body()) {
+        node->body()->accept(this);
     }
 }
 
@@ -398,7 +406,7 @@ void Builder::visit(ast::Module *module) {
     }
 
     push_scope(symbol);
-    module->body().accept(this);
+    module->body()->accept(this);
     pop_scope();
 }
 
@@ -406,6 +414,10 @@ void Builder::visit(ast::Import *statement) {
 
 }
 
-void Builder::visit(ast::SourceFile *module) {
-    module->code->accept(this);
+void Builder::visit(ast::SourceFile *node) {
+    for (auto &import : node->imports()) {
+        import->accept(this);
+    }
+
+    node->code()->accept(this);
 }

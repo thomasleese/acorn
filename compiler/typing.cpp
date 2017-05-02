@@ -19,7 +19,8 @@ using namespace acorn::typing;
 
 #define return_if_null(thing) if (thing == nullptr) return;
 #define return_null_if_null(thing) if (thing == nullptr) return nullptr;
-#define return_if_null_type(node) return_if_null(node->type())
+#define return_if_false(thing) if (thing == false) return;
+#define return_if_null_type(node) return_if_false(node->has_type())
 
 Inferrer::Inferrer(symboltable::Namespace *root_namespace)
         : m_in_if(false), m_as_type(false)
@@ -31,13 +32,17 @@ Inferrer::~Inferrer() {
 
 }
 
-types::TypeType *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
+types::TypeType *Inferrer::find_type_constructor(ast::Node &node, std::string name) {
     auto symbol = scope()->lookup(this, node, name);
     return_null_if_null(symbol);
     return dynamic_cast<types::TypeType *>(symbol->type);
 }
 
-types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
+types::TypeType *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
+    return find_type_constructor(*node, name);
+}
+
+types::TypeType *Inferrer::find_type(ast::Node &node, std::string name, std::vector<ast::Name *> parameters) {
     std::vector<types::Type *> parameterTypes;
 
     for (auto parameter : parameters) {
@@ -54,29 +59,53 @@ types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vec
     }
 }
 
-types::TypeType *Inferrer::find_type(ast::Node *node, std::string name) {
+types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
+    return find_type(*node, name, parameters);
+}
+
+types::TypeType *Inferrer::find_type(ast::Node &node, std::string name) {
     return find_type(node, name, std::vector<ast::Name *>());
 }
 
-types::TypeType *Inferrer::find_type(ast::Name *type) {
-    return find_type(type, type->value(), type->parameters());
+types::TypeType *Inferrer::find_type(ast::Node *node, std::string name) {
+    return find_type(*node, name);
 }
 
-types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
+types::TypeType *Inferrer::find_type(ast::Name &type) {
+    return find_type(type, type.value(), type.parameters());
+}
+
+types::TypeType *Inferrer::find_type(ast::Name *type) {
+    return find_type(*type);
+}
+
+types::Type *Inferrer::instance_type(ast::Node &node, std::string name, std::vector<ast::Name *> parameters) {
     types::TypeType *type_constructor = find_type(node, name, parameters);
     if (type_constructor == nullptr) {
         return nullptr;
     }
 
-    return type_constructor->create(this, node);
+    return type_constructor->create(this, &node);
 }
 
-types::Type *Inferrer::instance_type(ast::Node *node, std::string name) {
+types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
+    return instance_type(*node, name, parameters);
+}
+
+types::Type *Inferrer::instance_type(ast::Node &node, std::string name) {
     return instance_type(node, name, std::vector<ast::Name *>());
 }
 
-types::Type *Inferrer::instance_type(ast::Name *identifier) {
-    return instance_type(identifier, identifier->value(), identifier->parameters());
+types::Type *Inferrer::instance_type(ast::Node *node, std::string name) {
+    return instance_type(*node, name);
+}
+
+types::Type *Inferrer::instance_type(ast::Name &name) {
+    return instance_type(name, name.value(), name.parameters());
+}
+
+types::Type *Inferrer::instance_type(ast::Name *name) {
+    return instance_type(*name);
 }
 
 types::Type *Inferrer::builtin_type_from_name(ast::Name *node) {
@@ -193,15 +222,15 @@ types::Type *Inferrer::replace_type_parameters(types::Type *type, std::map<types
     }
 }
 
-void Inferrer::visit(ast::Block *block) {
-    for (auto statement : block->expressions()) {
-        statement->accept(this);
+void Inferrer::visit(ast::Block *node) {
+    for (auto &expression : node->expressions()) {
+        expression->accept(this);
     }
 
-    if (block->empty()) {
-        block->set_type(new types::Void());
+    if (node->empty()) {
+        node->set_type(new types::Void());
     } else {
-        block->copy_type_from(block->expressions().back());
+        node->copy_type_from(node->last_expression());
     }
 }
 
@@ -251,34 +280,34 @@ void Inferrer::visit(ast::String *expression) {
     expression->set_type(instance_type(expression, "String"));
 }
 
-void Inferrer::visit(ast::List *sequence) {
-    for (auto element : sequence->elements()) {
-        element->accept(this);
+void Inferrer::visit(ast::List *node) {
+    for (size_t i = 0; i < node->no_elements(); i++) {
+        node->element(i).accept(this);
     }
 
     std::vector<types::Type *> types;
-    for (auto element : sequence->elements()) {
+    for (size_t i = 0; i < node->no_elements(); i++) {
         bool inList = false;
         for (auto type : types) {
-            if (type->is_compatible(element->type())) {
+            if (type->is_compatible(node->element(i).type())) {
                 inList = true;
                 break;
             }
         }
 
         if (!inList) {
-            types.push_back(element->type());
+            types.push_back(node->element(i).type());
         }
     }
 
     if (types.size() == 1) {
         std::vector<types::Type *> p;
         p.push_back(types[0]);
-        auto array_type = find_type(sequence, "Array")->with_parameters(p);
-        sequence->set_type(array_type->create(this, sequence));
+        auto array_type = find_type(node, "Array")->with_parameters(p);
+        node->set_type(array_type->create(this, node));
     } else {
         // FIXME show error
-        sequence->set_type(nullptr);
+        node->set_type(nullptr);
     }
 }
 
@@ -286,39 +315,35 @@ void Inferrer::visit(ast::Dictionary *mapping) {
     report(TypeInferenceError(mapping));
 }
 
-void Inferrer::visit(ast::Tuple *expression) {
+void Inferrer::visit(ast::Tuple *node) {
     std::vector<types::Type *> element_types;
 
-    for (auto value : expression->elements()) {
-        value->accept(this);
-        element_types.push_back(value->type());
+    for (size_t i = 0; i < node->no_elements(); i++) {
+        node->element(i).accept(this);
+        element_types.push_back(node->element(i).type());
     }
 
-    expression->set_type(new types::Tuple(element_types));
+    node->set_type(new types::Tuple(element_types));
 }
 
 void Inferrer::visit(ast::Call *node) {
-    node->operand->accept(this);
-    return_if_null_type(node->operand);
+    node->operand()->accept(this);
+    return_if_null_type(node->operand());
 
-    for (auto arg : node->positional_arguments()) {
-        arg->accept(this);
-        if (!arg->has_type()) {
-            return;
-        }
+    for (auto &argument : node->positional_arguments()) {
+        argument->accept(this);
+        return_if_null_type(argument);
     }
 
-    for (auto const &entry : node->keyword_arguments()) {
+    for (auto &entry : node->keyword_arguments()) {
         entry.second->accept(this);
-        if (!entry.second->has_type()) {
-            return;
-        }
+        return_if_null_type(entry.second);
     }
 
-    auto function = dynamic_cast<types::Function *>(node->operand->type());
+    auto function = dynamic_cast<types::Function *>(node->operand_type());
     if (function == nullptr) {
         node->set_type(new types::Function());
-        report(TypeMismatchError(node->operand, node));
+        report(TypeMismatchError(node->operand(), node));
         delete node->type();
         node->set_type(nullptr);
         // FIXME make the construct accept a type directly
@@ -355,8 +380,8 @@ void Inferrer::visit(ast::CCall *ccall) {
         param->set_type(instance_type(param));
     }
 
-    for (auto arg : ccall->arguments()) {
-        arg->accept(this);
+    for (size_t i = 0; i < ccall->no_arguments(); i++) {
+        ccall->argument(i).accept(this);
     }
 
     // TODO check arg and param types match
@@ -367,167 +392,178 @@ void Inferrer::visit(ast::CCall *ccall) {
 }
 
 void Inferrer::visit(ast::Cast *cast) {
-    cast->operand->accept(this);
-    cast->new_type->accept(this);
+    cast->operand()->accept(this);
+    cast->new_type()->accept(this);
 
-    cast->set_type(instance_type(cast->new_type));
+    cast->set_type(instance_type(cast->new_type()));
 }
 
 void Inferrer::visit(ast::Assignment *expression) {
-    auto symbol = scope()->lookup(this, expression->lhs->name());
+    auto symbol = scope()->lookup(this, expression->lhs()->name());
     return_if_null(symbol);
 
-    if (!expression->builtin()) {
-        expression->rhs->accept(this);
-        return_if_null_type(expression->rhs);
-    }
-
-    expression->lhs->accept(this);
-    if (!expression->lhs->has_type()) {
-        expression->lhs->copy_type_from(expression->rhs);
-    }
-
-    return_if_null_type(expression->lhs);
+    auto rhs = expression->rhs();
 
     if (!expression->builtin()) {
-        if (!expression->lhs->has_compatible_type_with(expression->rhs)) {
-            report(TypeMismatchError(expression->lhs, expression->rhs));
+        rhs->accept(this);
+        return_if_null_type(rhs);
+    }
+
+    auto lhs = expression->lhs();
+
+    lhs->accept(this);
+    if (!lhs->has_type()) {
+        lhs->copy_type_from(expression->rhs());
+    }
+
+    return_if_null_type(lhs);
+
+    if (!expression->builtin()) {
+        if (!lhs->has_compatible_type_with(rhs)) {
+            report(TypeMismatchError(lhs, rhs));
             return;
         }
     }
 
-    expression->copy_type_from(expression->lhs);
+    expression->copy_type_from(lhs);
     symbol->copy_type_from(expression);
 }
 
-void Inferrer::visit(ast::Selector *expression) {
-    expression->operand->accept(this);
-    return_if_null_type(expression->operand);
+void Inferrer::visit(ast::Selector *node) {
+    auto operand = node->operand();
 
-    auto module = dynamic_cast<types::Module *>(expression->operand->type());
-    auto record_type = dynamic_cast<types::RecordType *>(expression->operand->type());
-    auto record = dynamic_cast<types::Record *>(expression->operand->type());
+    operand->accept(this);
+    return_if_null_type(operand);
+
+    auto module = dynamic_cast<types::Module *>(operand->type());
+    auto record_type = dynamic_cast<types::RecordType *>(operand->type());
+    auto record = dynamic_cast<types::Record *>(operand->type());
 
     if (module) {
-        auto module_name = static_cast<ast::Name *>(expression->operand);
+        auto module_name = static_cast<ast::Name *>(operand);
 
         auto symbol = scope()->lookup(this, module_name);
         return_if_null(symbol);
 
-        auto child_symbol = symbol->nameSpace->lookup(this, expression->name);
+        auto child_symbol = symbol->nameSpace->lookup(this, node->field());
         return_if_null(child_symbol);
 
-        expression->set_type(child_symbol->type);
+        node->set_type(child_symbol->type);
     } else if (record_type) {
-        if (expression->name->value() == "new") {
-            expression->set_type(record_type->constructor());
+        if (node->field()->value() == "new") {
+            node->set_type(record_type->constructor());
         } else {
-            report(UndefinedError(expression->name, "new"));
+            report(UndefinedError(node->field(), "new"));
         }
     } else if (record) {
-        auto field_type = record->child_type(expression->name->value());
+        auto field = node->field();
+
+        auto field_type = record->child_type(field->value());
         if (field_type != nullptr) {
-            expression->set_type(field_type);
+            node->set_type(field_type);
         } else {
-            report(UndefinedError(expression->name, expression->name->value()));
+            report(UndefinedError(field));
         }
     } else {
-        report(TypeMismatchError(expression->operand, expression->operand->type()->name(), "module, record type or record"));
+        report(TypeMismatchError(operand, operand->type()->name(), "module, record type or record"));
     }
 }
 
-void Inferrer::visit(ast::While *expression) {
-    expression->condition()->accept(this);
-    expression->body().accept(this);
+void Inferrer::visit(ast::While *node) {
+    node->condition()->accept(this);
+    node->body()->accept(this);
 
-    expression->copy_type_from(expression->body());
+    node->copy_type_from(node->body());
 }
 
 void Inferrer::visit(ast::If *expression) {
     m_in_if = true;
-    expression->condition->accept(this);
+    expression->condition()->accept(this);
     m_in_if = false;
 
-    expression->true_case->accept(this);
-    if (expression->false_case) {
-        expression->false_case->accept(this);
+    expression->true_case()->accept(this);
+    if (expression->has_false_case()) {
+        expression->false_case()->accept(this);
     }
 
     // FIXME return a union type
-    expression->copy_type_from(expression->true_case);
+    expression->copy_type_from(expression->true_case());
 }
 
-void Inferrer::visit(ast::Return *expression) {
-    expression->expression->accept(this);
-    return_if_null_type(expression->expression)
+void Inferrer::visit(ast::Return *node) {
+    auto expression = node->expression();
+
+    expression->accept(this);
+    return_if_null_type(expression)
 
     if (!m_functionStack.empty()) {
         auto def = m_functionStack.back();
         auto method = static_cast<types::Method *>(def->type());
         return_if_null(method);
 
-        if (!method->return_type()->is_compatible(expression->expression->type())) {
-            report(TypeMismatchError(expression->expression, def->given_return_type()));
+        if (!method->return_type()->is_compatible(expression->type())) {
+            report(TypeMismatchError(expression, def->given_return_type()));
             return;
         }
     } else {
-        report(TypeMismatchError(expression, nullptr));
+        report(TypeMismatchError(node, nullptr));
         return;
     }
 
-    expression->copy_type_from(expression->expression);
+    expression->copy_type_from(expression);
 }
 
-void Inferrer::visit(ast::Spawn *expression) {
-    expression->call->accept(this);
-    expression->copy_type_from(expression->call);
+void Inferrer::visit(ast::Spawn *node) {
+    auto call = node->call();
+    call->accept(this);
+    node->copy_type_from(call);
 }
 
-void Inferrer::visit(ast::Switch *expression) {
-    expression->expression()->accept(this);
+void Inferrer::visit(ast::Switch *node) {
+    node->expression()->accept(this);
 
-    for (auto entry : expression->cases()) {
+    for (auto entry : node->cases()) {
         entry->condition()->accept(this);
 
-        if (entry->assignment()) {
+        if (entry->has_assignment()) {
             entry->assignment()->accept(this);
         }
 
-        entry->body().accept(this);
+        entry->body()->accept(this);
 
         entry->copy_type_from(entry->body());
     }
 
-    if (expression->has_default_case()) {
-        expression->default_case().accept(this);
+    if (node->has_default_case()) {
+        node->default_case()->accept(this);
     }
 
-    // TODO ensure all cases are the same type
+    // FIXME make this a union of the types
 
-    expression->copy_type_from(expression->cases()[0]);
+    node->copy_type_from(node->cases()[0]);
 }
 
-void Inferrer::visit(ast::Parameter *parameter) {
-    auto symbol = scope()->lookup(this, parameter, parameter->name()->value());
+void Inferrer::visit(ast::Parameter *node) {
+    auto symbol = scope()->lookup(this, node, node->name()->value());
     return_if_null(symbol);
 
-    parameter->given_type()->accept(this);
-    return_if_null(parameter->given_type());
+    node->given_type()->accept(this);
+    return_if_null(node->given_type());
 
-    parameter->set_type(instance_type(parameter->given_type()));
-    return_if_null_type(parameter);
+    node->set_type(instance_type(node->given_type()));
+    return_if_null_type(node);
 
-    symbol->type = parameter->type();
+    symbol->type = node->type();
 }
 
-void Inferrer::visit(ast::Let *definition) {
-    definition->assignment->accept(this);
+void Inferrer::visit(ast::Let *node) {
+    node->assignment()->accept(this);
 
-    if (definition->has_body()) {
-        definition->body()->accept(this);
-        definition->copy_type_from(definition->body());
+    if (node->has_body()) {
+        node->body()->accept(this);
+        node->copy_type_from(node->body());
     } else {
-        definition->copy_type_from(definition->assignment);
+        node->copy_type_from(node->assignment());
     }
 }
 
@@ -585,7 +621,7 @@ void Inferrer::visit(ast::Def *node) {
     auto method = new types::Method(parameter_types, return_type);
 
     for (size_t i = 0; i < parameter_types.size(); i++) {
-        auto parameter = node->get_parameter(i);
+        auto parameter = node->parameter(i);
         method->set_parameter_inout(parameter_types[i], parameter->inout());
         method->set_parameter_name(i, parameter->name()->value());
     }
@@ -676,7 +712,7 @@ void Inferrer::visit(ast::Module *module) {
 
     push_scope(symbol);
 
-    module->body().accept(this);
+    module->body()->accept(this);
     module->set_type(new types::Module());
     symbol->copy_type_from(module);
 
@@ -688,9 +724,14 @@ void Inferrer::visit(ast::Import *statement) {
     statement->set_type(new types::Void());
 }
 
-void Inferrer::visit(ast::SourceFile *module) {
-    module->code->accept(this);
-    module->copy_type_from(module->code);
+void Inferrer::visit(ast::SourceFile *node) {
+    for (auto &import : node->imports()) {
+        import->accept(this);
+    }
+
+    node->code()->accept(this);
+
+    node->copy_type_from(node->code());
 }
 
 Checker::Checker(symboltable::Namespace *root_namespace) {
@@ -720,20 +761,20 @@ void Checker::check_not_null(ast::Expression &expression) {
     }
 }
 
-void Checker::visit(ast::Block *block) {
-    for (auto expression : block->expressions()) {
+void Checker::visit(ast::Block *node) {
+    for (auto &expression : node->expressions()) {
         expression->accept(this);
     }
 
-    check_not_null(block);
+    check_not_null(node);
 }
 
-void Checker::visit(ast::Name *identifier) {
-    for (auto p : identifier->parameters()) {
-        p->accept(this);
+void Checker::visit(ast::Name *node) {
+    for (auto &parameter : node->parameters()) {
+        parameter->accept(this);
     }
 
-    check_not_null(identifier);
+    check_not_null(node);
 }
 
 void Checker::visit(ast::VariableDeclaration *node) {
@@ -760,127 +801,130 @@ void Checker::visit(ast::String *expression) {
     check_not_null(expression);
 }
 
-void Checker::visit(ast::List *sequence) {
-    for (auto element : sequence->elements()) {
-        element->accept(this);
+void Checker::visit(ast::List *node) {
+    for (size_t i = 0; i < node->no_elements(); i++) {
+        node->element(i).accept(this);
     }
 
-    check_not_null(sequence);
+    check_not_null(node);
 }
 
-void Checker::visit(ast::Dictionary *dict) {
-    for (size_t i = 0; i < dict->no_elements(); i++) {
-        dict->get_key(i)->accept(this);
-        dict->get_value(i)->accept(this);
+void Checker::visit(ast::Dictionary *node) {
+    for (size_t i = 0; i < node->no_elements(); i++) {
+        node->key(i).accept(this);
+        node->value(i).accept(this);
     }
 
-    check_not_null(dict);
+    check_not_null(node);
 }
 
-void Checker::visit(ast::Tuple *expression) {
-    for (auto element : expression->elements()) {
-        element->accept(this);
+void Checker::visit(ast::Tuple *node) {
+    for (size_t i = 0; i < node->no_elements(); i++) {
+        node->element(i).accept(this);
     }
 
-    check_not_null(expression);
+    check_not_null(node);
 }
 
-void Checker::visit(ast::Call *expression) {
-    expression->operand->accept(this);
+void Checker::visit(ast::Call *node) {
+    node->operand()->accept(this);
 
-    for (auto arg : expression->positional_arguments()) {
-        arg->accept(this);
+    for (auto &argument : node->positional_arguments()) {
+        argument->accept(this);
     }
 
-    for (auto const &entry : expression->keyword_arguments()) {
+    for (auto &entry : node->keyword_arguments()) {
         entry.second->accept(this);
     }
 
-    check_not_null(expression);
+    check_not_null(node);
 }
 
-void Checker::visit(ast::CCall *ccall) {
-    // ccall->name->accept(this);
+void Checker::visit(ast::CCall *node) {
+    // node->name->accept(this);
 
-    for (auto param : ccall->parameters()) {
+    for (auto param : node->parameters()) {
         param->accept(this);
     }
 
-    ccall->given_return_type()->accept(this);
+    node->given_return_type()->accept(this);
 
-    for (auto arg : ccall->arguments()) {
-        arg->accept(this);
+    for (size_t i = 0; i < node->no_arguments(); i++) {
+        node->argument(i).accept(this);
     }
 
-    check_not_null(ccall);
+    check_not_null(node);
 }
 
-void Checker::visit(ast::Cast *cast) {
-    cast->operand->accept(this);
-    cast->new_type->accept(this);
+void Checker::visit(ast::Cast *node) {
+    node->operand()->accept(this);
+    node->new_type()->accept(this);
 
-    check_not_null(cast);
+    check_not_null(node);
 }
 
 void Checker::visit(ast::Assignment *node) {
-    node->lhs->accept(this);
+    node->lhs()->accept(this);
 
     if (!node->builtin()) {
-        node->rhs->accept(this);
+        node->rhs()->accept(this);
     }
 
     check_not_null(node);
 }
 
 void Checker::visit(ast::Selector *node) {
-    node->operand->accept(this);
+    node->operand()->accept(this);
     check_not_null(node);
 }
 
-void Checker::visit(ast::While *expression) {
-    expression->condition()->accept(this);
-    expression->body().accept(this);
-    check_not_null(expression);
+void Checker::visit(ast::While *node) {
+    node->condition()->accept(this);
+    node->body()->accept(this);
+    check_not_null(node);
 }
 
-void Checker::visit(ast::If *expression) {
-    expression->condition->accept(this);
-    expression->true_case->accept(this);
-    if (expression->false_case) {
-        expression->false_case->accept(this);
+void Checker::visit(ast::If *node) {
+    node->condition()->accept(this);
+
+    node->true_case()->accept(this);
+
+    if (node->has_false_case()) {
+        node->false_case()->accept(this);
     }
-    check_not_null(expression);
+
+    check_not_null(node);
 }
 
-void Checker::visit(ast::Return *expression) {
-    expression->expression->accept(this);
-    check_not_null(expression);
+void Checker::visit(ast::Return *node) {
+    node->expression()->accept(this);
+    check_not_null(node);
 }
 
-void Checker::visit(ast::Spawn *expression) {
-    expression->call->accept(this);
-    check_not_null(expression);
+void Checker::visit(ast::Spawn *node) {
+    node->call()->accept(this);
+    check_not_null(node);
 }
 
-void Checker::visit(ast::Switch *expression) {
-    expression->expression()->accept(this);
+void Checker::visit(ast::Switch *node) {
+    node->expression()->accept(this);
 
-    for (auto entry : expression->cases()) {
+    for (auto entry : node->cases()) {
         entry->condition()->accept(this);
 
-        if (entry->assignment()) {
+        if (entry->has_assignment()) {
             entry->assignment()->accept(this);
         }
 
-        entry->body().accept(this);
+        entry->body()->accept(this);
         check_not_null(entry);
     }
 
-    if (expression->has_default_case()) {
-        check_not_null(expression->default_case());
+    if (node->has_default_case()) {
+        check_not_null(node->default_case());
     }
 
-    check_not_null(expression);
+    check_not_null(node);
 }
 
 void Checker::visit(ast::Parameter *parameter) {
@@ -889,16 +933,16 @@ void Checker::visit(ast::Parameter *parameter) {
     check_not_null(parameter);
 }
 
-void Checker::visit(ast::Let *definition) {
-    check_not_null(definition);
+void Checker::visit(ast::Let *node) {
+    check_not_null(node);
 
-    definition->assignment->accept(this);
+    node->assignment()->accept(this);
 
-    if (definition->has_body()) {
-        definition->body()->accept(this);
-        check_types(definition, definition->body());
+    if (node->has_body()) {
+        node->body()->accept(this);
+        check_types(node, node->body());
     } else {
-        check_types(definition, definition->assignment);
+        check_types(node, node->assignment());
     }
 }
 
@@ -969,7 +1013,7 @@ void Checker::visit(ast::Module *module) {
 
     push_scope(symbol);
 
-    module->body().accept(this);
+    module->body()->accept(this);
     check_not_null(module);
 
     pop_scope();
@@ -980,7 +1024,12 @@ void Checker::visit(ast::Import *statement) {
     check_not_null(statement);
 }
 
-void Checker::visit(ast::SourceFile *module) {
-    module->code->accept(this);
-    check_not_null(module);
+void Checker::visit(ast::SourceFile *node) {
+    for (auto &import : node->imports()) {
+        import->accept(this);
+    }
+
+    node->code()->accept(this);
+
+    check_not_null(node);
 }

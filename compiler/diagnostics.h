@@ -14,6 +14,7 @@ namespace acorn {
     namespace ast {
         class Node;
         class Expression;
+        class Name;
     }
 
     namespace types {
@@ -76,6 +77,8 @@ namespace acorn {
         class UndefinedError : public CompilerError {
         public:
             UndefinedError(ast::Node *node, std::string name);
+            UndefinedError(ast::Node &node, std::string name);
+            explicit UndefinedError(ast::Name *name);
         };
 
         class TooManyDefinedError : public CompilerError {
@@ -91,6 +94,7 @@ namespace acorn {
         class InvalidTypeConstructor : public CompilerError {
         public:
             InvalidTypeConstructor(ast::Node *node);
+            InvalidTypeConstructor(ast::Node &node);
         };
 
         class InvalidTypeParameters : public CompilerError {
@@ -101,8 +105,11 @@ namespace acorn {
         class TypeMismatchError : public CompilerError {
         public:
             TypeMismatchError(ast::Expression *node1, ast::Expression *node2);
+            TypeMismatchError(ast::Expression &node1, ast::Expression &node2);
             TypeMismatchError(ast::Node *node, types::Type *type1, types::Type *type2);
+            TypeMismatchError(ast::Node &node, types::Type *type1, types::Type *type2);
             TypeMismatchError(ast::Node *node, std::string type1, std::string type2);
+            TypeMismatchError(ast::Node &node, std::string type1, std::string type2);
         };
 
         class TypeInferenceError : public CompilerError {

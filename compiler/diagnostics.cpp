@@ -111,10 +111,18 @@ void SyntaxError::makeMessage(std::string got, std::string expectation) {
     m_message = ss.str();
 }
 
-UndefinedError::UndefinedError(ast::Node *node, std::string name) :
+UndefinedError::UndefinedError(ast::Node *node, std::string name) : UndefinedError(*node, name) {
+
+}
+
+UndefinedError::UndefinedError(ast::Node &node, std::string name) :
         CompilerError(node) {
     m_prefix = "Undefined error";
     m_message = name + " is not defined in this scope.";
+}
+
+UndefinedError::UndefinedError(ast::Name *name) : UndefinedError(name, name->value()) {
+
 }
 
 TooManyDefinedError::TooManyDefinedError(ast::Node *node, std::string name) :
@@ -129,8 +137,12 @@ RedefinedError::RedefinedError(ast::Node *node, std::string name) :
     m_message = name + " is already defined in this scope.";
 }
 
-InvalidTypeConstructor::InvalidTypeConstructor(ast::Node *node) :
-        CompilerError(node) {
+InvalidTypeConstructor::InvalidTypeConstructor(ast::Node *node) : CompilerError(node) {
+    m_prefix = "Invalid type";
+    m_message = "This is not a type type.";
+}
+
+InvalidTypeConstructor::InvalidTypeConstructor(ast::Node &node) : CompilerError(node) {
     m_prefix = "Invalid type";
     m_message = "This is not a type type.";
 }
@@ -148,11 +160,23 @@ TypeMismatchError::TypeMismatchError(ast::Expression *node1, ast::Expression *no
 
 }
 
+TypeMismatchError::TypeMismatchError(ast::Expression &node1, ast::Expression &node2) : TypeMismatchError(node1, node1.type(), node2.type()) {
+
+}
+
 TypeMismatchError::TypeMismatchError(ast::Node *node, types::Type *type1, types::Type *type2) : TypeMismatchError(node, type1->name(), type2->name()) {
 
 }
 
-TypeMismatchError::TypeMismatchError(ast::Node *node, std::string type1, std::string type2) : CompilerError(node) {
+TypeMismatchError::TypeMismatchError(ast::Node &node, types::Type *type1, types::Type *type2) : TypeMismatchError(node, type1->name(), type2->name()) {
+
+}
+
+TypeMismatchError::TypeMismatchError(ast::Node *node, std::string type1, std::string type2) : TypeMismatchError(*node, type1, type2) {
+
+}
+
+TypeMismatchError::TypeMismatchError(ast::Node &node, std::string type1, std::string type2) : CompilerError(node) {
     m_prefix = "Invalid types";
 
     std::stringstream ss;

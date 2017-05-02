@@ -33,8 +33,10 @@ namespace acorn {
             ~Namespace();
 
             bool has(std::string name, bool follow_parents = true) const;
-            Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Node *currentNode, std::string name) const;
+            Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Node *current_node, std::string name) const;
+            Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Node &current_node, std::string name) const;
             Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Name *identifier) const;
+            Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Name &name) const;
             Symbol *lookup_by_node(diagnostics::Reporter *diagnostics, ast::Node *node) const;
             void insert(diagnostics::Reporter *diagnostics, ast::Node *currentNode, Symbol *symbol);
             void rename(diagnostics::Reporter *diagnostics, Symbol *symbol, std::string new_name);
