@@ -360,35 +360,45 @@ Call *Parser::read_call(Expression *operand) {
 }
 
 CCall *Parser::read_ccall() {
-    return_if_false(read_token(Token::CCallKeyword, token));
+    Token ccall_token;
+    return_if_false(read_token(Token::CCallKeyword, ccall_token));
 
-    CCall *ccall = new CCall(token);
-    ccall->name = read_name(false);
+    auto name = read_name(false);
+    return_if_null(name);
 
     return_if_false(skip_token(Token::OpenParenthesis));
 
+    std::vector<Name *> parameters;
     while (!is_token(Token::CloseParenthesis)) {
-        ccall->parameters.push_back(read_name(true));
+        auto parameter = read_name(true);
+        return_if_null(parameter);
+        parameters.push_back(parameter);
         if (!is_and_skip_token(Token::Comma)) {
             break;
         }
     }
 
     return_if_false(skip_token(Token::CloseParenthesis));
-
     return_if_false(skip_token(Token::AsKeyword));
-    ccall->given_return_type = read_name(true);
 
+    auto given_return_type = read_name(true);
+    return_if_null(given_return_type);
+
+    std::vector<Expression *> arguments;
     if (is_and_skip_token(Token::UsingKeyword)) {
         while (true) {
-            ccall->arguments.push_back(read_expression(false));
+            auto argument = read_expression(false);
+            return_if_null(argument);
+            arguments.push_back(argument);
             if (!is_and_skip_token(Token::Comma)) {
                 break;
             }
         }
     }
 
-    return ccall;
+    return new CCall(
+        ccall_token, name, parameters, given_return_type, arguments
+    );
 }
 
 Cast *Parser::read_cast(Expression *operand) {

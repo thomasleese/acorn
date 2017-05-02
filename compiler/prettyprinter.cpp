@@ -147,15 +147,15 @@ void PrettyPrinter::visit(ast::CCall *ccall)
     ss << indentation() << "(CCall [" << type_of(ccall) << "]\n";
     indent++;
 
-    ccall->name->accept(this);
+    ccall->name()->accept(this);
 
-    for (auto parameter : ccall->parameters) {
+    for (auto parameter : ccall->parameters()) {
         parameter->accept(this);
     }
 
-    ccall->given_return_type->accept(this);
+    ccall->given_return_type()->accept(this);
 
-    for (auto argument : ccall->arguments) {
+    for (auto argument : ccall->arguments()) {
         argument->accept(this);
     }
 

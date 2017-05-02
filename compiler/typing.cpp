@@ -350,20 +350,20 @@ void Inferrer::visit(ast::Call *node) {
 }
 
 void Inferrer::visit(ast::CCall *ccall) {
-    for (auto param : ccall->parameters) {
+    for (auto param : ccall->parameters()) {
         param->accept(this);
         param->set_type(instance_type(param));
     }
 
-    for (auto arg : ccall->arguments) {
+    for (auto arg : ccall->arguments()) {
         arg->accept(this);
     }
 
     // TODO check arg and param types match
 
-    ccall->given_return_type->accept(this);
+    ccall->given_return_type()->accept(this);
 
-    ccall->set_type(instance_type(ccall->given_return_type));
+    ccall->set_type(instance_type(ccall->given_return_type()));
 }
 
 void Inferrer::visit(ast::Cast *cast) {
@@ -798,13 +798,13 @@ void Checker::visit(ast::Call *expression) {
 void Checker::visit(ast::CCall *ccall) {
     // ccall->name->accept(this);
 
-    for (auto param : ccall->parameters) {
+    for (auto param : ccall->parameters()) {
         param->accept(this);
     }
 
-    ccall->given_return_type->accept(this);
+    ccall->given_return_type()->accept(this);
 
-    for (auto arg : ccall->arguments) {
+    for (auto arg : ccall->arguments()) {
         arg->accept(this);
     }
 

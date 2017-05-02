@@ -823,29 +823,32 @@ void CodeGenerator::visit(ast::Call *node) {
 }
 
 void CodeGenerator::visit(ast::CCall *ccall) {
-    std::vector<llvm::Type *> parameters;
     auto return_type = generate_type(ccall);
-    for (auto parameter : ccall->parameters) {
+
+    std::vector<llvm::Type *> parameters;
+    for (auto parameter : ccall->parameters()) {
         parameters.push_back(generate_type(parameter));
     }
 
-    std::string name = ccall->name->value();
-
-    auto function_type = llvm::FunctionType::get(
+    auto llvm_function_type = llvm::FunctionType::get(
         return_type, parameters, false
     );
 
-    auto function = m_module->getOrInsertFunction(name, function_type);
+    auto llvm_function_name = ccall->name()->value();
+
+    auto llvm_function = m_module->getOrInsertFunction(
+        llvm_function_name, llvm_function_type
+    );
 
     std::vector<llvm::Value *> arguments;
-    for (auto argument : ccall->arguments) {
+    for (auto argument : ccall->arguments()) {
         argument->accept(this);
         auto arg_value = pop_llvm_value();
         return_and_push_null_if_null(arg_value);
         arguments.push_back(arg_value);
     }
 
-    push_llvm_value(m_ir_builder->CreateCall(function, arguments));
+    push_llvm_value(m_ir_builder->CreateCall(llvm_function, arguments));
 }
 
 void CodeGenerator::visit(ast::Cast *cast) {

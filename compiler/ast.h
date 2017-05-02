@@ -232,14 +232,20 @@ namespace acorn {
 
         class CCall : public Expression {
         public:
-            CCall(Token token);
+            CCall(Token token, Name *name, std::vector<Name *> parameters, Name *given_return_type, std::vector<Expression *> arguments);
 
-            Name *name;
-            std::vector<Name *> parameters;
-            Name *given_return_type;
-            std::vector<Expression *> arguments;
+            Name *name() const;
+            std::vector<Name *> parameters() const;
+            Name *given_return_type() const;
+            std::vector<Expression *> arguments() const;
 
             void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Name> m_name;
+            std::vector<std::unique_ptr<Name> > m_parameters;
+            std::unique_ptr<Name> m_given_return_type;
+            std::vector<std::unique_ptr<Expression> > m_arguments;
         };
 
         class Cast : public Expression {

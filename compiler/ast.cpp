@@ -359,8 +359,38 @@ void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-CCall::CCall(Token token) : Expression(token), name(nullptr), given_return_type(nullptr) {
+CCall::CCall(Token token, Name *name, std::vector<Name *> parameters, Name *given_return_type, std::vector<Expression *> arguments) : Expression(token), m_name(name), m_given_return_type(given_return_type) {
+    for (auto &parameter : parameters) {
+        m_parameters.push_back(std::unique_ptr<Name>(parameter));
+    }
 
+    for (auto &argument : arguments) {
+        m_arguments.push_back(std::unique_ptr<Expression>(argument));
+    }
+}
+
+Name *CCall::name() const {
+    return m_name.get();
+}
+
+std::vector<Name *> CCall::parameters() const {
+    std::vector<Name *> parameters;
+    for (auto &parameter : m_parameters) {
+        parameters.push_back(parameter.get());
+    }
+    return parameters;
+}
+
+Name *CCall::given_return_type() const {
+    return m_given_return_type.get();
+}
+
+std::vector<Expression *> CCall::arguments() const {
+    std::vector<Expression *> arguments;
+    for (auto &argument : m_arguments) {
+        arguments.push_back(argument.get());
+    }
+    return arguments;
 }
 
 void CCall::accept(Visitor *visitor) {
