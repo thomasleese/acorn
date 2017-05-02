@@ -14,7 +14,7 @@ execute_process(COMMAND /usr/local/Cellar/llvm/4.0.0/bin/llvm-config --libs OUTP
 include_directories(${Boost_INCLUDE_DIRS} /usr/local/Cellar/icu4c/58.2/include)
 link_directories(/usr/local/Cellar/icu4c/58.2/lib/)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS} -std=c++11 -Wall -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS} -std=c++14 -Wall -pedantic")
 set(CMAKE_EXE_LINKER_FLAGS "${LLVM_LD_FLAGS} -fexceptions")
 
 set(SOURCE_FILES compiler/ast.cpp
