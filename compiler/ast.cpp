@@ -68,14 +68,6 @@ std::vector<Expression *> Block::expressions() const {
     return expressions;
 }
 
-void Block::add_expression(std::unique_ptr<Expression> expression) {
-    m_expressions.push_back(std::move(expression));
-}
-
-void Block::insert_expression(int index, std::unique_ptr<Expression> expression) {
-    m_expressions.insert(m_expressions.begin() + index, std::move(expression));
-}
-
 void Block::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -88,31 +80,6 @@ Name::Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> pa
     for (auto &parameter : parameters) {
         m_parameters.push_back(std::move(parameter));
     }
-}
-
-bool Name::has_parameters() const {
-    return !m_parameters.empty();
-}
-
-std::string Name::collapsed_value() const {
-    std::stringstream ss;
-    ss << m_value;
-    if (has_parameters()) {
-        ss << "_";
-        for (auto &parameter : m_parameters) {
-            ss << parameter->collapsed_value() << "_";
-        }
-    }
-    return ss.str();
-}
-
-void Name::collapse_parameters() {
-    m_value = collapsed_value();
-    m_parameters.clear();
-}
-
-std::string Name::value() const {
-    return m_value;
 }
 
 std::vector<Name *> Name::parameters() const {

@@ -70,8 +70,6 @@ namespace acorn {
 
             std::vector<Expression *> expressions() const;
             Expression *last_expression() const { return m_expressions.back().get(); }
-            void add_expression(std::unique_ptr<Expression> expression);
-            void insert_expression(int index, std::unique_ptr<Expression> expression);
             bool empty() const { return m_expressions.empty(); }
 
             void accept(Visitor *visitor);
@@ -85,12 +83,9 @@ namespace acorn {
             Name(Token token, std::string value);
             Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> parameters);
 
-            bool has_parameters() const;
-            std::string collapsed_value() const;
-            void collapse_parameters();
+            std::string value() const { return m_value; }
 
-            std::string value() const;
-
+            bool has_parameters() const { return !m_parameters.empty(); }
             std::vector<Name *> parameters() const;
 
             void accept(Visitor *visitor);
