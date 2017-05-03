@@ -1116,9 +1116,9 @@ void CodeGenerator::visit(ast::Type *definition) {
         return;
     }
 
-    if (definition->alias) {
+    if (definition->has_alias()) {
         auto new_symbol = scope()->lookup(this, definition->name());
-        auto old_symbol = scope()->lookup(this, definition->alias);
+        auto old_symbol = scope()->lookup(this, definition->alias());
         new_symbol->value = old_symbol->value;
         push_llvm_value(new_symbol->value);
     } else {

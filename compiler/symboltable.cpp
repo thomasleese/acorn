@@ -381,11 +381,11 @@ void Builder::visit(ast::Type *definition) {
     push_scope(symbol);
 
     for (auto parameter : definition->name()->parameters()) {
-        Symbol *sym = new Symbol(parameter->value());
+        auto sym = new Symbol(parameter->value());
         scope()->insert(this, parameter, sym);
     }
 
-    if (definition->alias) {
+    if (definition->has_alias()) {
         // do nothing
     } else {
         auto constructor_symbol = new Symbol("new");

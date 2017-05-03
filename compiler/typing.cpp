@@ -234,18 +234,18 @@ void Inferrer::visit(ast::Block *node) {
     }
 }
 
-void Inferrer::visit(ast::Name *expression) {
-    auto symbol = scope()->lookup(this, expression);
+void Inferrer::visit(ast::Name *node) {
+    auto symbol = scope()->lookup(this, node);
     if (symbol == nullptr) {
         return;
     }
 
     if (dynamic_cast<types::TypeType *>(symbol->type)) {
-        expression->set_type(find_type(expression));
+        node->set_type(find_type(node));
     } else {
         // it *must* be empty
-        assert(expression->parameters.empty());
-        expression->set_type(symbol->type);
+        assert(node->parameters.empty());
+        node->set_type(symbol->type);
     }
 }
 
@@ -670,12 +670,12 @@ void Inferrer::visit(ast::Type *definition) {
     }
 
     types::Type *type;
-    if (definition->alias) {
+    if (definition->has_alias()) {
         m_as_type = true;
-        definition->alias->accept(this);
+        definition->alias()->accept(this);
         m_as_type = false;
 
-        auto alias = dynamic_cast<types::TypeType *>(definition->alias->type());
+        auto alias = dynamic_cast<types::TypeType *>(definition->alias()->type());
         assert(alias);
 
         type = new types::AliasType(alias, input_parameters);
@@ -683,11 +683,11 @@ void Inferrer::visit(ast::Type *definition) {
         std::vector<std::string> field_names;
         std::vector<types::TypeType *> field_types;
 
-        for (auto name : definition->field_names) {
+        for (auto name : definition->field_names()) {
             field_names.push_back(name->value());
         }
 
-        for (auto type : definition->field_types) {
+        for (auto type : definition->field_types()) {
             m_as_type = true;
             type->accept(this);
             m_as_type = false;
@@ -992,14 +992,14 @@ void Checker::visit(ast::Type *definition) {
 
     push_scope(symbol);
 
-    if (definition->alias) {
-        definition->alias->accept(this);
+    if (definition->has_alias()) {
+        definition->alias()->accept(this);
     } else {
         /*for (auto name : definition->field_names) {
             name->accept(this);
         }*/
 
-        for (auto type : definition->field_types) {
+        for (auto type : definition->field_types()) {
             type->accept(this);
         }
     }

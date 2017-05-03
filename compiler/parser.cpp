@@ -212,14 +212,18 @@ std::unique_ptr<Expression> Parser::read_expression(bool parse_comma) {
     }
 }
 
-Name *Parser::read_name_or_operator(Token::Kind kind, bool accept_parameters) {
-    return_if_false(read_token(kind, token));
+std::unique_ptr<Name> Parser::read_name_or_operator(Token::Kind kind, bool accept_parameters) {
+    Token name_token;
+    return_if_false(read_token(kind, name_token));
 
-    auto identifier = new Name(token, token.lexeme);
+    std::vector<std::unique_ptr<Name>> parameters;
 
     if (accept_parameters && is_and_skip_token(Token::OpenBrace)) {
         while (!is_token(Token::CloseBrace)) {
-            identifier->add_parameter(read_name(true));
+            auto parameter = read_name(true);
+            return_if_null(parameter);
+            parameters.push_back(std::move(parameter));
+
             if (!is_and_skip_token(Token::Comma)) {
                 break;
             }
@@ -228,32 +232,37 @@ Name *Parser::read_name_or_operator(Token::Kind kind, bool accept_parameters) {
         return_if_false(skip_token(Token::CloseBrace));
     }
 
-    return identifier;
+    return std::make_unique<Name>(
+        name_token, name_token.lexeme, std::move(parameters)
+    );
 }
 
-Name *Parser::read_name(bool accept_parameters) {
+std::unique_ptr<Name> Parser::read_name(bool accept_parameters) {
     return read_name_or_operator(Token::Name, accept_parameters);
 }
 
-Name *Parser::read_operator(bool accept_parameters) {
+std::unique_ptr<Name> Parser::read_operator(bool accept_parameters) {
     return read_name_or_operator(Token::Operator, accept_parameters);
 }
 
 ast::VariableDeclaration *Parser::read_variable_declaration() {
-    return_if_false(read_token(Token::LetKeyword, token));
+    Token let_token;
+    return_if_false(read_token(Token::LetKeyword, let_token));
 
     bool builtin = is_and_skip_token(Token::BuiltinKeyword);
 
     auto name = read_name(false);
     return_if_null(name);
 
-    ast::Name *type = nullptr;
+    std::unique_ptr<Name> type;
     if (is_and_skip_token(Token::AsKeyword)) {
         type = read_name(true);
         return_if_null(type);
     }
 
-    return new VariableDeclaration(token, name, type, builtin);
+    return new VariableDeclaration(
+        let_token, std::move(name), std::move(type), builtin
+    );
 }
 
 Int *Parser::read_int() {
@@ -373,11 +382,11 @@ CCall *Parser::read_ccall() {
 
     return_if_false(skip_token(Token::OpenParenthesis));
 
-    std::vector<Name *> parameters;
+    std::vector<std::unique_ptr<Name>> parameters;
     while (!is_token(Token::CloseParenthesis)) {
         auto parameter = read_name(true);
         return_if_null(parameter);
-        parameters.push_back(parameter);
+        parameters.push_back(std::move(parameter));
         if (!is_and_skip_token(Token::Comma)) {
             break;
         }
@@ -402,7 +411,7 @@ CCall *Parser::read_ccall() {
     }
 
     return new CCall(
-        ccall_token, name, parameters, given_return_type, std::move(arguments)
+        ccall_token, std::move(name), std::move(parameters), std::move(given_return_type), std::move(arguments)
     );
 }
 
@@ -413,18 +422,19 @@ std::unique_ptr<Cast> Parser::read_cast(std::unique_ptr<ast::Expression> operand
     auto new_type = read_name(true);
     return_if_null(new_type);
 
-    return std::make_unique<Cast>(as_token, std::move(operand), new_type);
+    return std::make_unique<Cast>(
+        as_token, std::move(operand), std::move(new_type)
+    );
 }
 
 std::unique_ptr<Selector> Parser::read_selector(std::unique_ptr<ast::Expression> operand, bool allow_operators) {
     return_if_false(read_token(Token::Dot, token));
 
-    Name *name = nullptr;
+    std::unique_ptr<Name> name;
 
     if (is_token(Token::Int)) {
         auto il = read_int();
-        name = new Name(il->token(), il->value());
-        delete il;
+        name = std::make_unique<Name>(il->token(), il->value());
     } else {
         if (allow_operators && is_token(Token::Operator)) {
             name = read_operator(true);
@@ -435,7 +445,7 @@ std::unique_ptr<Selector> Parser::read_selector(std::unique_ptr<ast::Expression>
 
     return_if_null(name);
 
-    return std::make_unique<Selector>(token, std::move(operand), name);
+    return std::make_unique<Selector>(token, std::move(operand), std::move(name));
 }
 
 std::unique_ptr<Call> Parser::read_index(std::unique_ptr<ast::Expression> operand) {
@@ -659,7 +669,9 @@ Switch *Parser::read_switch() {
 
     return_if_false(skip_token(Token::EndKeyword));
 
-    return new Switch(token, std::move(expression), cases, std::move(default_block));
+    return new Switch(
+        token, std::move(expression), cases, std::move(default_block)
+    );
 }
 
 std::unique_ptr<Expression> Parser::read_unary_expression(bool parse_comma) {
@@ -670,7 +682,9 @@ std::unique_ptr<Expression> Parser::read_unary_expression(bool parse_comma) {
         auto argument = read_unary_expression(false);
         return_if_null(argument);
 
-        return std::make_unique<Call>(operand->token(), std::unique_ptr<Name>(operand), std::move(argument));
+        return std::make_unique<Call>(
+            operand->token(), std::move(operand), std::move(argument)
+        );
     } else {
         return read_operand_expression(parse_comma);
     }
@@ -690,7 +704,7 @@ std::unique_ptr<Expression> Parser::read_binary_expression(std::unique_ptr<Expre
             rhs = read_binary_expression(std::move(rhs), m_operator_precendence[front_token().lexeme]);
         }
 
-        lhs = std::make_unique<Call>(saved_token, std::unique_ptr<Name>(op), std::move(lhs), std::move(rhs));
+        lhs = std::make_unique<Call>(saved_token, std::move(op), std::move(lhs), std::move(rhs));
     }
 
     return lhs;
@@ -773,7 +787,9 @@ Parameter *Parser::read_parameter() {
     auto given_type = read_name(true);
     return_if_null(given_type);
 
-    return new Parameter(token, inout, name, given_type);
+    return new Parameter(
+        token, inout, std::move(name), std::move(given_type)
+    );
 }
 
 Let *Parser::read_let() {
@@ -810,9 +826,9 @@ Def *Parser::read_def() {
     std::unique_ptr<Expression> name;
 
     if (is_token(Token::Name)) {
-        name = std::unique_ptr<Name>(read_name(true));
+        name = read_name(true);
     } else if (is_token(Token::Operator)) {
-        name = std::unique_ptr<Name>(read_operator(true));
+        name = read_operator(true);
     } else {
         report(SyntaxError(front_token(), "identifier or operator"));
         return nullptr;
@@ -843,7 +859,8 @@ Def *Parser::read_def() {
         return_if_false(skip_token(Token::CloseParenthesis));
     }
 
-    Name *given_return_type = nullptr;
+    std::unique_ptr<Name> given_return_type;
+
     if (builtin) {
         return_if_false(skip_token(Token::AsKeyword));
         given_return_type = read_name(true);
@@ -863,7 +880,7 @@ Def *Parser::read_def() {
     }
 
     return new Def(
-        def_token, std::move(name), builtin, parameters, std::move(body), given_return_type
+        def_token, std::move(name), builtin, parameters, std::move(body), std::move(given_return_type)
     );
 }
 
@@ -874,18 +891,26 @@ Type *Parser::read_type() {
 
     auto name = read_name(true);
 
-    auto definition = new Type(token, name, builtin);
+    auto definition = new Type(token, std::move(name), builtin);
 
     if (!builtin) {
         if (is_and_skip_token(Token::AsKeyword)) {
-            definition->alias = read_name(true);
+            auto alias = read_name(true);
+            return_if_null(alias);
+            definition->set_alias(std::move(alias));
         } else {
             return_if_false(skip_token(Token::Indent));
 
             while (!is_token(Token::Deindent)) {
-                definition->field_names.push_back(read_name(false));
+                auto field_name = read_name(false);
+                return_if_null(field_name);
+
                 skip_token(Token::AsKeyword);
-                definition->field_types.push_back(read_name(true));
+
+                auto field_type = read_name(true);
+                return_if_null(field_name);
+
+                definition->add_field(std::move(field_name), std::move(field_type));
             }
 
             return_if_false(skip_deindent_and_end_token());
@@ -896,7 +921,8 @@ Type *Parser::read_type() {
 }
 
 Module *Parser::read_module() {
-    return_if_false(read_token(Token::ModuleKeyword, token));
+    Token module_token;
+    return_if_false(read_token(Token::ModuleKeyword, module_token));
 
     auto name = read_name(false);
     return_if_null(name);
@@ -904,7 +930,7 @@ Module *Parser::read_module() {
     auto body = read_block();
     return_if_null(name);
 
-    return new Module(token, name, std::move(body));
+    return new Module(module_token, std::move(name), std::move(body));
 }
 
 Import *Parser::read_import_expression() {

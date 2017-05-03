@@ -38,9 +38,9 @@ namespace acorn {
 
         std::unique_ptr<ast::Block> read_block(bool read_end = true);
         std::unique_ptr<ast::Expression> read_expression(bool parse_comma = true);
-        ast::Name *read_name_or_operator(Token::Kind kind, bool accept_parameters);
-        ast::Name *read_name(bool accept_parameters);
-        ast::Name *read_operator(bool accept_parameters);
+        std::unique_ptr<ast::Name> read_name_or_operator(Token::Kind kind, bool accept_parameters);
+        std::unique_ptr<ast::Name> read_name(bool accept_parameters);
+        std::unique_ptr<ast::Name> read_operator(bool accept_parameters);
         ast::VariableDeclaration *read_variable_declaration();
         ast::Int *read_int();
         ast::Float *read_float();

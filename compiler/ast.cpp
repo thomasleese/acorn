@@ -80,12 +80,14 @@ void Block::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Name::Name(Token token) : Expression(NK_Name, token) {
+Name::Name(Token token, std::string value) : Expression(NK_Name, token), m_value(value) {
 
 }
 
-Name::Name(Token token, std::string name) : Expression(NK_Name, token), m_value(name) {
-
+Name::Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> parameters) : Name(token, value) {
+    for (auto &parameter : parameters) {
+        m_parameters.push_back(std::move(parameter));
+    }
 }
 
 bool Name::has_parameters() const {
@@ -97,8 +99,8 @@ std::string Name::collapsed_value() const {
     ss << m_value;
     if (has_parameters()) {
         ss << "_";
-        for (auto p : m_parameters) {
-            ss << p->collapsed_value() << "_";
+        for (auto &parameter : m_parameters) {
+            ss << parameter->collapsed_value() << "_";
         }
     }
     return ss.str();
@@ -114,19 +116,18 @@ std::string Name::value() const {
 }
 
 std::vector<Name *> Name::parameters() const {
-    return m_parameters;
-}
-
-void Name::add_parameter(Name *identifier) {
-    m_parameters.push_back(identifier);
+    std::vector<Name *> parameters;
+    for (auto &parameter : m_parameters) {
+        parameters.push_back(parameter.get());
+    }
+    return parameters;
 }
 
 void Name::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-VariableDeclaration::VariableDeclaration(Token token, Name *name, Name *type, bool builtin) :
-        Expression(token), m_name(name), m_given_type(type), m_builtin(builtin) {
+VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type, bool builtin) : Expression(token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {
 
 }
 
@@ -334,9 +335,9 @@ void Call::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-CCall::CCall(Token token, Name *name, std::vector<Name *> parameters, Name *given_return_type, std::vector<std::unique_ptr<Expression>> arguments) : Expression(token), m_name(name), m_given_return_type(given_return_type) {
+CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Expression>> arguments) : Expression(token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
     for (auto &parameter : parameters) {
-        m_parameters.push_back(std::unique_ptr<Name>(parameter));
+        m_parameters.push_back(std::move(parameter));
     }
 
     for (auto &argument : arguments) {
@@ -364,7 +365,7 @@ void CCall::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Cast::Cast(Token token, std::unique_ptr<Expression> operand, Name *new_type) : Expression(token), m_operand(std::move(operand)), m_new_type(std::unique_ptr<Name>(new_type)) {
+Cast::Cast(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> new_type) : Expression(token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) {
 
 }
 
@@ -380,11 +381,11 @@ void Assignment::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Selector::Selector(Token token, std::unique_ptr<Expression> operand, Name *field) : Expression(token), m_operand(std::move(operand)), m_field(field) {
+Selector::Selector(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> field) : Expression(token), m_operand(std::move(operand)), m_field(std::move(field)) {
 
 }
 
-Selector::Selector(Token token, std::unique_ptr<Expression> operand, std::string field) : Selector(token, std::move(operand), new Name(token, field)) {
+Selector::Selector(Token token, std::unique_ptr<Expression> operand, std::string field) : Selector(token, std::move(operand), std::make_unique<Name>(token, field)) {
 
 }
 
@@ -459,7 +460,8 @@ Let::Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Ex
 }
 
 Let::Let(Token token, std::string name, std::unique_ptr<Expression> value, std::unique_ptr<Expression> body) : Expression(token), m_body(std::move(body)) {
-    auto variable_declaration = new VariableDeclaration(token, new Name(token, name), nullptr, false);
+    auto name_node = std::make_unique<Name>(token, name);
+    auto variable_declaration = new VariableDeclaration(token, std::move(name_node), nullptr, false);
     m_assignment = std::make_unique<Assignment>(token, variable_declaration, std::move(value));
 }
 
@@ -467,7 +469,7 @@ void Let::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Parameter::Parameter(Token token, bool inout, Name *name, Name *given_type) : Expression(token), m_inout(inout), m_name(name), m_given_type(given_type) {
+Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type) : Expression(token), m_inout(inout), m_name(std::move(name)), m_given_type(std::move(given_type)) {
 
 }
 
@@ -487,7 +489,7 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Def::Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<Parameter *> parameters, std::unique_ptr<Expression> body, Name *given_return_type) : Expression(token), m_name(std::move(name)), m_builtin(builtin), m_body(std::move(body)), m_given_return_type(given_return_type) {
+Def::Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<Parameter *> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(token), m_name(std::move(name)), m_builtin(builtin), m_body(std::move(body)), m_given_return_type(std::move(given_return_type)) {
     for (auto parameter : parameters) {
         m_parameters.push_back(std::unique_ptr<Parameter>(parameter));
     }
@@ -530,7 +532,7 @@ void Def::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Type::Type(Token token, Name *name, bool builtin) : Expression(token), alias(nullptr), m_name(name), m_builtin(builtin) {
+Type::Type(Token token, std::unique_ptr<Name> name, bool builtin) : Expression(token), m_name(std::move(name)), m_builtin(builtin) {
 
 }
 
@@ -547,6 +549,27 @@ void Type::set_type(types::Type *type) {
     m_name->set_type(type);
 }
 
+void Type::add_field(std::unique_ptr<Name> name, std::unique_ptr<Name> type) {
+    m_field_names.push_back(std::move(name));
+    m_field_types.push_back(std::move(type));
+}
+
+std::vector<Name *> Type::field_names() const {
+    std::vector<Name *> field_names;
+    for (auto &name : m_field_names) {
+        field_names.push_back(name.get());
+    }
+    return field_names;
+}
+
+std::vector<Name *> Type::field_types() const {
+    std::vector<Name *> field_types;
+    for (auto &type : m_field_types) {
+        field_types.push_back(type.get());
+    }
+    return field_types;
+}
+
 bool Type::builtin() const {
     return m_builtin;
 }
@@ -559,13 +582,9 @@ void Type::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-MethodSignature::MethodSignature(Token token, Name *name, std::vector<Name *> parameter_types, Name *return_type) :
-        Node(token),
-        m_name(name),
-        m_return_type(return_type)
-{
-    for (auto p : parameter_types) {
-        m_parameter_types.push_back(std::unique_ptr<Name>(p));
+MethodSignature::MethodSignature(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameter_types, std::unique_ptr<Name> return_type) : Node(token), m_name(std::move(name)), m_return_type(std::move(return_type)) {
+    for (auto &parameter : parameter_types) {
+        m_parameter_types.push_back(std::move(parameter));
     }
 }
 
@@ -589,7 +608,7 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-Module::Module(Token token, Name *name, std::unique_ptr<Block> body) : Expression(token), m_name(name), m_body(std::move(body)) {
+Module::Module(Token token, std::unique_ptr<Name> name, std::unique_ptr<Block> body) : Expression(token), m_name(std::move(name)), m_body(std::move(body)) {
 
 }
 

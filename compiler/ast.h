@@ -82,8 +82,8 @@ namespace acorn {
 
         class Name : public Expression {
         public:
-            Name(Token token);
-            Name(Token token, std::string name);
+            Name(Token token, std::string value);
+            Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> parameters);
 
             bool has_parameters() const;
             std::string collapsed_value() const;
@@ -92,7 +92,6 @@ namespace acorn {
             std::string value() const;
 
             std::vector<Name *> parameters() const;
-            void add_parameter(Name *identifier);
 
             void accept(Visitor *visitor);
 
@@ -102,12 +101,12 @@ namespace acorn {
 
         private:
             std::string m_value;
-            std::vector<Name *> m_parameters;
+            std::vector<std::unique_ptr<Name>> m_parameters;
         };
 
         class VariableDeclaration : public Expression {
         public:
-            VariableDeclaration(Token token, Name *name, Name *type = nullptr, bool builtin = false);
+            VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type = nullptr, bool builtin = false);
 
             Name *name() const;
 
@@ -254,7 +253,7 @@ namespace acorn {
 
         class CCall : public Expression {
         public:
-            CCall(Token token, Name *name, std::vector<Name *> parameters, Name *given_return_type, std::vector<std::unique_ptr<Expression>> arguments);
+            CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Expression>> arguments);
 
             Name *name() const;
             std::vector<Name *> parameters() const;
@@ -267,14 +266,14 @@ namespace acorn {
 
         private:
             std::unique_ptr<Name> m_name;
-            std::vector<std::unique_ptr<Name> > m_parameters;
+            std::vector<std::unique_ptr<Name>> m_parameters;
             std::unique_ptr<Name> m_given_return_type;
             std::vector<std::unique_ptr<Expression>> m_arguments;
         };
 
         class Cast : public Expression {
         public:
-            Cast(Token token, std::unique_ptr<Expression> operand, Name *new_type);
+            Cast(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> new_type);
 
             Expression *operand() const { return m_operand.get(); }
             Name *new_type() const { return m_new_type.get(); }
@@ -304,7 +303,7 @@ namespace acorn {
 
         class Selector : public Expression {
         public:
-            Selector(Token token, std::unique_ptr<Expression> operand, Name *field);
+            Selector(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> field);
             Selector(Token token, std::unique_ptr<Expression> operand, std::string field);
 
             Expression *operand() const { return m_operand.get(); }
@@ -431,7 +430,7 @@ namespace acorn {
 
         class Parameter : public Expression {
         public:
-            explicit Parameter(Token token, bool inout, Name *name, Name *given_type);
+            explicit Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type);
 
             bool inout() const;
             Name *name() const;
@@ -447,7 +446,7 @@ namespace acorn {
 
         class Def : public Expression {
         public:
-            Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<Parameter *> parameters, std::unique_ptr<Expression> body, Name *given_return_type = nullptr);
+            Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<Parameter *> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
 
             Expression *name() const { return m_name.get(); }
 
@@ -476,7 +475,7 @@ namespace acorn {
 
         class Type : public Expression {
         public:
-            Type(Token token, Name *name, bool builtin);
+            Type(Token token, std::unique_ptr<Name> name, bool builtin);
 
             Name *name() const;
             void set_name(Name *name);
@@ -486,21 +485,27 @@ namespace acorn {
 
             void set_type(types::Type *type) override;
 
-            Name *alias;
+            bool has_alias() const { return static_cast<bool>(m_alias); }
+            Name *alias() const { return m_alias.get(); }
+            void set_alias(std::unique_ptr<Name> alias) { m_alias = std::move(alias); }
 
-            std::vector<Name *> field_names;
-            std::vector<Name *> field_types;
+            void add_field(std::unique_ptr<Name> name, std::unique_ptr<Name> type);
+            std::vector<Name *> field_names() const;
+            std::vector<Name *> field_types() const;
 
             void accept(Visitor *visitor) override;
 
         private:
             std::unique_ptr<Name> m_name;
+            std::unique_ptr<Name> m_alias;
+            std::vector<std::unique_ptr<Name>> m_field_names;
+            std::vector<std::unique_ptr<Name>> m_field_types;
             bool m_builtin;
         };
 
         class MethodSignature : public Node {
         public:
-            MethodSignature(Token token, Name *name, std::vector<Name *> parameter_types, Name *return_type);
+            MethodSignature(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameter_types, std::unique_ptr<Name> return_type);
 
             Name *name() const;
             std::vector<Name *> parameter_types() const;
@@ -516,7 +521,7 @@ namespace acorn {
 
         class Module : public Expression {
         public:
-            Module(Token token, Name *name, std::unique_ptr<Block> body);
+            Module(Token token, std::unique_ptr<Name> name, std::unique_ptr<Block> body);
 
             Name *name() const { return m_name.get(); }
             Block *body() const { return m_body.get(); }

@@ -317,12 +317,12 @@ void PrettyPrinter::visit(ast::Type *definition)
 
     definition->name()->accept(this);
 
-    if (definition->alias) {
-        definition->alias->accept(this);
+    if (definition->has_alias()) {
+        definition->alias()->accept(this);
     } else {
-        for (size_t i = 0; i < definition->field_names.size(); i++) {
-            definition->field_names[i]->accept(this);
-            definition->field_types[i]->accept(this);
+        for (size_t i = 0; i < definition->field_names().size(); i++) {
+            definition->field_names()[i]->accept(this);
+            definition->field_types()[i]->accept(this);
         }
     }
 
