@@ -435,11 +435,9 @@ void Case::accept(Visitor *visitor) {
     // visitor->visit(this);
 }
 
-Switch::Switch(Token token, std::unique_ptr<Expression> expression, std::vector<Case *> cases, std::unique_ptr<Expression> default_case) :
-        Expression(token), m_expression(std::move(expression)), m_default_case(std::move(default_case))
-{
-    for (auto entry : cases) {
-        m_cases.push_back(std::unique_ptr<Case>(entry));
+Switch::Switch(Token token, std::unique_ptr<Expression> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Expression> default_case) : Expression(token), m_expression(std::move(expression)), m_default_case(std::move(default_case)) {
+    for (auto &entry : cases) {
+        m_cases.push_back(std::move(entry));
     }
 }
 
@@ -495,9 +493,9 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Def::Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<Parameter *> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(token), m_name(std::move(name)), m_builtin(builtin), m_body(std::move(body)), m_given_return_type(std::move(given_return_type)) {
-    for (auto parameter : parameters) {
-        m_parameters.push_back(std::unique_ptr<Parameter>(parameter));
+Def::Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(token), m_name(std::move(name)), m_builtin(builtin), m_body(std::move(body)), m_given_return_type(std::move(given_return_type)) {
+    for (auto &parameter : parameters) {
+        m_parameters.push_back(std::move(parameter));
     }
 }
 

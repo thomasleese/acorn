@@ -394,7 +394,7 @@ namespace acorn {
 
         class Switch : public Expression {
         public:
-            Switch(Token token, std::unique_ptr<Expression> expression, std::vector<Case *> cases, std::unique_ptr<Expression> default_case = nullptr);
+            Switch(Token token, std::unique_ptr<Expression> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Expression> default_case = nullptr);
 
             Expression *expression() const { return m_expression.get(); }
 
@@ -407,7 +407,7 @@ namespace acorn {
 
         private:
             std::unique_ptr<Expression> m_expression;
-            std::vector<std::unique_ptr<Case> > m_cases;
+            std::vector<std::unique_ptr<Case>> m_cases;
             std::unique_ptr<Expression> m_default_case;
         };
 
@@ -446,7 +446,7 @@ namespace acorn {
 
         class Def : public Expression {
         public:
-            Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<Parameter *> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
+            Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
 
             Expression *name() const { return m_name.get(); }
 
@@ -468,7 +468,7 @@ namespace acorn {
         private:
             std::unique_ptr<Expression> m_name;
             bool m_builtin;
-            std::vector<std::unique_ptr<Parameter> > m_parameters;
+            std::vector<std::unique_ptr<Parameter>> m_parameters;
             std::unique_ptr<Expression> m_body;
             std::unique_ptr<Name> m_given_return_type;
         };
