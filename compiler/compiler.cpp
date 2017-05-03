@@ -47,8 +47,8 @@ Compiler::~Compiler() {
 }
 
 bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_namespace, std::string filename) {
-    std::string outputName = filename + ".o";
-    std::string moduleName = filename.substr(0, filename.find_last_of("."));
+    auto output_name = filename + ".o";
+    auto module_name = filename.substr(0, filename.find_last_of("."));
 
     llvm::Triple triple(llvm::sys::getDefaultTargetTriple());
 
@@ -70,10 +70,10 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
     }
 
     std::string error;
-    const llvm::Target *target = llvm::TargetRegistry::lookupTarget(triple.str(), error);
+    const auto target = llvm::TargetRegistry::lookupTarget(triple.str(), error);
 
-    std::string cpu = llvm::sys::getHostCPUName();
-    llvm::CodeGenOpt::Level opt_level = llvm::CodeGenOpt::None;
+    auto cpu = llvm::sys::getHostCPUName();
+    auto opt_level = llvm::CodeGenOpt::None;
     llvm::TargetOptions target_options;
 
     llvm::SubtargetFeatures features;
@@ -83,9 +83,9 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
     for (auto &it : host_features) {
         features.AddFeature(it.first(), it.second);
     }
-    std::string target_features = features.getString();
+    auto target_features = features.getString();
 
-    llvm::TargetMachine *target_machine = target->createTargetMachine(triple.str(), cpu, target_features, target_options, llvm::Reloc::PIC_, llvm::CodeModel::Default, opt_level);
+    auto target_machine = target->createTargetMachine(triple.str(), cpu, target_features, target_options, llvm::Reloc::PIC_, llvm::CodeModel::Default, opt_level);
 
     auto data_layout = target_machine->createDataLayout();
 
@@ -96,34 +96,34 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
         return false;
     }
 
-    llvm::Module *llvmModule = generator.module();
+    auto llvm_module = generator.module();
 
     delete module;
 
     debug("Generating object file...");
 
-    llvmModule->setDataLayout(data_layout);
-    llvmModule->setTargetTriple(triple.str());
+    llvm_module->setDataLayout(data_layout);
+    llvm_module->setTargetTriple(triple.str());
 
-    llvmModule->dump();
+    llvm_module->dump();
 
     llvm::legacy::PassManager pass_manager;
 
     std::error_code error_code;
-    llvm::tool_output_file output_file(outputName, error_code, llvm::sys::fs::F_None);
+    llvm::tool_output_file output_file(output_name, error_code, llvm::sys::fs::F_None);
 
     target_machine->addPassesToEmitFile(pass_manager, output_file.os(), llvm::TargetMachine::CGFT_ObjectFile);
 
-    pass_manager.run(*llvmModule);
+    pass_manager.run(*llvm_module);
 
     output_file.keep();
 
     output_file.os().close();
 
-    std::string cmd = "clang " + outputName + " -o " + moduleName;
+    std::string cmd = "clang " + output_name + " -o " + module_name;
     system(cmd.c_str());
 
-    remove(outputName.c_str());
+    remove(output_name.c_str());
 
     return true;
 }

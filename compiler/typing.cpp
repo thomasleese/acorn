@@ -32,17 +32,13 @@ Inferrer::~Inferrer() {
 
 }
 
-types::TypeType *Inferrer::find_type_constructor(ast::Node &node, std::string name) {
+types::TypeType *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
     auto symbol = scope()->lookup(this, node, name);
     return_null_if_null(symbol);
     return dynamic_cast<types::TypeType *>(symbol->type);
 }
 
-types::TypeType *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
-    return find_type_constructor(*node, name);
-}
-
-types::TypeType *Inferrer::find_type(ast::Node &node, std::string name, std::vector<ast::Name *> parameters) {
+types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
     std::vector<types::Type *> parameterTypes;
 
     for (auto parameter : parameters) {
@@ -59,53 +55,29 @@ types::TypeType *Inferrer::find_type(ast::Node &node, std::string name, std::vec
     }
 }
 
-types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
-    return find_type(*node, name, parameters);
-}
-
-types::TypeType *Inferrer::find_type(ast::Node &node, std::string name) {
+types::TypeType *Inferrer::find_type(ast::Node *node, std::string name) {
     return find_type(node, name, std::vector<ast::Name *>());
 }
 
-types::TypeType *Inferrer::find_type(ast::Node *node, std::string name) {
-    return find_type(*node, name);
-}
-
-types::TypeType *Inferrer::find_type(ast::Name &type) {
-    return find_type(type, type.value(), type.parameters());
-}
-
 types::TypeType *Inferrer::find_type(ast::Name *type) {
-    return find_type(*type);
+    return find_type(type, type->value(), type->parameters());
 }
 
-types::Type *Inferrer::instance_type(ast::Node &node, std::string name, std::vector<ast::Name *> parameters) {
+types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
     types::TypeType *type_constructor = find_type(node, name, parameters);
     if (type_constructor == nullptr) {
         return nullptr;
     }
 
-    return type_constructor->create(this, &node);
-}
-
-types::Type *Inferrer::instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
-    return instance_type(*node, name, parameters);
-}
-
-types::Type *Inferrer::instance_type(ast::Node &node, std::string name) {
-    return instance_type(node, name, std::vector<ast::Name *>());
+    return type_constructor->create(this, node);
 }
 
 types::Type *Inferrer::instance_type(ast::Node *node, std::string name) {
-    return instance_type(*node, name);
-}
-
-types::Type *Inferrer::instance_type(ast::Name &name) {
-    return instance_type(name, name.value(), name.parameters());
+    return instance_type(node, name, std::vector<ast::Name *>());
 }
 
 types::Type *Inferrer::instance_type(ast::Name *name) {
-    return instance_type(*name);
+    return instance_type(name, name->value(), name->parameters());
 }
 
 types::Type *Inferrer::builtin_type_from_name(ast::Name *node) {

@@ -31,21 +31,14 @@ namespace acorn {
             ~Inferrer();
 
         private:
-            types::TypeType *find_type_constructor(ast::Node &node, std::string name);
             types::TypeType *find_type_constructor(ast::Node *node, std::string name);
 
-            types::TypeType *find_type(ast::Node &node, std::string name, std::vector<ast::Name *> parameters);
             types::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
-            types::TypeType *find_type(ast::Node &node, std::string name);
             types::TypeType *find_type(ast::Node *node, std::string name);
-            types::TypeType *find_type(ast::Name &name);
             types::TypeType *find_type(ast::Name *name);
 
-            types::Type *instance_type(ast::Node &node, std::string name, std::vector<ast::Name *> parameters);
             types::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
-            types::Type *instance_type(ast::Node &node, std::string name);
             types::Type *instance_type(ast::Node *node, std::string name);
-            types::Type *instance_type(ast::Name &name);
             types::Type *instance_type(ast::Name *name);
 
             types::Type *builtin_type_from_name(ast::Name *node);

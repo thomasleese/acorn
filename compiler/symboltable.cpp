@@ -39,10 +39,6 @@ bool Namespace::has(std::string name, bool follow_parents) const {
 }
 
 Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node *current_node, std::string name) const {
-    return lookup(diagnostics, *current_node, name);
-}
-
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node &current_node, std::string name) const {
     auto it = m_symbols.find(name);
     if (it == m_symbols.end()) {
         if (m_parent) {
@@ -57,11 +53,7 @@ Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node &current_node, std::s
 }
 
 Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *name) const {
-    return lookup(diagnostics, *name);
-}
-
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name &name) const {
-    return lookup(diagnostics, name, name.value());
+    return lookup(diagnostics, name, name->value());
 }
 
 Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const {
