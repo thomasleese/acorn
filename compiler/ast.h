@@ -287,7 +287,7 @@ namespace acorn {
 
         class Assignment : public Expression {
         public:
-            Assignment(Token token, VariableDeclaration *lhs, std::unique_ptr<Expression> rhs);
+            Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Expression> rhs);
 
             VariableDeclaration *lhs() const { return m_lhs.get(); }
             Expression *rhs() const { return m_rhs.get(); }
@@ -535,11 +535,14 @@ namespace acorn {
 
         class Import : public Expression {
         public:
-            Import(Token token, String *path);
+            Import(Token token, std::unique_ptr<String> path);
 
-            String *path;
+            String *path() const { return m_path.get(); }
 
             void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<String> m_path;
         };
 
         class SourceFile : public Expression {

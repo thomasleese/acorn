@@ -41,12 +41,12 @@ namespace acorn {
         std::unique_ptr<ast::Name> read_name_or_operator(Token::Kind kind, bool accept_parameters);
         std::unique_ptr<ast::Name> read_name(bool accept_parameters);
         std::unique_ptr<ast::Name> read_operator(bool accept_parameters);
-        ast::VariableDeclaration *read_variable_declaration();
-        ast::Int *read_int();
-        ast::Float *read_float();
-        ast::String *read_string();
-        ast::List *read_list();
-        ast::Dictionary *read_dictionary();
+        std::unique_ptr<ast::VariableDeclaration> read_variable_declaration();
+        std::unique_ptr<ast::Int> read_int();
+        std::unique_ptr<ast::Float> read_float();
+        std::unique_ptr<ast::String> read_string();
+        std::unique_ptr<ast::List> read_list();
+        std::unique_ptr<ast::Dictionary> read_dictionary();
         std::unique_ptr<ast::Call> read_call(std::unique_ptr<ast::Expression> operand);
         ast::CCall *read_ccall();
         std::unique_ptr<ast::Cast> read_cast(std::unique_ptr<ast::Expression> operand);
@@ -65,7 +65,7 @@ namespace acorn {
         std::unique_ptr<ast::Expression> read_primary_expression();
         std::unique_ptr<ast::Expression> read_operand_expression(bool parse_comma);
         ast::Parameter *read_parameter();
-        ast::Let *read_let();
+        std::unique_ptr<ast::Let> read_let();
         ast::Def *read_def();
         ast::Type *read_type();
         ast::Module *read_module();

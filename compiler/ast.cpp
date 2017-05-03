@@ -373,7 +373,7 @@ void Cast::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Assignment::Assignment(Token token, VariableDeclaration *lhs, std::unique_ptr<Expression> rhs) : Expression(token), m_lhs(std::unique_ptr<VariableDeclaration>(lhs)), m_rhs(std::move(rhs)) {
+Assignment::Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Expression> rhs) : Expression(token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
 
 }
 
@@ -461,8 +461,14 @@ Let::Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Ex
 
 Let::Let(Token token, std::string name, std::unique_ptr<Expression> value, std::unique_ptr<Expression> body) : Expression(token), m_body(std::move(body)) {
     auto name_node = std::make_unique<Name>(token, name);
-    auto variable_declaration = new VariableDeclaration(token, std::move(name_node), nullptr, false);
-    m_assignment = std::make_unique<Assignment>(token, variable_declaration, std::move(value));
+
+    auto variable_declaration = std::make_unique<VariableDeclaration>(
+        token, std::move(name_node), nullptr, false
+    );
+
+    m_assignment = std::make_unique<Assignment>(
+        token, std::move(variable_declaration), std::move(value)
+    );
 }
 
 void Let::accept(Visitor *visitor) {
@@ -616,8 +622,8 @@ void Module::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Import::Import(Token token, String *path) : Expression(token) {
-    this->path = path;
+Import::Import(Token token, std::unique_ptr<String> path) : Expression(token), m_path(std::move(path)) {
+
 }
 
 void Import::accept(Visitor *visitor) {

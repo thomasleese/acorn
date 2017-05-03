@@ -42,7 +42,7 @@ SourceFile *Parser::parse(std::string name) {
         auto import = read_import_expression();
         return_if_null(import);
 
-        std::string filename = "../library/" + import->path->value() + ".acorn";
+        std::string filename = "../library/" + import->path()->value() + ".acorn";
 
         Lexer lexer(filename);
         Parser parser(lexer);
@@ -193,7 +193,7 @@ std::unique_ptr<Block> Parser::read_block(bool read_end) {
 
 std::unique_ptr<Expression> Parser::read_expression(bool parse_comma) {
     if (is_token(Token::LetKeyword)) {
-        return std::unique_ptr<Expression>(read_let());
+        return read_let();
     } else if (is_token(Token::DefKeyword)) {
         return std::unique_ptr<Expression>(read_def());
     } else if (is_token(Token::TypeKeyword)) {
@@ -245,7 +245,7 @@ std::unique_ptr<Name> Parser::read_operator(bool accept_parameters) {
     return read_name_or_operator(Token::Operator, accept_parameters);
 }
 
-ast::VariableDeclaration *Parser::read_variable_declaration() {
+std::unique_ptr<VariableDeclaration> Parser::read_variable_declaration() {
     Token let_token;
     return_if_false(read_token(Token::LetKeyword, let_token));
 
@@ -260,27 +260,27 @@ ast::VariableDeclaration *Parser::read_variable_declaration() {
         return_if_null(type);
     }
 
-    return new VariableDeclaration(
+    return std::make_unique<VariableDeclaration>(
         let_token, std::move(name), std::move(type), builtin
     );
 }
 
-Int *Parser::read_int() {
+std::unique_ptr<ast::Int> Parser::read_int() {
     return_if_false(read_token(Token::Int, token));
-    return new Int(token, token.lexeme);
+    return std::make_unique<Int>(token, token.lexeme);
 }
 
-Float *Parser::read_float() {
+std::unique_ptr<ast::Float> Parser::read_float() {
     return_if_false(read_token(Token::Float, token));
-    return new Float(token, token.lexeme);
+    return std::make_unique<Float>(token, token.lexeme);
 }
 
-String *Parser::read_string() {
+std::unique_ptr<ast::String> Parser::read_string() {
     return_if_false(read_token(Token::String, token));
-    return new String(token, token.lexeme);
+    return std::make_unique<String>(token, token.lexeme);
 }
 
-List *Parser::read_list() {
+std::unique_ptr<ast::List> Parser::read_list() {
     Token list_token;
     return_if_false(read_token(Token::OpenBracket, list_token));
 
@@ -299,10 +299,10 @@ List *Parser::read_list() {
 
     return_if_false(skip_token(Token::CloseBracket));
 
-    return new List(list_token, std::move(elements));
+    return std::make_unique<List>(list_token, std::move(elements));
 }
 
-Dictionary *Parser::read_dictionary() {
+std::unique_ptr<ast::Dictionary> Parser::read_dictionary() {
     Token dict_token;
     return_if_false(read_token(Token::OpenBrace, dict_token));
 
@@ -327,7 +327,9 @@ Dictionary *Parser::read_dictionary() {
 
     return_if_false(skip_token(Token::CloseBrace));
 
-    return new Dictionary(dict_token, std::move(keys), std::move(values));
+    return std::make_unique<Dictionary>(
+        dict_token, std::move(keys), std::move(values)
+    );
 }
 
 std::unique_ptr<Call> Parser::read_call(std::unique_ptr<Expression> operand) {
@@ -563,7 +565,9 @@ std::unique_ptr<If> Parser::read_if() {
         auto rhs = read_expression(true);
         return_if_null(rhs);
 
-        condition = std::make_unique<Assignment>(assignment_token, lhs, std::move(rhs));
+        condition = std::make_unique<Assignment>(
+            assignment_token, std::move(lhs), std::move(rhs)
+        );
     } else {
         condition = read_expression();
     }
@@ -792,7 +796,7 @@ Parameter *Parser::read_parameter() {
     );
 }
 
-Let *Parser::read_let() {
+std::unique_ptr<ast::Let> Parser::read_let() {
     auto lhs = read_variable_declaration();
     return_if_null(lhs);
 
@@ -813,8 +817,13 @@ Let *Parser::read_let() {
         return_if_false(skip_deindent_and_end_token());
     }
 
-    auto assignment = std::make_unique<Assignment>(token, lhs, std::move(rhs));
-    return new Let(lhs->token(), std::move(assignment), std::move(body));
+    auto assignment = std::make_unique<Assignment>(
+        token, std::move(lhs), std::move(rhs)
+    );
+
+    return std::make_unique<Let>(
+        assignment->lhs()->token(), std::move(assignment), std::move(body)
+    );
 }
 
 Def *Parser::read_def() {
@@ -937,5 +946,5 @@ Import *Parser::read_import_expression() {
     return_if_false(read_token(Token::ImportKeyword, token));
     auto path = read_string();
     return_if_null(path);
-    return new Import(token, path);
+    return new Import(token, std::move(path));
 }

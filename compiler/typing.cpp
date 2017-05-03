@@ -720,7 +720,7 @@ void Inferrer::visit(ast::Module *module) {
 }
 
 void Inferrer::visit(ast::Import *statement) {
-    statement->path->accept(this);
+    statement->path()->accept(this);
     statement->set_type(new types::Void());
 }
 
@@ -1020,7 +1020,7 @@ void Checker::visit(ast::Module *module) {
 }
 
 void Checker::visit(ast::Import *statement) {
-    statement->path->accept(this);
+    statement->path()->accept(this);
     check_not_null(statement);
 }
 

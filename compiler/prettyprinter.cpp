@@ -345,7 +345,7 @@ void PrettyPrinter::visit(ast::Import *node) {
     ss << indentation() << "(Import [" << type_of(node) << "]\n";
     indent++;
 
-    node->path->accept(this);
+    node->path()->accept(this);
 
     indent--;
     ss << indentation() << ")\n";
