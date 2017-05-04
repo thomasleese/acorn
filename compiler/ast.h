@@ -2,8 +2,7 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
-#ifndef ACORN_AST_H
-#define ACORN_AST_H
+#pragma once
 
 #include <map>
 #include <memory>
@@ -593,5 +592,3 @@ namespace acorn {
     }
 
 }
-
-#endif // ACORN_AST_H

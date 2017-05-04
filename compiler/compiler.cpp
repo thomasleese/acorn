@@ -102,7 +102,6 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
 
     debug("Generating object file...");
 
-    llvm_module->setDataLayout(data_layout);
     llvm_module->setTargetTriple(triple.str());
 
     llvm_module->dump();

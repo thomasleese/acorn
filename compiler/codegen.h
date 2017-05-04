@@ -2,8 +2,7 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
-#ifndef ACORN_CODEGEN_H
-#define ACORN_CODEGEN_H
+#pragma once
 
 #include <string>
 
@@ -93,9 +92,8 @@ namespace acorn {
 
         public:
             CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout);
-            ~CodeGenerator();
 
-            llvm::Module *module() const;
+            llvm::Module *module() const { return m_module.get(); }
 
             llvm::Type *take_type(ast::Expression *expression);
             llvm::Constant *take_initialiser(ast::Node *node);
@@ -142,7 +140,6 @@ namespace acorn {
             void visit(types::TupleType *type);
             void visit(types::AliasType *type);
             void visit(types::TypeDescriptionType *type);
-
             void visit(types::Parameter *type);
             void visit(types::Void *type);
             void visit(types::Boolean *type);
@@ -186,8 +183,8 @@ namespace acorn {
 
         private:
             llvm::LLVMContext m_context;
-            llvm::Module *m_module;
-            llvm::MDBuilder *m_md_builder;
+            std::unique_ptr<llvm::Module> m_module;
+            std::unique_ptr<llvm::MDBuilder> m_md_builder;
             llvm::DataLayout *m_data_layout;
 
             std::vector<llvm::Argument *> m_args;
@@ -199,5 +196,3 @@ namespace acorn {
     }
 
 }
-
-#endif // ACORN_CODEGEN_H

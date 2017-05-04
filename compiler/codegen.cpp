@@ -153,17 +153,8 @@ llvm::Value *IrBuilder::create_store_method_to_function(llvm::Function *method, 
 CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout) : IrBuilder(m_context), m_module(nullptr) {
     push_scope(scope);
 
-    m_md_builder = new llvm::MDBuilder(m_context);
+    m_md_builder = std::make_unique<llvm::MDBuilder>(m_context);
     m_data_layout = data_layout;
-}
-
-CodeGenerator::~CodeGenerator() {
-    delete m_ir_builder;
-    delete m_md_builder;
-}
-
-llvm::Module *CodeGenerator::module() const {
-    return m_module;
 }
 
 llvm::Type *CodeGenerator::take_type(ast::Expression *expression) {
@@ -262,7 +253,7 @@ llvm::Function *CodeGenerator::create_function(llvm::Type *type, std::string nam
     auto function_type = llvm::cast<llvm::FunctionType>(type);
     return llvm::Function::Create(
         function_type, llvm::Function::ExternalLinkage,
-        name, m_module
+        name, module()
     );
 }
 
@@ -1189,8 +1180,8 @@ void CodeGenerator::visit(ast::Import *node) {
 }
 
 void CodeGenerator::visit(ast::SourceFile *node) {
-    if (m_module == nullptr) {
-        m_module = new llvm::Module(node->name(), m_context);
+    if (!m_module) {
+        m_module = std::make_unique<llvm::Module>(node->name(), m_context);
 
         auto void_function_type = llvm::FunctionType::get(m_ir_builder->getVoidTy(), false);
 
@@ -1221,6 +1212,8 @@ void CodeGenerator::visit(ast::SourceFile *node) {
 
         m_ir_builder->SetInsertPoint(init_variables_bb);
         m_ir_builder->CreateRetVoid();
+
+        m_module->setDataLayout(*m_data_layout);
 
         std::string str;
         llvm::raw_string_ostream stream(str);
