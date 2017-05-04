@@ -12,27 +12,25 @@
 
 using namespace acorn;
 
-ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space) {
+#define return_if_has_errors(thing) if (thing.has_errors()) { return nullptr; }
+
+ast::SourceFile *parse(std::string filename, symboltable::Namespace *root_namespace) {
     Lexer lexer(filename);
 
     Parser parser(lexer);
     auto module = parser.parse(filename);
 
-    if (lexer.has_errors() || parser.has_errors() || module == nullptr) {
+    if (lexer.has_errors() || parser.has_errors() || !module) {
         return nullptr;
     }
 
     PrettyPrinter pp;
 
-    symboltable::Builder symbol_table_builder;
+    symboltable::Builder symbol_table_builder(root_namespace);
     module->accept(&symbol_table_builder);
     assert(symbolTableBuilder.is_at_root());
 
-    if (symbol_table_builder.has_errors()) {
-        return nullptr;
-    }
-
-    auto root_namespace = symbol_table_builder.root_namespace();
+    return_if_has_errors(symbol_table_builder);
 
     typing::Inferrer inferrer(root_namespace);
     module->accept(&inferrer);
@@ -41,32 +39,28 @@ ast::SourceFile *parse(std::string filename, symboltable::Namespace **name_space
     //module->accept(&pp);
     //pp.print();
 
-    if (inferrer.has_errors()) {
-        return nullptr;
-    }
+    return_if_has_errors(inferrer);
 
     typing::Checker type_checker(root_namespace);
     module->accept(&type_checker);
 
-    if (type_checker.has_errors()) {
-        return nullptr;
-    }
+    return_if_has_errors(type_checker);
 
-    *name_space = root_namespace;
-    return module;
+    return module.release();
 }
 
 int main(int argc, char *argv[]) {
     std::string filename = argv[1];
 
-    symboltable::Namespace *root_namespace;
-    auto module = parse(filename, &root_namespace);
+    auto root_namespace = std::make_unique<symboltable::Namespace>(nullptr);
+    auto module = parse(filename, root_namespace.get());
+
     if (module == nullptr) {
         return 1;
     }
 
     compiler::Compiler compiler;
-    if (!compiler.compile(module, root_namespace, filename)) {
+    if (!compiler.compile(module, root_namespace.get(), filename)) {
         return 2;
     }
 

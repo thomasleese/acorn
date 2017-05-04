@@ -32,7 +32,7 @@ Parser::~Parser() {
 
 }
 
-SourceFile *Parser::parse(std::string name) {
+std::unique_ptr<SourceFile> Parser::parse(std::string name) {
     return_if_false(fill_token());
     Token source_token = front_token();
 
@@ -53,7 +53,7 @@ SourceFile *Parser::parse(std::string name) {
             continue;
         }
 
-        imports.push_back(std::unique_ptr<SourceFile>(imported_module));
+        imports.push_back(std::move(imported_module));
     }
 
     Token block_token = front_token();
@@ -66,7 +66,10 @@ SourceFile *Parser::parse(std::string name) {
     }
 
     auto code = std::make_unique<Block>(block_token, std::move(expressions));
-    return new SourceFile(source_token, name, std::move(imports), std::move(code));
+
+    return std::make_unique<SourceFile>(
+        source_token, name, std::move(imports), std::move(code)
+    );
 }
 
 void Parser::debug(std::string line) {

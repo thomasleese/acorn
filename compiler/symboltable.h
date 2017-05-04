@@ -85,7 +85,7 @@ namespace acorn {
 
         class Builder : public ast::Visitor, public diagnostics::Reporter, ScopeFollower {
         public:
-            Builder();
+            explicit Builder(Namespace *root_namespace);
 
             bool is_at_root() const;
             Namespace *root_namespace();

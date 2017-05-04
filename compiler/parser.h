@@ -19,7 +19,7 @@ namespace acorn {
         explicit Parser(Lexer &lexer);
         ~Parser();
 
-        ast::SourceFile *parse(std::string name);
+        std::unique_ptr<ast::SourceFile> parse(std::string name);
 
     private:
         void debug(std::string line);
