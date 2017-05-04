@@ -887,8 +887,8 @@ void CodeGenerator::visit(ast::Selector *node) {
         node->field()->accept(this);
         pop_scope();
     } else if (record_type_type) {
-        operand->accept(this);
-        auto instance = pop_llvm_value();
+        auto instance = generate_llvm_value(operand);
+        return_if_null(instance);
 
         if (node->field()->value() == "new") {
             push_llvm_value(instance);
@@ -897,10 +897,10 @@ void CodeGenerator::visit(ast::Selector *node) {
             push_llvm_value(nullptr);
         }
     } else if (record_type) {
-        operand->accept(this);
-        auto instance = pop_llvm_value();
+        auto instance = generate_llvm_value(operand);
+        return_if_null(instance);
 
-        auto actual_thing = llvm::dyn_cast<llvm::LoadInst>(instance)->getPointerOperand();
+        auto actual_thing = llvm::cast<llvm::LoadInst>(instance)->getPointerOperand();
 
         auto record = dynamic_cast<types::Record *>(operand->type());
 
