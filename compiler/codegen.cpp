@@ -631,10 +631,10 @@ void CodeGenerator::visit(types::Module *type) {
     push_null_llvm_type_and_initialiser();
 }
 
-void CodeGenerator::visit(ast::Block *block) {
+void CodeGenerator::visit(ast::Block *node) {
     llvm::Value *last_value = nullptr;
 
-    for (auto &expression : block->expressions()) {
+    for (auto &expression : node->expressions()) {
         last_value = generate_llvm_value(expression);
         return_and_push_null_if_null(last_value);
     }
@@ -642,12 +642,12 @@ void CodeGenerator::visit(ast::Block *block) {
     push_llvm_value(last_value);
 }
 
-void CodeGenerator::visit(ast::Name *name) {
-    auto symbol = scope()->lookup(this, name);
+void CodeGenerator::visit(ast::Name *node) {
+    auto symbol = scope()->lookup(this, node);
     return_and_push_null_if_null(symbol);
 
     if (symbol->value == nullptr) {
-        report(InternalError(name, "The LLVM value of this symbol is null."));
+        report(InternalError(node, "The LLVM value of this symbol is null."));
         push_llvm_value(nullptr);
         return;
     }
@@ -683,35 +683,35 @@ void CodeGenerator::visit(ast::VariableDeclaration *node) {
     push_llvm_value(symbol->value);
 }
 
-void CodeGenerator::visit(ast::Int *expression) {
-    auto type = generate_type(expression);
+void CodeGenerator::visit(ast::Int *node) {
+    auto type = generate_type(node);
 
     uint64_t integer;
     std::stringstream ss;
-    ss << expression->value();
+    ss << node->value();
     ss >> integer;
 
     push_llvm_value(llvm::ConstantInt::get(type, integer, true));
 }
 
-void CodeGenerator::visit(ast::Float *expression) {
-    auto type = generate_type(expression);
+void CodeGenerator::visit(ast::Float *node) {
+    auto type = generate_type(node);
 
     double floatValue;
     std::stringstream ss;
-    ss << expression->value();
+    ss << node->value();
     ss >> floatValue;
 
     push_llvm_value(llvm::ConstantFP::get(type, floatValue));
 }
 
-void CodeGenerator::visit(ast::Complex *imaginary) {
-    report(InternalError(imaginary, "Not yet implemented."));
+void CodeGenerator::visit(ast::Complex *node) {
+    report(InternalError(node, "Not yet implemented."));
     push_llvm_value(nullptr);
 }
 
-void CodeGenerator::visit(ast::String *expression) {
-    report(InternalError(expression, "Not yet implemented."));
+void CodeGenerator::visit(ast::String *node) {
+    report(InternalError(node, "Not yet implemented."));
     push_llvm_value(nullptr);
 }
 
@@ -753,8 +753,8 @@ void CodeGenerator::visit(ast::List *node) {
     push_llvm_value(m_ir_builder->CreateLoad(instance));
 }
 
-void CodeGenerator::visit(ast::Dictionary *mapping) {
-    report(InternalError(mapping, "N/A"));
+void CodeGenerator::visit(ast::Dictionary *node) {
+    report(InternalError(node, "N/A"));
     push_llvm_value(nullptr);
 }
 
@@ -828,11 +828,11 @@ void CodeGenerator::visit(ast::Call *node) {
     push_llvm_value(call);
 }
 
-void CodeGenerator::visit(ast::CCall *ccall) {
-    auto return_type = generate_type(ccall);
+void CodeGenerator::visit(ast::CCall *node) {
+    auto return_type = generate_type(node);
 
     std::vector<llvm::Type *> parameters;
-    for (auto parameter : ccall->parameters()) {
+    for (auto parameter : node->parameters()) {
         parameters.push_back(generate_type(parameter));
     }
 
@@ -840,15 +840,15 @@ void CodeGenerator::visit(ast::CCall *ccall) {
         return_type, parameters, false
     );
 
-    auto llvm_function_name = ccall->name()->value();
+    auto llvm_function_name = node->name()->value();
 
     auto llvm_function = m_module->getOrInsertFunction(
         llvm_function_name, llvm_function_type
     );
 
     std::vector<llvm::Value *> arguments;
-    for (size_t i = 0; i < ccall->no_arguments(); i++) {
-        ccall->argument(i).accept(this);
+    for (size_t i = 0; i < node->no_arguments(); i++) {
+        node->argument(i).accept(this);
         auto arg_value = pop_llvm_value();
         return_and_push_null_if_null(arg_value);
         arguments.push_back(arg_value);
@@ -857,11 +857,11 @@ void CodeGenerator::visit(ast::CCall *ccall) {
     push_llvm_value(m_ir_builder->CreateCall(llvm_function, arguments));
 }
 
-void CodeGenerator::visit(ast::Cast *cast) {
-    cast->operand()->accept(this);
+void CodeGenerator::visit(ast::Cast *node) {
+    node->operand()->accept(this);
     auto value = pop_llvm_value();
 
-    auto destination_type = generate_type(cast);
+    auto destination_type = generate_type(node);
     auto new_value = m_ir_builder->CreateBitCast(value, destination_type);
     push_llvm_value(new_value);
 }
@@ -927,7 +927,7 @@ void CodeGenerator::visit(ast::Selector *node) {
     }
 }
 
-void CodeGenerator::visit(ast::While *expression) {
+void CodeGenerator::visit(ast::While *node) {
     auto entry_bb = create_basic_block("while_entry");
     auto loop_bb = create_basic_block("while_loop");
     auto join_bb = create_basic_block("while_join");
@@ -935,13 +935,13 @@ void CodeGenerator::visit(ast::While *expression) {
     m_ir_builder->CreateBr(entry_bb);
 
     m_ir_builder->SetInsertPoint(entry_bb);
-    expression->condition()->accept(this);
+    node->condition()->accept(this);
     auto condition = m_ir_builder->CreateICmpEQ(pop_llvm_value(), m_ir_builder->getInt1(true), "while_cond");
     m_ir_builder->CreateCondBr(condition, loop_bb, join_bb);
 
     m_ir_builder->SetInsertPoint(loop_bb);
 
-    expression->body()->accept(this);
+    node->body()->accept(this);
     auto then_value = pop_llvm_value();
     push_llvm_value(then_value);
     m_ir_builder->CreateBr(entry_bb);
@@ -949,8 +949,8 @@ void CodeGenerator::visit(ast::While *expression) {
     m_ir_builder->SetInsertPoint(join_bb);
 }
 
-void CodeGenerator::visit(ast::If *expression) {
-    auto condition = generate_llvm_value(expression->condition());
+void CodeGenerator::visit(ast::If *node) {
+    auto condition = generate_llvm_value(node->condition());
     return_and_push_null_if_null(condition);
 
     condition = m_ir_builder->CreateICmpEQ(condition, m_ir_builder->getTrue(), "if_cond");
@@ -962,7 +962,7 @@ void CodeGenerator::visit(ast::If *expression) {
     m_ir_builder->CreateCondBr(condition, then_bb, else_bb);
     m_ir_builder->SetInsertPoint(then_bb);
 
-    auto then_value = generate_llvm_value(expression->true_case());
+    auto then_value = generate_llvm_value(node->true_case());
     return_and_push_null_if_null(then_value);
     m_ir_builder->CreateBr(join_bb);
 
@@ -971,8 +971,8 @@ void CodeGenerator::visit(ast::If *expression) {
     m_ir_builder->SetInsertPoint(else_bb);
 
     llvm::Value *else_value = nullptr;
-    if (expression->has_false_case()) {
-        else_value = generate_llvm_value(expression->false_case());
+    if (node->has_false_case()) {
+        else_value = generate_llvm_value(node->false_case());
     } else {
         else_value = m_ir_builder->getInt1(false);
     }
@@ -983,7 +983,7 @@ void CodeGenerator::visit(ast::If *expression) {
 
     m_ir_builder->SetInsertPoint(join_bb);
 
-    auto type = generate_type(expression);
+    auto type = generate_type(node);
     return_and_push_null_if_null(type);
 
     auto phi = m_ir_builder->CreatePHI(type, 2, "iftmp");
@@ -999,12 +999,12 @@ void CodeGenerator::visit(ast::Return *node) {
     push_llvm_value(m_ir_builder->CreateRet(value));
 }
 
-void CodeGenerator::visit(ast::Spawn *expression) {
-    report(InternalError(expression, "N/A"));
+void CodeGenerator::visit(ast::Spawn *node) {
+    report(InternalError(node, "N/A"));
     push_llvm_value(nullptr);
 }
 
-void CodeGenerator::visit(ast::Switch *expression) {
+void CodeGenerator::visit(ast::Switch *node) {
     /*auto entry_block = create_basic_block("switch_entry");
     m_ir_builder->CreateBr(entry_block);
 
@@ -1026,7 +1026,7 @@ void CodeGenerator::visit(ast::Switch *expression) {
     auto exit_block = create_basic_block("switch_exit");
     m_ir_builder->SetInsertPoint(entry_block);*/
 
-    report(InternalError(expression, "N/A"));
+    report(InternalError(node, "N/A"));
     push_llvm_value(nullptr);
 }
 
@@ -1108,9 +1108,9 @@ void CodeGenerator::visit(ast::Def *node) {
     push_llvm_value(symbol->value);
 }
 
-void CodeGenerator::visit(ast::Type *definition) {
-    if (definition->builtin()) {
-        auto symbol = scope()->lookup(this, definition->name());
+void CodeGenerator::visit(ast::Type *node) {
+    if (node->builtin()) {
+        auto symbol = scope()->lookup(this, node->name());
         return_and_push_null_if_null(symbol);
 
         // FIXME create a proper type
@@ -1119,22 +1119,22 @@ void CodeGenerator::visit(ast::Type *definition) {
         return;
     }
 
-    if (definition->has_alias()) {
-        auto new_symbol = scope()->lookup(this, definition->name());
-        auto old_symbol = scope()->lookup(this, definition->alias());
+    if (node->has_alias()) {
+        auto new_symbol = scope()->lookup(this, node->name());
+        auto old_symbol = scope()->lookup(this, node->alias());
         new_symbol->value = old_symbol->value;
         push_llvm_value(new_symbol->value);
     } else {
-        auto node_type = dynamic_cast<types::RecordType *>(definition->type());
+        auto node_type = dynamic_cast<types::RecordType *>(node->type());
 
-        auto symbol = scope()->lookup(this, definition->name());
+        auto symbol = scope()->lookup(this, node->name());
         return_and_push_null_if_null(symbol);
 
-        auto llvm_type = generate_type(definition, node_type->constructor());
-        auto llvm_initialiser = take_initialiser(definition);
+        auto llvm_type = generate_type(node, node_type->constructor());
+        auto llvm_initialiser = take_initialiser(node);
 
         // variable to hold the type
-        auto variable = create_global_variable(llvm_type, llvm_initialiser, definition->name()->value());
+        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
         return_and_push_null_if_null(variable);
 
         symbol->value = variable;
@@ -1143,9 +1143,9 @@ void CodeGenerator::visit(ast::Type *definition) {
         auto function_type = node_type->constructor();
         auto method_type = function_type->get_method(0);
 
-        std::string mangled_name = codegen::mangle_method(definition->name()->value(), method_type);
+        std::string mangled_name = codegen::mangle_method(node->name()->value(), method_type);
 
-        auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(definition, method_type));
+        auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(node, method_type));
         auto llvm_specialised_method_type = llvm::cast<llvm::FunctionType>(llvm::cast<llvm::PointerType>(llvm_method_type->getElementType(0))->getElementType());
 
         auto method = create_function(llvm_specialised_method_type, mangled_name);
@@ -1176,17 +1176,17 @@ void CodeGenerator::visit(ast::Type *definition) {
     }
 }
 
-void CodeGenerator::visit(ast::Module *module) {
-    auto symbol = scope()->lookup(this, module->name());
+void CodeGenerator::visit(ast::Module *node) {
+    auto symbol = scope()->lookup(this, node->name());
     return_and_push_null_if_null(symbol);
 
     push_scope(symbol);
-    module->body()->accept(this);
+    node->body()->accept(this);
     pop_scope();
 }
 
-void CodeGenerator::visit(ast::Import *statement) {
-    report(InternalError(statement, "N/A"));
+void CodeGenerator::visit(ast::Import *node) {
+    report(InternalError(node, "N/A"));
 }
 
 void CodeGenerator::visit(ast::SourceFile *node) {

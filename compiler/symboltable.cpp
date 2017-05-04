@@ -214,43 +214,43 @@ void Builder::visit(ast::VariableDeclaration *node) {
     scope()->insert(this, node, symbol);
 }
 
-void Builder::visit(ast::Int *expression) {
+void Builder::visit(ast::Int *node) {
 
 }
 
-void Builder::visit(ast::Float *expression) {
+void Builder::visit(ast::Float *node) {
 
 }
 
-void Builder::visit(ast::Complex *imaginary) {
+void Builder::visit(ast::Complex *node) {
 
 }
 
-void Builder::visit(ast::String *expression) {
+void Builder::visit(ast::String *node) {
 
 }
 
-void Builder::visit(ast::List *sequence) {
+void Builder::visit(ast::List *node) {
 
 }
 
-void Builder::visit(ast::Dictionary *mapping) {
+void Builder::visit(ast::Dictionary *node) {
 
 }
 
-void Builder::visit(ast::Tuple *expression) {
+void Builder::visit(ast::Tuple *node) {
 
 }
 
-void Builder::visit(ast::Call *expression) {
+void Builder::visit(ast::Call *node) {
 
 }
 
-void Builder::visit(ast::CCall *expression) {
+void Builder::visit(ast::CCall *node) {
 
 }
 
-void Builder::visit(ast::Cast *expression) {
+void Builder::visit(ast::Cast *node) {
 
 }
 
@@ -262,7 +262,7 @@ void Builder::visit(ast::Assignment *node) {
     }
 }
 
-void Builder::visit(ast::Selector *expression) {
+void Builder::visit(ast::Selector *node) {
 
 }
 
@@ -281,11 +281,11 @@ void Builder::visit(ast::If *node) {
     }
 }
 
-void Builder::visit(ast::Return *expression) {
+void Builder::visit(ast::Return *node) {
 
 }
 
-void Builder::visit(ast::Spawn *expression) {
+void Builder::visit(ast::Spawn *node) {
 
 }
 
@@ -303,9 +303,9 @@ void Builder::visit(ast::Switch *node) {
     }
 }
 
-void Builder::visit(ast::Parameter *parameter) {
-    auto symbol = new Symbol(parameter->name()->value());
-    scope()->insert(this, parameter, symbol);
+void Builder::visit(ast::Parameter *node) {
+    auto symbol = new Symbol(node->name()->value());
+    scope()->insert(this, node, symbol);
 }
 
 void Builder::visit(ast::Let *node) {
@@ -363,46 +363,46 @@ void Builder::visit(ast::Def *node) {
     pop_scope();
 }
 
-void Builder::visit(ast::Type *definition) {
-    auto symbol = new Symbol(definition->name()->value());
-    symbol->is_builtin = definition->builtin();
-    scope()->insert(this, definition, symbol);
+void Builder::visit(ast::Type *node) {
+    auto symbol = new Symbol(node->name()->value());
+    symbol->is_builtin = node->builtin();
+    scope()->insert(this, node, symbol);
 
     symbol->nameSpace = new Namespace(scope());
 
     push_scope(symbol);
 
-    for (auto parameter : definition->name()->parameters()) {
+    for (auto parameter : node->name()->parameters()) {
         auto sym = new Symbol(parameter->value());
         scope()->insert(this, parameter, sym);
     }
 
-    if (definition->has_alias()) {
+    if (node->has_alias()) {
         // do nothing
     } else {
         auto constructor_symbol = new Symbol("new");
-        scope()->insert(this, definition, constructor_symbol);
+        scope()->insert(this, node, constructor_symbol);
     }
 
     pop_scope();
 }
 
-void Builder::visit(ast::Module *module) {
+void Builder::visit(ast::Module *node) {
     symboltable::Symbol *symbol;
-    if (scope()->has(module->name()->value())) {
-        symbol = scope()->lookup(this, module->name());
+    if (scope()->has(node->name()->value())) {
+        symbol = scope()->lookup(this, node->name());
     } else {
-        symbol = new Symbol(module->name());
+        symbol = new Symbol(node->name());
         symbol->nameSpace = new Namespace(scope());
-        scope()->insert(this, module, symbol);
+        scope()->insert(this, node, symbol);
     }
 
     push_scope(symbol);
-    module->body()->accept(this);
+    node->body()->accept(this);
     pop_scope();
 }
 
-void Builder::visit(ast::Import *statement) {
+void Builder::visit(ast::Import *node) {
 
 }
 
