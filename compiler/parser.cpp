@@ -843,12 +843,12 @@ std::unique_ptr<Def> Parser::read_def() {
 
     bool builtin = is_and_skip_token(Token::BuiltinKeyword);
 
-    std::unique_ptr<Expression> name;
+    std::unique_ptr<Selector> name;
 
     if (is_token(Token::Name)) {
-        name = read_name(true);
+        name = std::make_unique<Selector>(def_token, nullptr, read_name(true));
     } else if (is_token(Token::Operator)) {
-        name = read_operator(true);
+        name = std::make_unique<Selector>(def_token, nullptr, read_operator(true));
     } else {
         report(SyntaxError(front_token(), "identifier or operator"));
         return nullptr;

@@ -397,6 +397,10 @@ void Inferrer::visit(ast::Assignment *node) {
 }
 
 void Inferrer::visit(ast::Selector *node) {
+    if (!node->has_operand()) {
+        return;
+    }
+
     auto operand = node->operand();
 
     operand->accept(this);
@@ -533,7 +537,7 @@ void Inferrer::visit(ast::Let *node) {
 }
 
 void Inferrer::visit(ast::Def *node) {
-    auto name = static_cast<ast::Name *>(node->name());
+    auto name = node->name()->field();
 
     auto function_symbol = scope()->lookup(this, name);
     if (!function_symbol->has_type()) {
@@ -827,7 +831,10 @@ void Checker::visit(ast::Assignment *node) {
 }
 
 void Checker::visit(ast::Selector *node) {
-    node->operand()->accept(this);
+    if (node->has_operand()) {
+        node->operand()->accept(this);
+    }
+
     check_not_null(node);
 }
 
@@ -901,7 +908,7 @@ void Checker::visit(ast::Let *node) {
 void Checker::visit(ast::Def *node) {
     check_not_null(node);
 
-    auto name = static_cast<ast::Name *>(node->name());
+    auto name = node->name()->field();
 
     auto function_symbol = scope()->lookup(this, name);
 

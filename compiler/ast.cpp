@@ -399,7 +399,7 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-MethodSignature::MethodSignature(Token token, std::unique_ptr<Expression> name, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Name> given_return_type) : Node(token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
+MethodSignature::MethodSignature(Token token, std::unique_ptr<Selector> name, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Name> given_return_type) : Node(token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
     for (auto &parameter : parameters) {
         m_parameters.push_back(std::move(parameter));
     }
@@ -417,7 +417,7 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-Def::Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(token), m_builtin(builtin), m_body(std::move(body)) {
+Def::Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(token), m_builtin(builtin), m_body(std::move(body)) {
     m_signature = std::make_unique<MethodSignature>(token, std::move(name), std::move(parameters), std::move(given_return_type));
 }
 

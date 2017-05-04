@@ -330,7 +330,7 @@ void Builder::visit(ast::Let *node) {
 }
 
 void Builder::visit(ast::Def *node) {
-    auto name = static_cast<ast::Name *>(node->name());
+    auto name = node->name()->field();
 
     Symbol *function_symbol;
     if (scope()->has(name->value(), false)) {

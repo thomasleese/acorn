@@ -275,7 +275,7 @@ llvm::GlobalVariable *CodeGenerator::create_global_variable(llvm::Type *type, ll
 }
 
 void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *function) {
-    auto name = static_cast<ast::Name *>(node->name());
+    auto name = node->name()->field();
 
     for (auto param : name->parameters()) {
         auto symbol = scope()->lookup(this, node, param->value());
@@ -314,7 +314,7 @@ llvm::Value *CodeGenerator::generate_builtin_variable(ast::VariableDeclaration *
 }
 
 void CodeGenerator::generate_builtin_method_body(ast::Def *node, llvm::Function *function) {
-    std::string name = static_cast<ast::Name *>(node->name())->value();
+    std::string name = node->name()->field()->value();
 
     if (name == "*") {
         auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
@@ -1029,7 +1029,7 @@ void CodeGenerator::visit(ast::Let *node) {
 }
 
 void CodeGenerator::visit(ast::Def *node) {
-    auto function_symbol = scope()->lookup(this, static_cast<ast::Name *>(node->name()));
+    auto function_symbol = scope()->lookup(this, node->name()->field());
     auto function_type = static_cast<types::Function *>(function_symbol->type());
 
     if (!function_symbol->has_llvm_value()) {
@@ -1039,7 +1039,7 @@ void CodeGenerator::visit(ast::Def *node) {
         function_symbol->set_llvm_value(
             create_global_variable(
                 llvm_function_type, llvm_initialiser,
-                static_cast<ast::Name *>(node->name())->value()
+                node->name()->field()->value()
             )
         );
     }

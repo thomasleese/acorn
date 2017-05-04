@@ -304,6 +304,7 @@ namespace acorn {
             Selector(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> field);
             Selector(Token token, std::unique_ptr<Expression> operand, std::string field);
 
+            bool has_operand() const { return m_operand != nullptr; }
             Expression *operand() const { return m_operand.get(); }
             Name *field() const { return m_field.get(); }
 
@@ -444,9 +445,9 @@ namespace acorn {
 
         class MethodSignature : public Node {
         public:
-            MethodSignature(Token token, std::unique_ptr<Expression> name, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Name> given_return_type);
+            MethodSignature(Token token, std::unique_ptr<Selector> name, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Name> given_return_type);
 
-            Expression *name() const { return m_name.get(); }
+            Selector *name() const { return m_name.get(); }
 
             Parameter *parameter(size_t index) const { return m_parameters[index].get(); }
             std::vector<Parameter *> parameters() const;
@@ -454,19 +455,19 @@ namespace acorn {
             bool has_given_return_type() const { return static_cast<bool>(m_given_return_type); }
             Name *given_return_type() const { return m_given_return_type.get(); }
 
-            void accept(Visitor *visitor);
+            void accept(Visitor *visitor) override;
 
         private:
-            std::unique_ptr<Expression> m_name;
+            std::unique_ptr<Selector> m_name;
             std::vector<std::unique_ptr<Parameter>> m_parameters;
             std::unique_ptr<Name> m_given_return_type;
         };
 
         class Def : public Expression {
         public:
-            Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
+            Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
 
-            Expression *name() const { return m_signature->name(); }
+            Selector *name() const { return m_signature->name(); }
 
             bool builtin() const { return m_builtin; }
 
