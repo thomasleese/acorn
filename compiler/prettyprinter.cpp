@@ -72,8 +72,8 @@ void PrettyPrinter::visit(ast::Float *expression) {
     ss << indentation() << "(Float " << expression->value() << " [" << type_of(expression) << "])\n";
 }
 
-void PrettyPrinter::visit(ast::Complex *imaginary) {
-    ss << indentation() << "(Complex " << imaginary->value << ")\n";
+void PrettyPrinter::visit(ast::Complex *node) {
+    ss << indentation() << "(Complex " << "<unknown>" << ")\n";
 }
 
 void PrettyPrinter::visit(ast::String *expression) {
@@ -84,8 +84,8 @@ void PrettyPrinter::visit(ast::List *node) {
     ss << indentation() << "(List\n";
     indent++;
 
-    for (size_t i = 0; i < node->no_elements(); i++) {
-        node->element(i).accept(this);
+    for (auto element : node->elements()) {
+        element->accept(this);
     }
 
     indent--;
@@ -97,8 +97,8 @@ void PrettyPrinter::visit(ast::Dictionary *node) {
     indent++;
 
     for (size_t i = 0; i < node->no_elements(); i++) {
-        node->key(i).accept(this);
-        node->value(i).accept(this);
+        node->key(i)->accept(this);
+        node->value(i)->accept(this);
     }
 
     indent--;
@@ -109,8 +109,8 @@ void PrettyPrinter::visit(ast::Tuple *node) {
     ss << indentation() << "(Tuple\n";
     indent++;
 
-    for (size_t i = 0; i < node->no_elements(); i++) {
-        node->element(i).accept(this);
+    for (auto element : node->elements()) {
+        element->accept(this);
     }
 
     indent--;

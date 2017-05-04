@@ -253,22 +253,24 @@ void Inferrer::visit(ast::String *expression) {
 }
 
 void Inferrer::visit(ast::List *node) {
-    for (size_t i = 0; i < node->no_elements(); i++) {
-        node->element(i).accept(this);
+    auto elements = node->elements();
+
+    for (auto element : elements) {
+        element->accept(this);
     }
 
     std::vector<types::Type *> types;
-    for (size_t i = 0; i < node->no_elements(); i++) {
+    for (auto element : elements) {
         bool inList = false;
         for (auto type : types) {
-            if (type->is_compatible(node->element(i).type())) {
+            if (type->is_compatible(element->type())) {
                 inList = true;
                 break;
             }
         }
 
         if (!inList) {
-            types.push_back(node->element(i).type());
+            types.push_back(element->type());
         }
     }
 
@@ -290,9 +292,9 @@ void Inferrer::visit(ast::Dictionary *mapping) {
 void Inferrer::visit(ast::Tuple *node) {
     std::vector<types::Type *> element_types;
 
-    for (size_t i = 0; i < node->no_elements(); i++) {
-        node->element(i).accept(this);
-        element_types.push_back(node->element(i).type());
+    for (auto element : node->elements()) {
+        element->accept(this);
+        element_types.push_back(element->type());
     }
 
     node->set_type(new types::Tuple(element_types));
@@ -774,8 +776,8 @@ void Checker::visit(ast::String *expression) {
 }
 
 void Checker::visit(ast::List *node) {
-    for (size_t i = 0; i < node->no_elements(); i++) {
-        node->element(i).accept(this);
+    for (auto element : node->elements()) {
+        element->accept(this);
     }
 
     check_not_null(node);
@@ -783,16 +785,16 @@ void Checker::visit(ast::List *node) {
 
 void Checker::visit(ast::Dictionary *node) {
     for (size_t i = 0; i < node->no_elements(); i++) {
-        node->key(i).accept(this);
-        node->value(i).accept(this);
+        node->key(i)->accept(this);
+        node->value(i)->accept(this);
     }
 
     check_not_null(node);
 }
 
 void Checker::visit(ast::Tuple *node) {
-    for (size_t i = 0; i < node->no_elements(); i++) {
-        node->element(i).accept(this);
+    for (auto element : node->elements()) {
+        element->accept(this);
     }
 
     check_not_null(node);

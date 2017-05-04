@@ -98,22 +98,6 @@ VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name
 
 }
 
-Name *VariableDeclaration::name() const {
-    return m_name.get();
-}
-
-bool VariableDeclaration::has_given_type() {
-    return m_given_type != nullptr;
-}
-
-Name *VariableDeclaration::given_type() const {
-    return m_given_type.get();
-}
-
-bool VariableDeclaration::builtin() const {
-    return m_builtin;
-}
-
 void VariableDeclaration::set_type(types::Type *type) {
     Expression::set_type(type);
     m_name->set_type(type);
@@ -127,20 +111,12 @@ Int::Int(Token token, std::string value) : Expression(token), m_value(value) {
 
 }
 
-std::string Int::value() const {
-    return m_value;
-}
-
 void Int::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
 Float::Float(Token token, std::string value) : Expression(token), m_value(value) {
 
-}
-
-std::string Float::value() const {
-    return m_value;
 }
 
 void Float::accept(Visitor *visitor) {
@@ -155,10 +131,6 @@ String::String(Token token, std::string value) : Expression(token), m_value(valu
 
 }
 
-std::string String::value() const {
-    return m_value;
-}
-
 void String::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -169,12 +141,12 @@ List::List(Token token, std::vector<std::unique_ptr<Expression>> elements) : Exp
     }
 }
 
-size_t List::no_elements() const {
-    return m_elements.size();
-}
-
-Expression &List::element(size_t index) const {
-    return *m_elements[index];
+std::vector<Expression *> List::elements() const {
+    std::vector<Expression *> elements;
+    for (auto &element : m_elements) {
+        elements.push_back(element.get());
+    }
+    return elements;
 }
 
 void List::accept(Visitor *visitor) {
@@ -193,19 +165,6 @@ Dictionary::Dictionary(Token token, std::vector<std::unique_ptr<Expression>> key
     }
 }
 
-size_t Dictionary::no_elements() const {
-    assert(m_keys.size() == m_values.size());
-    return m_keys.size();
-}
-
-Expression &Dictionary::key(size_t index) const {
-    return *m_keys[index];
-}
-
-Expression &Dictionary::value(size_t index) const {
-    return *m_values[index];
-}
-
 void Dictionary::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -214,6 +173,14 @@ Tuple::Tuple(Token token, std::vector<std::unique_ptr<Expression>> elements) : E
     for (auto &element : elements) {
         m_elements.push_back(std::move(element));
     }
+}
+
+std::vector<Expression *> Tuple::elements() const {
+    std::vector<Expression *> elements;
+    for (auto &element : m_elements) {
+        elements.push_back(element.get());
+    }
+    return elements;
 }
 
 void Tuple::accept(Visitor *visitor) {

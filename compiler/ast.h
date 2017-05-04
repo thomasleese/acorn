@@ -103,12 +103,12 @@ namespace acorn {
         public:
             VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type = nullptr, bool builtin = false);
 
-            Name *name() const;
+            Name *name() const { return m_name.get(); }
 
-            bool has_given_type();
-            Name *given_type() const;
+            bool has_given_type() { return static_cast<bool>(m_given_type); }
+            Name *given_type() const { return m_given_type.get(); }
 
-            bool builtin() const;
+            bool builtin() const { return m_builtin; }
 
             void set_type(types::Type *type) override;
 
@@ -124,7 +124,7 @@ namespace acorn {
         public:
             Int(Token token, std::string value);
 
-            std::string value() const;
+            std::string value() const { return m_value; }
 
             void accept(Visitor *visitor);
 
@@ -136,7 +136,7 @@ namespace acorn {
         public:
             Float(Token token, std::string value);
 
-            std::string value() const;
+            std::string value() const { return m_value; }
 
             void accept(Visitor *visitor);
 
@@ -148,8 +148,6 @@ namespace acorn {
         public:
             using Expression::Expression;
 
-            std::string value;
-
             void accept(Visitor *visitor);
         };
 
@@ -157,7 +155,7 @@ namespace acorn {
         public:
             String(Token token, std::string value);
 
-            std::string value() const;
+            std::string value() const { return m_value; }
 
             void accept(Visitor *visitor);
 
@@ -169,8 +167,10 @@ namespace acorn {
         public:
             List(Token token, std::vector<std::unique_ptr<Expression>> elements);
 
-            size_t no_elements() const;
-            Expression &element(size_t index) const;
+            bool has_elements() const { return !m_elements.empty(); }
+            size_t elements_size() const { return m_elements.size(); }
+            Expression *element(size_t index) const { return m_elements[index].get(); }
+            std::vector<Expression *> elements() const;
 
             void accept(Visitor *visitor);
 
@@ -182,9 +182,10 @@ namespace acorn {
         public:
             Dictionary(Token token, std::vector<std::unique_ptr<Expression>> keys, std::vector<std::unique_ptr<Expression>> values);
 
-            size_t no_elements() const;
-            Expression &key(size_t index) const;
-            Expression &value(size_t index) const;
+            bool has_elements() const { return !m_keys.empty(); }
+            size_t no_elements() const { return m_keys.size(); }
+            Expression *key(size_t index) const { return m_keys[index].get(); }
+            Expression *value(size_t index) const { return m_values[index].get(); }
 
             void accept(Visitor *visitor);
 
@@ -197,8 +198,10 @@ namespace acorn {
         public:
             Tuple(Token token, std::vector<std::unique_ptr<Expression>> elements);
 
-            size_t no_elements() const { return m_elements.size(); }
-            Expression &element(size_t index) const { return *m_elements[index]; }
+            bool has_elements() const { return !m_elements.empty(); }
+            size_t elements_size() const { return m_elements.size(); }
+            Expression *element(size_t index) const { return m_elements[index].get(); }
+            std::vector<Expression *> elements() const;
 
             void accept(Visitor *visitor);
 
