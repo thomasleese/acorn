@@ -531,6 +531,20 @@ namespace acorn {
             std::unique_ptr<Block> m_body;
         };
 
+        class Protocol : public Expression {
+        public:
+            Protocol(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<MethodSignature>> methods);
+
+            Name *name() const { return m_name.get(); }
+            std::vector<MethodSignature *> methods() const;
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Name> m_name;
+            std::vector<std::unique_ptr<MethodSignature>> m_methods;
+        };
+
         class Import : public Expression {
         public:
             Import(Token token, std::unique_ptr<String> path);

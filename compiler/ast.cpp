@@ -481,6 +481,24 @@ void Module::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+Protocol::Protocol(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<MethodSignature>> methods) : Expression(token), m_name(std::move(name)) {
+    for (auto &method : methods) {
+        m_methods.push_back(std::move(method));
+    }
+}
+
+std::vector<MethodSignature *> Protocol::methods() const {
+    std::vector<MethodSignature *> methods;
+    for (auto &method : m_methods) {
+        methods.push_back(method.get());
+    }
+    return methods;
+}
+
+void Protocol::accept(Visitor *visitor) {
+
+}
+
 Import::Import(Token token, std::unique_ptr<String> path) : Expression(token), m_path(std::move(path)) {
 
 }
