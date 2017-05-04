@@ -136,27 +136,28 @@ bool Inferrer::infer_call_type_parameters(ast::Call *call, std::vector<types::Ty
 
     int i = 0;
     for (auto t : parameter_types) {
+        auto inferred_type_parameters = call->inferred_type_parameters();
+
         auto dt = dynamic_cast<types::Parameter *>(t);
         if (dt) {
-            auto it = call->inferred_type_parameters.find(dt->type());
-            if (it != call->inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
+            auto it = inferred_type_parameters.find(dt->type());
+            if (it != inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
                 report(TypeMismatchError(call, argument_types[i], it->second));
                 return false;
             } else {
-                call->inferred_type_parameters[dt->type()] = argument_types[i];
+                call->add_inferred_type_parameter(dt->type(), argument_types[i]);
             }
         } else {
             auto dt2 = dynamic_cast<types::ParameterType *>(t);
             if (dt2) {
                 auto arg = dynamic_cast<types::TypeType *>(argument_types[i]);
-                assert(arg);
 
-                auto it = call->inferred_type_parameters.find(dt2);
-                if (it != call->inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
+                auto it = inferred_type_parameters.find(dt2);
+                if (it != inferred_type_parameters.end() && !it->second->is_compatible(argument_types[i])) {
                     report(TypeMismatchError(call, argument_types[i], it->second));
                     return false;
                 } else {
-                    call->inferred_type_parameters[dt2] = arg->create(this, call);
+                    call->add_inferred_type_parameter(dt2, arg->create(this, call));
                 }
             } else {
                 if (!infer_call_type_parameters(call, t->parameters(), argument_types[i]->parameters())) {
@@ -338,11 +339,11 @@ void Inferrer::visit(ast::Call *node) {
     }
 
     auto return_type = replace_type_parameters(method->return_type(),
-                                               node->inferred_type_parameters);
+                                               node->inferred_type_parameters());
 
     if (method->is_generic()) {
         node->set_method_specialisation_index(method->no_generic_specialisation());
-        method->add_generic_specialisation(node->inferred_type_parameters);
+        method->add_generic_specialisation(node->inferred_type_parameters());
     }
 
     node->set_type(return_type);
@@ -354,8 +355,8 @@ void Inferrer::visit(ast::CCall *node) {
         param->set_type(instance_type(param));
     }
 
-    for (size_t i = 0; i < node->no_arguments(); i++) {
-        node->argument(i).accept(this);
+    for (auto argument : node->arguments()) {
+        argument->accept(this);
     }
 
     // TODO check arg and param types match
@@ -784,7 +785,7 @@ void Checker::visit(ast::List *node) {
 }
 
 void Checker::visit(ast::Dictionary *node) {
-    for (size_t i = 0; i < node->no_elements(); i++) {
+    for (size_t i = 0; i < node->elements_size(); i++) {
         node->key(i)->accept(this);
         node->value(i)->accept(this);
     }
@@ -823,8 +824,8 @@ void Checker::visit(ast::CCall *node) {
 
     node->given_return_type()->accept(this);
 
-    for (size_t i = 0; i < node->no_arguments(); i++) {
-        node->argument(i).accept(this);
+    for (auto argument : node->arguments()) {
+        argument->accept(this);
     }
 
     check_not_null(node);

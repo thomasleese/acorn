@@ -847,9 +847,8 @@ void CodeGenerator::visit(ast::CCall *node) {
     );
 
     std::vector<llvm::Value *> arguments;
-    for (size_t i = 0; i < node->no_arguments(); i++) {
-        node->argument(i).accept(this);
-        auto arg_value = pop_llvm_value();
+    for (auto argument : node->arguments()) {
+        auto arg_value = generate_llvm_value(argument);
         return_and_push_null_if_null(arg_value);
         arguments.push_back(arg_value);
     }

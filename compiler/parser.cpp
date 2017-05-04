@@ -909,34 +909,43 @@ std::unique_ptr<Type> Parser::read_type() {
     bool builtin = is_and_skip_token(Token::BuiltinKeyword);
 
     auto name = read_name(true);
+    return_if_null(name);
 
-    auto definition = std::make_unique<Type>(type_token, std::move(name), builtin);
-
-    if (!builtin) {
-        if (is_and_skip_token(Token::AsKeyword)) {
-            auto alias = read_name(true);
-            return_if_null(alias);
-            definition->set_alias(std::move(alias));
-        } else {
-            return_if_false(skip_token(Token::Indent));
-
-            while (!is_token(Token::Deindent)) {
-                auto field_name = read_name(false);
-                return_if_null(field_name);
-
-                skip_token(Token::AsKeyword);
-
-                auto field_type = read_name(true);
-                return_if_null(field_name);
-
-                definition->add_field(std::move(field_name), std::move(field_type));
-            }
-
-            return_if_false(skip_deindent_and_end_token());
-        }
+    if (builtin) {
+        return std::make_unique<Type>(type_token, std::move(name));
     }
 
-    return definition;
+    if (is_and_skip_token(Token::AsKeyword)) {
+        auto alias = read_name(true);
+        return_if_null(alias);
+
+        return std::make_unique<Type>(
+            type_token, std::move(name), std::move(alias)
+        );
+    } else {
+        return_if_false(skip_token(Token::Indent));
+
+        std::vector<std::unique_ptr<Name>> field_names;
+        std::vector<std::unique_ptr<Name>> field_types;
+
+        while (!is_token(Token::Deindent)) {
+            auto field_name = read_name(false);
+            return_if_null(field_name);
+            field_names.push_back(std::move(field_name));
+
+            skip_token(Token::AsKeyword);
+
+            auto field_type = read_name(true);
+            return_if_null(field_type);
+            field_types.push_back(std::move(field_type));
+        }
+
+        return_if_false(skip_deindent_and_end_token());
+
+        return std::make_unique<Type>(
+            type_token, std::move(name), std::move(field_names), std::move(field_types)
+        );
+    }
 }
 
 std::unique_ptr<Module> Parser::read_module() {

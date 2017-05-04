@@ -183,7 +183,7 @@ namespace acorn {
             Dictionary(Token token, std::vector<std::unique_ptr<Expression>> keys, std::vector<std::unique_ptr<Expression>> values);
 
             bool has_elements() const { return !m_keys.empty(); }
-            size_t no_elements() const { return m_keys.size(); }
+            size_t elements_size() const { return m_keys.size(); }
             Expression *key(size_t index) const { return m_keys[index].get(); }
             Expression *value(size_t index) const { return m_values[index].get(); }
 
@@ -219,19 +219,20 @@ namespace acorn {
             Expression *operand() const { return m_operand.get(); }
             types::Type *operand_type() const { return m_operand->type(); }
 
-            std::map<types::ParameterType *, types::Type *> inferred_type_parameters;
-
             std::vector<Expression *> positional_arguments() const;
             std::vector<types::Type *> positional_argument_types() const;
 
             std::map<std::string, Expression *> keyword_arguments() const;
             std::map<std::string, types::Type *> keyword_argument_types() const;
 
-            void set_method_index(int index);
-            int get_method_index() const;
+            void add_inferred_type_parameter(types::ParameterType *parameter, types::Type *type) { m_inferred_type_parameters[parameter] = type; }
+            std::map<types::ParameterType *, types::Type *> inferred_type_parameters() const { return m_inferred_type_parameters; }
 
-            void set_method_specialisation_index(int index);
-            int get_method_specialisation_index() const;
+            void set_method_index(int index) { m_method_index = index; }
+            int get_method_index() const { return m_method_index; }
+
+            void set_method_specialisation_index(int index) { m_method_specialisation_index = index; }
+            int get_method_specialisation_index() const { return m_method_specialisation_index; }
 
             void accept(Visitor *visitor);
 
@@ -245,6 +246,8 @@ namespace acorn {
             std::vector<std::unique_ptr<Expression>> m_positional_arguments;
             std::map<std::string, std::unique_ptr<Expression>> m_keyword_arguments;
 
+            std::map<types::ParameterType *, types::Type *> m_inferred_type_parameters;
+
             int m_method_index;
             int m_method_specialisation_index;
         };
@@ -253,12 +256,10 @@ namespace acorn {
         public:
             CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Expression>> arguments);
 
-            Name *name() const;
+            Name *name() const { return m_name.get(); }
             std::vector<Name *> parameters() const;
-            Name *given_return_type() const;
-
-            size_t no_arguments() const { return m_arguments.size(); }
-            Expression &argument(size_t index) const { return *m_arguments[index]; }
+            Name *given_return_type() const { return m_given_return_type.get(); }
+            std::vector<Expression *> arguments() const;
 
             void accept(Visitor *visitor);
 
@@ -430,9 +431,9 @@ namespace acorn {
         public:
             explicit Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type);
 
-            bool inout() const;
-            Name *name() const;
-            Name *given_type() const;
+            bool inout() const { return m_inout; }
+            Name *name() const { return m_name.get(); }
+            Name *given_type() const { return m_given_type.get(); }
 
             void accept(Visitor *visitor);
 
@@ -448,16 +449,15 @@ namespace acorn {
 
             Expression *name() const { return m_name.get(); }
 
-            bool builtin() const;
+            bool builtin() const { return m_builtin; }
 
+            Parameter *parameter(size_t index) const { return m_parameters[index].get(); }
             std::vector<Parameter *> parameters() const;
-            Parameter *parameter(size_t index) const;
-            size_t no_parameters() const;
 
             Expression *body() const { return m_body.get(); }
 
-            Name *given_return_type() const;
-            bool has_given_return_type() const;
+            bool has_given_return_type() const { return static_cast<bool>(m_given_return_type); }
+            Name *given_return_type() const { return m_given_return_type.get(); }
 
             void set_type(types::Type *type) override;
 
@@ -473,41 +473,39 @@ namespace acorn {
 
         class Type : public Expression {
         public:
-            Type(Token token, std::unique_ptr<Name> name, bool builtin);
+            Type(Token token, std::unique_ptr<Name> name);
+            Type(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias);
+            Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types);
 
-            Name *name() const;
-            void set_name(Name *name);
+            Name *name() const { return m_name.get(); }
 
-            bool builtin() const;
-            void set_builtin(bool builtin);
-
-            void set_type(types::Type *type) override;
+            bool builtin() const { return m_builtin; }
 
             bool has_alias() const { return static_cast<bool>(m_alias); }
             Name *alias() const { return m_alias.get(); }
-            void set_alias(std::unique_ptr<Name> alias) { m_alias = std::move(alias); }
 
-            void add_field(std::unique_ptr<Name> name, std::unique_ptr<Name> type);
             std::vector<Name *> field_names() const;
             std::vector<Name *> field_types() const;
+
+            void set_type(types::Type *type) override;
 
             void accept(Visitor *visitor) override;
 
         private:
             std::unique_ptr<Name> m_name;
+            bool m_builtin;
             std::unique_ptr<Name> m_alias;
             std::vector<std::unique_ptr<Name>> m_field_names;
             std::vector<std::unique_ptr<Name>> m_field_types;
-            bool m_builtin;
         };
 
         class MethodSignature : public Node {
         public:
             MethodSignature(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameter_types, std::unique_ptr<Name> return_type);
 
-            Name *name() const;
+            Name *name() const { return m_name.get(); }
             std::vector<Name *> parameter_types() const;
-            Name *return_type() const;
+            Name *return_type() const { return m_return_type.get(); }
 
             void accept(Visitor *visitor);
 
@@ -548,11 +546,7 @@ namespace acorn {
             SourceFile(Token token, std::string name, std::vector<std::unique_ptr<SourceFile>> imports, std::unique_ptr<Block> code);
 
             std::string name() const { return m_name; }
-
-            size_t no_imports() const { return m_imports.size(); }
-            SourceFile *import(size_t index) const { return m_imports[index].get(); }
             std::vector<SourceFile *> imports() const;
-
             Block *code() const { return m_code.get(); }
 
             void accept(Visitor *visitor);

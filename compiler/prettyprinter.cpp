@@ -93,7 +93,7 @@ void PrettyPrinter::visit(ast::Dictionary *node) {
     ss << indentation() << "(Dictionary\n";
     indent++;
 
-    for (size_t i = 0; i < node->no_elements(); i++) {
+    for (size_t i = 0; i < node->elements_size(); i++) {
         node->key(i)->accept(this);
         node->value(i)->accept(this);
     }
@@ -144,8 +144,8 @@ void PrettyPrinter::visit(ast::CCall *node) {
 
     node->given_return_type()->accept(this);
 
-    for (size_t i = 0; i < node->no_arguments(); i++) {
-        node->argument(i).accept(this);
+    for (auto argument : node->arguments()) {
+        argument->accept(this);
     }
 
     indent--;
