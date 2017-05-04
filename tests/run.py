@@ -15,6 +15,7 @@ def test(filename):
                        stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError as e:
         print(e.output.decode('UTF-8'))
+        print("Fail!")
         return False
 
     subprocess.check_call(['./' + executable_name])

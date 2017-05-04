@@ -1138,6 +1138,7 @@ void CodeGenerator::visit(ast::Type *node) {
         std::string mangled_name = codegen::mangle_method(node->name()->value(), method_type);
 
         auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(node, method_type));
+
         auto llvm_specialised_method_type = llvm::cast<llvm::FunctionType>(llvm::cast<llvm::PointerType>(llvm_method_type->getElementType(0))->getElementType());
 
         auto method = create_function(llvm_specialised_method_type, mangled_name);
