@@ -442,32 +442,50 @@ namespace acorn {
             std::unique_ptr<Name> m_given_type;
         };
 
-        class Def : public Expression {
+        class MethodSignature : public Node {
         public:
-            Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
+            MethodSignature(Token token, std::unique_ptr<Expression> name, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Name> given_return_type);
 
             Expression *name() const { return m_name.get(); }
-
-            bool builtin() const { return m_builtin; }
 
             Parameter *parameter(size_t index) const { return m_parameters[index].get(); }
             std::vector<Parameter *> parameters() const;
 
-            Expression *body() const { return m_body.get(); }
-
             bool has_given_return_type() const { return static_cast<bool>(m_given_return_type); }
             Name *given_return_type() const { return m_given_return_type.get(); }
+
+            void accept(Visitor *visitor);
+
+        private:
+            std::unique_ptr<Expression> m_name;
+            std::vector<std::unique_ptr<Parameter>> m_parameters;
+            std::unique_ptr<Name> m_given_return_type;
+        };
+
+        class Def : public Expression {
+        public:
+            Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
+
+            Expression *name() const { return m_signature->name(); }
+
+            bool builtin() const { return m_builtin; }
+
+            Parameter *parameter(size_t index) const { return m_signature->parameter(index); }
+            std::vector<Parameter *> parameters() const { return m_signature->parameters(); };
+
+            Expression *body() const { return m_body.get(); }
+
+            bool has_given_return_type() const { return m_signature->has_given_return_type(); }
+            Name *given_return_type() const { return m_signature->given_return_type(); }
 
             void set_type(types::Type *type) override;
 
             void accept(Visitor *visitor) override;
 
         private:
-            std::unique_ptr<Expression> m_name;
+            std::unique_ptr<MethodSignature> m_signature;
             bool m_builtin;
-            std::vector<std::unique_ptr<Parameter>> m_parameters;
             std::unique_ptr<Expression> m_body;
-            std::unique_ptr<Name> m_given_return_type;
         };
 
         class Type : public Expression {
@@ -496,22 +514,6 @@ namespace acorn {
             std::unique_ptr<Name> m_alias;
             std::vector<std::unique_ptr<Name>> m_field_names;
             std::vector<std::unique_ptr<Name>> m_field_types;
-        };
-
-        class MethodSignature : public Node {
-        public:
-            MethodSignature(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameter_types, std::unique_ptr<Name> return_type);
-
-            Name *name() const { return m_name.get(); }
-            std::vector<Name *> parameter_types() const;
-            Name *return_type() const { return m_return_type.get(); }
-
-            void accept(Visitor *visitor);
-
-        private:
-            std::unique_ptr<Name> m_name;
-            std::vector<std::unique_ptr<Name>> m_parameter_types;
-            std::unique_ptr<Name> m_return_type;
         };
 
         class Module : public Expression {
