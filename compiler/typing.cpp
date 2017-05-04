@@ -22,20 +22,14 @@ using namespace acorn::typing;
 #define return_if_false(thing) if (thing == false) return;
 #define return_if_null_type(node) return_if_false(node->has_type())
 
-Inferrer::Inferrer(symboltable::Namespace *root_namespace)
-        : m_in_if(false), m_as_type(false)
-{
-    push_scope(root_namespace);
-}
-
-Inferrer::~Inferrer() {
-
+Inferrer::Inferrer(symboltable::Namespace *scope) {
+    push_scope(scope);
 }
 
 types::TypeType *Inferrer::find_type_constructor(ast::Node *node, std::string name) {
     auto symbol = scope()->lookup(this, node, name);
     return_null_if_null(symbol);
-    return dynamic_cast<types::TypeType *>(symbol->type);
+    return dynamic_cast<types::TypeType *>(symbol->type());
 }
 
 types::TypeType *Inferrer::find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
@@ -213,12 +207,12 @@ void Inferrer::visit(ast::Name *node) {
         return;
     }
 
-    if (dynamic_cast<types::TypeType *>(symbol->type)) {
+    if (dynamic_cast<types::TypeType *>(symbol->type())) {
         node->set_type(find_type(node));
     } else {
         // it *must* be empty
         assert(node->parameters.empty());
-        node->set_type(symbol->type);
+        node->set_type(symbol->type());
     }
 }
 
@@ -228,12 +222,10 @@ void Inferrer::visit(ast::VariableDeclaration *node) {
     auto symbol = scope()->lookup(this, node->name());
 
     if (node->has_given_type()) {
-        m_as_type = true;
         node->given_type()->accept(this);
-        m_as_type = false;
 
         node->set_type(instance_type(node->given_type()));
-        symbol->type = node->type();
+        symbol->copy_type_from(node);
     }
 }
 
@@ -420,10 +412,10 @@ void Inferrer::visit(ast::Selector *node) {
         auto symbol = scope()->lookup(this, module_name);
         return_if_null(symbol);
 
-        auto child_symbol = symbol->nameSpace->lookup(this, node->field());
+        auto child_symbol = symbol->scope()->lookup(this, node->field());
         return_if_null(child_symbol);
 
-        node->set_type(child_symbol->type);
+        node->set_type(child_symbol->type());
     } else if (record_type) {
         if (node->field()->value() == "new") {
             node->set_type(record_type->constructor());
@@ -452,9 +444,7 @@ void Inferrer::visit(ast::While *node) {
 }
 
 void Inferrer::visit(ast::If *node) {
-    m_in_if = true;
     node->condition()->accept(this);
-    m_in_if = false;
 
     node->true_case()->accept(this);
     if (node->has_false_case()) {
@@ -471,8 +461,8 @@ void Inferrer::visit(ast::Return *node) {
     expression->accept(this);
     return_if_null_type(expression)
 
-    if (!m_functionStack.empty()) {
-        auto def = m_functionStack.back();
+    if (!m_function_stack.empty()) {
+        auto def = m_function_stack.back();
         auto method = static_cast<types::Method *>(def->type());
         return_if_null(method);
 
@@ -528,7 +518,7 @@ void Inferrer::visit(ast::Parameter *node) {
     node->set_type(instance_type(node->given_type()));
     return_if_null_type(node);
 
-    symbol->type = node->type();
+    symbol->copy_type_from(node);
 }
 
 void Inferrer::visit(ast::Let *node) {
@@ -546,8 +536,8 @@ void Inferrer::visit(ast::Def *node) {
     auto name = static_cast<ast::Name *>(node->name());
 
     auto function_symbol = scope()->lookup(this, name);
-    if (function_symbol->type == nullptr) {
-        function_symbol->type = new types::Function();
+    if (!function_symbol->has_type()) {
+        function_symbol->set_type(new types::Function());
     }
 
     push_scope(function_symbol);
@@ -558,7 +548,7 @@ void Inferrer::visit(ast::Def *node) {
 
     for (auto parameter : name->parameters()) {
         auto parameter_symbol = scope()->lookup(this, parameter);
-        parameter_symbol->type = new types::ParameterType();
+        parameter_symbol->set_type(new types::ParameterType());
         parameter->accept(this);
     }
 
@@ -603,7 +593,7 @@ void Inferrer::visit(ast::Def *node) {
 
     method->set_is_generic(name->has_parameters());
 
-    auto function_type = static_cast<types::Function *>(function_symbol->type);
+    auto function_type = static_cast<types::Function *>(function_symbol->type());
     function_type->add_method(method);
 
     pop_scope();
@@ -613,9 +603,9 @@ void Inferrer::visit(ast::Def *node) {
     node->set_type(method);
     symbol->copy_type_from(node);
 
-    m_functionStack.push_back(node);
+    m_function_stack.push_back(node);
 
-    m_functionStack.pop_back();
+    m_function_stack.pop_back();
 
     pop_scope();
 }
@@ -634,7 +624,7 @@ void Inferrer::visit(ast::Type *node) {
     std::vector<types::ParameterType *> input_parameters;
     for (auto t : node->name()->parameters()) {
         auto sym = scope()->lookup(this, t);
-        sym->type = new types::ParameterType();
+        sym->set_type(new types::ParameterType());
 
         t->accept(this);
 
@@ -646,9 +636,7 @@ void Inferrer::visit(ast::Type *node) {
 
     types::Type *type;
     if (node->has_alias()) {
-        m_as_type = true;
         node->alias()->accept(this);
-        m_as_type = false;
 
         auto alias = dynamic_cast<types::TypeType *>(node->alias()->type());
         assert(alias);
@@ -663,9 +651,7 @@ void Inferrer::visit(ast::Type *node) {
         }
 
         for (auto type : node->field_types()) {
-            m_as_type = true;
             type->accept(this);
-            m_as_type = false;
 
             auto type_type = dynamic_cast<types::TypeType *>(type->type());
             assert(type_type);
@@ -675,8 +661,8 @@ void Inferrer::visit(ast::Type *node) {
         type = new types::RecordType(input_parameters, field_names, field_types);
     }
 
-    symbol->type = type;
     node->set_type(type);
+    symbol->copy_type_from(node);
 
     pop_scope();
 }
@@ -709,12 +695,8 @@ void Inferrer::visit(ast::SourceFile *node) {
     node->copy_type_from(node->code());
 }
 
-Checker::Checker(symboltable::Namespace *root_namespace) {
-    push_scope(root_namespace);
-}
-
-Checker::~Checker() {
-
+Checker::Checker(symboltable::Namespace *scope) {
+    push_scope(scope);
 }
 
 void Checker::check_types(ast::Expression *lhs, ast::Expression *rhs) {

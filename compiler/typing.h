@@ -27,8 +27,7 @@ namespace acorn {
         class Inferrer : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower {
 
         public:
-            explicit Inferrer(symboltable::Namespace *root_namespace);
-            ~Inferrer();
+            explicit Inferrer(symboltable::Namespace *scope);
 
         private:
             types::TypeType *find_type_constructor(ast::Node *node, std::string name);
@@ -79,17 +78,14 @@ namespace acorn {
             void visit(ast::SourceFile *node);
 
         private:
-            std::vector<ast::Def *> m_functionStack;
-            bool m_in_if;
-            bool m_as_type;
+            std::vector<ast::Def *> m_function_stack;
 
         };
 
         class Checker : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower {
 
         public:
-            explicit Checker(symboltable::Namespace *root_namespace);
-            ~Checker();
+            explicit Checker(symboltable::Namespace *scope);
 
         private:
             void check_types(ast::Expression *lhs, ast::Expression *rhs);

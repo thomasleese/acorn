@@ -36,7 +36,7 @@ namespace acorn {
             Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Node *current_node, std::string name) const;
             Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Name *identifier) const;
             Symbol *lookup_by_node(diagnostics::Reporter *diagnostics, ast::Node *node) const;
-            void insert(diagnostics::Reporter *diagnostics, ast::Node *currentNode, Symbol *symbol);
+            void insert(diagnostics::Reporter *diagnostics, ast::Node *current_node, std::unique_ptr<Symbol> symbol);
             void rename(diagnostics::Reporter *diagnostics, Symbol *symbol, std::string new_name);
             unsigned long size() const;
             std::vector<Symbol *> symbols() const;
@@ -46,20 +46,32 @@ namespace acorn {
 
         private:
             Namespace *m_parent;
-            std::map<std::string, Symbol *> m_symbols;
+            std::map<std::string, std::unique_ptr<Symbol>> m_symbols;
         };
 
         class Symbol {
         public:
-            explicit Symbol(std::string name);
-            explicit Symbol(ast::Name *name);
+            Symbol(std::string name, bool builtin);
+            Symbol(ast::Name *name, bool builtin);
 
-            std::string name;
-            types::Type *type;
-            llvm::Value *value;
-            Namespace *nameSpace;
-            ast::Node *node;
-            bool is_builtin;
+            std::string name() const { return m_name; }
+            void set_name(std::string name) { m_name = name; }
+
+            bool builtin() const { return m_builtin; }
+
+            bool has_type() const { return m_type != nullptr; }
+            types::Type *type() const { return m_type; }
+            void set_type(types::Type *type) { m_type = type; }
+
+            bool has_llvm_value() const { return m_llvm_value != nullptr; }
+            llvm::Value *llvm_value() const { return m_llvm_value; }
+            void set_llvm_value(llvm::Value *value) { m_llvm_value = value; }
+
+            Namespace *scope() const { return m_scope.get(); }
+            void initialise_scope(Namespace *parent);
+
+            ast::Node *node() const { return m_node; }
+            void initialise_node(ast::Node *node);
 
             bool is_function() const;
             bool is_variable() const;
@@ -68,6 +80,14 @@ namespace acorn {
             void copy_type_from(ast::Expression *expression);
 
             std::string to_string(int indent = 0) const;
+
+        private:
+            std::string m_name;
+            bool m_builtin;
+            types::Type *m_type;
+            llvm::Value *m_llvm_value;
+            std::unique_ptr<Namespace> m_scope;
+            ast::Node *m_node;
         };
 
         class ScopeFollower {

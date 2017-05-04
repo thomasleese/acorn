@@ -49,7 +49,7 @@ Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node *current_node, std::s
         }
     }
 
-    return it->second;
+    return it->second.get();
 }
 
 Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *name) const {
@@ -57,9 +57,10 @@ Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *name) const {
 }
 
 Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const {
-    for (auto entry : m_symbols) {
-        if (entry.second->node == node) {
-            return entry.second;
+    for (auto &entry : m_symbols) {
+        auto &symbol = entry.second;
+        if (symbol->node() == node) {
+            return symbol.get();
         }
     }
 
@@ -71,24 +72,28 @@ Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const 
     }
 }
 
-void Namespace::insert(Reporter *diagnostics, ast::Node *currentNode, Symbol *symbol) {
-    symbol->node = currentNode;
+void Namespace::insert(Reporter *diagnostics, ast::Node *current_node, std::unique_ptr<Symbol> symbol) {
+    auto name = symbol->name();
 
-    auto it = m_symbols.find(symbol->name);
+    auto it = m_symbols.find(name);
     if (it != m_symbols.end()) {
-        diagnostics->report(RedefinedError(currentNode, symbol->name));
+        diagnostics->report(RedefinedError(current_node, name));
     }
 
-    m_symbols[symbol->name] = symbol;
+    symbol->initialise_scope(this);
+    symbol->initialise_node(current_node);
+
+    m_symbols[name] = std::move(symbol);
 }
 
 void Namespace::rename(Reporter *diagnostics, Symbol *symbol, std::string new_name) {
-    auto it = m_symbols.find(symbol->name);
+    auto it = m_symbols.find(symbol->name());
     assert(it != m_symbols.end());
+    it->second.release();
 
     m_symbols.erase(it);
-    symbol->name = new_name;
-    insert(diagnostics, symbol->node, symbol);
+    symbol->set_name(new_name);
+    insert(diagnostics, symbol->node(), std::unique_ptr<Symbol>(symbol));
 }
 
 unsigned long Namespace::size() const {
@@ -97,8 +102,8 @@ unsigned long Namespace::size() const {
 
 std::vector<Symbol *> Namespace::symbols() const {
     std::vector<Symbol *> symbols;
-    for (auto entry : m_symbols) {
-        symbols.push_back(entry.second);
+    for (auto &entry : m_symbols) {
+        symbols.push_back(entry.second.get());
     }
     return symbols;
 }
@@ -117,9 +122,8 @@ std::string Namespace::to_string(int indent) const {
 
     ss << gap << "{\n";
 
-    for (auto it = m_symbols.begin(); it != m_symbols.end(); it++) {
-        auto symbol = it->second;
-        ss << gap << " " << symbol->to_string(indent + 1) << "\n";
+    for (auto &entry : m_symbols) {
+        ss << gap << " " << entry.second->to_string(indent + 1) << "\n";
     }
 
     ss << gap << "}";
@@ -127,48 +131,59 @@ std::string Namespace::to_string(int indent) const {
     return ss.str();
 }
 
-Symbol::Symbol(std::string name) : type(nullptr), value(nullptr), nameSpace(nullptr), node(nullptr), is_builtin(false) {
-    this->name = name;
+Symbol::Symbol(std::string name, bool builtin) : m_name(name), m_builtin(builtin), m_type(nullptr), m_llvm_value(nullptr), m_scope(nullptr), m_node(nullptr) {
+
 }
 
-Symbol::Symbol(ast::Name *name) : Symbol(name->value()) {
+Symbol::Symbol(ast::Name *name, bool builtin) : Symbol(name->value(), builtin) {
 
+}
+
+void Symbol::initialise_scope(Namespace *parent) {
+    if (m_scope) {
+        assert(m_scope->parent() == parent);
+    } else {
+        m_scope = std::make_unique<Namespace>(parent);
+    }
+}
+
+void Symbol::initialise_node(ast::Node *node) {
+    assert(m_node == nullptr);
+    m_node = node;
 }
 
 bool Symbol::is_function() const {
-    return dynamic_cast<types::Function *>(this->type) != nullptr && this->node == nullptr;
+    return dynamic_cast<types::Function *>(m_type) != nullptr;
 }
 
 bool Symbol::is_type() const {
-    return dynamic_cast<types::TypeType *>(this->type) != nullptr;
+    return dynamic_cast<types::TypeType *>(m_type) != nullptr;
 }
 
 bool Symbol::is_variable() const {
-    return dynamic_cast<ast::Let *>(this->node) != nullptr;
+    return dynamic_cast<ast::Let *>(m_node) != nullptr;
 }
 
 void Symbol::copy_type_from(ast::Expression *expression) {
     // TODO check type is not null?
-    this->type = expression->type();
+    set_type(expression->type());
 }
 
 std::string Symbol::to_string(int indent) const {
     std::stringstream ss;
-    ss << this->name << " (Node: " << this->node << ") (Value: " << this->value << ")";
+    ss << m_name << " (Node: " << m_node << ") (LLVM Value: " << m_llvm_value << ")";
 
-    if (this->type) {
-        ss << ": " << this->type->name();
+    if (m_type) {
+        ss << ": " << m_type->name();
     }
 
-    if (this->nameSpace) {
-        ss << " " << this->nameSpace->to_string(indent + 1);
-    }
+    ss << " " << m_scope->to_string(indent + 1);
 
     return ss.str();
 }
 
 void ScopeFollower::push_scope(symboltable::Symbol *symbol) {
-    push_scope(symbol->nameSpace);
+    push_scope(symbol->scope());
 }
 
 void ScopeFollower::push_scope(symboltable::Namespace *name_space) {
@@ -208,9 +223,8 @@ void Builder::visit(ast::Name *node) {
 void Builder::visit(ast::VariableDeclaration *node) {
     assert(!node->name()->has_parameters());
 
-    Symbol *symbol = new Symbol(node->name()->value());
-    symbol->is_builtin = node->builtin();
-    scope()->insert(this, node, symbol);
+    auto symbol = std::make_unique<Symbol>(node->name(), node->builtin());
+    scope()->insert(this, node, std::move(symbol));
 }
 
 void Builder::visit(ast::Int *node) {
@@ -303,8 +317,8 @@ void Builder::visit(ast::Switch *node) {
 }
 
 void Builder::visit(ast::Parameter *node) {
-    auto symbol = new Symbol(node->name()->value());
-    scope()->insert(this, node, symbol);
+    auto symbol = std::make_unique<Symbol>(node->name(), false);
+    scope()->insert(this, node, std::move(symbol));
 }
 
 void Builder::visit(ast::Let *node) {
@@ -325,10 +339,8 @@ void Builder::visit(ast::Def *node) {
         // variables, i.e. we are hiding the previous binding
         function_symbol = scope()->lookup(this, name);
     } else {
-        function_symbol = new Symbol(name->value());
-        function_symbol->nameSpace = new Namespace(scope());
-        scope()->insert(this, node, function_symbol);
-        function_symbol->node = nullptr;  // explicit no node for function symbols
+        function_symbol = new Symbol(name, false);
+        scope()->insert(this, nullptr, std::unique_ptr<Symbol>(function_symbol));
     }
 
     // this is really hacky...
@@ -338,16 +350,14 @@ void Builder::visit(ast::Def *node) {
 
     push_scope(function_symbol);
 
-    auto symbol = new Symbol(ss.str());
-    symbol->is_builtin = node->builtin();
-    symbol->nameSpace = new Namespace(scope());
-    scope()->insert(this, node, symbol);
+    auto symbol = new Symbol(ss.str(), node->builtin());
+    scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
 
     push_scope(symbol);
 
     for (auto parameter : name->parameters()) {
-        auto sym = new Symbol(parameter->value());
-        scope()->insert(this, parameter, sym);
+        auto sym = std::make_unique<Symbol>(parameter, false);
+        scope()->insert(this, parameter, std::move(sym));
     }
 
     for (auto parameter : node->parameters()) {
@@ -363,24 +373,21 @@ void Builder::visit(ast::Def *node) {
 }
 
 void Builder::visit(ast::Type *node) {
-    auto symbol = new Symbol(node->name()->value());
-    symbol->is_builtin = node->builtin();
-    scope()->insert(this, node, symbol);
-
-    symbol->nameSpace = new Namespace(scope());
+    auto symbol = new Symbol(node->name(), node->builtin());
+    scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
 
     push_scope(symbol);
 
     for (auto parameter : node->name()->parameters()) {
-        auto sym = new Symbol(parameter->value());
-        scope()->insert(this, parameter, sym);
+        auto sym = std::make_unique<Symbol>(parameter->value(), false);
+        scope()->insert(this, parameter, std::move(sym));
     }
 
     if (node->has_alias()) {
         // do nothing
     } else {
-        auto constructor_symbol = new Symbol("new");
-        scope()->insert(this, node, constructor_symbol);
+        auto constructor_symbol = std::make_unique<Symbol>("new", true);
+        scope()->insert(this, node, std::move(constructor_symbol));
     }
 
     pop_scope();
@@ -391,9 +398,8 @@ void Builder::visit(ast::Module *node) {
     if (scope()->has(node->name()->value())) {
         symbol = scope()->lookup(this, node->name());
     } else {
-        symbol = new Symbol(node->name());
-        symbol->nameSpace = new Namespace(scope());
-        scope()->insert(this, node, symbol);
+        symbol = new Symbol(node->name(), false);
+        scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
     }
 
     push_scope(symbol);

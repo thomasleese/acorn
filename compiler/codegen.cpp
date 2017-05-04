@@ -281,7 +281,7 @@ void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *fu
         auto symbol = scope()->lookup(this, node, param->value());
         auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
         m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
-        symbol->value = alloca;
+        symbol->set_llvm_value(alloca);
     }
 
     int i = 0;
@@ -299,7 +299,7 @@ void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *fu
         }
 
         auto symbol = scope()->lookup(this, node, arg_name);
-        symbol->value = value;
+        symbol->set_llvm_value(value);
 
         i++;
     }
@@ -317,50 +317,50 @@ void CodeGenerator::generate_builtin_method_body(ast::Def *node, llvm::Function 
     std::string name = static_cast<ast::Name *>(node->name())->value();
 
     if (name == "*") {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->llvm_value());
         push_llvm_value(m_ir_builder->CreateMul(a_value, b_value, "multiplication"));
     } else if (name == "+") {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->llvm_value());
         if (a_value->getType()->isFloatingPointTy()) {
             push_llvm_value(m_ir_builder->CreateFAdd(a_value, b_value, "addition"));
         } else {
             push_llvm_value(m_ir_builder->CreateAdd(a_value, b_value, "addition"));
         }
     } else if (name == "-") {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->llvm_value());
         push_llvm_value(m_ir_builder->CreateSub(a_value, b_value, "subtraction"));
     } else if (name == "==") {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->llvm_value());
         push_llvm_value(m_ir_builder->CreateICmpEQ(a_value, b_value, "eq"));
     } else if (name == "!=") {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->llvm_value());
         push_llvm_value(m_ir_builder->CreateICmpNE(a_value, b_value, "neq"));
     } else if (name == "<") {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->llvm_value());
         push_llvm_value(m_ir_builder->CreateICmpSLT(a_value, b_value, "lt"));
     } else if (name == ">") {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->llvm_value());
         push_llvm_value(m_ir_builder->CreateICmpSGT(a_value, b_value, "gt"));
     } else if (name == ">=") {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->llvm_value());
         push_llvm_value(m_ir_builder->CreateICmpSGE(a_value, b_value, "gte"));
     } else if (name == "<=") {
-        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->value);
-        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->value);
+        auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
+        auto b_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "b")->llvm_value());
         push_llvm_value(m_ir_builder->CreateICmpSLE(a_value, b_value, "lte"));
     } else if (name == "to_float") {
-        auto value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "self")->value);
+        auto value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "self")->llvm_value());
         push_llvm_value(m_ir_builder->CreateSIToFP(value, function->getReturnType(), "float"));
     } else if (name == "to_int") {
-        auto value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "self")->value);
+        auto value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "self")->llvm_value());
         push_llvm_value(m_ir_builder->CreateFPToSI(value, function->getReturnType(), "int"));
     } else {
         report(InternalError(node, "Unknown builtin definition."));
@@ -633,13 +633,13 @@ void CodeGenerator::visit(ast::Name *node) {
     auto symbol = scope()->lookup(this, node);
     return_and_push_null_if_null(symbol);
 
-    if (symbol->value == nullptr) {
+    if (!symbol->has_llvm_value()) {
         report(InternalError(node, "The LLVM value of this symbol is null."));
         push_llvm_value(nullptr);
         return;
     }
 
-    push_llvm_value(m_ir_builder->CreateLoad(symbol->value));
+    push_llvm_value(m_ir_builder->CreateLoad(symbol->llvm_value()));
 }
 
 void CodeGenerator::visit(ast::VariableDeclaration *node) {
@@ -655,19 +655,19 @@ void CodeGenerator::visit(ast::VariableDeclaration *node) {
         return_and_push_null_if_null(llvm_initialiser);
 
         auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
-        symbol->value = variable;
+        symbol->set_llvm_value(variable);
 
         m_ir_builder->SetInsertPoint(&m_init_variables_function->getEntryBlock());
     } else {
         auto insert_function = m_ir_builder->GetInsertBlock()->getParent();
         m_ir_builder->SetInsertPoint(&insert_function->getEntryBlock().front());
 
-        symbol->value = m_ir_builder->CreateAlloca(llvm_type, 0, node->name()->value());
+        symbol->set_llvm_value(m_ir_builder->CreateAlloca(llvm_type, 0, node->name()->value()));
     }
 
     pop_insert_point();
 
-    push_llvm_value(symbol->value);
+    push_llvm_value(symbol->llvm_value());
 }
 
 void CodeGenerator::visit(ast::Int *node) {
@@ -1030,21 +1030,25 @@ void CodeGenerator::visit(ast::Let *node) {
 
 void CodeGenerator::visit(ast::Def *node) {
     auto function_symbol = scope()->lookup(this, static_cast<ast::Name *>(node->name()));
-    auto function_type = static_cast<types::Function *>(function_symbol->type);
+    auto function_type = static_cast<types::Function *>(function_symbol->type());
 
-    if (function_symbol->value == nullptr) {
+    if (!function_symbol->has_llvm_value()) {
         auto llvm_function_type = generate_type(node, function_type);
         auto llvm_initialiser = take_initialiser(node);
-        function_symbol->value = create_global_variable(
-            llvm_function_type, llvm_initialiser, static_cast<ast::Name *>(node->name())->value()
+
+        function_symbol->set_llvm_value(
+            create_global_variable(
+                llvm_function_type, llvm_initialiser,
+                static_cast<ast::Name *>(node->name())->value()
+            )
         );
     }
 
     auto method = static_cast<types::Method *>(node->type());
 
-    auto symbol = function_symbol->nameSpace->lookup_by_node(this, node);
+    auto symbol = function_symbol->scope()->lookup_by_node(this, node);
 
-    auto llvm_function_name = codegen::mangle_method(function_symbol->name, method);
+    auto llvm_function_name = codegen::mangle_method(function_symbol->name(), method);
 
     auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(node));
 
@@ -1082,16 +1086,18 @@ void CodeGenerator::visit(ast::Def *node) {
         }
 
         // FIXME return something better, like a load to the GEP pointer
-        symbol->value = function;
+        symbol->set_llvm_value(function);
 
         int llvm_method_index = function_type->get_llvm_index(method);
-        create_store_method_to_function(function, function_symbol->value, llvm_method_index, specialisation_index);
+        create_store_method_to_function(
+            function, function_symbol->llvm_value(), llvm_method_index, specialisation_index
+        );
 
         pop_replacement_generic_specialisation(specialisation);
         specialisation_index += 1;
     }
 
-    push_llvm_value(symbol->value);
+    push_llvm_value(symbol->llvm_value());
 }
 
 void CodeGenerator::visit(ast::Type *node) {
@@ -1100,16 +1106,16 @@ void CodeGenerator::visit(ast::Type *node) {
         return_and_push_null_if_null(symbol);
 
         // FIXME create a proper type
-        symbol->value = m_ir_builder->getInt1(0);
-        push_llvm_value(symbol->value);
+        symbol->set_llvm_value(m_ir_builder->getInt1(0));
+        push_llvm_value(symbol->llvm_value());
         return;
     }
 
     if (node->has_alias()) {
         auto new_symbol = scope()->lookup(this, node->name());
         auto old_symbol = scope()->lookup(this, node->alias());
-        new_symbol->value = old_symbol->value;
-        push_llvm_value(new_symbol->value);
+        new_symbol->set_llvm_value(old_symbol->llvm_value());
+        push_llvm_value(new_symbol->llvm_value());
     } else {
         auto node_type = dynamic_cast<types::RecordType *>(node->type());
 
@@ -1123,7 +1129,7 @@ void CodeGenerator::visit(ast::Type *node) {
         auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
         return_and_push_null_if_null(variable);
 
-        symbol->value = variable;
+        symbol->set_llvm_value(variable);
 
         // create constructor function
         auto function_type = node_type->constructor();
