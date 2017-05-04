@@ -1,17 +1,17 @@
 import "base/os"
 
-# type Thing
-#   x as Int
-# end
-#
-# def +(a as Thing, b as Thing)
-#   Thing.new(a.x + b.x)
-# end
-#
-# protocol Adder
-#   def +(a as Adder, b as Adder)
-# end
-#
+type Thing
+  x as Int
+end
+
+def +(a as Thing, b as Thing)
+  Thing.new(a.x + b.x)
+end
+
+protocol Adder
+  def +(a as Adder, b as Adder)
+end
+
 # def add(a as Adder, b as Adder)
 #   a + b
 # end

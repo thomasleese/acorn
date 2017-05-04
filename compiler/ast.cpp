@@ -417,7 +417,7 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-Def::Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(token), m_body(std::move(body)), m_builtin(builtin) {
+Def::Def(Token token, std::unique_ptr<Expression> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(token), m_builtin(builtin), m_body(std::move(body)) {
     m_signature = std::make_unique<MethodSignature>(token, std::move(name), std::move(parameters), std::move(given_return_type));
 }
 
