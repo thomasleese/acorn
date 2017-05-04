@@ -1,0 +1,23 @@
+import "base/os"
+
+# type Thing
+#   x as Int
+# end
+#
+# def +(a as Thing, b as Thing)
+#   Thing.new(a.x + b.x)
+# end
+#
+# protocol Adder
+#   def +(a as Adder, b as Adder)
+# end
+#
+# def add(a as Adder, b as Adder)
+#   a + b
+# end
+#
+# let a = Thing.new(10)
+# let b = Thing.new(20)
+# exit(add(a, b).x)
+
+exit(0)
