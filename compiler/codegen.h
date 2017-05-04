@@ -121,7 +121,6 @@ namespace acorn {
             void generate_builtin_method_body(ast::Def *node, llvm::Function *function);
 
             llvm::Value *generate_llvm_value(ast::Node *node);
-            llvm::Value *generate_llvm_value(ast::Node &node);
 
             llvm::FunctionType *generate_function_type_for_method(types::Method *method);
 

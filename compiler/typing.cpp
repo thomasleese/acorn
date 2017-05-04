@@ -727,12 +727,8 @@ void Checker::check_types(ast::Expression *lhs, ast::Expression *rhs) {
 }
 
 void Checker::check_not_null(ast::Expression *expression) {
-    check_not_null(*expression);
-}
-
-void Checker::check_not_null(ast::Expression &expression) {
-    if (!expression.has_type()) {
-        report(InternalError(expression, "No type given for: " + Token::as_string(expression.token().kind)));
+    if (!expression->has_type()) {
+        report(InternalError(expression, "No type given for: " + Token::as_string(expression->token().kind)));
     }
 }
 

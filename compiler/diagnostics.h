@@ -28,7 +28,6 @@ namespace acorn {
             explicit CompilerError(std::string filename, int lineNumber, int column, std::string line);
             CompilerError(const Token &token);
             CompilerError(ast::Node *node);
-            CompilerError(const ast::Node &node);
 
             void print() const;
 
@@ -53,7 +52,6 @@ namespace acorn {
         public:
             InternalError(const Token &token, std::string message);
             InternalError(ast::Node *node, std::string message);
-            InternalError(const ast::Node &node, std::string message);
         };
 
         class InternalAstError : public InternalError {
@@ -77,7 +75,6 @@ namespace acorn {
         class UndefinedError : public CompilerError {
         public:
             UndefinedError(ast::Node *node, std::string name);
-            UndefinedError(ast::Node &node, std::string name);
             explicit UndefinedError(ast::Name *name);
         };
 
@@ -94,7 +91,6 @@ namespace acorn {
         class InvalidTypeConstructor : public CompilerError {
         public:
             InvalidTypeConstructor(ast::Node *node);
-            InvalidTypeConstructor(ast::Node &node);
         };
 
         class InvalidTypeParameters : public CompilerError {
@@ -105,11 +101,8 @@ namespace acorn {
         class TypeMismatchError : public CompilerError {
         public:
             TypeMismatchError(ast::Expression *node1, ast::Expression *node2);
-            TypeMismatchError(ast::Expression &node1, ast::Expression &node2);
             TypeMismatchError(ast::Node *node, types::Type *type1, types::Type *type2);
-            TypeMismatchError(ast::Node &node, types::Type *type1, types::Type *type2);
             TypeMismatchError(ast::Node *node, std::string type1, std::string type2);
-            TypeMismatchError(ast::Node &node, std::string type1, std::string type2);
         };
 
         class TypeInferenceError : public CompilerError {

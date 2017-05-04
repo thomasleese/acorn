@@ -368,11 +368,7 @@ void CodeGenerator::generate_builtin_method_body(ast::Def *node, llvm::Function 
 }
 
 llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
-    return generate_llvm_value(*node);
-}
-
-llvm::Value *CodeGenerator::generate_llvm_value(ast::Node &node) {
-    node.accept(this);
+    node->accept(this);
     auto value = pop_llvm_value();
 
     if (value == nullptr) {
