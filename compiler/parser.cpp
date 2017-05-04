@@ -198,11 +198,13 @@ std::unique_ptr<Expression> Parser::read_expression(bool parse_comma) {
     if (is_token(Token::LetKeyword)) {
         return read_let();
     } else if (is_token(Token::DefKeyword)) {
-        return std::unique_ptr<Expression>(read_def());
+        return read_def();
     } else if (is_token(Token::TypeKeyword)) {
-        return std::unique_ptr<Expression>(read_type());
+        return read_type();
     } else if (is_token(Token::ModuleKeyword)) {
-        return std::unique_ptr<Expression>(read_module());
+        return read_module();
+    } else if (is_token(Token::ProtocolKeyword)) {
+        return read_protocol();
     } else {
         auto unary_expression = read_unary_expression(parse_comma);
         return_if_null(unary_expression);
@@ -837,20 +839,17 @@ std::unique_ptr<Let> Parser::read_let() {
     );
 }
 
-std::unique_ptr<Def> Parser::read_def() {
-    Token def_token;
-    return_if_false(read_token(Token::DefKeyword, def_token));
-
-    bool builtin = is_and_skip_token(Token::BuiltinKeyword);
+std::unique_ptr<ast::Selector> Parser::read_method_signature_name() {
+    auto token = front_token();
 
     std::unique_ptr<Selector> name;
 
     if (is_token(Token::Name)) {
-        name = std::make_unique<Selector>(def_token, nullptr, read_name(true));
+        name = std::make_unique<Selector>(token, nullptr, read_name(true));
     } else if (is_token(Token::Operator)) {
-        name = std::make_unique<Selector>(def_token, nullptr, read_operator(true));
+        name = std::make_unique<Selector>(token, nullptr, read_operator(true));
     } else {
-        report(SyntaxError(front_token(), "identifier or operator"));
+        report(SyntaxError(token, "identifier or operator"));
         return nullptr;
     }
 
@@ -858,8 +857,19 @@ std::unique_ptr<Def> Parser::read_def() {
 
     while (is_token(Token::Dot)) {
         name = read_selector(std::move(name), true);
+        return_if_null(name);
     }
 
+    return name;
+}
+
+std::unique_ptr<Def> Parser::read_def() {
+    Token def_token;
+    return_if_false(read_token(Token::DefKeyword, def_token));
+
+    bool builtin = is_and_skip_token(Token::BuiltinKeyword);
+
+    auto name = read_method_signature_name();
     return_if_null(name);
 
     std::vector<std::unique_ptr<Parameter>> parameters;
@@ -936,7 +946,7 @@ std::unique_ptr<Type> Parser::read_type() {
             return_if_null(field_name);
             field_names.push_back(std::move(field_name));
 
-            skip_token(Token::AsKeyword);
+            return_if_false(skip_token(Token::AsKeyword));
 
             auto field_type = read_name(true);
             return_if_null(field_type);
@@ -963,6 +973,58 @@ std::unique_ptr<Module> Parser::read_module() {
 
     return std::make_unique<Module>(
         module_token, std::move(name), std::move(body)
+    );
+}
+
+std::unique_ptr<Protocol> Parser::read_protocol() {
+    Token protocol_token;
+    return_if_false(read_token(Token::ProtocolKeyword, protocol_token));
+
+    auto name = read_name(true);
+    return_if_null(name);
+
+    return_if_false(skip_token(Token::Indent));
+
+    std::vector<std::unique_ptr<MethodSignature>> methods;
+
+    while (!is_token(Token::Deindent)) {
+        Token def_token;
+        return_if_false(read_token(Token::DefKeyword, def_token));
+
+        auto name = read_method_signature_name();
+        return_if_null(name);
+
+        std::vector<std::unique_ptr<Parameter>> parameters;
+        if (is_and_skip_token(Token::OpenParenthesis)) {
+            while (!is_token(Token::CloseParenthesis)) {
+                auto parameter = read_parameter();
+                return_if_null(parameter);
+
+                parameters.push_back(std::move(parameter));
+
+                if (!is_and_skip_token(Token::Comma)) {
+                    break;
+                }
+            }
+
+            return_if_false(skip_token(Token::CloseParenthesis));
+        }
+
+        return_if_false(skip_token(Token::AsKeyword));
+        auto given_return_type = read_name(true);
+        return_if_null(given_return_type);
+
+        methods.push_back(
+            std::make_unique<MethodSignature>(
+                def_token, std::move(name), std::move(parameters), std::move(given_return_type)
+            )
+        );
+    }
+
+    return_if_false(skip_deindent_and_end_token());
+
+    return std::make_unique<Protocol>(
+        protocol_token, std::move(name), std::move(methods)
     );
 }
 

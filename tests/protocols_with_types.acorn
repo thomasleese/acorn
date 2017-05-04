@@ -9,7 +9,7 @@ def +(a as Thing, b as Thing)
 end
 
 protocol Adder
-  def +(a as Adder, b as Adder)
+  def +(a as Adder, b as Adder) as Adder
 end
 
 # def add(a as Adder, b as Adder)
