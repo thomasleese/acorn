@@ -602,6 +602,7 @@ namespace acorn {
             virtual void visit(Def *node) = 0;
             virtual void visit(Type *node) = 0;
             virtual void visit(Module *node) = 0;
+            virtual void visit(Protocol *node) = 0;
             virtual void visit(Import *node) = 0;
             virtual void visit(SourceFile *node) = 0;
         };

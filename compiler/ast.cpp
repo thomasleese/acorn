@@ -496,7 +496,7 @@ std::vector<MethodSignature *> Protocol::methods() const {
 }
 
 void Protocol::accept(Visitor *visitor) {
-
+    visitor->visit(this);
 }
 
 Import::Import(Token token, std::unique_ptr<String> path) : Expression(token), m_path(std::move(path)) {
