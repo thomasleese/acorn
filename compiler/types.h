@@ -264,6 +264,28 @@ namespace acorn {
 
         };
 
+        class ModuleType : public Type {
+        public:
+            std::string name() const;
+            std::string mangled_name() const;
+
+            TypeType *type() const;
+            ModuleType *with_parameters(std::vector<Type *> parameters);
+
+            void accept(Visitor *visitor);
+        };
+
+        class ProtocolType : public ParameterType {
+        public:
+            std::string name() const override;
+            std::string mangled_name() const override;
+
+            TypeType *type() const override;
+            ProtocolType *with_parameters(std::vector<TypeType *> parameters) override;
+
+            void accept(Visitor *visitor) override;
+        };
+
         class TypeDescriptionType : public TypeType {
         public:
             explicit TypeDescriptionType(TypeType *type = nullptr);
@@ -506,17 +528,6 @@ namespace acorn {
             std::map<Method *, int> m_llvm_index;
         };
 
-        class Module : public Type {
-        public:
-            std::string name() const;
-            std::string mangled_name() const;
-
-            TypeType *type() const;
-            Module *with_parameters(std::vector<Type *> parameters);
-
-            void accept(Visitor *visitor);
-        };
-
         class Visitor {
         public:
             virtual ~Visitor();
@@ -533,6 +544,8 @@ namespace acorn {
             virtual void visit(RecordType *type) = 0;
             virtual void visit(TupleType *type) = 0;
             virtual void visit(AliasType *type) = 0;
+            virtual void visit(ModuleType *type) = 0;
+            virtual void visit(ProtocolType *type) = 0;
             virtual void visit(TypeDescriptionType *type) = 0;
             virtual void visit(Parameter *type) = 0;
             virtual void visit(Void *type) = 0;
@@ -545,7 +558,6 @@ namespace acorn {
             virtual void visit(Tuple *type) = 0;
             virtual void visit(Method *type) = 0;
             virtual void visit(Function *type) = 0;
-            virtual void visit(Module *type) = 0;
         };
 
     };

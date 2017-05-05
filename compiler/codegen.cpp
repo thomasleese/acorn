@@ -465,6 +465,14 @@ void CodeGenerator::visit(types::AliasType *type) {
     visit_constructor(type);
 }
 
+void CodeGenerator::visit(types::ModuleType *type) {
+    push_null_llvm_type_and_initialiser();
+}
+
+void CodeGenerator::visit(types::ProtocolType *type) {
+    push_null_llvm_type_and_initialiser();
+}
+
 void CodeGenerator::visit(types::TypeDescriptionType *type) {
     visit_constructor(type);
 }
@@ -612,10 +620,6 @@ void CodeGenerator::visit(types::Function *type) {
     auto struct_initialiser = llvm::ConstantStruct::get(llvm_type, llvm_initialisers);
 
     push_llvm_type_and_initialiser(llvm_type, struct_initialiser);
-}
-
-void CodeGenerator::visit(types::Module *type) {
-    push_null_llvm_type_and_initialiser();
 }
 
 void CodeGenerator::visit(ast::Block *node) {
@@ -873,7 +877,7 @@ void CodeGenerator::visit(ast::Assignment *node) {
 void CodeGenerator::visit(ast::Selector *node) {
     auto operand = node->operand();
 
-    auto module_type = dynamic_cast<types::Module *>(operand->type());
+    auto module_type = dynamic_cast<types::ModuleType *>(operand->type());
     auto record_type_type = dynamic_cast<types::RecordType *>(operand->type());
     auto record_type = dynamic_cast<types::Record *>(operand->type());
 

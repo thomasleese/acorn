@@ -406,11 +406,11 @@ void Inferrer::visit(ast::Selector *node) {
     operand->accept(this);
     return_if_null_type(operand);
 
-    auto module = dynamic_cast<types::Module *>(operand->type());
+    auto module_type = dynamic_cast<types::ModuleType *>(operand->type());
     auto record_type = dynamic_cast<types::RecordType *>(operand->type());
     auto record = dynamic_cast<types::Record *>(operand->type());
 
-    if (module) {
+    if (module_type) {
         auto module_name = static_cast<ast::Name *>(operand);
 
         auto symbol = scope()->lookup(this, module_name);
@@ -677,8 +677,11 @@ void Inferrer::visit(ast::Module *node) {
 
     push_scope(symbol);
 
+    auto module = new types::ModuleType();
+
     node->body()->accept(this);
-    node->set_type(new types::Module());
+
+    node->set_type(module);
     symbol->copy_type_from(node);
 
     pop_scope();
@@ -690,10 +693,9 @@ void Inferrer::visit(ast::Protocol *node) {
 
     push_scope(symbol);
 
-    //node->set_type(new types::Protocol());
+    auto protocol = new types::ProtocolType();
 
-    // FIXME what do we need to do here?
-
+    node->set_type(protocol);
     symbol->copy_type_from(node);
 
     pop_scope();

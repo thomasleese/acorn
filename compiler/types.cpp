@@ -565,6 +565,46 @@ void AliasType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+std::string ModuleType::name() const {
+    return "ModuleType";
+}
+
+std::string ModuleType::mangled_name() const {
+    return "mod";
+}
+
+TypeType *ModuleType::type() const {
+    return nullptr;
+}
+
+ModuleType *ModuleType::with_parameters(std::vector<Type *> parameters) {
+    return nullptr;
+}
+
+void ModuleType::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
+std::string ProtocolType::name() const {
+    return "ProtocolType";
+}
+
+std::string ProtocolType::mangled_name() const {
+    return "protocol";
+}
+
+TypeType *ProtocolType::type() const {
+    return nullptr;
+}
+
+ProtocolType *ProtocolType::with_parameters(std::vector<TypeType *> parameters) {
+    return nullptr;
+}
+
+void ProtocolType::accept(Visitor *visitor) {
+    visitor->visit(this);
+}
+
 TypeDescriptionType::TypeDescriptionType(TypeType *type) {
     if (type) {
         m_parameters.push_back(type);
@@ -1239,26 +1279,6 @@ Function *Function::with_parameters(std::vector<Type *> parameters) {
 }
 
 void Function::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-std::string Module::name() const {
-    return "Module";
-}
-
-std::string Module::mangled_name() const {
-    return "mod";
-}
-
-TypeType *Module::type() const {
-    return nullptr;
-}
-
-Module *Module::with_parameters(std::vector<Type *> parameters) {
-    return nullptr;
-}
-
-void Module::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

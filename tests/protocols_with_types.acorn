@@ -12,13 +12,11 @@ protocol Adder
   def +(a as Adder, b as Adder) as Adder
 end
 
-# def add(a as Adder, b as Adder)
-#   a + b
-# end
-#
-# let a = Thing.new(10)
-# let b = Thing.new(20)
-# let c = add(a, b)
-# exit(c.x - 30)
+def add(a as Adder, b as Adder)
+  a + b
+end
 
-exit(0)
+let a = Thing.new(10)
+let b = Thing.new(20)
+let c = add(a, b)
+exit(c.x - 30)
