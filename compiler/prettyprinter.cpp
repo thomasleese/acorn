@@ -329,12 +329,40 @@ void PrettyPrinter::visit(ast::Type *node)
 
 void PrettyPrinter::visit(ast::Module *node) {
     ss << indentation() << "(Module [" << type_of(node) << "]\n";
-
     indent++;
+
     node->name()->accept(this);
     node->body()->accept(this);
-    indent--;
 
+    indent--;
+    ss << indentation() << ")\n";
+}
+
+void PrettyPrinter::visit(ast::Protocol *node) {
+    ss << indentation() << "(Protocol [" << type_of(node) << "]\n";
+    indent++;
+
+    node->name()->accept(this);
+
+    for (auto &method : node->methods()) {
+        ss << indentation() << "(\n";
+        indent++;
+
+        method->name()->accept(this);
+
+        for (auto parameter : method->parameters()) {
+            parameter->accept(this);
+        }
+
+        if (method->has_given_return_type()) {
+            method->given_return_type()->accept(this);
+        }
+
+        indent--;
+        ss << indentation() << ")\n";
+    }
+
+    indent--;
     ss << indentation() << ")\n";
 }
 

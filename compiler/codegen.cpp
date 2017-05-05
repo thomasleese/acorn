@@ -1178,6 +1178,15 @@ void CodeGenerator::visit(ast::Module *node) {
     pop_scope();
 }
 
+void CodeGenerator::visit(ast::Protocol *node) {
+    auto symbol = scope()->lookup(this, node->name());
+    return_and_push_null_if_null(symbol);
+
+    push_scope(symbol);
+    // FIXME do we need to do something here?
+    pop_scope();
+}
+
 void CodeGenerator::visit(ast::Import *node) {
     report(InternalError(node, "N/A"));
 }

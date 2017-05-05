@@ -74,6 +74,7 @@ namespace acorn {
             void visit(ast::Def *node);
             void visit(ast::Type *node);
             void visit(ast::Module *node);
+            void visit(ast::Protocol *node);
             void visit(ast::Import *node);
             void visit(ast::SourceFile *node);
 
@@ -117,6 +118,7 @@ namespace acorn {
             void visit(ast::Def *node);
             void visit(ast::Type *node);
             void visit(ast::Module *node);
+            void visit(ast::Protocol *node);
             void visit(ast::Import *node);
             void visit(ast::SourceFile *node);
 
