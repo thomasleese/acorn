@@ -1255,6 +1255,14 @@ int Function::no_methods() const {
     return m_parameters.size();
 }
 
+std::vector<Method *> Function::methods() const {
+    std::vector<Method *> methods;
+    for (size_t i = 0; i < no_methods(); i++) {
+        methods.push_back(get_method(i));
+    }
+    return methods;
+}
+
 int Function::index_of(Method *method) const {
     for (int i = 0; i < no_methods(); i++) {
         if (get_method(i) == method) {

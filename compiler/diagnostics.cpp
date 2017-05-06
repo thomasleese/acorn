@@ -102,12 +102,12 @@ void SyntaxError::makeMessage(std::string got, std::string expectation) {
     m_message = ss.str();
 }
 
-UndefinedError::UndefinedError(ast::Node *node, std::string name) : CompilerError(node) {
+UndefinedError::UndefinedError(ast::Node *node, std::string message) : CompilerError(node) {
     m_prefix = "Undefined error";
-    m_message = name + " is not defined in this scope.";
+    m_message = message;
 }
 
-UndefinedError::UndefinedError(ast::Name *name) : UndefinedError(name, name->value()) {
+UndefinedError::UndefinedError(ast::Name *name) : UndefinedError(name, name->value() + " is not defined in scope.") {
 
 }
 

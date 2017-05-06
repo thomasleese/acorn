@@ -515,6 +515,7 @@ namespace acorn {
             Method *find_method(ast::Call *call) const;
             Method *get_method(int index) const;
             int no_methods() const;
+            std::vector<Method *> methods() const;
             int index_of(Method *method) const;
 
             void set_llvm_index(Method *method, int index);

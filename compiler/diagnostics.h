@@ -74,7 +74,7 @@ namespace acorn {
 
         class UndefinedError : public CompilerError {
         public:
-            UndefinedError(ast::Node *node, std::string name);
+            UndefinedError(ast::Node *node, std::string message);
             explicit UndefinedError(ast::Name *name);
         };
 
