@@ -338,34 +338,6 @@ void PrettyPrinter::visit(ast::Module *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Protocol *node) {
-    ss << indentation() << "(Protocol [" << type_of(node) << "]\n";
-    indent++;
-
-    node->name()->accept(this);
-
-    for (auto &method : node->methods()) {
-        ss << indentation() << "(\n";
-        indent++;
-
-        method->name()->accept(this);
-
-        for (auto parameter : method->parameters()) {
-            parameter->accept(this);
-        }
-
-        if (method->has_given_return_type()) {
-            method->given_return_type()->accept(this);
-        }
-
-        indent--;
-        ss << indentation() << ")\n";
-    }
-
-    indent--;
-    ss << indentation() << ")\n";
-}
-
 void PrettyPrinter::visit(ast::Import *node) {
     ss << indentation() << "(Import [" << type_of(node) << "]\n";
     indent++;

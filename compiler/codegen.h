@@ -139,7 +139,6 @@ namespace acorn {
             void visit(types::TupleType *type);
             void visit(types::AliasType *type);
             void visit(types::ModuleType *type);
-            void visit(types::ProtocolType *type);
             void visit(types::TypeDescriptionType *type);
             void visit(types::Parameter *type);
             void visit(types::Void *type);
@@ -178,7 +177,6 @@ namespace acorn {
             void visit(ast::Def *node);
             void visit(ast::Type *node);
             void visit(ast::Module *node);
-            void visit(ast::Protocol *node);
             void visit(ast::Import *node);
             void visit(ast::SourceFile *node);
 

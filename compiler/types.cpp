@@ -585,26 +585,6 @@ void ModuleType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-std::string ProtocolType::name() const {
-    return "ProtocolType";
-}
-
-std::string ProtocolType::mangled_name() const {
-    return "protocol";
-}
-
-TypeType *ProtocolType::type() const {
-    return nullptr;
-}
-
-ProtocolType *ProtocolType::with_parameters(std::vector<TypeType *> parameters) {
-    return nullptr;
-}
-
-void ProtocolType::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
 TypeDescriptionType::TypeDescriptionType(TypeType *type) {
     if (type) {
         m_parameters.push_back(type);
@@ -1257,7 +1237,7 @@ int Function::no_methods() const {
 
 std::vector<Method *> Function::methods() const {
     std::vector<Method *> methods;
-    for (size_t i = 0; i < no_methods(); i++) {
+    for (size_t i = 0; i < m_parameters.size(); i++) {
         methods.push_back(get_method(i));
     }
     return methods;

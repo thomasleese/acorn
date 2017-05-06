@@ -275,17 +275,6 @@ namespace acorn {
             void accept(Visitor *visitor);
         };
 
-        class ProtocolType : public ParameterType {
-        public:
-            std::string name() const override;
-            std::string mangled_name() const override;
-
-            TypeType *type() const override;
-            ProtocolType *with_parameters(std::vector<TypeType *> parameters) override;
-
-            void accept(Visitor *visitor) override;
-        };
-
         class TypeDescriptionType : public TypeType {
         public:
             explicit TypeDescriptionType(TypeType *type = nullptr);
@@ -546,7 +535,6 @@ namespace acorn {
             virtual void visit(TupleType *type) = 0;
             virtual void visit(AliasType *type) = 0;
             virtual void visit(ModuleType *type) = 0;
-            virtual void visit(ProtocolType *type) = 0;
             virtual void visit(TypeDescriptionType *type) = 0;
             virtual void visit(Parameter *type) = 0;
             virtual void visit(Void *type) = 0;

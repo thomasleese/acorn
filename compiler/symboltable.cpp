@@ -407,17 +407,6 @@ void Builder::visit(ast::Module *node) {
     pop_scope();
 }
 
-void Builder::visit(ast::Protocol *node) {
-    auto symbol = new Symbol(node->name(), false);
-    scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
-
-    push_scope(symbol);
-
-    // FIXME do we need to do something here?
-
-    pop_scope();
-}
-
 void Builder::visit(ast::Import *node) {
 
 }

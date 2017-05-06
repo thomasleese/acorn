@@ -203,8 +203,6 @@ std::unique_ptr<Expression> Parser::read_expression(bool parse_comma) {
         return read_type();
     } else if (is_token(Token::ModuleKeyword)) {
         return read_module();
-    } else if (is_token(Token::ProtocolKeyword)) {
-        return read_protocol();
     } else {
         auto unary_expression = read_unary_expression(parse_comma);
         return_if_null(unary_expression);
@@ -973,58 +971,6 @@ std::unique_ptr<Module> Parser::read_module() {
 
     return std::make_unique<Module>(
         module_token, std::move(name), std::move(body)
-    );
-}
-
-std::unique_ptr<Protocol> Parser::read_protocol() {
-    Token protocol_token;
-    return_if_false(read_token(Token::ProtocolKeyword, protocol_token));
-
-    auto name = read_name(true);
-    return_if_null(name);
-
-    return_if_false(skip_token(Token::Indent));
-
-    std::vector<std::unique_ptr<MethodSignature>> methods;
-
-    while (!is_token(Token::Deindent)) {
-        Token def_token;
-        return_if_false(read_token(Token::DefKeyword, def_token));
-
-        auto name = read_method_signature_name();
-        return_if_null(name);
-
-        std::vector<std::unique_ptr<Parameter>> parameters;
-        if (is_and_skip_token(Token::OpenParenthesis)) {
-            while (!is_token(Token::CloseParenthesis)) {
-                auto parameter = read_parameter();
-                return_if_null(parameter);
-
-                parameters.push_back(std::move(parameter));
-
-                if (!is_and_skip_token(Token::Comma)) {
-                    break;
-                }
-            }
-
-            return_if_false(skip_token(Token::CloseParenthesis));
-        }
-
-        return_if_false(skip_token(Token::AsKeyword));
-        auto given_return_type = read_name(true);
-        return_if_null(given_return_type);
-
-        methods.push_back(
-            std::make_unique<MethodSignature>(
-                def_token, std::move(name), std::move(parameters), std::move(given_return_type)
-            )
-        );
-    }
-
-    return_if_false(skip_deindent_and_end_token());
-
-    return std::make_unique<Protocol>(
-        protocol_token, std::move(name), std::move(methods)
     );
 }
 

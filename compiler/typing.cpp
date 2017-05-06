@@ -698,20 +698,6 @@ void Inferrer::visit(ast::Module *node) {
     pop_scope();
 }
 
-void Inferrer::visit(ast::Protocol *node) {
-    auto symbol = scope()->lookup(this, node->name());
-    return_if_null(symbol);
-
-    push_scope(symbol);
-
-    auto protocol = new types::ProtocolType();
-
-    node->set_type(protocol);
-    symbol->copy_type_from(node);
-
-    pop_scope();
-}
-
 void Inferrer::visit(ast::Import *node) {
     node->path()->accept(this);
     node->set_type(new types::Void());
@@ -1004,10 +990,6 @@ void Checker::visit(ast::Module *node) {
     check_not_null(node);
 
     pop_scope();
-}
-
-void Checker::visit(ast::Protocol *node) {
-    check_not_null(node);
 }
 
 void Checker::visit(ast::Import *node) {
