@@ -320,7 +320,12 @@ void Inferrer::visit(ast::Call *node) {
     auto method = function->find_method(node);
     if (method == nullptr) {
         std::stringstream ss;
-        ss << "Method not found for these types. Available methods are:\n";
+        ss << "Method not found for these types:\n";
+        for (auto argument : node->positional_arguments()) {
+            ss << argument->type()->name() << ", ";
+        }
+
+        ss << "\nAvailable methods are:\n";
         for (auto method : function->methods()) {
             ss << " - " << method->name() << "\n";
         }
@@ -527,10 +532,16 @@ void Inferrer::visit(ast::Parameter *node) {
     auto symbol = scope()->lookup(this, node, node->name()->value());
     return_if_null(symbol);
 
-    node->given_type()->accept(this);
-    return_if_null(node->given_type());
+    if (node->has_given_type()) {
+        node->given_type()->accept(this);
+        return_if_null(node->given_type());
 
-    node->set_type(instance_type(node->given_type()));
+        node->set_type(instance_type(node->given_type()));
+    } else {
+        auto type = new types::ParameterType();
+        node->set_type(type->create(this, node));
+    }
+
     return_if_null_type(node);
 
     symbol->copy_type_from(node);
@@ -606,7 +617,7 @@ void Inferrer::visit(ast::Def *node) {
         method->set_parameter_name(i, parameter->name()->value());
     }
 
-    method->set_is_generic(name->has_parameters());
+    method->set_is_generic(true);
 
     auto function_type = static_cast<types::Function *>(function_symbol->type());
     function_type->add_method(method);
@@ -902,7 +913,10 @@ void Checker::visit(ast::Switch *node) {
 }
 
 void Checker::visit(ast::Parameter *node) {
-    node->given_type()->accept(this);
+    if (node->has_given_type()) {
+        node->given_type()->accept(this);
+    }
+
     check_not_null(node);
 }
 

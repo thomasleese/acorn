@@ -432,7 +432,10 @@ namespace acorn {
             explicit Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type);
 
             bool inout() const { return m_inout; }
+
             Name *name() const { return m_name.get(); }
+
+            bool has_given_type() const { return static_cast<bool>(m_given_type); }
             Name *given_type() const { return m_given_type.get(); }
 
             void accept(Visitor *visitor);

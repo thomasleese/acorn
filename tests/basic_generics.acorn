@@ -1,6 +1,6 @@
 import "base"
 
-def test{T}(x as T) as T
+def test(x)
   x
 end
 

@@ -128,7 +128,7 @@ void Complex::accept(Visitor *visitor) {
 }
 
 String::String(Token token, std::string value) : Expression(token), m_value(value) {
-
+    
 }
 
 void String::accept(Visitor *visitor) {

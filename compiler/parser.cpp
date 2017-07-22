@@ -797,10 +797,12 @@ std::unique_ptr<Parameter> Parser::read_parameter() {
     auto name = read_name(false);
     return_if_null(name);
 
-    return_if_false(skip_token(Token::AsKeyword));
+    std::unique_ptr<Name> given_type;
 
-    auto given_type = read_name(true);
-    return_if_null(given_type);
+    if (is_and_skip_token(Token::AsKeyword)) {
+        given_type = read_name(true);
+        return_if_null(given_type);
+    }
 
     return std::make_unique<Parameter>(
         token, inout, std::move(name), std::move(given_type)
