@@ -7,7 +7,7 @@
 #include <set>
 #include <sstream>
 
-#include "ast.h"
+#include "ast/nodes.h"
 #include "diagnostics.h"
 #include "types.h"
 
@@ -617,7 +617,7 @@ void Inferrer::visit(ast::Def *node) {
         method->set_parameter_name(i, parameter->name()->value());
     }
 
-    method->set_is_generic(true);
+    method->set_is_generic(false);
 
     auto function_type = static_cast<types::Function *>(function_symbol->type());
     function_type->add_method(method);

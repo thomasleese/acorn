@@ -7,7 +7,7 @@
 #include <memory>
 #include <sstream>
 
-#include "ast.h"
+#include "ast/nodes.h"
 #include "diagnostics.h"
 #include "lexer.h"
 

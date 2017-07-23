@@ -18,7 +18,7 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
 
-#include "ast.h"
+#include "ast/nodes.h"
 #include "codegen.h"
 
 #include "compiler.h"

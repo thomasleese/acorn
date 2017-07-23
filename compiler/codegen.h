@@ -12,7 +12,7 @@
 #include <llvm/IR/MDBuilder.h>
 #include <llvm/IR/Module.h>
 
-#include "ast.h"
+#include "ast/visitor.h"
 #include "diagnostics.h"
 #include "symboltable.h"
 #include "types.h"

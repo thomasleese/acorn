@@ -2,14 +2,13 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
-#ifndef ACORN_SYMBOLTABLE_H
-#define ACORN_SYMBOLTABLE_H
+#pragma once
 
 #include <map>
 #include <string>
 #include <vector>
 
-#include "ast.h"
+#include "ast/visitor.h"
 #include "diagnostics.h"
 
 namespace llvm {
@@ -145,5 +144,3 @@ namespace acorn {
     };
 
 }
-
-#endif // ACORN_SYMBOLTABLE_H

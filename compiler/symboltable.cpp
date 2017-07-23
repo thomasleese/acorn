@@ -6,7 +6,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "ast.h"
+#include "ast/nodes.h"
 #include "diagnostics.h"
 #include "lexer.h"
 #include "types.h"

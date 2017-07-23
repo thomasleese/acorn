@@ -1,20 +1,18 @@
 #include <iostream>
 
-#include "ast.h"
+#include "ast/nodes.h"
 #include "codegen.h"
 #include "compiler.h"
-#include "diagnostics.h"
 #include "lexer.h"
 #include "parser.h"
 #include "prettyprinter.h"
-#include "symboltable.h"
 #include "typing.h"
 
 using namespace acorn;
 
-#define return_if_has_errors(thing) if (thing.has_errors()) { return nullptr; }
+#define return_if_has_errors(thing) if ((thing).has_errors()) { return nullptr; }
 
-ast::SourceFile *parse(std::string filename, symboltable::Namespace *root_namespace) {
+ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_namespace) {
     Lexer lexer(filename);
 
     Parser parser(lexer);

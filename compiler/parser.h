@@ -9,7 +9,7 @@
 #include <map>
 #include <string>
 
-#include "ast.h"
+#include "ast/visitor.h"
 
 namespace acorn {
 

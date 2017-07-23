@@ -18,7 +18,7 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
 
-#include "ast.h"
+#include "ast/nodes.h"
 #include "diagnostics.h"
 #include "symboltable.h"
 #include "types.h"

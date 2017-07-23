@@ -2,12 +2,11 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
-#ifndef ACORN_TYPING_H
-#define ACORN_TYPING_H
+#pragma once
 
 #include <vector>
 
-#include "ast.h"
+#include "ast/visitor.h"
 #include "symboltable.h"
 
 namespace acorn {
@@ -19,7 +18,6 @@ namespace acorn {
     namespace types {
         class Type;
         class TypeType;
-        class Parameter;
     }
 
     namespace typing {
@@ -49,33 +47,33 @@ namespace acorn {
                                                  std::map<types::ParameterType *, types::Type *> replacements);
 
         public:
-            void visit(ast::Block *node);
-            void visit(ast::Name *node);
-            void visit(ast::VariableDeclaration *node);
-            void visit(ast::Int *node);
-            void visit(ast::Float *node);
-            void visit(ast::Complex *node);
-            void visit(ast::String *node);
-            void visit(ast::List *node);
-            void visit(ast::Dictionary *node);
-            void visit(ast::Tuple *node);
-            void visit(ast::Call *node);
-            void visit(ast::CCall *node);
-            void visit(ast::Cast *node);
-            void visit(ast::Assignment *node);
-            void visit(ast::Selector *node);
-            void visit(ast::While *node);
-            void visit(ast::If *node);
-            void visit(ast::Return *node);
-            void visit(ast::Spawn *node);
-            void visit(ast::Switch *node);
-            void visit(ast::Parameter *node);
-            void visit(ast::Let *node);
-            void visit(ast::Def *node);
-            void visit(ast::Type *node);
-            void visit(ast::Module *node);
-            void visit(ast::Import *node);
-            void visit(ast::SourceFile *node);
+            void visit(ast::Block *node) override;
+            void visit(ast::Name *node) override;
+            void visit(ast::VariableDeclaration *node) override;
+            void visit(ast::Int *node) override;
+            void visit(ast::Float *node) override;
+            void visit(ast::Complex *node) override;
+            void visit(ast::String *node) override;
+            void visit(ast::List *node) override;
+            void visit(ast::Dictionary *node) override;
+            void visit(ast::Tuple *node) override;
+            void visit(ast::Call *node) override;
+            void visit(ast::CCall *node) override;
+            void visit(ast::Cast *node) override;
+            void visit(ast::Assignment *node) override;
+            void visit(ast::Selector *node) override;
+            void visit(ast::While *node) override;
+            void visit(ast::If *node) override;
+            void visit(ast::Return *node) override;
+            void visit(ast::Spawn *node) override;
+            void visit(ast::Switch *node) override;
+            void visit(ast::Parameter *node) override;
+            void visit(ast::Let *node) override;
+            void visit(ast::Def *node) override;
+            void visit(ast::Type *node) override;
+            void visit(ast::Module *node) override;
+            void visit(ast::Import *node) override;
+            void visit(ast::SourceFile *node) override;
 
         private:
             std::vector<ast::Def *> m_function_stack;
@@ -92,38 +90,36 @@ namespace acorn {
             void check_not_null(ast::Expression *expression);
 
         public:
-            void visit(ast::Block *node);
-            void visit(ast::Name *node);
-            void visit(ast::VariableDeclaration *node);
-            void visit(ast::Int *node);
-            void visit(ast::Float *node);
-            void visit(ast::Complex *node);
-            void visit(ast::String *node);
-            void visit(ast::List *node);
-            void visit(ast::Dictionary *node);
-            void visit(ast::Tuple *node);
-            void visit(ast::Call *node);
-            void visit(ast::CCall *node);
-            void visit(ast::Cast *node);
-            void visit(ast::Assignment *node);
-            void visit(ast::Selector *node);
-            void visit(ast::While *node);
-            void visit(ast::If *node);
-            void visit(ast::Return *node);
-            void visit(ast::Spawn *node);
-            void visit(ast::Switch *node);
-            void visit(ast::Parameter *node);
-            void visit(ast::Let *node);
-            void visit(ast::Def *node);
-            void visit(ast::Type *node);
-            void visit(ast::Module *node);
-            void visit(ast::Import *node);
-            void visit(ast::SourceFile *node);
+            void visit(ast::Block *node) override;
+            void visit(ast::Name *node) override;
+            void visit(ast::VariableDeclaration *node) override;
+            void visit(ast::Int *node) override;
+            void visit(ast::Float *node) override;
+            void visit(ast::Complex *node) override;
+            void visit(ast::String *node) override;
+            void visit(ast::List *node) override;
+            void visit(ast::Dictionary *node) override;
+            void visit(ast::Tuple *node) override;
+            void visit(ast::Call *node) override;
+            void visit(ast::CCall *node) override;
+            void visit(ast::Cast *node) override;
+            void visit(ast::Assignment *node) override;
+            void visit(ast::Selector *node) override;
+            void visit(ast::While *node) override;
+            void visit(ast::If *node) override;
+            void visit(ast::Return *node) override;
+            void visit(ast::Spawn *node) override;
+            void visit(ast::Switch *node) override;
+            void visit(ast::Parameter *node) override;
+            void visit(ast::Let *node) override;
+            void visit(ast::Def *node) override;
+            void visit(ast::Type *node) override;
+            void visit(ast::Module *node) override;
+            void visit(ast::Import *node) override;
+            void visit(ast::SourceFile *node) override;
 
         };
 
     }
 
 }
-
-#endif //ACORN_TYPING_H

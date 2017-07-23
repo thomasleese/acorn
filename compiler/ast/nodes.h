@@ -11,7 +11,7 @@
 
 #include <llvm/Support/Casting.h>
 
-#include "token.h"
+#include "../token.h"
 
 namespace acorn {
 
@@ -560,39 +560,6 @@ namespace acorn {
             std::string m_name;
             std::vector<std::unique_ptr<SourceFile>> m_imports;
             std::unique_ptr<Block> m_code;
-        };
-
-        class Visitor {
-        public:
-            virtual ~Visitor();
-
-            virtual void visit(Block *node) = 0;
-            virtual void visit(Name *node) = 0;
-            virtual void visit(VariableDeclaration *node) = 0;
-            virtual void visit(Int *node) = 0;
-            virtual void visit(Float *node) = 0;
-            virtual void visit(Complex *node) = 0;
-            virtual void visit(String *node) = 0;
-            virtual void visit(List *node) = 0;
-            virtual void visit(Dictionary *node) = 0;
-            virtual void visit(Tuple *node) = 0;
-            virtual void visit(Call *node) = 0;
-            virtual void visit(CCall *node) = 0;
-            virtual void visit(Cast *node) = 0;
-            virtual void visit(Assignment *node) = 0;
-            virtual void visit(Selector *node) = 0;
-            virtual void visit(While *node) = 0;
-            virtual void visit(If *node) = 0;
-            virtual void visit(Return *node) = 0;
-            virtual void visit(Spawn *node) = 0;
-            virtual void visit(Switch *node) = 0;
-            virtual void visit(Parameter *node) = 0;
-            virtual void visit(Let *node) = 0;
-            virtual void visit(Def *node) = 0;
-            virtual void visit(Type *node) = 0;
-            virtual void visit(Module *node) = 0;
-            virtual void visit(Import *node) = 0;
-            virtual void visit(SourceFile *node) = 0;
         };
 
     }

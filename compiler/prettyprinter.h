@@ -2,13 +2,12 @@
 // Created by Thomas Leese on 14/03/2016.
 //
 
-#ifndef ACORN_PRETTYPRINTER_H
-#define ACORN_PRETTYPRINTER_H
+#pragma once
 
 #include <sstream>
 #include <string>
 
-#include "ast.h"
+#include "ast/visitor.h"
 
 namespace acorn {
 
@@ -60,5 +59,3 @@ namespace acorn {
     };
 
 }
-
-#endif // ACORN_PRETTYPRINTER_H

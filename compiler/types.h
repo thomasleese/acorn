@@ -2,8 +2,7 @@
 // Created by Thomas Leese on 18/03/2016.
 //
 
-#ifndef ACORN_TYPES_H
-#define ACORN_TYPES_H
+#pragma once
 
 #include <set>
 #include <string>
@@ -552,5 +551,3 @@ namespace acorn {
     };
 
 }
-
-#endif // ACORN_TYPES_H

@@ -6,9 +6,10 @@
 #include <iostream>
 #include <sstream>
 
-#include "types.h"
+#include "../types.h"
+#include "visitor.h"
 
-#include "ast.h"
+#include "nodes.h"
 
 using namespace acorn;
 using namespace acorn::ast;
@@ -128,7 +129,7 @@ void Complex::accept(Visitor *visitor) {
 }
 
 String::String(Token token, std::string value) : Expression(token), m_value(value) {
-    
+
 }
 
 void String::accept(Visitor *visitor) {
@@ -379,11 +380,11 @@ Let::Let(Token token, std::string name, std::unique_ptr<Expression> value, std::
     auto name_node = std::make_unique<Name>(token, name);
 
     auto variable_declaration = std::make_unique<VariableDeclaration>(
-        token, std::move(name_node), nullptr, false
+            token, std::move(name_node), nullptr, false
     );
 
     m_assignment = std::make_unique<Assignment>(
-        token, std::move(variable_declaration), std::move(value)
+            token, std::move(variable_declaration), std::move(value)
     );
 }
 
@@ -505,8 +506,4 @@ std::vector<SourceFile *> SourceFile::imports() const {
 
 void SourceFile::accept(Visitor *visitor) {
     visitor->visit(this);
-}
-
-Visitor::~Visitor() {
-
 }
