@@ -6,7 +6,7 @@
 #include <iostream>
 #include <sstream>
 
-#include "../types.h"
+#include "../typesystem/types.h"
 #include "visitor.h"
 
 #include "nodes.h"
@@ -99,7 +99,7 @@ VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name
 
 }
 
-void VariableDeclaration::set_type(types::Type *type) {
+void VariableDeclaration::set_type(typesystem::Type *type) {
     Expression::set_type(type);
     m_name->set_type(type);
 }
@@ -226,8 +226,8 @@ std::vector<Expression *> Call::positional_arguments() const {
     return expressions;
 }
 
-std::vector<types::Type *> Call::positional_argument_types() const {
-    std::vector<types::Type *> types;
+std::vector<typesystem::Type *> Call::positional_argument_types() const {
+    std::vector<typesystem::Type *> types;
     for (auto &expression : m_positional_arguments) {
         types.push_back(expression->type());
     }
@@ -242,8 +242,8 @@ std::map<std::string, Expression *> Call::keyword_arguments() const {
     return expressions;
 }
 
-std::map<std::string, types::Type *> Call::keyword_argument_types() const {
-    std::map<std::string, types::Type *> types;
+std::map<std::string, typesystem::Type *> Call::keyword_argument_types() const {
+    std::map<std::string, typesystem::Type *> types;
     for (auto &entry : m_keyword_arguments) {
         types[entry.first] = entry.second->type();
     }
@@ -422,7 +422,7 @@ Def::Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<
     m_signature = std::make_unique<MethodSignature>(token, std::move(name), std::move(parameters), std::move(given_return_type));
 }
 
-void Def::set_type(types::Type *type) {
+void Def::set_type(typesystem::Type *type) {
     Expression::set_type(type);
     m_signature->name()->set_type(type);
 }
@@ -465,7 +465,7 @@ std::vector<Name *> Type::field_types() const {
     return field_types;
 }
 
-void Type::set_type(types::Type *type) {
+void Type::set_type(typesystem::Type *type) {
     Expression::set_type(type);
     m_name->set_type(type);
 }

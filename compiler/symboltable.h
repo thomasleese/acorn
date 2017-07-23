@@ -17,7 +17,7 @@ namespace llvm {
 
 namespace acorn {
 
-    namespace types {
+    namespace typesystem {
         class Type;
         class Method;
     }
@@ -59,8 +59,8 @@ namespace acorn {
             bool builtin() const { return m_builtin; }
 
             bool has_type() const { return m_type != nullptr; }
-            types::Type *type() const { return m_type; }
-            void set_type(types::Type *type) { m_type = type; }
+            typesystem::Type *type() const { return m_type; }
+            void set_type(typesystem::Type *type) { m_type = type; }
 
             bool has_llvm_value() const { return m_llvm_value != nullptr; }
             llvm::Value *llvm_value() const { return m_llvm_value; }
@@ -83,7 +83,7 @@ namespace acorn {
         private:
             std::string m_name;
             bool m_builtin;
-            types::Type *m_type;
+            typesystem::Type *m_type;
             llvm::Value *m_llvm_value;
             std::unique_ptr<Namespace> m_scope;
             ast::Node *m_node;

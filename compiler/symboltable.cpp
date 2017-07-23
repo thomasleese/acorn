@@ -9,7 +9,7 @@
 #include "ast/nodes.h"
 #include "diagnostics.h"
 #include "lexer.h"
-#include "types.h"
+#include "typesystem/types.h"
 
 #include "symboltable.h"
 
@@ -153,11 +153,11 @@ void Symbol::initialise_node(ast::Node *node) {
 }
 
 bool Symbol::is_function() const {
-    return dynamic_cast<types::Function *>(m_type) != nullptr;
+    return dynamic_cast<typesystem::Function *>(m_type) != nullptr;
 }
 
 bool Symbol::is_type() const {
-    return dynamic_cast<types::TypeType *>(m_type) != nullptr;
+    return dynamic_cast<typesystem::TypeType *>(m_type) != nullptr;
 }
 
 bool Symbol::is_variable() const {

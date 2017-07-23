@@ -15,7 +15,7 @@
 #include "ast/visitor.h"
 #include "diagnostics.h"
 #include "symboltable.h"
-#include "types.h"
+#include "typesystem/visitor.h"
 
 namespace llvm {
     class Module;
@@ -31,7 +31,7 @@ namespace acorn {
     namespace codegen {
 
         std::string mangle(std::string name);
-        std::string mangle_method(std::string name, types::Method *type);
+        std::string mangle_method(std::string name, typesystem::Method *type);
 
         class ValueFollower {
         public:
@@ -88,7 +88,7 @@ namespace acorn {
             std::vector<llvm::IRBuilderBase::InsertPoint> m_insert_points;
         };
 
-        class CodeGenerator : public ast::Visitor, public types::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower, public TypeFollower, public InitialiserFollower, public IrBuilder {
+        class CodeGenerator : public ast::Visitor, public typesystem::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower, public TypeFollower, public InitialiserFollower, public IrBuilder {
 
         public:
             CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout);
@@ -98,15 +98,15 @@ namespace acorn {
             llvm::Type *take_type(ast::Expression *expression);
             llvm::Constant *take_initialiser(ast::Node *node);
 
-            llvm::Type *generate_type(ast::Expression *expression, types::Type *type);
+            llvm::Type *generate_type(ast::Expression *expression, typesystem::Type *type);
             llvm::Type *generate_type(ast::Expression *expression);
 
-            void push_replacement_type_parameter(types::ParameterType *key, types::Type *value);
-            void pop_replacement_type_parameter(types::ParameterType *key);
-            void push_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation);
-            void pop_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation);
-            types::Type *get_replacement_type_parameter(types::ParameterType *key);
-            types::Type *get_replacement_type_parameter(types::Parameter *key);
+            void push_replacement_type_parameter(typesystem::ParameterType *key, typesystem::Type *value);
+            void pop_replacement_type_parameter(typesystem::ParameterType *key);
+            void push_replacement_generic_specialisation(std::map<typesystem::ParameterType *, typesystem::Type *> specialisation);
+            void pop_replacement_generic_specialisation(std::map<typesystem::ParameterType *, typesystem::Type *> specialisation);
+            typesystem::Type *get_replacement_type_parameter(typesystem::ParameterType *key);
+            typesystem::Type *get_replacement_type_parameter(typesystem::Parameter *key);
 
             void push_llvm_type_and_initialiser(llvm::Type *type, llvm::Constant *initialiser);
             void push_null_llvm_type_and_initialiser();
@@ -122,35 +122,35 @@ namespace acorn {
 
             llvm::Value *generate_llvm_value(ast::Node *node);
 
-            llvm::FunctionType *generate_function_type_for_method(types::Method *method);
+            llvm::FunctionType *generate_function_type_for_method(typesystem::Method *method);
 
-            void visit_constructor(types::TypeType *type);
+            void visit_constructor(typesystem::TypeType *type);
 
-            void visit(types::ParameterType *type);
-            void visit(types::VoidType *type);
-            void visit(types::BooleanType *type);
-            void visit(types::IntegerType *type);
-            void visit(types::UnsignedIntegerType *type);
-            void visit(types::FloatType *type);
-            void visit(types::UnsafePointerType *type);
-            void visit(types::FunctionType *type);
-            void visit(types::MethodType *type);
-            void visit(types::RecordType *type);
-            void visit(types::TupleType *type);
-            void visit(types::AliasType *type);
-            void visit(types::ModuleType *type);
-            void visit(types::TypeDescriptionType *type);
-            void visit(types::Parameter *type);
-            void visit(types::Void *type);
-            void visit(types::Boolean *type);
-            void visit(types::Integer *type);
-            void visit(types::UnsignedInteger *type);
-            void visit(types::Float *type);
-            void visit(types::UnsafePointer *type);
-            void visit(types::Record *type);
-            void visit(types::Tuple *type);
-            void visit(types::Method *type);
-            void visit(types::Function *type);
+            void visit(typesystem::ParameterType *type);
+            void visit(typesystem::VoidType *type);
+            void visit(typesystem::BooleanType *type);
+            void visit(typesystem::IntegerType *type);
+            void visit(typesystem::UnsignedIntegerType *type);
+            void visit(typesystem::FloatType *type);
+            void visit(typesystem::UnsafePointerType *type);
+            void visit(typesystem::FunctionType *type);
+            void visit(typesystem::MethodType *type);
+            void visit(typesystem::RecordType *type);
+            void visit(typesystem::TupleType *type);
+            void visit(typesystem::AliasType *type);
+            void visit(typesystem::ModuleType *type);
+            void visit(typesystem::TypeDescriptionType *type);
+            void visit(typesystem::Parameter *type);
+            void visit(typesystem::Void *type);
+            void visit(typesystem::Boolean *type);
+            void visit(typesystem::Integer *type);
+            void visit(typesystem::UnsignedInteger *type);
+            void visit(typesystem::Float *type);
+            void visit(typesystem::UnsafePointer *type);
+            void visit(typesystem::Record *type);
+            void visit(typesystem::Tuple *type);
+            void visit(typesystem::Method *type);
+            void visit(typesystem::Function *type);
 
             void visit(ast::Block *node);
             void visit(ast::Name *node);
@@ -187,7 +187,7 @@ namespace acorn {
             llvm::DataLayout *m_data_layout;
 
             std::vector<llvm::Argument *> m_args;
-            std::map<types::ParameterType *, types::Type *> m_replacement_type_parameters;
+            std::map<typesystem::ParameterType *, typesystem::Type *> m_replacement_type_parameters;
 
             llvm::Function *m_init_variables_function;
         };

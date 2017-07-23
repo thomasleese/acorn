@@ -7,7 +7,7 @@
 
 #include "ast/nodes.h"
 #include "lexer.h"
-#include "types.h"
+#include "typesystem/types.h"
 
 #include "diagnostics.h"
 
@@ -141,12 +141,12 @@ TypeMismatchError::TypeMismatchError(ast::Expression *node1, ast::Expression *no
 
 }
 
-TypeMismatchError::TypeMismatchError(ast::Node *node, types::Type *type1, types::Type *type2) : TypeMismatchError(node, type1->name(), type2->name()) {
+TypeMismatchError::TypeMismatchError(ast::Node *node, typesystem::Type *type1, typesystem::Type *type2) : TypeMismatchError(node, type1->name(), type2->name()) {
 
 }
 
 TypeMismatchError::TypeMismatchError(ast::Node *node, std::string type1, std::string type2) : CompilerError(node) {
-    m_prefix = "Invalid types";
+    m_prefix = "Invalid typesystem";
 
     std::stringstream ss;
     ss << "Got: " << type1 << "\n";

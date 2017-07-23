@@ -3,7 +3,7 @@ type Maybe{T} as enum:
     Nothing
     Some(T)
 
-# Enumeration types.
+# Enumeration typesystem.
 type Enumeration{T}:
     iterator as ArrayIterator{T}
     state as Int

@@ -6,7 +6,8 @@
 #include "lexer.h"
 #include "parser.h"
 #include "prettyprinter.h"
-#include "typing.h"
+#include "typesystem/inferrer.h"
+#include "typesystem/checker.h"
 
 using namespace acorn;
 
@@ -30,7 +31,9 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
 
     return_if_has_errors(symbol_table_builder);
 
-    typing::Inferrer inferrer(root_namespace);
+    std::cout << "inferrer" << std::endl;
+
+    typesystem::TypeInferrer inferrer(root_namespace);
     module->accept(&inferrer);
 
     //std::cout << root_namespace->to_string() << std::endl;
@@ -39,7 +42,9 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
 
     return_if_has_errors(inferrer);
 
-    typing::Checker type_checker(root_namespace);
+    std::cout << "checker" << std::endl;
+
+    typesystem::TypeChecker type_checker(root_namespace);
     module->accept(&type_checker);
 
     return_if_has_errors(type_checker);

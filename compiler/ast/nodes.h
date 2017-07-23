@@ -15,7 +15,7 @@
 
 namespace acorn {
 
-    namespace types {
+    namespace typesystem {
         class Type;
         class ParameterType;
     }
@@ -51,15 +51,15 @@ namespace acorn {
             Expression(NodeKind kind, Token token);
             explicit Expression(Token token);
 
-            types::Type *type() const { return m_type; }
-            virtual void set_type(types::Type *type) { m_type = type; }
+            typesystem::Type *type() const { return m_type; }
+            virtual void set_type(typesystem::Type *type) { m_type = type; }
             bool has_type() const { return m_type != nullptr; }
             void copy_type_from(Expression *expression);
             bool has_compatible_type_with(Expression *expression) const;
             std::string type_name() const;
 
         private:
-            types::Type *m_type;
+            typesystem::Type *m_type;
         };
 
         class Block : public Expression {
@@ -109,7 +109,7 @@ namespace acorn {
 
             bool builtin() const { return m_builtin; }
 
-            void set_type(types::Type *type) override;
+            void set_type(typesystem::Type *type) override;
 
             void accept(Visitor *visitor) override;
 
@@ -216,16 +216,16 @@ namespace acorn {
             Call(Token token, std::string name, std::vector<std::unique_ptr<Expression>> arguments);
 
             Expression *operand() const { return m_operand.get(); }
-            types::Type *operand_type() const { return m_operand->type(); }
+            typesystem::Type *operand_type() const { return m_operand->type(); }
 
             std::vector<Expression *> positional_arguments() const;
-            std::vector<types::Type *> positional_argument_types() const;
+            std::vector<typesystem::Type *> positional_argument_types() const;
 
             std::map<std::string, Expression *> keyword_arguments() const;
-            std::map<std::string, types::Type *> keyword_argument_types() const;
+            std::map<std::string, typesystem::Type *> keyword_argument_types() const;
 
-            void add_inferred_type_parameter(types::ParameterType *parameter, types::Type *type) { m_inferred_type_parameters[parameter] = type; }
-            std::map<types::ParameterType *, types::Type *> inferred_type_parameters() const { return m_inferred_type_parameters; }
+            void add_inferred_type_parameter(typesystem::ParameterType *parameter, typesystem::Type *type) { m_inferred_type_parameters[parameter] = type; }
+            std::map<typesystem::ParameterType *, typesystem::Type *> inferred_type_parameters() const { return m_inferred_type_parameters; }
 
             void set_method_index(int index) { m_method_index = index; }
             int get_method_index() const { return m_method_index; }
@@ -245,7 +245,7 @@ namespace acorn {
             std::vector<std::unique_ptr<Expression>> m_positional_arguments;
             std::map<std::string, std::unique_ptr<Expression>> m_keyword_arguments;
 
-            std::map<types::ParameterType *, types::Type *> m_inferred_type_parameters;
+            std::map<typesystem::ParameterType *, typesystem::Type *> m_inferred_type_parameters;
 
             int m_method_index;
             int m_method_specialisation_index;
@@ -482,7 +482,7 @@ namespace acorn {
             bool has_given_return_type() const { return m_signature->has_given_return_type(); }
             Name *given_return_type() const { return m_signature->given_return_type(); }
 
-            void set_type(types::Type *type) override;
+            void set_type(typesystem::Type *type) override;
 
             void accept(Visitor *visitor) override;
 
@@ -508,7 +508,7 @@ namespace acorn {
             std::vector<Name *> field_names() const;
             std::vector<Name *> field_types() const;
 
-            void set_type(types::Type *type) override;
+            void set_type(typesystem::Type *type) override;
 
             void accept(Visitor *visitor) override;
 

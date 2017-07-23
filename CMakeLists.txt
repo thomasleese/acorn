@@ -27,8 +27,8 @@ set(SOURCE_FILES
                  compiler/prettyprinter.cpp
                  compiler/symboltable.cpp
                  compiler/token.cpp
-                 compiler/typing.cpp
-                 compiler/types.cpp compiler/ast/visitor.cpp compiler/ast/nodes.cpp)
+        compiler/typesystem/checker.cpp
+        compiler/typesystem/types.cpp compiler/ast/visitor.cpp compiler/ast/nodes.cpp compiler/typesystem/visitor.cpp compiler/typesystem/inferrer.cpp)
 
 add_executable(acorn ${SOURCE_FILES})
 target_link_libraries(acorn ${LLVM_LIBS} ${Boost_LIBRARIES} z icuuc icudata ncurses)

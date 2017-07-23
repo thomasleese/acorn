@@ -1,4 +1,4 @@
-import "base/types"
+import "base/typesystem"
 
 ## Exit the program.
 ##

@@ -21,7 +21,7 @@
 #include "ast/nodes.h"
 #include "diagnostics.h"
 #include "symboltable.h"
-#include "types.h"
+#include "typesystem/types.h"
 
 #include "codegen.h"
 
@@ -37,7 +37,7 @@ std::string codegen::mangle(std::string name) {
     return "_A_" + name;
 }
 
-std::string codegen::mangle_method(std::string name, types::Method *type) {
+std::string codegen::mangle_method(std::string name, typesystem::Method *type) {
     return mangle(name + "_" + type->mangled_name());
 }
 
@@ -189,7 +189,7 @@ llvm::Constant *CodeGenerator::take_initialiser(ast::Node *node) {
     }
 }
 
-llvm::Type *CodeGenerator::generate_type(ast::Expression *expression, types::Type *type) {
+llvm::Type *CodeGenerator::generate_type(ast::Expression *expression, typesystem::Type *type) {
     type->accept(this);
     return take_type(expression);
 }
@@ -198,31 +198,31 @@ llvm::Type *CodeGenerator::generate_type(ast::Expression *expression) {
     return generate_type(expression, expression->type());
 }
 
-void CodeGenerator::push_replacement_type_parameter(types::ParameterType *key, types::Type *value) {
+void CodeGenerator::push_replacement_type_parameter(typesystem::ParameterType *key, typesystem::Type *value) {
     m_replacement_type_parameters[key] = value;
 }
 
-void CodeGenerator::pop_replacement_type_parameter(types::ParameterType *key) {
+void CodeGenerator::pop_replacement_type_parameter(typesystem::ParameterType *key) {
     m_replacement_type_parameters.erase(key);
 }
 
-void CodeGenerator::push_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation) {
+void CodeGenerator::push_replacement_generic_specialisation(std::map<typesystem::ParameterType *, typesystem::Type *> specialisation) {
     for (auto const &entry : specialisation) {
         push_replacement_type_parameter(entry.first, entry.second);
     }
 }
 
-void CodeGenerator::pop_replacement_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation) {
+void CodeGenerator::pop_replacement_generic_specialisation(std::map<typesystem::ParameterType *, typesystem::Type *> specialisation) {
     for (auto const &entry : specialisation) {
         pop_replacement_type_parameter(entry.first);
     }
 }
 
-types::Type *CodeGenerator::get_replacement_type_parameter(types::ParameterType *key) {
+typesystem::Type *CodeGenerator::get_replacement_type_parameter(typesystem::ParameterType *key) {
     return m_replacement_type_parameters[key];
 }
 
-types::Type *CodeGenerator::get_replacement_type_parameter(types::Parameter *key) {
+typesystem::Type *CodeGenerator::get_replacement_type_parameter(typesystem::Parameter *key) {
     return get_replacement_type_parameter(key->type());
 }
 
@@ -378,7 +378,7 @@ llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
     return value;
 }
 
-llvm::FunctionType *CodeGenerator::generate_function_type_for_method(types::Method *method) {
+llvm::FunctionType *CodeGenerator::generate_function_type_for_method(typesystem::Method *method) {
     auto llvm_return_type = generate_type(nullptr, method->return_type());
     return_null_if_null(llvm_return_type);
 
@@ -399,50 +399,50 @@ llvm::FunctionType *CodeGenerator::generate_function_type_for_method(types::Meth
     );
 }
 
-void CodeGenerator::visit_constructor(types::TypeType *type) {
+void CodeGenerator::visit_constructor(typesystem::TypeType *type) {
     push_llvm_type_and_initialiser(
         m_ir_builder->getInt1Ty(),
         m_ir_builder->getInt1(0)
     );
 }
 
-void CodeGenerator::visit(types::ParameterType *type) {
+void CodeGenerator::visit(typesystem::ParameterType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::VoidType *type) {
+void CodeGenerator::visit(typesystem::VoidType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::BooleanType *type) {
+void CodeGenerator::visit(typesystem::BooleanType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::IntegerType *type) {
+void CodeGenerator::visit(typesystem::IntegerType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::UnsignedIntegerType *type) {
+void CodeGenerator::visit(typesystem::UnsignedIntegerType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::FloatType *type) {
+void CodeGenerator::visit(typesystem::FloatType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::UnsafePointerType *type) {
+void CodeGenerator::visit(typesystem::UnsafePointerType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::FunctionType *type) {
+void CodeGenerator::visit(typesystem::FunctionType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::MethodType *type) {
+void CodeGenerator::visit(typesystem::MethodType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::RecordType *type) {
+void CodeGenerator::visit(typesystem::RecordType *type) {
     type->constructor()->accept(this);
 
     std::vector<llvm::Type *> struct_fields;
@@ -457,23 +457,23 @@ void CodeGenerator::visit(types::RecordType *type) {
     push_llvm_type_and_initialiser(llvm_type, llvm_initialiser);
 }
 
-void CodeGenerator::visit(types::TupleType *type) {
+void CodeGenerator::visit(typesystem::TupleType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::AliasType *type) {
+void CodeGenerator::visit(typesystem::AliasType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::ModuleType *type) {
+void CodeGenerator::visit(typesystem::ModuleType *type) {
     push_null_llvm_type_and_initialiser();
 }
 
-void CodeGenerator::visit(types::TypeDescriptionType *type) {
+void CodeGenerator::visit(typesystem::TypeDescriptionType *type) {
     visit_constructor(type);
 }
 
-void CodeGenerator::visit(types::Parameter *type) {
+void CodeGenerator::visit(typesystem::Parameter *type) {
     auto it = m_replacement_type_parameters.find(type->type());
     if (it == m_replacement_type_parameters.end()) {
         push_null_llvm_type_and_initialiser();
@@ -482,21 +482,21 @@ void CodeGenerator::visit(types::Parameter *type) {
     }
 }
 
-void CodeGenerator::visit(types::Void *type) {
+void CodeGenerator::visit(typesystem::Void *type) {
     push_llvm_type_and_initialiser(
         m_ir_builder->getInt1Ty(),
         m_ir_builder->getInt1(0)
     );
 }
 
-void CodeGenerator::visit(types::Boolean *type) {
+void CodeGenerator::visit(typesystem::Boolean *type) {
     push_llvm_type_and_initialiser(
         m_ir_builder->getInt1Ty(),
         m_ir_builder->getInt1(0)
     );
 }
 
-void CodeGenerator::visit(types::Integer *type) {
+void CodeGenerator::visit(typesystem::Integer *type) {
     const unsigned int size = type->size();
     push_llvm_type_and_initialiser(
         m_ir_builder->getIntNTy(size),
@@ -504,7 +504,7 @@ void CodeGenerator::visit(types::Integer *type) {
     );
 }
 
-void CodeGenerator::visit(types::UnsignedInteger *type) {
+void CodeGenerator::visit(typesystem::UnsignedInteger *type) {
     const unsigned int size = type->size();
     push_llvm_type_and_initialiser(
         m_ir_builder->getIntNTy(size),
@@ -512,7 +512,7 @@ void CodeGenerator::visit(types::UnsignedInteger *type) {
     );
 }
 
-void CodeGenerator::visit(types::Float *type) {
+void CodeGenerator::visit(typesystem::Float *type) {
     const unsigned int size = type->size();
     llvm::Type *llvm_type = nullptr;
 
@@ -533,7 +533,7 @@ void CodeGenerator::visit(types::Float *type) {
     );
 }
 
-void CodeGenerator::visit(types::UnsafePointer *type) {
+void CodeGenerator::visit(typesystem::UnsafePointer *type) {
     auto llvm_element_type = generate_type(nullptr, type->element_type());
     if (llvm_element_type == nullptr) {
         push_null_llvm_type_and_initialiser();
@@ -545,7 +545,7 @@ void CodeGenerator::visit(types::UnsafePointer *type) {
     push_llvm_initialiser(llvm::ConstantPointerNull::get(llvm_pointer_type));
 }
 
-void CodeGenerator::visit(types::Record *type) {
+void CodeGenerator::visit(typesystem::Record *type) {
     std::vector<llvm::Type *> llvm_types;
     std::vector<llvm::Constant *> llvm_initialisers;
 
@@ -569,11 +569,11 @@ void CodeGenerator::visit(types::Record *type) {
     push_llvm_initialiser(struct_initialiser);
 }
 
-void CodeGenerator::visit(types::Tuple *type) {
-    visit(static_cast<types::Record *>(type));
+void CodeGenerator::visit(typesystem::Tuple *type) {
+    visit(static_cast<typesystem::Record *>(type));
 }
 
-void CodeGenerator::visit(types::Method *type) {
+void CodeGenerator::visit(typesystem::Method *type) {
     std::vector<llvm::Type *> specialised_method_types;
     std::vector<llvm::Constant *> specialised_method_initialisers;
 
@@ -597,7 +597,7 @@ void CodeGenerator::visit(types::Method *type) {
     push_llvm_type_and_initialiser(struct_type, struct_initialiser);
 }
 
-void CodeGenerator::visit(types::Function *type) {
+void CodeGenerator::visit(typesystem::Function *type) {
     std::vector<llvm::Type *> llvm_types;
     std::vector<llvm::Constant *> llvm_initialisers;
 
@@ -769,7 +769,7 @@ void CodeGenerator::visit(ast::Call *node) {
 
     operand->accept(this);
 
-    auto function_type = dynamic_cast<types::Function *>(operand->type());
+    auto function_type = dynamic_cast<typesystem::Function *>(operand->type());
 
     auto method_index = node->get_method_index();
     auto method = function_type->get_method(method_index);
@@ -873,9 +873,9 @@ void CodeGenerator::visit(ast::Assignment *node) {
 void CodeGenerator::visit(ast::Selector *node) {
     auto operand = node->operand();
 
-    auto module_type = dynamic_cast<types::ModuleType *>(operand->type());
-    auto record_type_type = dynamic_cast<types::RecordType *>(operand->type());
-    auto record_type = dynamic_cast<types::Record *>(operand->type());
+    auto module_type = dynamic_cast<typesystem::ModuleType *>(operand->type());
+    auto record_type_type = dynamic_cast<typesystem::RecordType *>(operand->type());
+    auto record_type = dynamic_cast<typesystem::Record *>(operand->type());
 
     if (module_type) {
         auto module_name = static_cast<ast::Name *>(operand);
@@ -902,7 +902,7 @@ void CodeGenerator::visit(ast::Selector *node) {
 
         auto actual_thing = llvm::cast<llvm::LoadInst>(instance)->getPointerOperand();
 
-        auto record = dynamic_cast<types::Record *>(operand->type());
+        auto record = dynamic_cast<typesystem::Record *>(operand->type());
 
         int index = record->get_field_index(node->field()->value());
         auto value = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(actual_thing, build_gep_index({ 0, index })));
@@ -1030,7 +1030,7 @@ void CodeGenerator::visit(ast::Let *node) {
 
 void CodeGenerator::visit(ast::Def *node) {
     auto function_symbol = scope()->lookup(this, node->name()->field());
-    auto function_type = static_cast<types::Function *>(function_symbol->type());
+    auto function_type = static_cast<typesystem::Function *>(function_symbol->type());
 
     if (!function_symbol->has_llvm_value()) {
         auto llvm_function_type = generate_type(node, function_type);
@@ -1044,7 +1044,7 @@ void CodeGenerator::visit(ast::Def *node) {
         );
     }
 
-    auto method = static_cast<types::Method *>(node->type());
+    auto method = static_cast<typesystem::Method *>(node->type());
 
     auto symbol = function_symbol->scope()->lookup_by_node(this, node);
 
@@ -1117,7 +1117,7 @@ void CodeGenerator::visit(ast::Type *node) {
         new_symbol->set_llvm_value(old_symbol->llvm_value());
         push_llvm_value(new_symbol->llvm_value());
     } else {
-        auto node_type = dynamic_cast<types::RecordType *>(node->type());
+        auto node_type = dynamic_cast<typesystem::RecordType *>(node->type());
 
         auto symbol = scope()->lookup(this, node->name());
         return_and_push_null_if_null(symbol);

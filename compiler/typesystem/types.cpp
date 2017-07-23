@@ -7,14 +7,15 @@
 #include <sstream>
 #include <iostream>
 
-#include "ast/nodes.h"
-#include "diagnostics.h"
+#include "../ast/nodes.h"
+#include "../diagnostics.h"
+#include "visitor.h"
 
 #include "types.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;
-using namespace acorn::types;
+using namespace acorn::typesystem;
 
 Type::Type() {
 
@@ -34,7 +35,7 @@ bool Type::is_compatible(const Type *other) const {
     return name1 == name2;
 }
 
-std::vector<types::Type *> Type::parameters() const {
+std::vector<typesystem::Type *> Type::parameters() const {
     return m_parameters;
 }
 
@@ -74,7 +75,7 @@ std::string ParameterType::name() const {
 }
 
 bool ParameterType::is_compatible(const Type *other) const {
-    return (bool) dynamic_cast<const types::TypeType *>(other);
+    return (bool) dynamic_cast<const typesystem::TypeType *>(other);
 }
 
 Type *ParameterType::create(diagnostics::Reporter *diagnostics, ast::Node *node) {
@@ -256,7 +257,7 @@ bool UnsafePointerType::has_element_type() const {
 }
 
 TypeType *UnsafePointerType::element_type() const {
-    auto t = dynamic_cast<types::TypeType *>(m_parameters[0]);
+    auto t = dynamic_cast<typesystem::TypeType *>(m_parameters[0]);
     assert(t);
     return t;
 }
@@ -1131,11 +1132,11 @@ bool Method::could_be_called_with(std::vector<Type *> positional_arguments, std:
     return true;
 }
 
-void Method::add_generic_specialisation(std::map<types::ParameterType *, types::Type *> specialisation) {
+void Method::add_generic_specialisation(std::map<typesystem::ParameterType *, typesystem::Type *> specialisation) {
     m_specialisations.push_back(specialisation);
 }
 
-std::vector<std::map<types::ParameterType *, types::Type *> > Method::generic_specialisations() {
+std::vector<std::map<typesystem::ParameterType *, typesystem::Type *> > Method::generic_specialisations() {
     return m_specialisations;
 }
 
@@ -1144,7 +1145,7 @@ size_t Method::no_generic_specialisation() const {
 }
 
 void Method::add_empty_specialisation() {
-    std::map<types::ParameterType *, types::Type *> empty_specialisation;
+    std::map<typesystem::ParameterType *, typesystem::Type *> empty_specialisation;
     add_generic_specialisation(empty_specialisation);
 }
 
@@ -1268,8 +1269,4 @@ Function *Function::with_parameters(std::vector<Type *> parameters) {
 
 void Function::accept(Visitor *visitor) {
     visitor->visit(this);
-}
-
-Visitor::~Visitor() {
-
 }
