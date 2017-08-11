@@ -4,12 +4,13 @@
 #include "acorn/codegen.h"
 #include "acorn/compiler.h"
 #include "acorn/parser/lexer.h"
-#include "acorn/parser.h"
+#include "acorn/parser/parser.h"
 #include "acorn/prettyprinter.h"
 #include "acorn/typesystem/inferrer.h"
 #include "acorn/typesystem/checker.h"
 
 using namespace acorn;
+using namespace acorn::parser;
 
 #define return_if_has_errors(thing) if ((thing).has_errors()) { return nullptr; }
 

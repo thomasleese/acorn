@@ -11,7 +11,7 @@
 #include "acorn/diagnostics.h"
 #include "acorn/parser/lexer.h"
 
-#include "acorn/parser.h"
+#include "acorn/parser/parser.h"
 
 using namespace acorn;
 using namespace acorn::ast;
