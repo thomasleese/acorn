@@ -20,22 +20,34 @@ set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_LD_FLAGS} -fexcepti
 
 include_directories(include)
 
-set(SOURCE_FILES src/codegen.cpp
-                 src/compiler.cpp
-                 src/diagnostics.cpp
-                 src/lexer.cpp
-                 src/main.cpp
-                 src/parser.cpp
-                 src/prettyprinter.cpp
-                 src/symboltable.cpp
-                 src/token.cpp
-                 src/typesystem/checker.cpp
-                 src/typesystem/types.cpp
-                 src/ast/visitor.cpp
-                 src/ast/nodes.cpp
-                 src/typesystem/visitor.cpp
-                 src/typesystem/inferrer.cpp
-                 src/parser/keywords.cpp)
+set(LIB_FILES lib/codegen.cpp
+              lib/compiler.cpp
+              lib/diagnostics.cpp
+              lib/lexer.cpp
+              lib/parser.cpp
+              lib/prettyprinter.cpp
+              lib/symboltable.cpp
+              lib/token.cpp
+              lib/typesystem/checker.cpp
+              lib/typesystem/types.cpp
+              lib/ast/visitor.cpp
+              lib/ast/nodes.cpp
+              lib/typesystem/visitor.cpp
+              lib/typesystem/inferrer.cpp
+              lib/parser/keywords.cpp)
 
-add_executable(acorn ${SOURCE_FILES})
-target_link_libraries(acorn ${LLVM_LIBS} ${Boost_LIBRARIES} ${ICU_LIBRARIES} z ncurses)
+set(TEST_FILES test/parser/keywords_test.cpp)
+
+set(SOURCE_FILES src/main.cpp)
+
+set(LIBS ${LLVM_LIBS} ${Boost_LIBRARIES} ${ICU_LIBRARIES} z ncurses)
+
+add_executable(acorn ${LIB_FILES} ${SOURCE_FILES})
+target_link_libraries(acorn ${LIBS})
+
+enable_testing()
+
+include_directories(${GTEST_INCLUDE_DIRS})
+add_executable(acorntest ${LIB_FILES} ${TEST_FILES})
+target_link_libraries(acorntest ${LIBS} ${GTEST_LIBS_DIR}/libgtest.a ${GTEST_LIBS_DIR}/libgtest_main.a)
+add_test(acorntest acorntest)
