@@ -7,7 +7,7 @@
 #include <exception>
 #include <string>
 
-#include "token.h"
+#include "parser/token.h"
 
 namespace acorn {
 
@@ -20,6 +20,12 @@ namespace acorn {
     namespace typesystem {
         class Type;
     }
+
+    namespace parser {
+        struct Token;
+    }
+
+    using parser::Token;
 
     namespace diagnostics {
 

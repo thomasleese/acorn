@@ -9,9 +9,11 @@
 #include <vector>
 
 #include "diagnostics.h"
-#include "token.h"
+#include "parser/token.h"
 
 namespace acorn {
+
+    using parser::Token;
 
     /**
      * Lexical Analysis. Takes source code input and provides a stream of

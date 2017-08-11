@@ -11,7 +11,7 @@
 
 #include <llvm/Support/Casting.h>
 
-#include "../token.h"
+#include "../parser/token.h"
 
 namespace acorn {
 
@@ -19,6 +19,12 @@ namespace acorn {
         class Type;
         class ParameterType;
     }
+
+    namespace parser {
+        struct Token;
+    }
+
+    using parser::Token;
 
     namespace ast {
 

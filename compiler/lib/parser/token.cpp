@@ -2,9 +2,9 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
-#include "acorn/token.h"
+#include "acorn/parser/token.h"
 
-using namespace acorn;
+using namespace acorn::parser;
 
 std::string Token::as_string(Token::Kind kind)
 {
