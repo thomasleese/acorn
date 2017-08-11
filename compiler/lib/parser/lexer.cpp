@@ -11,7 +11,7 @@
 
 #include "acorn/parser/keywords.h"
 
-#include "acorn/lexer.h"
+#include "acorn/parser/lexer.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;

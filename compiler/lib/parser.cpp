@@ -9,13 +9,14 @@
 
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
-#include "acorn/lexer.h"
+#include "acorn/parser/lexer.h"
 
 #include "acorn/parser.h"
 
 using namespace acorn;
-using namespace acorn::diagnostics;
 using namespace acorn::ast;
+using namespace acorn::diagnostics;
+using namespace acorn::parser;
 
 #define return_if_null(thing) if (thing == nullptr) return nullptr;
 #define return_if_false(thing) if (thing == false) return nullptr;

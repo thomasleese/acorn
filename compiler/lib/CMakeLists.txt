@@ -1,7 +1,6 @@
 set(LIB_FILES codegen.cpp
               compiler.cpp
               diagnostics.cpp
-              lexer.cpp
               parser.cpp
               prettyprinter.cpp
               symboltable.cpp
@@ -12,6 +11,7 @@ set(LIB_FILES codegen.cpp
               typesystem/visitor.cpp
               typesystem/inferrer.cpp
               parser/keywords.cpp
+              parser/lexer.cpp
               parser/token.cpp)
 
 add_library(acorn ${LIB_FILES})

@@ -8,7 +8,6 @@
 
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
-#include "acorn/lexer.h"
 #include "acorn/typesystem/types.h"
 
 #include "acorn/symboltable.h"

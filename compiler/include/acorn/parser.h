@@ -13,6 +13,12 @@
 
 namespace acorn {
 
+    namespace parser {
+        class Lexer;
+    }
+
+    using namespace parser;
+
     class Parser : public diagnostics::Reporter {
 
     public:

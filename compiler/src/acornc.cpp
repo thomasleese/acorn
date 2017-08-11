@@ -3,7 +3,7 @@
 #include "acorn/ast/nodes.h"
 #include "acorn/codegen.h"
 #include "acorn/compiler.h"
-#include "acorn/lexer.h"
+#include "acorn/parser/lexer.h"
 #include "acorn/parser.h"
 #include "acorn/prettyprinter.h"
 #include "acorn/typesystem/inferrer.h"
