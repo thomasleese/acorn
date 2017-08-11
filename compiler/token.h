@@ -14,61 +14,15 @@ namespace acorn {
     struct Token {
 
         enum Kind {
-            // source code elements
             EndOfFile,
             Newline,
             Indent,
             Deindent,
 
-            // keywords
-            LetKeyword,
-            DefKeyword,
-            TypeKeyword,
-            AsKeyword,
-            WhileKeyword,
-            ForKeyword,
-            InKeyword,
-            IfKeyword,
-            ElseKeyword,
-            NotKeyword,
-            AndKeyword,
-            OrKeyword,
-            EndKeyword,
-            ContinueKeyword,
-            BreakKeyword,
-            TryKeyword,
-            ExceptKeyword,
-            RaiseKeyword,
-            FinallyKeyword,
-            FromKeyword,
-            ImportKeyword,
-            ReturnKeyword,
-            WithKeyword,
-            YieldKeyword,
-            AsyncKeyword,
-            AwaitKeyword,
-            RepeatKeyword,
-            UnlessKeyword,
-            MutableKeyword,
-            SpawnKeyword,
-            CCallKeyword,
-            UsingKeyword,
-            NewKeyword,
-            InoutKeyword,
-            ProtocolKeyword,
-            EnumKeyword,
-            SwitchKeyword,
-            CaseKeyword,
-            DefaultKeyword,
-            ModuleKeyword,
-            BuiltinKeyword,
-
-            // literals
             String,
             Float,
             Int,
 
-            // delimiters
             OpenBracket,
             CloseBracket,
             OpenParenthesis,
@@ -81,7 +35,7 @@ namespace acorn {
             Semicolon,
             Assignment,
 
-            // identifiers
+            Keyword,
             Operator,
             Name,
         };

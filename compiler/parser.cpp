@@ -38,7 +38,7 @@ std::unique_ptr<SourceFile> Parser::parse(std::string name) {
 
     std::vector<std::unique_ptr<SourceFile>> imports;
 
-    while (is_token(Token::ImportKeyword)) {
+    while (is_keyword("import")) {
         auto import = read_import_expression();
         return_if_null(import);
 
@@ -170,7 +170,40 @@ bool Parser::is_and_skip_token(Token::Kind kind) {
 }
 
 bool Parser::skip_deindent_and_end_token() {
-    return skip_token(Token::Deindent) && skip_token(Token::EndKeyword);
+    return skip_token(Token::Deindent) && skip_keyword("end");
+}
+
+bool Parser::read_keyword(const std::string &name, Token &token) {
+    Token next_front_token;
+    if (!read_token(Token::Keyword, next_front_token)) {
+        return false;
+    }
+
+    if (next_front_token.lexeme != name) {
+        report(SyntaxError(next_front_token, name));
+        return false;
+    }
+
+    token = next_front_token;
+
+    return true;
+}
+
+bool Parser::skip_keyword(const std::string &name) {
+    Token tmp_token;
+    return read_keyword(name, tmp_token);
+}
+
+bool Parser::is_keyword(const std::string &name) {
+    if (!is_token(Token::Keyword)) {
+        return false;
+    }
+
+    return front_token().lexeme == name;
+}
+
+bool Parser::is_and_skip_keyword(const std::string &name) {
+    return is_keyword(name) && skip_keyword(name);
 }
 
 std::unique_ptr<Block> Parser::read_block(bool read_end) {
@@ -188,20 +221,20 @@ std::unique_ptr<Block> Parser::read_block(bool read_end) {
     return_if_false(skip_token(Token::Deindent));
 
     if (read_end) {
-        return_if_false(skip_token(Token::EndKeyword));
+        return_if_false(skip_keyword("End"));
     }
 
     return std::make_unique<Block>(block_token, std::move(expressions));
 }
 
 std::unique_ptr<Expression> Parser::read_expression(bool parse_comma) {
-    if (is_token(Token::LetKeyword)) {
+    if (is_keyword("let")) {
         return read_let();
-    } else if (is_token(Token::DefKeyword)) {
+    } else if (is_keyword("def")) {
         return read_def();
-    } else if (is_token(Token::TypeKeyword)) {
+    } else if (is_keyword("type")) {
         return read_type();
-    } else if (is_token(Token::ModuleKeyword)) {
+    } else if (is_keyword("module")) {
         return read_module();
     } else {
         auto unary_expression = read_unary_expression(parse_comma);
@@ -250,15 +283,15 @@ std::unique_ptr<Name> Parser::read_operator(bool accept_parameters) {
 
 std::unique_ptr<VariableDeclaration> Parser::read_variable_declaration() {
     Token let_token;
-    return_if_false(read_token(Token::LetKeyword, let_token));
+    return_if_false(read_keyword("let", let_token));
 
-    bool builtin = is_and_skip_token(Token::BuiltinKeyword);
+    bool builtin = is_and_skip_keyword("builtin");
 
     auto name = read_name(false);
     return_if_null(name);
 
     std::unique_ptr<Name> type;
-    if (is_and_skip_token(Token::AsKeyword)) {
+    if (is_and_skip_keyword("as")) {
         type = read_name(true);
         return_if_null(type);
     }
@@ -380,7 +413,7 @@ std::unique_ptr<Call> Parser::read_call(std::unique_ptr<Expression> operand) {
 
 std::unique_ptr<CCall> Parser::read_ccall() {
     Token ccall_token;
-    return_if_false(read_token(Token::CCallKeyword, ccall_token));
+    return_if_false(read_keyword("ccall", ccall_token));
 
     auto name = read_name(false);
     return_if_null(name);
@@ -398,13 +431,13 @@ std::unique_ptr<CCall> Parser::read_ccall() {
     }
 
     return_if_false(skip_token(Token::CloseParenthesis));
-    return_if_false(skip_token(Token::AsKeyword));
+    return_if_false(skip_keyword("as"));
 
     auto given_return_type = read_name(true);
     return_if_null(given_return_type);
 
     std::vector<std::unique_ptr<Expression>> arguments;
-    if (is_and_skip_token(Token::UsingKeyword)) {
+    if (is_and_skip_keyword("using")) {
         while (true) {
             auto argument = read_expression(false);
             return_if_null(argument);
@@ -422,7 +455,7 @@ std::unique_ptr<CCall> Parser::read_ccall() {
 
 std::unique_ptr<Cast> Parser::read_cast(std::unique_ptr<Expression> operand) {
     Token as_token;
-    return_if_false(read_token(Token::AsKeyword, as_token));
+    return_if_false(read_keyword("as", as_token));
 
     auto new_type = read_name(true);
     return_if_null(new_type);
@@ -480,7 +513,7 @@ std::unique_ptr<Call> Parser::read_index(std::unique_ptr<Expression> operand) {
 
 std::unique_ptr<While> Parser::read_while() {
     Token while_token;
-    return_if_false(read_token(Token::WhileKeyword, while_token));
+    return_if_false(read_keyword("while", while_token));
 
     auto condition = read_expression(true);
     return_if_null(condition);
@@ -492,7 +525,7 @@ std::unique_ptr<While> Parser::read_while() {
     return_if_null(body);
 
     return_if_false(skip_token(Token::Deindent));
-    return_if_false(skip_token(Token::EndKeyword));
+    return_if_false(skip_keyword("end"));
 
     return std::make_unique<While>(
         while_token, std::move(condition), std::move(body)
@@ -512,12 +545,12 @@ std::unique_ptr<Block> Parser::read_for() {
      *         break
      */
 
-    return_if_false(read_token(Token::ForKeyword, token));
+    return_if_false(read_keyword("for", token));
 
     auto variable = read_name(false);
     return_if_null(variable);
 
-    return_if_false(skip_token(Token::InKeyword));
+    return_if_false(skip_keyword("in"));
 
     auto iterator = read_expression(true);
     return_if_null(iterator);
@@ -557,11 +590,11 @@ std::unique_ptr<Block> Parser::read_for() {
 
 std::unique_ptr<If> Parser::read_if() {
     Token if_token;
-    return_if_false(read_token(Token::IfKeyword, if_token));
+    return_if_false(read_keyword("if", if_token));
 
     std::unique_ptr<Expression> condition;
 
-    if (is_token(Token::LetKeyword)) {
+    if (is_keyword("let")) {
         auto lhs = read_variable_declaration();
         return_if_null(lhs);
 
@@ -587,10 +620,8 @@ std::unique_ptr<If> Parser::read_if() {
 
     return_if_false(skip_token(Token::Deindent));
 
-    if (is_token(Token::ElseKeyword)) {
-        skip_token(Token::ElseKeyword);
-
-        if (is_token(Token::IfKeyword)) {
+    if (is_and_skip_keyword("else")) {
+        if (is_keyword("if")) {
             false_case = read_if();
         } else {
             return_if_false(skip_token(Token::Indent));
@@ -608,7 +639,7 @@ std::unique_ptr<If> Parser::read_if() {
 
 std::unique_ptr<Return> Parser::read_return() {
     Token return_token;
-    return_if_false(read_token(Token::ReturnKeyword, return_token));
+    return_if_false(read_keyword("return", return_token));
 
     auto expression = read_expression();
     return_if_null(expression);
@@ -618,7 +649,7 @@ std::unique_ptr<Return> Parser::read_return() {
 
 std::unique_ptr<Spawn> Parser::read_spawn() {
     Token spawn_token;
-    return_if_false(read_token(Token::SpawnKeyword, spawn_token));
+    return_if_false(read_keyword("spawn", spawn_token));
 
     auto expression = read_expression();
     return_if_null(expression);
@@ -634,15 +665,15 @@ std::unique_ptr<Spawn> Parser::read_spawn() {
 
 std::unique_ptr<Case> Parser::read_case() {
     Token case_token;
-    return_if_false(read_token(Token::CaseKeyword, case_token));
+    return_if_false(read_keyword("case", case_token));
 
     auto condition = read_expression();
     return_if_null(condition);
 
     std::unique_ptr<Expression> assignment;
 
-    if (is_and_skip_token(Token::UsingKeyword)) {
-        if (is_token(Token::LetKeyword)) {
+    if (is_and_skip_keyword("using")) {
+        if (is_keyword("let")) {
             assignment = std::unique_ptr<VariableDeclaration>(read_variable_declaration());
         } else {
             assignment = read_expression(true);
@@ -662,7 +693,7 @@ std::unique_ptr<Case> Parser::read_case() {
 
 std::unique_ptr<Switch> Parser::read_switch() {
     Token switch_token;
-    return_if_false(read_token(Token::SwitchKeyword, switch_token));
+    return_if_false(read_keyword("switch", switch_token));
 
     auto expression = read_expression(true);
     return_if_null(expression);
@@ -670,19 +701,19 @@ std::unique_ptr<Switch> Parser::read_switch() {
     return_if_false(skip_token(Token::Newline));
 
     std::vector<std::unique_ptr<Case>> cases;
-    while (is_token(Token::CaseKeyword)) {
+    while (is_keyword("case")) {
         auto entry = read_case();
         return_if_null(entry);
         cases.push_back(std::move(entry));
     }
 
     std::unique_ptr<Block> default_block;
-    if (is_token(Token::DefaultKeyword)) {
+    if (is_keyword("default")) {
         default_block = read_block(false);
         return_if_null(default_block);
     }
 
-    return_if_false(skip_token(Token::EndKeyword));
+    return_if_false(skip_keyword("end"));
 
     return std::make_unique<Switch>(
         token, std::move(expression), std::move(cases), std::move(default_block)
@@ -746,19 +777,19 @@ std::unique_ptr<Expression> Parser::read_primary_expression() {
         return std::unique_ptr<Expression>(read_list());
     } else if (is_token(Token::OpenBrace)) {
         return std::unique_ptr<Expression>(read_dictionary());
-    } else if (is_token(Token::WhileKeyword)) {
+    } else if (is_keyword("while")) {
         return std::unique_ptr<Expression>(read_while());
-    } else if (is_token(Token::ForKeyword)) {
+    } else if (is_keyword("for")) {
         return std::unique_ptr<Expression>(read_for());
-    } else if (is_token(Token::IfKeyword)) {
+    } else if (is_keyword("if")) {
         return read_if();
-    } else if (is_token(Token::SwitchKeyword)) {
+    } else if (is_keyword("switch")) {
         return std::unique_ptr<Expression>(read_switch());
-    } else if (is_token(Token::ReturnKeyword)) {
+    } else if (is_keyword("return")) {
         return std::unique_ptr<Expression>(read_return());
-    } else if (is_token(Token::SpawnKeyword)) {
+    } else if (is_keyword("spawn")) {
         return std::unique_ptr<Expression>(read_spawn());
-    } else if (is_token(Token::CCallKeyword)) {
+    } else if (is_keyword("ccall")) {
         return std::unique_ptr<Expression>(read_ccall());
     } else if (is_token(Token::Name)) {
         return std::unique_ptr<Expression>(read_name(true));
@@ -777,7 +808,7 @@ std::unique_ptr<Expression> Parser::read_operand_expression(bool parse_comma) {
             left = read_call(std::move(left));
         } else if (is_token(Token::OpenBracket)) {
             left = read_index(std::move(left));
-        } else if (is_token(Token::AsKeyword)) {
+        } else if (is_keyword("as")) {
             left = read_cast(std::move(left));
         } else if (is_token(Token::Dot)) {
             left = read_selector(std::move(left));
@@ -792,14 +823,14 @@ std::unique_ptr<Expression> Parser::read_operand_expression(bool parse_comma) {
 std::unique_ptr<Parameter> Parser::read_parameter() {
     auto token = front_token();
 
-    bool inout = is_and_skip_token(Token::InoutKeyword);
+    bool inout = is_and_skip_keyword("inout");
 
     auto name = read_name(false);
     return_if_null(name);
 
     std::unique_ptr<Name> given_type;
 
-    if (is_and_skip_token(Token::AsKeyword)) {
+    if (is_and_skip_keyword("as")) {
         given_type = read_name(true);
         return_if_null(given_type);
     }
@@ -865,9 +896,9 @@ std::unique_ptr<ast::Selector> Parser::read_method_signature_name() {
 
 std::unique_ptr<Def> Parser::read_def() {
     Token def_token;
-    return_if_false(read_token(Token::DefKeyword, def_token));
+    return_if_false(read_keyword("def", def_token));
 
-    bool builtin = is_and_skip_token(Token::BuiltinKeyword);
+    bool builtin = is_and_skip_keyword("builtin");
 
     auto name = read_method_signature_name();
     return_if_null(name);
@@ -892,10 +923,10 @@ std::unique_ptr<Def> Parser::read_def() {
     std::unique_ptr<Name> given_return_type;
 
     if (builtin) {
-        return_if_false(skip_token(Token::AsKeyword));
+        return_if_false(skip_keyword("as"));
         given_return_type = read_name(true);
         return_if_null(given_return_type);
-    } else if (is_and_skip_token(Token::AsKeyword)) {
+    } else if (is_and_skip_keyword("as")) {
         given_return_type = read_name(true);
         return_if_null(given_return_type);
     }
@@ -917,9 +948,9 @@ std::unique_ptr<Def> Parser::read_def() {
 
 std::unique_ptr<Type> Parser::read_type() {
     Token type_token;
-    return_if_false(read_token(Token::TypeKeyword, type_token));
+    return_if_false(read_keyword("type", type_token));
 
-    bool builtin = is_and_skip_token(Token::BuiltinKeyword);
+    bool builtin = is_and_skip_keyword("builtin");
 
     auto name = read_name(true);
     return_if_null(name);
@@ -928,7 +959,7 @@ std::unique_ptr<Type> Parser::read_type() {
         return std::make_unique<Type>(type_token, std::move(name));
     }
 
-    if (is_and_skip_token(Token::AsKeyword)) {
+    if (is_and_skip_keyword("as")) {
         auto alias = read_name(true);
         return_if_null(alias);
 
@@ -946,7 +977,7 @@ std::unique_ptr<Type> Parser::read_type() {
             return_if_null(field_name);
             field_names.push_back(std::move(field_name));
 
-            return_if_false(skip_token(Token::AsKeyword));
+            return_if_false(skip_keyword("as"));
 
             auto field_type = read_name(true);
             return_if_null(field_type);
@@ -963,7 +994,7 @@ std::unique_ptr<Type> Parser::read_type() {
 
 std::unique_ptr<Module> Parser::read_module() {
     Token module_token;
-    return_if_false(read_token(Token::ModuleKeyword, module_token));
+    return_if_false(read_keyword("module", module_token));
 
     auto name = read_name(false);
     return_if_null(name);
@@ -978,7 +1009,7 @@ std::unique_ptr<Module> Parser::read_module() {
 
 std::unique_ptr<Import> Parser::read_import_expression() {
     Token import_token;
-    return_if_false(read_token(Token::ImportKeyword, import_token));
+    return_if_false(read_keyword("import", import_token));
 
     auto path = read_string();
     return_if_null(path);

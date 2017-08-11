@@ -10,7 +10,8 @@ static set<string> keywords = {
     "finally", "from", "import", "return", "with", "yield", "async", "await",
     "repeat", "unless", "mutable", "spawn", "ccall", "using", "new", "inout",
     "protocol", "enum", "switch", "case", "default", "module", "builtin",
-    "class", "interface", "static", "public", "private", "protected", "goto"
+    "class", "interface", "static", "public", "private", "protected", "goto",
+    "global", "virtual", "pass", "assert", "del"
 };
 
 bool acorn::parser::is_keyword(const string &name) {

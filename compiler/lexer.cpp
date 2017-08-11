@@ -9,10 +9,13 @@
 #include <unicode/unistr.h>
 #include <boost/regex/icu.hpp>
 
+#include "parser/keywords.h"
+
 #include "lexer.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;
+using namespace acorn::parser;
 
 Lexer::Lexer(std::string filename) {
     m_filename = filename;
@@ -216,39 +219,12 @@ bool Lexer::read_name(Token &token) {
 }
 
 bool Lexer::read_keyword(Token &token) const {
-    if (token.lexeme == "let") {
-        token.kind = Token::LetKeyword;
-    } else if (token.lexeme == "def") {
-        token.kind = Token::DefKeyword;
-    } else if (token.lexeme == "return") {
-        token.kind = Token::ReturnKeyword;
-    } else if (token.lexeme == "if") {
-        token.kind = Token::IfKeyword;
-    } else if (token.lexeme == "else") {
-        token.kind = Token::ElseKeyword;
-    } else if (token.lexeme == "as") {
-        token.kind = Token::AsKeyword;
-    } else if (token.lexeme == "end") {
-        token.kind = Token::EndKeyword;
-    } else if (token.lexeme == "ccall") {
-        token.kind = Token::CCallKeyword;
-    } else if (token.lexeme == "using") {
-        token.kind = Token::UsingKeyword;
-    } else if (token.lexeme == "import") {
-        token.kind = Token::ImportKeyword;
-    } else if (token.lexeme == "type") {
-        token.kind = Token::TypeKeyword;
-    } else if (token.lexeme == "module") {
-        token.kind = Token::ModuleKeyword;
-    } else if (token.lexeme == "protocol") {
-        token.kind = Token::ProtocolKeyword;
-    } else if (token.lexeme == "builtin") {
-        token.kind = Token::BuiltinKeyword;
+    if (is_keyword(token.lexeme)) {
+        token.kind = Token::Keyword;
+        return true;
     } else {
         return false;
     }
-
-    return true;
 }
 
 bool Lexer::read_number(Token &token) {

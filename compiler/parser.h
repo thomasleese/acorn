@@ -36,6 +36,11 @@ namespace acorn {
         bool is_and_skip_token(Token::Kind kind);
         bool skip_deindent_and_end_token();
 
+        bool read_keyword(const std::string &name, Token &token);
+        bool skip_keyword(const std::string &name);
+        bool is_keyword(const std::string &name);
+        bool is_and_skip_keyword(const std::string &name);
+
         std::unique_ptr<ast::Block> read_block(bool read_end = true);
         std::unique_ptr<ast::Expression> read_expression(bool parse_comma = true);
         std::unique_ptr<ast::Name> read_name_or_operator(Token::Kind kind, bool accept_parameters);
