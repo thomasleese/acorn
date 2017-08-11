@@ -3,6 +3,7 @@
 //
 
 #include <iostream>
+#include <memory>
 #include <sstream>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>

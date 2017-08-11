@@ -8,11 +8,14 @@ script:
   - mkdir build
   - cd build
   - cmake ..
-  - make
+  - make -j2
+  - ./compiler/test/acorntest
 
 addons:
   apt:
+    sources:
+      - llvm-toolchain-trusty-4.0
     packages:
       - cmake
-      - llvm-dev
+      - llvm-4.0-dev
       - libboost-regex-dev
