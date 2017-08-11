@@ -10,4 +10,4 @@ addons:
   apt:
     packages:
       - cmake
-      - boost
+      - boost-regex
