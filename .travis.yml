@@ -10,4 +10,5 @@ addons:
   apt:
     packages:
       - cmake
-      - boost-regex
+      - llvm-dev
+      - libboost-regex-dev
