@@ -1,13 +1,13 @@
 #include <iostream>
 
-#include "ast/nodes.h"
-#include "codegen.h"
-#include "compiler.h"
-#include "lexer.h"
-#include "parser.h"
-#include "prettyprinter.h"
-#include "typesystem/inferrer.h"
-#include "typesystem/checker.h"
+#include "acorn/ast/nodes.h"
+#include "acorn/codegen.h"
+#include "acorn/compiler.h"
+#include "acorn/lexer.h"
+#include "acorn/parser.h"
+#include "acorn/prettyprinter.h"
+#include "acorn/typesystem/inferrer.h"
+#include "acorn/typesystem/checker.h"
 
 using namespace acorn;
 

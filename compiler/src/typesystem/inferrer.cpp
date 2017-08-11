@@ -7,11 +7,11 @@
 #include <set>
 #include <sstream>
 
-#include "../ast/nodes.h"
-#include "../diagnostics.h"
-#include "types.h"
+#include "acorn/ast/nodes.h"
+#include "acorn/diagnostics.h"
+#include "acorn/typesystem/types.h"
 
-#include "inferrer.h"
+#include "acorn/typesystem/inferrer.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;

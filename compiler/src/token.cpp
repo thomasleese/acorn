@@ -2,7 +2,7 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
-#include "token.h"
+#include "acorn/token.h"
 
 using namespace acorn;
 

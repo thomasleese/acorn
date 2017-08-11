@@ -2,7 +2,7 @@
 // Created by Thomas Leese on 23/07/2017.
 //
 
-#include "visitor.h"
+#include "acorn/typesystem/visitor.h"
 
 using namespace acorn::typesystem;
 

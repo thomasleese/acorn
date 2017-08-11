@@ -7,11 +7,11 @@
 #include <memory>
 #include <sstream>
 
-#include "ast/nodes.h"
-#include "diagnostics.h"
-#include "lexer.h"
+#include "acorn/ast/nodes.h"
+#include "acorn/diagnostics.h"
+#include "acorn/lexer.h"
 
-#include "parser.h"
+#include "acorn/parser.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;

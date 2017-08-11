@@ -9,9 +9,9 @@
 #include <unicode/unistr.h>
 #include <boost/regex/icu.hpp>
 
-#include "parser/keywords.h"
+#include "acorn/parser/keywords.h"
 
-#include "lexer.h"
+#include "acorn/lexer.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;

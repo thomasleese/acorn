@@ -6,10 +6,10 @@
 #include <iostream>
 #include <sstream>
 
-#include "../typesystem/types.h"
-#include "visitor.h"
+#include "acorn/typesystem/types.h"
+#include "acorn/ast/visitor.h"
 
-#include "nodes.h"
+#include "acorn/ast/nodes.h"
 
 using namespace acorn;
 using namespace acorn::ast;

@@ -4,10 +4,10 @@
 
 #include <iostream>
 
-#include "ast/nodes.h"
-#include "typesystem/types.h"
+#include "acorn/ast/nodes.h"
+#include "acorn/typesystem/types.h"
 
-#include "prettyprinter.h"
+#include "acorn/prettyprinter.h"
 
 using namespace acorn;
 

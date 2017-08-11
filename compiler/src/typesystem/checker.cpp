@@ -6,11 +6,11 @@
 #include <iostream>
 #include <set>
 
-#include "../ast/nodes.h"
-#include "../diagnostics.h"
-#include "types.h"
+#include "acorn/ast/nodes.h"
+#include "acorn/diagnostics.h"
+#include "acorn/typesystem/types.h"
 
-#include "checker.h"
+#include "acorn/typesystem/checker.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;

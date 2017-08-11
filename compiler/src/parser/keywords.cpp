@@ -1,8 +1,9 @@
 #include <set>
 
-#include "keywords.h"
+#include "acorn/parser/keywords.h"
 
-using std::set, std::string;
+using std::set;
+using std::string;
 
 static set<string> keywords = {
     "let", "def", "type", "as", "while", "for", "in", "if", "else", "not",

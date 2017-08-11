@@ -18,12 +18,12 @@
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
 
-#include "ast/nodes.h"
-#include "diagnostics.h"
-#include "symboltable.h"
-#include "typesystem/types.h"
+#include "acorn/ast/nodes.h"
+#include "acorn/diagnostics.h"
+#include "acorn/symboltable.h"
+#include "acorn/typesystem/types.h"
 
-#include "codegen.h"
+#include "acorn/codegen.h"
 
 using namespace acorn;
 using namespace acorn::codegen;

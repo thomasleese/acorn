@@ -18,10 +18,10 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
 
-#include "ast/nodes.h"
-#include "codegen.h"
+#include "acorn/ast/nodes.h"
+#include "acorn/codegen.h"
 
-#include "compiler.h"
+#include "acorn/compiler.h"
 
 using namespace acorn;
 using namespace acorn::compiler;
