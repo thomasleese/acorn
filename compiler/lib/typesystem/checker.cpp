@@ -6,11 +6,15 @@
 #include <iostream>
 #include <set>
 
+#include <spdlog/spdlog.h>
+
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
 #include "acorn/typesystem/types.h"
 
 #include "acorn/typesystem/checker.h"
+
+static auto logger = spdlog::get("acorn");
 
 using namespace acorn;
 using namespace acorn::diagnostics;

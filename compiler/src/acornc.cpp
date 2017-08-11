@@ -1,5 +1,7 @@
 #include <iostream>
 
+#include <spdlog/spdlog.h>
+
 #include "acorn/ast/nodes.h"
 #include "acorn/codegen.h"
 #include "acorn/compiler.h"
@@ -13,6 +15,8 @@ using namespace acorn;
 using namespace acorn::parser;
 
 #define return_if_has_errors(thing) if ((thing).has_errors()) { return nullptr; }
+
+static auto logger = spdlog::stdout_color_mt("acorn");
 
 ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_namespace) {
     Lexer lexer(filename);
@@ -54,6 +58,9 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
 }
 
 int main(int argc, char *argv[]) {
+    logger->set_level(spdlog::level::debug);
+    logger->set_pattern("[%H:%M:%S] %v");
+
     std::string filename = argv[1];
 
     auto root_namespace = std::make_unique<symboltable::Namespace>(nullptr);

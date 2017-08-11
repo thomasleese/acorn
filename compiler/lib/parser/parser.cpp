@@ -7,6 +7,8 @@
 #include <memory>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
 #include "acorn/parser/lexer.h"
@@ -21,10 +23,14 @@ using namespace acorn::parser;
 #define return_if_null(thing) if (thing == nullptr) return nullptr;
 #define return_if_false(thing) if (thing == false) return nullptr;
 
+static auto logger = spdlog::get("acorn");
+
 // useful variable for storing the current token
 static Token token;
 
 Parser::Parser(Lexer &lexer) : m_lexer(lexer) {
+    logger->debug("Initialising parser...");
+
     m_operator_precendence["+"] = 1;
     m_operator_precendence["-"] = 1;
 }
@@ -34,6 +40,8 @@ Parser::~Parser() {
 }
 
 std::unique_ptr<SourceFile> Parser::parse(std::string name) {
+    logger->info("Parsing: {}", name);
+
     return_if_false(fill_token());
     Token source_token = front_token();
 

@@ -6,8 +6,11 @@
 #include <fstream>
 #include <sstream>
 
-#include <unicode/unistr.h>
 #include <boost/regex/icu.hpp>
+#include <unicode/unistr.h>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "acorn/parser/keywords.h"
 
@@ -17,7 +20,11 @@ using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::parser;
 
+static auto logger = spdlog::get("acorn");
+
 Lexer::Lexer(std::string filename) {
+    logger->info("Initialising lexer for: {}", filename);
+
     m_filename = filename;
 
     std::ifstream stream;
@@ -90,6 +97,8 @@ bool Lexer::next_token(Token &token) {
         report(SyntaxError(token, "code"));
         return false;
     }
+
+    logger->debug("Read token: {}", token.to_string());
 
     return true;
 }

@@ -18,6 +18,8 @@
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
 
+#include <spdlog/spdlog.h>
+
 #include "acorn/ast/nodes.h"
 #include "acorn/codegen.h"
 
@@ -26,6 +28,8 @@
 using namespace acorn;
 using namespace acorn::compiler;
 using namespace acorn::diagnostics;
+
+static auto logger = spdlog::get("acorn");
 
 Compiler::Compiler() {
     llvm::InitializeAllTargets();
@@ -49,6 +53,8 @@ Compiler::~Compiler() {
 bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_namespace, std::string filename) {
     auto output_name = filename + ".o";
     auto module_name = filename.substr(0, filename.find_last_of("."));
+
+    logger->info("Compiling {} to {}.", filename, output_name);
 
     llvm::Triple triple(llvm::sys::getDefaultTargetTriple());
 

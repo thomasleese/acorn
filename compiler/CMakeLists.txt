@@ -1,6 +1,7 @@
 find_package(PkgConfig REQUIRED)
 
 pkg_search_module(ICU REQUIRED icu-uc)
+pkg_search_module(SPDLOG REQUIRED spdlog)
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED OFF)
@@ -9,7 +10,7 @@ find_package(Boost REQUIRED COMPONENTS regex)
 
 find_package(LLVM REQUIRED)
 
-include_directories(${Boost_INCLUDE_DIRS} ${ICU_INCLUDE_DIRS})
+include_directories(${Boost_INCLUDE_DIRS} ${ICU_INCLUDE_DIRS} ${SPDLOG_INCLUDE_DIRS})
 link_directories(${ICU_LIBRARY_DIRS})
 
 set(CMAKE_CXX_STANDARD 14)
