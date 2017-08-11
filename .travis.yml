@@ -18,4 +18,5 @@ addons:
     packages:
       - cmake
       - llvm-4.0-dev
+      - clang-4.0
       - libboost-regex-dev
