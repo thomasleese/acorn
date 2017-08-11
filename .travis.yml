@@ -1,12 +1,12 @@
 language: cpp
 
-compiler: clang-4.0
+compiler: clang
 
 script:
   - mkdir build
   - cd build
-  - cmake ..
-  - make -j2
+  - CC=clang-4.0 CXX=clang++-4.0 cmake ..
+  - CC=clang-4.0 CXX=clang++-4.0 make
   - ./compiler/test/acorntest
 
 addons:
