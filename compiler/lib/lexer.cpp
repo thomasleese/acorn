@@ -99,7 +99,7 @@ void Lexer::debug() {
 
     Token token;
     while (next_token(token) && token.kind != Token::EndOfFile) {
-        std::cout << Token::as_string(token.kind) << " " << token.line_number << ":" << token.column << std::endl;
+        std::cout << token << " " << token.line_number << ":" << token.column << std::endl;
     }
 
     std::cout << "END DEBUG TOKENS" << std::endl;

@@ -84,14 +84,14 @@ SyntaxError::SyntaxError(const Token &token, std::string expectation) :
     std::string got = token.lexeme;
 
     if (got.empty()) {
-        got = "(" + Token::as_string(token.kind) + ")";
+        got = "(" + token.to_string() + ")";
     }
 
     makeMessage(got, expectation);
 }
 
 SyntaxError::SyntaxError(const Token &token, Token::Kind kind) :
-        SyntaxError(token, Token::as_string(kind)) {
+        SyntaxError(token, Token::kind_to_string(kind)) {
 
 }
 

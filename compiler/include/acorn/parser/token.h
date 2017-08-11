@@ -39,7 +39,9 @@ namespace acorn {
                 Name,
             };
 
-            static std::string as_string(Kind kind);
+            static std::string kind_to_string(const Kind &kind);
+
+            std::string to_string() const;
 
             Kind kind;
             std::string lexeme;
@@ -50,6 +52,8 @@ namespace acorn {
             int column;
 
         };
+
+        std::ostream &operator<<(std::ostream &stream, const Token &token);
 
     }
 

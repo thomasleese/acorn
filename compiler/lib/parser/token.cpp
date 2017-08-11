@@ -4,10 +4,10 @@
 
 #include "acorn/parser/token.h"
 
+using namespace acorn;
 using namespace acorn::parser;
 
-std::string Token::as_string(Token::Kind kind)
-{
+std::string Token::kind_to_string(const Kind &kind) {
     switch (kind) {
         case EndOfFile:
             return "EOF";
@@ -52,4 +52,16 @@ std::string Token::as_string(Token::Kind kind)
         case Operator:
             return "operator";
     }
+}
+
+std::string Token::to_string() const {
+    if (kind == Keyword) {
+        return lexeme;
+    } else {
+        return kind_to_string(kind);
+    }
+}
+
+std::ostream &parser::operator<<(std::ostream &stream, const Token &token) {
+    return stream << token.to_string();
 }
