@@ -1,8 +1,6 @@
 language: cpp
 
-compiler:
-  - clang
-  - gcc
+compiler: clang-4.0
 
 script:
   - mkdir build
