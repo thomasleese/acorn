@@ -2,10 +2,24 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
+#include <sstream>
+
 #include "acorn/parser/token.h"
 
 using namespace acorn;
 using namespace acorn::parser;
+
+std::string SourceLocation::to_string() const {
+    std::stringstream ss;
+    ss << filename << "[" << line_number << "," << column << "]";
+    return ss.str();
+}
+
+std::ostream &parser::operator<<(std::ostream &stream, const SourceLocation &location) {
+    return stream
+        << location.filename
+        << "[" << location.line_number << "," << location.column << "]";
+}
 
 std::string Token::kind_to_string(const Kind &kind) {
     switch (kind) {
@@ -54,12 +68,18 @@ std::string Token::kind_to_string(const Kind &kind) {
     }
 }
 
-std::string Token::to_string() const {
+std::string Token::kind_string() const {
     if (kind == Keyword) {
         return lexeme;
     } else {
         return kind_to_string(kind);
     }
+}
+
+std::string Token::to_string() const {
+    std::ostringstream ss;
+    ss << "Token(kind=" << kind_string() << ", lexeme=" << lexeme << ", location=" << location << ")";
+    return ss.str();
 }
 
 std::ostream &parser::operator<<(std::ostream &stream, const Token &token) {

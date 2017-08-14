@@ -12,12 +12,13 @@
 
 using namespace acorn;
 using namespace acorn::diagnostics;
+using namespace acorn::parser;
 
-CompilerError::CompilerError(std::string filename, int lineNumber, int column, std::string line) : m_filename(filename), m_lineNumber(lineNumber), m_column(column), m_line(line) {
+CompilerError::CompilerError(const SourceLocation &location) : m_location(location) {
 
 }
 
-CompilerError::CompilerError(const Token &token) : CompilerError(token.filename, token.line_number, token.column, token.line) {
+CompilerError::CompilerError(const Token &token) : CompilerError(token.location) {
 
 }
 
@@ -26,13 +27,13 @@ CompilerError::CompilerError(ast::Node *node) : CompilerError(node->token()) {
 }
 
 void CompilerError::print() const {
-    std::cout << m_prefix << " in " << m_filename << " on line " << m_lineNumber << " column " << m_column << std::endl;
+    std::cout << m_prefix << " in " << m_location.filename << " on line " << m_location.line_number << " column " << m_location.column << std::endl;
     std::cout << std::endl;
 
-    std::cout << "    " << m_line << std::endl;
+    std::cout << "    " << m_location.line << std::endl;
 
     std::cout << "    ";
-    for (int i = 1; i < m_column; i++) {
+    for (int i = 1; i < m_location.column; i++) {
         std::cout << " ";
     }
     std::cout << "^" << std::endl;
@@ -69,15 +70,13 @@ InternalAstError::InternalAstError(ast::Node *node) :
 
 }
 
-SyntaxError::SyntaxError(std::string filename, int lineNumber, int column, std::string line, std::string got, std::string expectation) :
-        CompilerError(filename, lineNumber, column, line) {
+SyntaxError::SyntaxError(const SourceLocation &location, std::string got, std::string expectation) : CompilerError(location) {
     m_prefix = "Invalid syntax";
 
     m_message = "Got: " + got + "\nExpected: " + expectation;
 }
 
-SyntaxError::SyntaxError(const Token &token, std::string expectation) :
-        CompilerError(token) {
+SyntaxError::SyntaxError(const Token &token, std::string expectation) : CompilerError(token) {
     m_prefix = "Invalid syntax";
 
     std::string got = token.lexeme;

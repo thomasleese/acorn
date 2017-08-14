@@ -6,55 +6,63 @@
 
 #include <string>
 
-namespace acorn {
+namespace acorn::parser {
 
-    namespace parser {
+    class SourceLocation {
+    public:
+        std::string to_string() const;
 
-        struct Token {
+    private:
+        friend std::ostream &operator<<(std::ostream &stream, const SourceLocation &source_location);
 
-            enum Kind {
-                EndOfFile,
-                Newline,
-                Indent,
-                Deindent,
+    public:
+        std::string filename;
+        std::string line;
+        int line_number;
+        int column;
+    };
 
-                String,
-                Float,
-                Int,
+    class Token {
+    public:
+        enum Kind {
+            EndOfFile,
+            Newline,
+            Indent,
+            Deindent,
 
-                OpenBracket,
-                CloseBracket,
-                OpenParenthesis,
-                CloseParenthesis,
-                OpenBrace,
-                CloseBrace,
-                Comma,
-                Dot,
-                Colon,
-                Semicolon,
-                Assignment,
+            String,
+            Float,
+            Int,
 
-                Keyword,
-                Operator,
-                Name,
-            };
+            OpenBracket,
+            CloseBracket,
+            OpenParenthesis,
+            CloseParenthesis,
+            OpenBrace,
+            CloseBrace,
+            Comma,
+            Dot,
+            Colon,
+            Semicolon,
+            Assignment,
 
-            static std::string kind_to_string(const Kind &kind);
-
-            std::string to_string() const;
-
-            Kind kind;
-            std::string lexeme;
-
-            std::string filename;
-            std::string line;
-            int line_number;
-            int column;
-
+            Keyword,
+            Operator,
+            Name,
         };
 
-        std::ostream &operator<<(std::ostream &stream, const Token &token);
+        static std::string kind_to_string(const Kind &kind);
 
-    }
+        std::string kind_string() const;
+        std::string to_string() const;
+
+    private:
+        friend std::ostream &operator<<(std::ostream &stream, const Token &token);
+
+    public:
+        Kind kind;
+        std::string lexeme;
+        SourceLocation location;
+    };
 
 }

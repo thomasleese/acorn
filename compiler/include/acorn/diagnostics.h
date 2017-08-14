@@ -21,27 +21,21 @@ namespace acorn {
         class Type;
     }
 
-    namespace parser {
-        struct Token;
-    }
-
+    using parser::SourceLocation;
     using parser::Token;
 
     namespace diagnostics {
 
         class CompilerError : public std::exception {
         public:
-            explicit CompilerError(std::string filename, int lineNumber, int column, std::string line);
-            CompilerError(const Token &token);
-            CompilerError(ast::Node *node);
+            explicit CompilerError(const SourceLocation &location);
+            explicit CompilerError(const Token &token);
+            explicit CompilerError(ast::Node *node);
 
             void print() const;
 
         private:
-            std::string m_filename;
-            int m_lineNumber;
-            int m_column;
-            std::string m_line;
+            parser::SourceLocation m_location;
 
         protected:
             std::string m_prefix;
@@ -68,8 +62,7 @@ namespace acorn {
 
         class SyntaxError : public CompilerError {
         public:
-            SyntaxError(std::string filename, int lineNumber, int column,
-                        std::string line, std::string got,
+            SyntaxError(const parser::SourceLocation &location, std::string got,
                         std::string expectation);
             SyntaxError(const Token &token, std::string expectation);
             SyntaxError(const Token &token, Token::Kind kind);

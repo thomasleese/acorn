@@ -103,17 +103,6 @@ bool Lexer::next_token(Token &token) {
     return true;
 }
 
-void Lexer::debug() {
-    std::cout << "DEBUG TOKENS" << std::endl;
-
-    Token token;
-    while (next_token(token) && token.kind != Token::EndOfFile) {
-        std::cout << token << " " << token.line_number << ":" << token.column << std::endl;
-    }
-
-    std::cout << "END DEBUG TOKENS" << std::endl;
-}
-
 int Lexer::get() {
     int c = m_data[m_pos];
     m_pos++;
@@ -127,10 +116,10 @@ void Lexer::unget() {
 Token Lexer::make_token(Token::Kind kind) const {
     Token token;
     token.kind = kind;
-    token.filename = m_filename;
-    token.line = m_current_line;
-    token.line_number = m_current_line_number;
-    token.column = m_current_column;
+    token.location.filename = m_filename;
+    token.location.line = m_current_line;
+    token.location.line_number = m_current_line_number;
+    token.location.column = m_current_column;
     return token;
 }
 

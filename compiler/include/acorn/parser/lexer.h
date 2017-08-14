@@ -21,8 +21,6 @@ namespace acorn {
 
             bool next_token(Token &token);
 
-            void debug();
-
         private:
             int get();
             void unget();

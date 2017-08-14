@@ -20,10 +20,6 @@ namespace acorn {
         class ParameterType;
     }
 
-    namespace parser {
-        struct Token;
-    }
-
     using parser::Token;
 
     namespace ast {
