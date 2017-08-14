@@ -329,8 +329,8 @@ void TypeInferrer::visit(ast::Call *node) {
     auto method = function->find_method(node);
     if (method == nullptr) {
         std::stringstream ss;
-        ss << "Method not found for these typesystem:\n";
-        for (auto argument : node->positional_arguments()) {
+        ss << "Method not found for these types:\n";
+        for (auto &argument : node->positional_arguments()) {
             ss << argument->type()->name() << ", ";
         }
 

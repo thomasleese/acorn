@@ -175,14 +175,6 @@ Call::Call(Token token, std::string name, std::vector<std::unique_ptr<Expression
     }
 }
 
-std::vector<Expression *> Call::positional_arguments() const {
-    std::vector<Expression *> expressions;
-    for (auto &expression : m_positional_arguments) {
-        expressions.push_back(expression.get());
-    }
-    return expressions;
-}
-
 std::vector<typesystem::Type *> Call::positional_argument_types() const {
     std::vector<typesystem::Type *> types;
     for (auto &expression : m_positional_arguments) {

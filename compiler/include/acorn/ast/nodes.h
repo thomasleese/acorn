@@ -215,7 +215,10 @@ namespace acorn::ast {
         Expression *operand() const { return m_operand.get(); }
         typesystem::Type *operand_type() const { return m_operand->type(); }
 
-        std::vector<Expression *> positional_arguments() const;
+        const std::vector<std::unique_ptr<Expression>> &positional_arguments() const {
+            return m_positional_arguments;
+        };
+
         std::vector<typesystem::Type *> positional_argument_types() const;
 
         std::map<std::string, Expression *> keyword_arguments() const;
