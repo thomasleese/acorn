@@ -42,6 +42,14 @@ namespace acorn::ast {
         virtual ~Visitor();
 
         template <typename T>
+        void accept(const std::unique_ptr<T> &node) {
+            node->accept(this);
+        }
+
+        void accept(Node *node);
+        void accept_if_present(Node *node);
+
+        template <typename T>
         void accept_many(const std::vector<std::unique_ptr<T>> &nodes) {
             for (auto &node : nodes) {
                 node->accept(this);

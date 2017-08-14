@@ -285,7 +285,7 @@ void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *fu
 
     int i = 0;
     for (auto &arg : function->args()) {
-        auto parameter = node->parameter(i);
+        auto &parameter = node->parameters()[i];
         std::string arg_name = parameter->name()->value();
         arg.setName(arg_name);
 
@@ -818,8 +818,8 @@ void CodeGenerator::visit(ast::CCall *node) {
     auto return_type = generate_type(node);
 
     std::vector<llvm::Type *> parameters;
-    for (auto parameter : node->parameters()) {
-        parameters.push_back(generate_type(parameter));
+    for (auto &parameter : node->parameters()) {
+        parameters.push_back(generate_type(parameter.get()));
     }
 
     auto llvm_function_type = llvm::FunctionType::get(
@@ -833,8 +833,8 @@ void CodeGenerator::visit(ast::CCall *node) {
     );
 
     std::vector<llvm::Value *> arguments;
-    for (auto argument : node->arguments()) {
-        auto arg_value = generate_llvm_value(argument);
+    for (auto &argument : node->arguments()) {
+        auto arg_value = generate_llvm_value(argument.get());
         return_and_push_null_if_null(arg_value);
         arguments.push_back(arg_value);
     }

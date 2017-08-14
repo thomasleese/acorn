@@ -221,22 +221,6 @@ CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_pt
     }
 }
 
-std::vector<Name *> CCall::parameters() const {
-    std::vector<Name *> parameters;
-    for (auto &parameter : m_parameters) {
-        parameters.push_back(parameter.get());
-    }
-    return parameters;
-}
-
-std::vector<Expression *> CCall::arguments() const {
-    std::vector<Expression *> arguments;
-    for (auto &argument : m_arguments) {
-        arguments.push_back(argument.get());
-    }
-    return arguments;
-}
-
 void CCall::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -317,14 +301,6 @@ Switch::Switch(Token token, std::unique_ptr<Expression> expression, std::vector<
     }
 }
 
-std::vector<Case *> Switch::cases() const {
-    std::vector<Case *> cases;
-    for (auto &entry : m_cases) {
-        cases.push_back(entry.get());
-    }
-    return cases;
-}
-
 void Switch::accept(Visitor *visitor) {
     visitor->visit(this);
 }
@@ -363,14 +339,6 @@ MethodSignature::MethodSignature(Token token, std::unique_ptr<Selector> name, st
     }
 }
 
-std::vector<Parameter *> MethodSignature::parameters() const {
-    std::vector<Parameter *> parameters;
-    for (auto &parameter : m_parameters) {
-        parameters.push_back(parameter.get());
-    }
-    return parameters;
-}
-
 void MethodSignature::accept(Visitor *visitor) {
 
 }
@@ -406,22 +374,6 @@ Type::Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<
     }
 }
 
-std::vector<Name *> Type::field_names() const {
-    std::vector<Name *> field_names;
-    for (auto &name : m_field_names) {
-        field_names.push_back(name.get());
-    }
-    return field_names;
-}
-
-std::vector<Name *> Type::field_types() const {
-    std::vector<Name *> field_types;
-    for (auto &type : m_field_types) {
-        field_types.push_back(type.get());
-    }
-    return field_types;
-}
-
 void Type::set_type(typesystem::Type *type) {
     Expression::set_type(type);
     m_name->set_type(type);
@@ -451,14 +403,6 @@ SourceFile::SourceFile(Token token, std::string name, std::vector<std::unique_pt
     for (auto &import : imports) {
         m_imports.push_back(std::move(import));
     }
-}
-
-std::vector<SourceFile *> SourceFile::imports() const {
-    std::vector<SourceFile *> imports;
-    for (auto &import : m_imports) {
-        imports.push_back(import.get());
-    }
-    return imports;
 }
 
 void SourceFile::accept(Visitor *visitor) {

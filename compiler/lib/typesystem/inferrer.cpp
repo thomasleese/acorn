@@ -367,18 +367,17 @@ void TypeInferrer::visit(ast::Call *node) {
 }
 
 void TypeInferrer::visit(ast::CCall *node) {
-    for (auto param : node->parameters()) {
-        param->accept(this);
-        param->set_type(instance_type(param));
+    accept_many(node->parameters());
+
+    for (auto &param : node->parameters()) {
+        param->set_type(instance_type(param.get()));
     }
 
-    for (auto argument : node->arguments()) {
-        argument->accept(this);
-    }
+    accept_many(node->arguments());
 
     // TODO check arg and param typesystem match
 
-    node->given_return_type()->accept(this);
+    accept(node->given_return_type());
 
     node->set_type(instance_type(node->given_return_type()));
 }
@@ -509,32 +508,26 @@ void TypeInferrer::visit(ast::Return *node) {
 
 void TypeInferrer::visit(ast::Spawn *node) {
     auto call = node->call();
-    call->accept(this);
+    accept(call);
     node->copy_type_from(call);
 }
 
 void TypeInferrer::visit(ast::Switch *node) {
-    node->expression()->accept(this);
+    accept(node->expression());
 
-    for (auto entry : node->cases()) {
-        entry->condition()->accept(this);
-
-        if (entry->has_assignment()) {
-            entry->assignment()->accept(this);
-        }
-
-        entry->body()->accept(this);
+    for (auto &entry : node->cases()) {
+        accept(entry->condition());
+        accept_if_present(entry->assignment());
+        accept(entry->body());
 
         entry->copy_type_from(entry->body());
     }
 
-    if (node->has_default_case()) {
-        node->default_case()->accept(this);
-    }
+    accept_if_present(node->default_case());
 
     // FIXME make this a union of the typesystem
 
-    node->copy_type_from(node->cases()[0]);
+    node->copy_type_from(node->cases()[0].get());
 }
 
 void TypeInferrer::visit(ast::Parameter *node) {
@@ -621,7 +614,7 @@ void TypeInferrer::visit(ast::Def *node) {
     auto method = new typesystem::Method(parameter_types, return_type);
 
     for (size_t i = 0; i < parameter_types.size(); i++) {
-        auto parameter = node->parameter(i);
+        auto &parameter = node->parameters()[i];
         method->set_parameter_inout(parameter_types[i], parameter->inout());
         method->set_parameter_name(i, parameter->name()->value());
     }
@@ -681,11 +674,11 @@ void TypeInferrer::visit(ast::Type *node) {
         std::vector<std::string> field_names;
         std::vector<typesystem::TypeType *> field_types;
 
-        for (auto name : node->field_names()) {
+        for (auto &name : node->field_names()) {
             field_names.push_back(name->value());
         }
 
-        for (auto type : node->field_types()) {
+        for (auto &type : node->field_types()) {
             type->accept(this);
 
             auto type_type = dynamic_cast<typesystem::TypeType *>(type->type());

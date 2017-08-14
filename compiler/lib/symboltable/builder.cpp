@@ -196,9 +196,7 @@ void Builder::visit(ast::Def *node) {
         scope()->insert(this, parameter.get(), std::move(sym));
     }
 
-    for (auto parameter : node->parameters()) {
-        parameter->accept(this);
-    }
+    accept_many(node->parameters());
 
     if (!node->builtin()) {
         node->body()->accept(this);

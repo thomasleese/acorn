@@ -118,15 +118,9 @@ void TypeChecker::visit(ast::Call *node) {
 void TypeChecker::visit(ast::CCall *node) {
     // node->name->accept(this);
 
-    for (auto param : node->parameters()) {
-        param->accept(this);
-    }
-
-    node->given_return_type()->accept(this);
-
-    for (auto argument : node->arguments()) {
-        argument->accept(this);
-    }
+    accept_many(node->parameters());
+    accept(node->given_return_type());
+    accept_many(node->arguments());
 
     check_not_null(node);
 }
@@ -187,7 +181,7 @@ void TypeChecker::visit(ast::Spawn *node) {
 void TypeChecker::visit(ast::Switch *node) {
     node->expression()->accept(this);
 
-    for (auto entry : node->cases()) {
+    for (auto &entry : node->cases()) {
         entry->condition()->accept(this);
 
         if (entry->has_assignment()) {
@@ -195,7 +189,7 @@ void TypeChecker::visit(ast::Switch *node) {
         }
 
         entry->body()->accept(this);
-        check_not_null(entry);
+        check_not_null(entry.get());
     }
 
     if (node->has_default_case()) {
@@ -241,16 +235,14 @@ void TypeChecker::visit(ast::Def *node) {
 
     push_scope(symbol);
 
-    node->name()->accept(this);
+    accept(node->name());
     accept_many(name->parameters());
 
     if (node->builtin() || node->has_given_return_type()) {
         node->given_return_type()->accept(this);
     }
 
-    for (auto p : node->parameters()) {
-        p->accept(this);
-    }
+    accept_many(node->parameters());
 
     if (!node->builtin()) {
         node->body()->accept(this);
@@ -263,22 +255,20 @@ void TypeChecker::visit(ast::Def *node) {
 void TypeChecker::visit(ast::Type *node) {
     check_not_null(node);
 
-    node->name()->accept(this);
+    accept(node->name());
 
     auto symbol = scope()->lookup(this, node->name());
 
     push_scope(symbol);
 
     if (node->has_alias()) {
-        node->alias()->accept(this);
+        accept(node->alias());
     } else {
         /*for (auto name : node->field_names) {
             name->accept(this);
         }*/
 
-        for (auto type : node->field_types()) {
-            type->accept(this);
-        }
+        accept_many(node->field_types());
     }
 
     pop_scope();

@@ -253,9 +253,16 @@ namespace acorn::ast {
         CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Expression>> arguments);
 
         Name *name() const { return m_name.get(); }
-        std::vector<Name *> parameters() const;
+
+        const std::vector<std::unique_ptr<Name>> &parameters() const {
+            return m_parameters;
+        }
+
         Name *given_return_type() const { return m_given_return_type.get(); }
-        std::vector<Expression *> arguments() const;
+
+        const std::vector<std::unique_ptr<Expression>> &arguments() const {
+            return m_arguments;
+        }
 
         void accept(Visitor *visitor);
 
@@ -394,7 +401,9 @@ namespace acorn::ast {
 
         Expression *expression() const { return m_expression.get(); }
 
-        std::vector<Case *> cases() const;
+        const std::vector<std::unique_ptr<Case>> &cases() const {
+            return m_cases;
+        }
 
         bool has_default_case() const { return static_cast<bool>(m_default_case); }
         Expression *default_case() const { return m_default_case.get(); }
@@ -449,8 +458,9 @@ namespace acorn::ast {
 
         Selector *name() const { return m_name.get(); }
 
-        Parameter *parameter(size_t index) const { return m_parameters[index].get(); }
-        std::vector<Parameter *> parameters() const;
+        const std::vector<std::unique_ptr<Parameter>> &parameters() const {
+            return m_parameters;
+        }
 
         bool has_given_return_type() const { return static_cast<bool>(m_given_return_type); }
         Name *given_return_type() const { return m_given_return_type.get(); }
@@ -471,8 +481,9 @@ namespace acorn::ast {
 
         bool builtin() const { return m_builtin; }
 
-        Parameter *parameter(size_t index) const { return m_signature->parameter(index); }
-        std::vector<Parameter *> parameters() const { return m_signature->parameters(); };
+        const std::vector<std::unique_ptr<Parameter>> &parameters() const {
+            return m_signature->parameters();
+        }
 
         Expression *body() const { return m_body.get(); }
 
@@ -502,8 +513,13 @@ namespace acorn::ast {
         bool has_alias() const { return static_cast<bool>(m_alias); }
         Name *alias() const { return m_alias.get(); }
 
-        std::vector<Name *> field_names() const;
-        std::vector<Name *> field_types() const;
+        const std::vector<std::unique_ptr<Name>> &field_names() const {
+            return m_field_names;
+        }
+
+        const std::vector<std::unique_ptr<Name>> &field_types() const {
+            return m_field_types;
+        }
 
         void set_type(typesystem::Type *type) override;
 
@@ -548,7 +564,11 @@ namespace acorn::ast {
         SourceFile(Token token, std::string name, std::vector<std::unique_ptr<SourceFile>> imports, std::unique_ptr<Block> code);
 
         std::string name() const { return m_name; }
-        std::vector<SourceFile *> imports() const;
+
+        const std::vector<std::unique_ptr<SourceFile>> &imports() const {
+            return m_imports;
+        }
+
         Block *code() const { return m_code.get(); }
 
         void accept(Visitor *visitor);

@@ -134,17 +134,10 @@ void PrettyPrinter::visit(ast::CCall *node) {
     ss << indentation() << "(CCall [" << type_of(node) << "]\n";
     indent++;
 
-    node->name()->accept(this);
-
-    for (auto parameter : node->parameters()) {
-        parameter->accept(this);
-    }
-
-    node->given_return_type()->accept(this);
-
-    for (auto argument : node->arguments()) {
-        argument->accept(this);
-    }
+    accept(node->name());
+    accept_many(node->parameters());
+    accept(node->given_return_type());
+    accept_many(node->arguments());
 
     indent--;
     ss << indentation() << ")\n";
@@ -285,32 +278,25 @@ void PrettyPrinter::visit(ast::Def *node) {
     ss << indentation() << "(Def [" << type_of(node) << "]\n";
     indent++;
 
-    node->name()->accept(this);
-
-    for (auto parameter : node->parameters()) {
-        parameter->accept(this);
-    }
-
-    if (node->has_given_return_type()) {
-        node->given_return_type()->accept(this);
-    }
+    accept(node->name());
+    accept_many(node->parameters());
+    accept_if_present(node->given_return_type());
 
     if (node->builtin()) {
         ss << "<builtin>";
     } else {
-        node->body()->accept(this);
+        accept(node->body());
     }
 
     indent--;
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Type *node)
-{
+void PrettyPrinter::visit(ast::Type *node) {
     ss << indentation() << "(Type\n";
     indent++;
 
-    node->name()->accept(this);
+    accept(node->name());
 
     if (node->has_alias()) {
         node->alias()->accept(this);
