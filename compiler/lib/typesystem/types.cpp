@@ -2,7 +2,6 @@
 // Created by Thomas Leese on 18/03/2016.
 //
 
-#include <cassert>
 #include <cstring>
 #include <sstream>
 #include <iostream>

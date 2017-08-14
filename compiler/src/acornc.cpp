@@ -12,11 +12,10 @@
 #include "acorn/symboltable/namespace.h"
 #include "acorn/typesystem/inferrer.h"
 #include "acorn/typesystem/checker.h"
+#include "acorn/utils.h"
 
 using namespace acorn;
 using namespace acorn::parser;
-
-#define return_if_has_errors(thing) if ((thing).has_errors()) { return nullptr; }
 
 static auto logger = spdlog::stdout_color_mt("acorn");
 
@@ -36,7 +35,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
     module->accept(&symbol_table_builder);
     assert(symbolTableBuilder.is_at_root());
 
-    return_if_has_errors(symbol_table_builder);
+    return_null_if_has_errors(symbol_table_builder);
 
     logger->debug("Running type inferrer...");
 
@@ -47,14 +46,14 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
     //module->accept(&pp);
     //pp.print();
 
-    return_if_has_errors(inferrer);
+    return_null_if_has_errors(inferrer);
 
     logger->debug("Running type checker...");
 
     typesystem::TypeChecker type_checker(root_namespace);
     module->accept(&type_checker);
 
-    return_if_has_errors(type_checker);
+    return_null_if_has_errors(type_checker);
 
     return module.release();
 }

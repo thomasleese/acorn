@@ -2,7 +2,6 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
-#include <cassert>
 #include <iostream>
 #include <set>
 #include <sstream>
@@ -12,17 +11,13 @@
 #include "acorn/symboltable/namespace.h"
 #include "acorn/symboltable/symbol.h"
 #include "acorn/typesystem/types.h"
+#include "acorn/utils.h"
 
 #include "acorn/typesystem/inferrer.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::typesystem;
-
-#define return_if_null(thing) if (thing == nullptr) return;
-#define return_null_if_null(thing) if (thing == nullptr) return nullptr;
-#define return_if_false(thing) if (thing == false) return;
-#define return_if_null_type(node) return_if_false(node->has_type())
 
 TypeInferrer::TypeInferrer(symboltable::Namespace *scope) {
     push_scope(scope);

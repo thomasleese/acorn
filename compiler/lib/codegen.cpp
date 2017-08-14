@@ -24,16 +24,13 @@
 #include "acorn/symboltable/namespace.h"
 #include "acorn/symboltable/symbol.h"
 #include "acorn/typesystem/types.h"
+#include "acorn/utils.h"
 
 #include "acorn/codegen.h"
 
 using namespace acorn;
 using namespace acorn::codegen;
 using namespace acorn::diagnostics;
-
-#define return_if_null(thing) if (thing == nullptr) return;
-#define return_and_push_null_if_null(thing) if (thing == nullptr) { push_llvm_value(nullptr); return; }
-#define return_null_if_null(thing) if (thing == nullptr) return nullptr;
 
 std::string codegen::mangle(std::string name) {
     return "_A_" + name;

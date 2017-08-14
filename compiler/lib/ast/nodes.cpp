@@ -2,7 +2,6 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
-#include <cassert>
 #include <iostream>
 #include <sstream>
 
