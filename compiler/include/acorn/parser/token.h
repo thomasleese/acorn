@@ -54,6 +54,7 @@ namespace acorn::parser {
         static std::string kind_to_string(const Kind &kind);
 
         std::string kind_string() const;
+        std::string lexeme_string() const;
         std::string to_string() const;
 
     private:

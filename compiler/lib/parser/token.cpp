@@ -76,12 +76,24 @@ std::string Token::kind_string() const {
     }
 }
 
+std::string Token::lexeme_string() const {
+    if (lexeme == "\n") {
+        return "\\n";
+    } else {
+        return lexeme;
+    }
+}
+
 std::string Token::to_string() const {
     std::ostringstream ss;
-    ss << "Token(kind=" << kind_string() << ", lexeme=" << lexeme << ", location=" << location << ")";
+    ss << "Token(" << kind_string()
+        << " '" << lexeme_string() << "'"
+        << " " << location << ")";
     return ss.str();
 }
 
 std::ostream &parser::operator<<(std::ostream &stream, const Token &token) {
-    return stream << token.to_string();
+    return stream << "Token(" << token.kind_string()
+        << " '" << token.lexeme_string() << "'"
+        << " " << token.location << ")";
 }
