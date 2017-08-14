@@ -98,7 +98,7 @@ bool Lexer::next_token(Token &token) {
         return false;
     }
 
-    logger->debug("Read token: {}", token.to_string());
+    logger->debug(token.to_string());
 
     return true;
 }

@@ -28,7 +28,7 @@ namespace acorn {
 
 namespace acorn::diagnostics {
 
-    class CompilerError : public std::exception {
+    class CompilerError {
     public:
         explicit CompilerError(const SourceLocation &location);
         explicit CompilerError(const Token &token);

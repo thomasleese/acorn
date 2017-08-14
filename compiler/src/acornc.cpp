@@ -36,7 +36,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
 
     return_if_has_errors(symbol_table_builder);
 
-    std::cout << "inferrer" << std::endl;
+    logger->debug("Running type inferrer...");
 
     typesystem::TypeInferrer inferrer(root_namespace);
     module->accept(&inferrer);
@@ -47,7 +47,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
 
     return_if_has_errors(inferrer);
 
-    std::cout << "checker" << std::endl;
+    logger->debug("Running type checker...");
 
     typesystem::TypeChecker type_checker(root_namespace);
     module->accept(&type_checker);
