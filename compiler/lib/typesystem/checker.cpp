@@ -251,10 +251,7 @@ void TypeChecker::visit(ast::Def *node) {
     push_scope(symbol);
 
     node->name()->accept(this);
-
-    for (auto p : name->parameters()) {
-        p->accept(this);
-    }
+    accept_many(name->parameters());
 
     if (node->builtin() || node->has_given_return_type()) {
         node->given_return_type()->accept(this);

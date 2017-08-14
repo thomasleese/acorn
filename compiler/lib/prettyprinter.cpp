@@ -32,18 +32,20 @@ void PrettyPrinter::visit(ast::Block *node) {
 }
 
 void PrettyPrinter::visit(ast::Name *node) {
-    if (node->has_parameters()) {
+    auto &parameters = node->parameters();
+
+    if (parameters.empty()) {
+        ss << indentation() << "(Name " << node->value() << " [" << type_of(node) << "])\n";
+    } else {
         ss << indentation() << "(Name " << node->value() << " [" << type_of(node) << "]\n";
         indent++;
 
-        for (auto parameter : node->parameters()) {
+        for (auto &parameter : parameters) {
             parameter->accept(this);
         }
 
         indent--;
         ss << indentation() << ")\n";
-    } else {
-        ss << indentation() << "(Name " << node->value() << " [" << type_of(node) << "])\n";
     }
 }
 

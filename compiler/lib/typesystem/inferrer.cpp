@@ -54,11 +54,16 @@ typesystem::TypeType *TypeInferrer::find_type(ast::Node *node, std::string name)
 }
 
 typesystem::TypeType *TypeInferrer::find_type(ast::Name *type) {
-    return find_type(type, type->value(), type->parameters());
+    std::vector<ast::Name *> parameters;
+    for (auto &p : type->parameters()) {
+        parameters.push_back(p.get());
+    }
+
+    return find_type(type, type->value(), parameters);
 }
 
 typesystem::Type *TypeInferrer::instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
-    typesystem::TypeType *type_constructor = find_type(node, name, parameters);
+    auto type_constructor = find_type(node, name, parameters);
     if (type_constructor == nullptr) {
         return nullptr;
     }
@@ -71,11 +76,16 @@ typesystem::Type *TypeInferrer::instance_type(ast::Node *node, std::string name)
 }
 
 typesystem::Type *TypeInferrer::instance_type(ast::Name *name) {
-    return instance_type(name, name->value(), name->parameters());
+    std::vector<ast::Name *> parameters;
+    for (auto &p : name->parameters()) {
+        parameters.push_back(p.get());
+    }
+
+    return instance_type(name, name->value(), parameters);
 }
 
 typesystem::Type *TypeInferrer::builtin_type_from_name(ast::Name *node) {
-    std::string name = node->value();
+    auto name = node->value();
 
     if (name == "Void") {
         return new typesystem::VoidType();
@@ -194,10 +204,12 @@ void TypeInferrer::visit(ast::Block *node) {
         expression->accept(this);
     }
 
-    if (node->empty()) {
+    auto &expressions = node->expressions();
+
+    if (expressions.empty()) {
         node->set_type(new typesystem::Void());
     } else {
-        node->copy_type_from(node->last_expression());
+        node->copy_type_from(expressions.back().get());
     }
 }
 
@@ -572,14 +584,14 @@ void TypeInferrer::visit(ast::Def *node) {
 
     push_scope(symbol);
 
-    for (auto parameter : name->parameters()) {
-        auto parameter_symbol = scope()->lookup(this, parameter);
+    for (auto &parameter : name->parameters()) {
+        auto parameter_symbol = scope()->lookup(this, parameter.get());
         parameter_symbol->set_type(new typesystem::ParameterType());
         parameter->accept(this);
     }
 
     std::vector<typesystem::Type *> parameter_types;
-    for (auto parameter : node->parameters()) {
+    for (auto &parameter : node->parameters()) {
         parameter->accept(this);
 
         if (!parameter->has_type()) {
@@ -648,8 +660,8 @@ void TypeInferrer::visit(ast::Type *node) {
     push_scope(symbol);
 
     std::vector<typesystem::ParameterType *> input_parameters;
-    for (auto t : node->name()->parameters()) {
-        auto sym = scope()->lookup(this, t);
+    for (auto &t : node->name()->parameters()) {
+        auto sym = scope()->lookup(this, t.get());
         sym->set_type(new typesystem::ParameterType());
 
         t->accept(this);

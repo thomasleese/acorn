@@ -594,7 +594,8 @@ std::unique_ptr<Block> Parser::read_for() {
 
     return code_block;*/
 
-    return std::make_unique<Block>(token);
+    std::vector<std::unique_ptr<Expression>> expressions;
+    return std::make_unique<Block>(token, std::move(expressions));
 }
 
 std::unique_ptr<If> Parser::read_if() {

@@ -51,22 +51,10 @@ std::string Expression::type_name() const {
     }
 }
 
-Block::Block(Token token) : Expression(token) {
-
-}
-
 Block::Block(Token token, std::vector<std::unique_ptr<Expression>> expressions) : Expression(token) {
     for (auto &expression : expressions) {
         m_expressions.push_back(std::move(expression));
     }
-}
-
-std::vector<Expression *> Block::expressions() const {
-    std::vector<Expression *> expressions;
-    for (auto &expression : m_expressions) {
-        expressions.push_back(expression.get());
-    }
-    return expressions;
 }
 
 void Block::accept(Visitor *visitor) {
@@ -81,14 +69,6 @@ Name::Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> pa
     for (auto &parameter : parameters) {
         m_parameters.push_back(std::move(parameter));
     }
-}
-
-std::vector<Name *> Name::parameters() const {
-    std::vector<Name *> parameters;
-    for (auto &parameter : m_parameters) {
-        parameters.push_back(parameter.get());
-    }
-    return parameters;
 }
 
 void Name::accept(Visitor *visitor) {

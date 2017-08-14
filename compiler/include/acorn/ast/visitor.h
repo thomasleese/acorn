@@ -4,8 +4,11 @@
 
 #pragma once
 
+#include <vector>
+
 namespace acorn::ast {
 
+    class Node;
     class Block;
     class Name;
     class VariableDeclaration;
@@ -37,6 +40,13 @@ namespace acorn::ast {
     class Visitor {
     public:
         virtual ~Visitor();
+
+        template <typename T>
+        void accept_many(const std::vector<std::unique_ptr<T>> &nodes) {
+            for (auto &node : nodes) {
+                node->accept(this);
+            }
+        }
 
         virtual void visit(Block *node) = 0;
         virtual void visit(Name *node) = 0;

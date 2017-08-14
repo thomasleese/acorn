@@ -278,7 +278,7 @@ llvm::GlobalVariable *CodeGenerator::create_global_variable(llvm::Type *type, ll
 void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *function) {
     auto name = node->name()->field();
 
-    for (auto param : name->parameters()) {
+    for (auto &param : name->parameters()) {
         auto symbol = scope()->lookup(this, node, param->value());
         auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
         m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
@@ -623,7 +623,7 @@ void CodeGenerator::visit(ast::Block *node) {
     llvm::Value *last_value = nullptr;
 
     for (auto &expression : node->expressions()) {
-        last_value = generate_llvm_value(expression);
+        last_value = generate_llvm_value(expression.get());
         return_and_push_null_if_null(last_value);
     }
 

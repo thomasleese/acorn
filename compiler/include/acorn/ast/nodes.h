@@ -67,12 +67,9 @@ namespace acorn::ast {
 
     class Block : public Expression {
     public:
-        explicit Block(Token token);
         Block(Token token, std::vector<std::unique_ptr<Expression>> expressions);
 
-        std::vector<Expression *> expressions() const;
-        Expression *last_expression() const { return m_expressions.back().get(); }
-        bool empty() const { return m_expressions.empty(); }
+        const std::vector<std::unique_ptr<Expression>> &expressions() const { return m_expressions; }
 
         void accept(Visitor *visitor);
 
@@ -85,10 +82,13 @@ namespace acorn::ast {
         Name(Token token, std::string value);
         Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> parameters);
 
-        std::string value() const { return m_value; }
+        const std::string &value() const {
+            return m_value;
+        }
 
-        bool has_parameters() const { return !m_parameters.empty(); }
-        std::vector<Name *> parameters() const;
+        const std::vector<std::unique_ptr<Name>> &parameters() const {
+            return m_parameters;
+        }
 
         void accept(Visitor *visitor);
 

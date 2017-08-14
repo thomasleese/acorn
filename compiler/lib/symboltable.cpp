@@ -354,9 +354,9 @@ void Builder::visit(ast::Def *node) {
 
     push_scope(symbol);
 
-    for (auto parameter : name->parameters()) {
-        auto sym = std::make_unique<Symbol>(parameter, false);
-        scope()->insert(this, parameter, std::move(sym));
+    for (auto &parameter : name->parameters()) {
+        auto sym = std::make_unique<Symbol>(parameter.get(), false);
+        scope()->insert(this, parameter.get(), std::move(sym));
     }
 
     for (auto parameter : node->parameters()) {
@@ -377,9 +377,9 @@ void Builder::visit(ast::Type *node) {
 
     push_scope(symbol);
 
-    for (auto parameter : node->name()->parameters()) {
+    for (auto &parameter : node->name()->parameters()) {
         auto sym = std::make_unique<Symbol>(parameter->value(), false);
-        scope()->insert(this, parameter, std::move(sym));
+        scope()->insert(this, parameter.get(), std::move(sym));
     }
 
     if (node->has_alias()) {
