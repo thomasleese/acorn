@@ -8,7 +8,9 @@ set(LIB_FILES ast/visitor.cpp
               parser/parser.cpp
               parser/token.cpp
               prettyprinter.cpp
-              symboltable.cpp
+              symboltable/builder.cpp
+              symboltable/namespace.cpp
+              symboltable/symbol.cpp
               typesystem/checker.cpp
               typesystem/types.cpp
               typesystem/visitor.cpp

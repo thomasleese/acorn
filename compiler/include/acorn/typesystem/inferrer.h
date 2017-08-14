@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "../ast/visitor.h"
-#include "../symboltable.h"
+#include "../symboltable/builder.h"
 
 namespace acorn {
 

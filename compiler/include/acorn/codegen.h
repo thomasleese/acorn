@@ -14,7 +14,7 @@
 
 #include "ast/visitor.h"
 #include "diagnostics.h"
-#include "symboltable.h"
+#include "symboltable/builder.h"
 #include "typesystem/visitor.h"
 
 namespace llvm {

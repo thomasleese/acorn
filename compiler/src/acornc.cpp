@@ -8,6 +8,8 @@
 #include "acorn/parser/lexer.h"
 #include "acorn/parser/parser.h"
 #include "acorn/prettyprinter.h"
+#include "acorn/symboltable/builder.h"
+#include "acorn/symboltable/namespace.h"
 #include "acorn/typesystem/inferrer.h"
 #include "acorn/typesystem/checker.h"
 

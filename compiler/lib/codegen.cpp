@@ -21,7 +21,8 @@
 
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
-#include "acorn/symboltable.h"
+#include "acorn/symboltable/namespace.h"
+#include "acorn/symboltable/symbol.h"
 #include "acorn/typesystem/types.h"
 
 #include "acorn/codegen.h"

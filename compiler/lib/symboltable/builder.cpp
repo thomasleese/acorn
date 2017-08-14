@@ -2,7 +2,6 @@
 // Created by Thomas Leese on 15/03/2016.
 //
 
-#include <cassert>
 #include <iostream>
 #include <sstream>
 
@@ -10,176 +9,14 @@
 #include "acorn/diagnostics.h"
 #include "acorn/typesystem/types.h"
 
-#include "acorn/symboltable.h"
+#include "acorn/symboltable/namespace.h"
+#include "acorn/symboltable/symbol.h"
+
+#include "acorn/symboltable/builder.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::symboltable;
-
-Namespace::Namespace(Namespace *parent) : m_parent(parent) {
-
-}
-
-Namespace::~Namespace() {
-
-}
-
-bool Namespace::has(std::string name, bool follow_parents) const {
-    auto it = m_symbols.find(name);
-    if (it == m_symbols.end()) {
-        if (follow_parents && m_parent) {
-            return m_parent->has(name);
-        } else {
-            return false;
-        }
-    } else {
-        return true;
-    }
-}
-
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node *current_node, std::string name) const {
-    auto it = m_symbols.find(name);
-    if (it == m_symbols.end()) {
-        if (m_parent) {
-            return m_parent->lookup(diagnostics, current_node, name);
-        } else {
-            diagnostics->report(UndefinedError(current_node, name));
-            return nullptr;
-        }
-    }
-
-    return it->second.get();
-}
-
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *name) const {
-    return lookup(diagnostics, name, name->value());
-}
-
-Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const {
-    for (auto &entry : m_symbols) {
-        auto &symbol = entry.second;
-        if (symbol->node() == node) {
-            return symbol.get();
-        }
-    }
-
-    if (m_parent) {
-        return m_parent->lookup_by_node(diagnostics, node);
-    } else {
-        diagnostics->report(UndefinedError(node, node->token().lexeme));
-        return nullptr;
-    }
-}
-
-void Namespace::insert(Reporter *diagnostics, ast::Node *current_node, std::unique_ptr<Symbol> symbol) {
-    auto name = symbol->name();
-
-    auto it = m_symbols.find(name);
-    if (it != m_symbols.end()) {
-        diagnostics->report(RedefinedError(current_node, name));
-    }
-
-    symbol->initialise_scope(this);
-    symbol->initialise_node(current_node);
-
-    m_symbols[name] = std::move(symbol);
-}
-
-void Namespace::rename(Reporter *diagnostics, Symbol *symbol, std::string new_name) {
-    auto it = m_symbols.find(symbol->name());
-    assert(it != m_symbols.end());
-    it->second.release();
-
-    m_symbols.erase(it);
-    symbol->set_name(new_name);
-    insert(diagnostics, symbol->node(), std::unique_ptr<Symbol>(symbol));
-}
-
-unsigned long Namespace::size() const {
-    return m_symbols.size();
-}
-
-std::vector<Symbol *> Namespace::symbols() const {
-    std::vector<Symbol *> symbols;
-    for (auto &entry : m_symbols) {
-        symbols.push_back(entry.second.get());
-    }
-    return symbols;
-}
-
-bool Namespace::is_root() const {
-    return m_parent == nullptr;
-}
-
-std::string Namespace::to_string(int indent) const {
-    std::stringstream ss;
-
-    std::string gap = "";
-    for (int i = 0; i < indent; i++) {
-        gap += " ";
-    }
-
-    ss << gap << "{\n";
-
-    for (auto &entry : m_symbols) {
-        ss << gap << " " << entry.second->to_string(indent + 1) << "\n";
-    }
-
-    ss << gap << "}";
-
-    return ss.str();
-}
-
-Symbol::Symbol(std::string name, bool builtin) : m_name(name), m_builtin(builtin), m_type(nullptr), m_llvm_value(nullptr), m_scope(nullptr), m_node(nullptr) {
-
-}
-
-Symbol::Symbol(ast::Name *name, bool builtin) : Symbol(name->value(), builtin) {
-
-}
-
-void Symbol::initialise_scope(Namespace *parent) {
-    if (m_scope) {
-        assert(m_scope->parent() == parent);
-    } else {
-        m_scope = std::make_unique<Namespace>(parent);
-    }
-}
-
-void Symbol::initialise_node(ast::Node *node) {
-    assert(m_node == nullptr);
-    m_node = node;
-}
-
-bool Symbol::is_function() const {
-    return dynamic_cast<typesystem::Function *>(m_type) != nullptr;
-}
-
-bool Symbol::is_type() const {
-    return dynamic_cast<typesystem::TypeType *>(m_type) != nullptr;
-}
-
-bool Symbol::is_variable() const {
-    return dynamic_cast<ast::Let *>(m_node) != nullptr;
-}
-
-void Symbol::copy_type_from(ast::Expression *expression) {
-    // TODO check type is not null?
-    set_type(expression->type());
-}
-
-std::string Symbol::to_string(int indent) const {
-    std::stringstream ss;
-    ss << m_name << " (Node: " << m_node << ") (LLVM Value: " << m_llvm_value << ")";
-
-    if (m_type) {
-        ss << ": " << m_type->name();
-    }
-
-    ss << " " << m_scope->to_string(indent + 1);
-
-    return ss.str();
-}
 
 void ScopeFollower::push_scope(symboltable::Symbol *symbol) {
     push_scope(symbol->scope());
