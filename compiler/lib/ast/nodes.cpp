@@ -116,21 +116,17 @@ void String::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-List::List(Token token, std::vector<std::unique_ptr<Expression>> elements) : Expression(token) {
+Sequence::Sequence(Token token, std::vector<std::unique_ptr<Expression>> elements) : Expression(token) {
     for (auto &element : elements) {
         m_elements.push_back(std::move(element));
     }
 }
 
-std::vector<Expression *> List::elements() const {
-    std::vector<Expression *> elements;
-    for (auto &element : m_elements) {
-        elements.push_back(element.get());
-    }
-    return elements;
+void List::accept(Visitor *visitor) {
+    visitor->visit(this);
 }
 
-void List::accept(Visitor *visitor) {
+void Tuple::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
@@ -147,24 +143,6 @@ Dictionary::Dictionary(Token token, std::vector<std::unique_ptr<Expression>> key
 }
 
 void Dictionary::accept(Visitor *visitor) {
-    visitor->visit(this);
-}
-
-Tuple::Tuple(Token token, std::vector<std::unique_ptr<Expression>> elements) : Expression(token) {
-    for (auto &element : elements) {
-        m_elements.push_back(std::move(element));
-    }
-}
-
-std::vector<Expression *> Tuple::elements() const {
-    std::vector<Expression *> elements;
-    for (auto &element : m_elements) {
-        elements.push_back(element.get());
-    }
-    return elements;
-}
-
-void Tuple::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 

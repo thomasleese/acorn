@@ -706,8 +706,8 @@ void CodeGenerator::visit(ast::String *node) {
 void CodeGenerator::visit(ast::List *node) {
     std::vector<llvm::Value *> elements;
 
-    for (auto element : node->elements()) {
-        auto value = generate_llvm_value(element);
+    for (auto &element : node->elements()) {
+        auto value = generate_llvm_value(element.get());
         return_and_push_null_if_null(value);
         elements.push_back(value);
     }
@@ -752,8 +752,8 @@ void CodeGenerator::visit(ast::Tuple *node) {
     auto instance = m_ir_builder->CreateAlloca(llvm_type);
 
     int i = 0;
-    for (auto element : node->elements()) {
-        auto value = generate_llvm_value(element);
+    for (auto &element : node->elements()) {
+        auto value = generate_llvm_value(element.get());
         return_if_null(value);
 
         auto ptr = m_ir_builder->CreateInBoundsGEP(instance, build_gep_index({ 0, static_cast<int>(i) }));

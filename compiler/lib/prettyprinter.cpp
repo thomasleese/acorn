@@ -83,9 +83,7 @@ void PrettyPrinter::visit(ast::List *node) {
     ss << indentation() << "(List\n";
     indent++;
 
-    for (auto element : node->elements()) {
-        element->accept(this);
-    }
+    accept_many(node->elements());
 
     indent--;
     ss << indentation() << ")\n";
@@ -108,9 +106,7 @@ void PrettyPrinter::visit(ast::Tuple *node) {
     ss << indentation() << "(Tuple\n";
     indent++;
 
-    for (auto element : node->elements()) {
-        element->accept(this);
-    }
+    accept_many(node->elements());
 
     indent--;
     ss << indentation() << ")\n";

@@ -258,14 +258,12 @@ void TypeInferrer::visit(ast::String *node) {
 }
 
 void TypeInferrer::visit(ast::List *node) {
-    auto elements = node->elements();
+    auto &elements = node->elements();
 
-    for (auto element : elements) {
-        element->accept(this);
-    }
+    accept_many(elements);
 
     std::vector<typesystem::Type *> types;
-    for (auto element : elements) {
+    for (auto &element : elements) {
         bool inList = false;
         for (auto type : types) {
             if (type->is_compatible(element->type())) {
@@ -295,10 +293,12 @@ void TypeInferrer::visit(ast::Dictionary *node) {
 }
 
 void TypeInferrer::visit(ast::Tuple *node) {
+    accept_many(node->elements());
+
     std::vector<typesystem::Type *> element_types;
 
-    for (auto element : node->elements()) {
-        element->accept(this);
+    for (auto &element : node->elements()) {
+        // FIXME check has type
         element_types.push_back(element->type());
     }
 

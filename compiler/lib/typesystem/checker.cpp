@@ -86,10 +86,7 @@ void TypeChecker::visit(ast::String *node) {
 }
 
 void TypeChecker::visit(ast::List *node) {
-    for (auto element : node->elements()) {
-        element->accept(this);
-    }
-
+    accept_many(node->elements());
     check_not_null(node);
 }
 
@@ -103,10 +100,7 @@ void TypeChecker::visit(ast::Dictionary *node) {
 }
 
 void TypeChecker::visit(ast::Tuple *node) {
-    for (auto element : node->elements()) {
-        element->accept(this);
-    }
-
+    accept_many(node->elements());
     check_not_null(node);
 }
 

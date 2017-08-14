@@ -165,19 +165,28 @@ namespace acorn::ast {
         std::string m_value;
     };
 
-    class List : public Expression {
+    class Sequence : public Expression {
     public:
-        List(Token token, std::vector<std::unique_ptr<Expression>> elements);
+        Sequence(Token token, std::vector<std::unique_ptr<Expression>> elements);
 
-        bool has_elements() const { return !m_elements.empty(); }
-        size_t elements_size() const { return m_elements.size(); }
-        Expression *element(size_t index) const { return m_elements[index].get(); }
-        std::vector<Expression *> elements() const;
-
-        void accept(Visitor *visitor);
+        const std::vector<std::unique_ptr<Expression>> &elements() const {
+            return m_elements;
+        };
 
     private:
         std::vector<std::unique_ptr<Expression>> m_elements;
+    };
+
+    class List : public Sequence {
+    public:
+        using Sequence::Sequence;
+        void accept(Visitor *visitor);
+    };
+
+    class Tuple : public Sequence {
+    public:
+        using Sequence::Sequence;
+        void accept(Visitor *visitor);
     };
 
     class Dictionary : public Expression {
@@ -194,21 +203,6 @@ namespace acorn::ast {
     private:
         std::vector<std::unique_ptr<Expression>> m_keys;
         std::vector<std::unique_ptr<Expression>> m_values;
-    };
-
-    class Tuple : public Expression {
-    public:
-        Tuple(Token token, std::vector<std::unique_ptr<Expression>> elements);
-
-        bool has_elements() const { return !m_elements.empty(); }
-        size_t elements_size() const { return m_elements.size(); }
-        Expression *element(size_t index) const { return m_elements[index].get(); }
-        std::vector<Expression *> elements() const;
-
-        void accept(Visitor *visitor);
-
-    private:
-        std::vector<std::unique_ptr<Expression>> m_elements;
     };
 
     class Call : public Expression {
