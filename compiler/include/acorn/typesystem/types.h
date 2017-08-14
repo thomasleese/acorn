@@ -21,502 +21,502 @@ namespace acorn {
         class Reporter;
     }
 
-    namespace typesystem {
+}
 
-        class Visitor;
+namespace acorn::typesystem {
 
-        class TypeType;
+    class Visitor;
 
-        class Type {
+    class TypeType;
 
-        public:
-            explicit Type();
-            explicit Type(std::vector<Type *> parameters);
-            virtual ~Type();
+    class Type {
 
-            virtual std::string name() const = 0;
-            virtual std::string mangled_name() const = 0;
+    public:
+        explicit Type();
+        explicit Type(std::vector<Type *> parameters);
+        virtual ~Type();
 
-            virtual bool is_compatible(const Type *other) const;
+        virtual std::string name() const = 0;
+        virtual std::string mangled_name() const = 0;
 
-            virtual TypeType *type() const = 0;
+        virtual bool is_compatible(const Type *other) const;
 
-            virtual Type *with_parameters(std::vector<Type *> parameters) = 0;
+        virtual TypeType *type() const = 0;
 
-            std::vector<Type *> parameters() const;
+        virtual Type *with_parameters(std::vector<Type *> parameters) = 0;
 
-            virtual void accept(Visitor *visitor) = 0;
+        std::vector<Type *> parameters() const;
 
-        protected:
-            std::vector<Type *> m_parameters;
-        };
+        virtual void accept(Visitor *visitor) = 0;
 
-        // type "type"s -- i.e. the type of concrete typesystem
-        class TypeType : public Type {
-        public:
-            explicit TypeType();
-            explicit TypeType(std::vector<TypeType *> parameters);
-            virtual Type *create(diagnostics::Reporter *diagnostics, ast::Node *node) = 0;
+    protected:
+        std::vector<Type *> m_parameters;
+    };
 
-            std::string mangled_name() const;
+    // type "type"s -- i.e. the type of concrete typesystem
+    class TypeType : public Type {
+    public:
+        explicit TypeType();
+        explicit TypeType(std::vector<TypeType *> parameters);
+        virtual Type *create(diagnostics::Reporter *diagnostics, ast::Node *node) = 0;
 
-            virtual TypeType *type() const;
+        std::string mangled_name() const;
 
-            TypeType *with_parameters(std::vector<Type *> parameters);
-            virtual TypeType *with_parameters(std::vector<TypeType *> parameters) = 0;
-        };
+        virtual TypeType *type() const;
 
-        class ParameterType : public TypeType {
-        public:
-            std::string name() const;
+        TypeType *with_parameters(std::vector<Type *> parameters);
+        virtual TypeType *with_parameters(std::vector<TypeType *> parameters) = 0;
+    };
 
-            bool is_compatible(const Type *other) const;
+    class ParameterType : public TypeType {
+    public:
+        std::string name() const;
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        bool is_compatible(const Type *other) const;
 
-            ParameterType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
-        };
+        ParameterType *with_parameters(std::vector<TypeType *> parameters);
 
-        class VoidType : public TypeType {
-        public:
-            std::string name() const;
+        void accept(Visitor *visitor);
+    };
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+    class VoidType : public TypeType {
+    public:
+        std::string name() const;
 
-            VoidType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
-        };
+        VoidType *with_parameters(std::vector<TypeType *> parameters);
 
-        class BooleanType : public TypeType {
-        public:
-            std::string name() const;
+        void accept(Visitor *visitor);
+    };
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+    class BooleanType : public TypeType {
+    public:
+        std::string name() const;
 
-            BooleanType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
-        };
+        BooleanType *with_parameters(std::vector<TypeType *> parameters);
 
-        class IntegerType : public TypeType {
-        public:
-            IntegerType(unsigned int size);
+        void accept(Visitor *visitor);
+    };
 
-            std::string name() const;
+    class IntegerType : public TypeType {
+    public:
+        IntegerType(unsigned int size);
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        std::string name() const;
 
-            IntegerType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
+        IntegerType *with_parameters(std::vector<TypeType *> parameters);
 
-        private:
-            unsigned int m_size;
-        };
+        void accept(Visitor *visitor);
 
-        class UnsignedIntegerType : public TypeType {
-        public:
-            UnsignedIntegerType(unsigned int size);
+    private:
+        unsigned int m_size;
+    };
 
-            std::string name() const;
+    class UnsignedIntegerType : public TypeType {
+    public:
+        UnsignedIntegerType(unsigned int size);
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        std::string name() const;
 
-            UnsignedIntegerType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
+        UnsignedIntegerType *with_parameters(std::vector<TypeType *> parameters);
 
-        private:
-            unsigned int m_size;
-        };
+        void accept(Visitor *visitor);
 
-        class FloatType : public TypeType {
-        public:
-            FloatType(int size);
+    private:
+        unsigned int m_size;
+    };
 
-            std::string name() const;
+    class FloatType : public TypeType {
+    public:
+        FloatType(int size);
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        std::string name() const;
 
-            FloatType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
+        FloatType *with_parameters(std::vector<TypeType *> parameters);
 
-        private:
-            int m_size;
-        };
+        void accept(Visitor *visitor);
 
-        class UnsafePointerType : public TypeType {
-        public:
-            explicit UnsafePointerType(TypeType *element_type = nullptr);
+    private:
+        int m_size;
+    };
 
-            std::string name() const;
+    class UnsafePointerType : public TypeType {
+    public:
+        explicit UnsafePointerType(TypeType *element_type = nullptr);
 
-            bool has_element_type() const;
-            TypeType *element_type() const;
+        std::string name() const;
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        bool has_element_type() const;
+        TypeType *element_type() const;
 
-            UnsafePointerType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
-        };
+        UnsafePointerType *with_parameters(std::vector<TypeType *> parameters);
 
-        class FunctionType : public TypeType {
-        public:
-            FunctionType();
-            FunctionType(std::vector<TypeType *> parameters);
+        void accept(Visitor *visitor);
+    };
 
-            std::string name() const;
+    class FunctionType : public TypeType {
+    public:
+        FunctionType();
+        FunctionType(std::vector<TypeType *> parameters);
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        std::string name() const;
 
-            FunctionType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
-        };
+        FunctionType *with_parameters(std::vector<TypeType *> parameters);
 
-        class MethodType : public TypeType {
-        public:
-            MethodType();
-            MethodType(std::vector<TypeType *> parameters);
+        void accept(Visitor *visitor);
+    };
 
-            std::string name() const;
+    class MethodType : public TypeType {
+    public:
+        MethodType();
+        MethodType(std::vector<TypeType *> parameters);
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        std::string name() const;
 
-            MethodType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
-        };
+        MethodType *with_parameters(std::vector<TypeType *> parameters);
 
-        class Function;
+        void accept(Visitor *visitor);
+    };
 
-        class RecordType : public TypeType {
+    class Function;
 
-        public:
-            RecordType();
-            RecordType(std::vector<ParameterType *> input_parameters,
-                       std::vector<std::string> field_names,
-                       std::vector<TypeType *> field_types);
-            RecordType(std::vector<ParameterType *> input_parameters,
-                       std::vector<std::string> field_names,
-                       std::vector<TypeType *> field_types,
-                       std::vector<TypeType *> parameters);
+    class RecordType : public TypeType {
 
-            std::string name() const;
+    public:
+        RecordType();
+        RecordType(std::vector<ParameterType *> input_parameters,
+                   std::vector<std::string> field_names,
+                   std::vector<TypeType *> field_types);
+        RecordType(std::vector<ParameterType *> input_parameters,
+                   std::vector<std::string> field_names,
+                   std::vector<TypeType *> field_types,
+                   std::vector<TypeType *> parameters);
 
-            Function *constructor() const;
+        std::string name() const;
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Function *constructor() const;
 
-            RecordType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
+        RecordType *with_parameters(std::vector<TypeType *> parameters);
 
-        private:
-            void create_builtin_constructor();
+        void accept(Visitor *visitor);
 
-            std::vector<ParameterType *> m_input_parameters;
-            std::vector<std::string> m_field_names;
-            std::vector<TypeType *> m_field_types;
-            Function *m_constructor;
+    private:
+        void create_builtin_constructor();
 
-        };
+        std::vector<ParameterType *> m_input_parameters;
+        std::vector<std::string> m_field_names;
+        std::vector<TypeType *> m_field_types;
+        Function *m_constructor;
 
-        class TupleType : public TypeType {
-        public:
-            TupleType();
-            explicit TupleType(std::vector<TypeType *> parameters);
+    };
 
-            std::string name() const;
+    class TupleType : public TypeType {
+    public:
+        TupleType();
+        explicit TupleType(std::vector<TypeType *> parameters);
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        std::string name() const;
 
-            TupleType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
-        };
+        TupleType *with_parameters(std::vector<TypeType *> parameters);
 
-        class AliasType : public TypeType {
+        void accept(Visitor *visitor);
+    };
 
-        public:
-            AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters);
-            AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters, std::vector<TypeType *> parameters);
+    class AliasType : public TypeType {
 
-            std::string name() const;
+    public:
+        AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters);
+        AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters, std::vector<TypeType *> parameters);
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        std::string name() const;
 
-            AliasType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
+        AliasType *with_parameters(std::vector<TypeType *> parameters);
 
-        private:
-            TypeType *m_alias;
-            std::vector<ParameterType *> m_input_parameters;
-            std::map<int, int> m_parameterMapping;
-            std::vector<Type *> m_knownTypes;
+        void accept(Visitor *visitor);
 
-        };
+    private:
+        TypeType *m_alias;
+        std::vector<ParameterType *> m_input_parameters;
+        std::map<int, int> m_parameterMapping;
+        std::vector<Type *> m_knownTypes;
 
-        class ModuleType : public Type {
-        public:
-            std::string name() const;
-            std::string mangled_name() const;
+    };
 
-            TypeType *type() const;
-            ModuleType *with_parameters(std::vector<Type *> parameters);
+    class ModuleType : public Type {
+    public:
+        std::string name() const;
+        std::string mangled_name() const;
 
-            void accept(Visitor *visitor);
-        };
+        TypeType *type() const;
+        ModuleType *with_parameters(std::vector<Type *> parameters);
 
-        class TypeDescriptionType : public TypeType {
-        public:
-            explicit TypeDescriptionType(TypeType *type = nullptr);
+        void accept(Visitor *visitor);
+    };
 
-            std::string name() const;
+    class TypeDescriptionType : public TypeType {
+    public:
+        explicit TypeDescriptionType(TypeType *type = nullptr);
 
-            bool is_compatible(const Type *other) const;
+        std::string name() const;
 
-            Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        bool is_compatible(const Type *other) const;
 
-            TypeDescriptionType *with_parameters(std::vector<TypeType *> parameters);
+        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
 
-            void accept(Visitor *visitor);
-        };
+        TypeDescriptionType *with_parameters(std::vector<TypeType *> parameters);
 
-        // constructed typesystem
-        class Parameter : public Type {
+        void accept(Visitor *visitor);
+    };
 
-        public:
-            Parameter(ParameterType *constructor);
+    // constructed typesystem
+    class Parameter : public Type {
 
-            std::string name() const;
-            std::string mangled_name() const;
+    public:
+        Parameter(ParameterType *constructor);
 
-            ParameterType *type() const;
+        std::string name() const;
+        std::string mangled_name() const;
 
-            bool is_compatible(const Type *other) const;
+        ParameterType *type() const;
 
-            Parameter *with_parameters(std::vector<Type *> parameters);
+        bool is_compatible(const Type *other) const;
 
-            void accept(Visitor *visitor);
+        Parameter *with_parameters(std::vector<Type *> parameters);
 
-        private:
-            ParameterType *m_constructor;
+        void accept(Visitor *visitor);
 
-        };
+    private:
+        ParameterType *m_constructor;
 
-        class Void : public Type {
-        public:
-            std::string name() const;
-            std::string mangled_name() const;
+    };
 
-            VoidType *type() const;
+    class Void : public Type {
+    public:
+        std::string name() const;
+        std::string mangled_name() const;
 
-            Void *with_parameters(std::vector<Type *> parameters);
+        VoidType *type() const;
 
-            void accept(Visitor *visitor);
-        };
+        Void *with_parameters(std::vector<Type *> parameters);
 
-        class Boolean : public Type {
-        public:
-            std::string name() const;
-            std::string mangled_name() const;
+        void accept(Visitor *visitor);
+    };
 
-            BooleanType *type() const;
+    class Boolean : public Type {
+    public:
+        std::string name() const;
+        std::string mangled_name() const;
 
-            Boolean *with_parameters(std::vector<Type *> parameters);
+        BooleanType *type() const;
 
-            void accept(Visitor *visitor);
-        };
+        Boolean *with_parameters(std::vector<Type *> parameters);
 
-        class Integer : public Type {
-        public:
-            explicit Integer(unsigned int size);
+        void accept(Visitor *visitor);
+    };
 
-            std::string name() const;
-            std::string mangled_name() const;
+    class Integer : public Type {
+    public:
+        explicit Integer(unsigned int size);
 
-            IntegerType *type() const;
+        std::string name() const;
+        std::string mangled_name() const;
 
-            unsigned int size() const;
+        IntegerType *type() const;
 
-            Integer *with_parameters(std::vector<Type *> parameters);
+        unsigned int size() const;
 
-            void accept(Visitor *visitor);
+        Integer *with_parameters(std::vector<Type *> parameters);
 
-        private:
-            unsigned int m_size;
-        };
+        void accept(Visitor *visitor);
 
-        class UnsignedInteger : public Type {
-        public:
-            explicit UnsignedInteger(unsigned int size);
+    private:
+        unsigned int m_size;
+    };
 
-            std::string name() const;
-            std::string mangled_name() const;
+    class UnsignedInteger : public Type {
+    public:
+        explicit UnsignedInteger(unsigned int size);
 
-            UnsignedIntegerType *type() const;
+        std::string name() const;
+        std::string mangled_name() const;
 
-            unsigned int size() const;
+        UnsignedIntegerType *type() const;
 
-            UnsignedInteger *with_parameters(std::vector<Type *> parameters);
+        unsigned int size() const;
 
-            void accept(Visitor *visitor);
+        UnsignedInteger *with_parameters(std::vector<Type *> parameters);
 
-        private:
-            unsigned int m_size;
-        };
+        void accept(Visitor *visitor);
 
-        class Float : public Type {
-        public:
-            explicit Float(unsigned int size);
+    private:
+        unsigned int m_size;
+    };
 
-            std::string name() const;
-            std::string mangled_name() const;
+    class Float : public Type {
+    public:
+        explicit Float(unsigned int size);
 
-            FloatType *type() const;
+        std::string name() const;
+        std::string mangled_name() const;
 
-            unsigned int size() const;
+        FloatType *type() const;
 
-            Float *with_parameters(std::vector<Type *> parameters);
+        unsigned int size() const;
 
-            void accept(Visitor *visitor);
+        Float *with_parameters(std::vector<Type *> parameters);
 
-        private:
-            unsigned int m_size;
-        };
+        void accept(Visitor *visitor);
 
-        class UnsafePointer : public Type {
-        public:
-            explicit UnsafePointer(Type *element_type);
+    private:
+        unsigned int m_size;
+    };
 
-            std::string name() const;
-            std::string mangled_name() const;
+    class UnsafePointer : public Type {
+    public:
+        explicit UnsafePointer(Type *element_type);
 
-            UnsafePointerType *type() const;
+        std::string name() const;
+        std::string mangled_name() const;
 
-            Type *element_type() const;
+        UnsafePointerType *type() const;
 
-            bool is_compatible(const Type *other) const;
+        Type *element_type() const;
 
-            UnsafePointer *with_parameters(std::vector<Type *> parameters);
+        bool is_compatible(const Type *other) const;
 
-            void accept(Visitor *visitor);
-        };
+        UnsafePointer *with_parameters(std::vector<Type *> parameters);
 
-        class Record : public Type {
-        public:
-            Record(std::vector<std::string> field_names, std::vector<Type *> field_types);
+        void accept(Visitor *visitor);
+    };
 
-            bool has_field(std::string name);
-            long get_field_index(std::string name);
-            Type *get_field_type(std::string name);
-            std::vector<Type *> field_types() const;
+    class Record : public Type {
+    public:
+        Record(std::vector<std::string> field_names, std::vector<Type *> field_types);
 
-            bool has_child(std::string name);
-            Type *child_type(std::string name);
+        bool has_field(std::string name);
+        long get_field_index(std::string name);
+        Type *get_field_type(std::string name);
+        std::vector<Type *> field_types() const;
 
-            std::string name() const;
-            std::string mangled_name() const;
+        bool has_child(std::string name);
+        Type *child_type(std::string name);
 
-            RecordType *type() const;
+        std::string name() const;
+        std::string mangled_name() const;
 
-            bool is_compatible(const Type *other) const;
+        RecordType *type() const;
 
-            Record *with_parameters(std::vector<Type *> parameters);
+        bool is_compatible(const Type *other) const;
 
-            void accept(Visitor *visitor);
+        Record *with_parameters(std::vector<Type *> parameters);
 
-        protected:
-            std::vector<std::string> m_field_names;
-        };
+        void accept(Visitor *visitor);
 
-        class Tuple : public Record {
-        public:
-            Tuple(std::vector<Type *> field_types);
+    protected:
+        std::vector<std::string> m_field_names;
+    };
 
-            void accept(Visitor *visitor);
-        };
+    class Tuple : public Record {
+    public:
+        Tuple(std::vector<Type *> field_types);
 
-        class Method : public Type {
-        public:
-            Method(std::vector<Type *> parameter_types, Type *return_type);
-            Method(Type *return_type);
-            Method(Type *parameter1_type, Type *return_type);
-            Method(Type *parameter1_type, Type *parameter2_type, Type *return_type);
-            Method(Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type);
+        void accept(Visitor *visitor);
+    };
 
-            std::string name() const;
-            std::string mangled_name() const;
+    class Method : public Type {
+    public:
+        Method(std::vector<Type *> parameter_types, Type *return_type);
+        Method(Type *return_type);
+        Method(Type *parameter1_type, Type *return_type);
+        Method(Type *parameter1_type, Type *parameter2_type, Type *return_type);
+        Method(Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type);
 
-            TypeType *type() const;
+        std::string name() const;
+        std::string mangled_name() const;
 
-            void set_is_generic(bool is_generic);
-            bool is_generic() const;
+        TypeType *type() const;
 
-            std::vector<Type *> parameter_types() const;
-            int parameter_index(std::string name) const;
-            Type *return_type() const;
+        void set_is_generic(bool is_generic);
+        bool is_generic() const;
 
-            template<typename T> std::vector<T> ordered_arguments(std::vector<T> positional_arguments, std::map<std::string, T> keyword_arguments, bool *valid = nullptr);
-            std::vector<ast::Expression *> ordered_arguments(ast::Call *call, bool *valid = nullptr);
-            std::vector<Type *> ordered_argument_types(ast::Call *call, bool *valid = nullptr);
+        std::vector<Type *> parameter_types() const;
+        int parameter_index(std::string name) const;
+        Type *return_type() const;
 
-            bool could_be_called_with(std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments);
+        template<typename T> std::vector<T> ordered_arguments(std::vector<T> positional_arguments, std::map<std::string, T> keyword_arguments, bool *valid = nullptr);
+        std::vector<ast::Expression *> ordered_arguments(ast::Call *call, bool *valid = nullptr);
+        std::vector<Type *> ordered_argument_types(ast::Call *call, bool *valid = nullptr);
 
-            void add_generic_specialisation(std::map<typesystem::ParameterType *, typesystem::Type *> specialisation);
-            std::vector<std::map<typesystem::ParameterType *, typesystem::Type *> > generic_specialisations();
-            size_t no_generic_specialisation() const;
-            void add_empty_specialisation();
+        bool could_be_called_with(std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments);
 
-            void set_parameter_inout(Type *type, bool inout);
-            bool is_parameter_inout(Type *type);
+        void add_generic_specialisation(std::map<typesystem::ParameterType *, typesystem::Type *> specialisation);
+        std::vector<std::map<typesystem::ParameterType *, typesystem::Type *> > generic_specialisations();
+        size_t no_generic_specialisation() const;
+        void add_empty_specialisation();
 
-            void set_parameter_name(int index, std::string name);
+        void set_parameter_inout(Type *type, bool inout);
+        bool is_parameter_inout(Type *type);
 
-            Method *with_parameters(std::vector<Type *> parameters);
+        void set_parameter_name(int index, std::string name);
 
-            void accept(Visitor *visitor);
+        Method *with_parameters(std::vector<Type *> parameters);
 
-        private:
-            std::map<Type *, bool> m_inouts;
-            std::map<std::string, int> m_names;
-            bool m_is_generic;
-            std::vector<std::map<typesystem::ParameterType *, typesystem::Type *> > m_specialisations;
-        };
+        void accept(Visitor *visitor);
 
-        class Function : public Type {
-        public:
-            std::string name() const;
-            std::string mangled_name() const;
+    private:
+        std::map<Type *, bool> m_inouts;
+        std::map<std::string, int> m_names;
+        bool m_is_generic;
+        std::vector<std::map<typesystem::ParameterType *, typesystem::Type *> > m_specialisations;
+    };
 
-            FunctionType *type() const;
+    class Function : public Type {
+    public:
+        std::string name() const;
+        std::string mangled_name() const;
 
-            void add_method(Method *method);
-            Method *find_method(ast::Node *node, std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments) const;
-            Method *find_method(ast::Call *call) const;
-            Method *get_method(int index) const;
-            int no_methods() const;
-            std::vector<Method *> methods() const;
-            int index_of(Method *method) const;
+        FunctionType *type() const;
 
-            void set_llvm_index(Method *method, int index);
-            int get_llvm_index(Method *method);
+        void add_method(Method *method);
+        Method *find_method(ast::Node *node, std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments) const;
+        Method *find_method(ast::Call *call) const;
+        Method *get_method(int index) const;
+        int no_methods() const;
+        std::vector<Method *> methods() const;
+        int index_of(Method *method) const;
 
-            Function *with_parameters(std::vector<Type *> parameters);
+        void set_llvm_index(Method *method, int index);
+        int get_llvm_index(Method *method);
 
-            void accept(Visitor *visitor);
+        Function *with_parameters(std::vector<Type *> parameters);
 
-        private:
-            std::map<Method *, int> m_llvm_index;
-        };
+        void accept(Visitor *visitor);
 
-    }
+    private:
+        std::map<Method *, int> m_llvm_index;
+    };
 
 }

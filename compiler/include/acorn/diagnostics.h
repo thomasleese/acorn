@@ -24,111 +24,111 @@ namespace acorn {
     using parser::SourceLocation;
     using parser::Token;
 
-    namespace diagnostics {
+}
 
-        class CompilerError : public std::exception {
-        public:
-            explicit CompilerError(const SourceLocation &location);
-            explicit CompilerError(const Token &token);
-            explicit CompilerError(ast::Node *node);
+namespace acorn::diagnostics {
 
-            void print() const;
+    class CompilerError : public std::exception {
+    public:
+        explicit CompilerError(const SourceLocation &location);
+        explicit CompilerError(const Token &token);
+        explicit CompilerError(ast::Node *node);
 
-        private:
-            parser::SourceLocation m_location;
+        void print() const;
 
-        protected:
-            std::string m_prefix;
-            std::string m_message;
-        };
+    private:
+        parser::SourceLocation m_location;
 
-        class FileNotFoundError : public CompilerError {
-        public:
-            FileNotFoundError(const Token &token);
-            FileNotFoundError(ast::Node *node);
-        };
+    protected:
+        std::string m_prefix;
+        std::string m_message;
+    };
 
-        class InternalError : public CompilerError {
-        public:
-            InternalError(const Token &token, std::string message);
-            InternalError(ast::Node *node, std::string message);
-        };
+    class FileNotFoundError : public CompilerError {
+    public:
+        FileNotFoundError(const Token &token);
+        FileNotFoundError(ast::Node *node);
+    };
 
-        class InternalAstError : public InternalError {
-        public:
-            InternalAstError(const Token &token);
-            InternalAstError(ast::Node *node);
-        };
+    class InternalError : public CompilerError {
+    public:
+        InternalError(const Token &token, std::string message);
+        InternalError(ast::Node *node, std::string message);
+    };
 
-        class SyntaxError : public CompilerError {
-        public:
-            SyntaxError(const parser::SourceLocation &location, std::string got,
-                        std::string expectation);
-            SyntaxError(const Token &token, std::string expectation);
-            SyntaxError(const Token &token, Token::Kind kind);
+    class InternalAstError : public InternalError {
+    public:
+        InternalAstError(const Token &token);
+        InternalAstError(ast::Node *node);
+    };
 
-        private:
-            void makeMessage(std::string got, std::string expectation);
-        };
+    class SyntaxError : public CompilerError {
+    public:
+        SyntaxError(const parser::SourceLocation &location, std::string got,
+                    std::string expectation);
+        SyntaxError(const Token &token, std::string expectation);
+        SyntaxError(const Token &token, Token::Kind kind);
 
-        class UndefinedError : public CompilerError {
-        public:
-            UndefinedError(ast::Node *node, std::string message);
-            explicit UndefinedError(ast::Name *name);
-        };
+    private:
+        void makeMessage(std::string got, std::string expectation);
+    };
 
-        class TooManyDefinedError : public CompilerError {
-        public:
-            TooManyDefinedError(ast::Node *node, std::string name);
-        };
+    class UndefinedError : public CompilerError {
+    public:
+        UndefinedError(ast::Node *node, std::string message);
+        explicit UndefinedError(ast::Name *name);
+    };
 
-        class RedefinedError : public CompilerError {
-        public:
-            RedefinedError(ast::Node *node, std::string name);
-        };
+    class TooManyDefinedError : public CompilerError {
+    public:
+        TooManyDefinedError(ast::Node *node, std::string name);
+    };
 
-        class InvalidTypeConstructor : public CompilerError {
-        public:
-            InvalidTypeConstructor(ast::Node *node);
-        };
+    class RedefinedError : public CompilerError {
+    public:
+        RedefinedError(ast::Node *node, std::string name);
+    };
 
-        class InvalidTypeParameters : public CompilerError {
-        public:
-            InvalidTypeParameters(ast::Node *node, unsigned long given_no, unsigned long expected_no);
-        };
+    class InvalidTypeConstructor : public CompilerError {
+    public:
+        InvalidTypeConstructor(ast::Node *node);
+    };
 
-        class TypeMismatchError : public CompilerError {
-        public:
-            TypeMismatchError(ast::Expression *node1, ast::Expression *node2);
-            TypeMismatchError(ast::Node *node, typesystem::Type *type1, typesystem::Type *type2);
-            TypeMismatchError(ast::Node *node, std::string type1, std::string type2);
-        };
+    class InvalidTypeParameters : public CompilerError {
+    public:
+        InvalidTypeParameters(ast::Node *node, unsigned long given_no, unsigned long expected_no);
+    };
 
-        class TypeInferenceError : public CompilerError {
-        public:
-            TypeInferenceError(ast::Node *node);
-        };
+    class TypeMismatchError : public CompilerError {
+    public:
+        TypeMismatchError(ast::Expression *node1, ast::Expression *node2);
+        TypeMismatchError(ast::Node *node, typesystem::Type *type1, typesystem::Type *type2);
+        TypeMismatchError(ast::Node *node, std::string type1, std::string type2);
+    };
 
-        class ConstantAssignmentError : public CompilerError {
-        public:
-            ConstantAssignmentError(ast::Node *node);
-        };
+    class TypeInferenceError : public CompilerError {
+    public:
+        TypeInferenceError(ast::Node *node);
+    };
 
-        class Reporter {
+    class ConstantAssignmentError : public CompilerError {
+    public:
+        ConstantAssignmentError(ast::Node *node);
+    };
 
-        public:
-            Reporter();
+    class Reporter {
 
-            void debug(std::string line) const;
-            void report(const CompilerError &error);
+    public:
+        Reporter();
 
-            bool has_errors() const;
+        void debug(std::string line) const;
+        void report(const CompilerError &error);
 
-        private:
-            bool m_has_errors;
+        bool has_errors() const;
 
-        };
+    private:
+        bool m_has_errors;
 
-    }
+    };
 
 }

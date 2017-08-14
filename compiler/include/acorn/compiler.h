@@ -21,20 +21,20 @@ namespace acorn {
         class Namespace;
     }
 
-    namespace compiler {
+}
 
-        class Compiler : public diagnostics::Reporter {
+namespace acorn::compiler {
 
-        public:
-            Compiler();
-            ~Compiler();
+    class Compiler : public diagnostics::Reporter {
 
-            bool compile(ast::SourceFile *module, symboltable::Namespace *root_namespace, std::string filename);
+    public:
+        Compiler();
+        ~Compiler();
 
-        private:
-            llvm::LLVMContext m_context;
+        bool compile(ast::SourceFile *module, symboltable::Namespace *root_namespace, std::string filename);
 
-        };
-    }
+    private:
+        llvm::LLVMContext m_context;
 
+    };
 }

@@ -2,12 +2,8 @@
 
 #include <string>
 
-namespace acorn {
+namespace acorn::parser {
 
-    namespace parser {
-
-        bool is_keyword(const std::string &name);
-
-    }
+    bool is_keyword(const std::string &name);
 
 }

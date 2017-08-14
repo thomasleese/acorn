@@ -21,66 +21,66 @@ namespace acorn {
         class ParameterType;
     }
 
-    namespace typesystem {
+}
 
-        class TypeInferrer : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower {
+namespace acorn::typesystem {
 
-        public:
-            explicit TypeInferrer(symboltable::Namespace *scope);
+    class TypeInferrer : public ast::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower {
 
-        private:
-            typesystem::TypeType *find_type_constructor(ast::Node *node, std::string name);
+    public:
+        explicit TypeInferrer(symboltable::Namespace *scope);
 
-            typesystem::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
-            typesystem::TypeType *find_type(ast::Node *node, std::string name);
-            typesystem::TypeType *find_type(ast::Name *name);
+    private:
+        typesystem::TypeType *find_type_constructor(ast::Node *node, std::string name);
 
-            typesystem::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
-            typesystem::Type *instance_type(ast::Node *node, std::string name);
-            typesystem::Type *instance_type(ast::Name *name);
+        typesystem::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
+        typesystem::TypeType *find_type(ast::Node *node, std::string name);
+        typesystem::TypeType *find_type(ast::Name *name);
 
-            typesystem::Type *builtin_type_from_name(ast::Name *node);
+        typesystem::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
+        typesystem::Type *instance_type(ast::Node *node, std::string name);
+        typesystem::Type *instance_type(ast::Name *name);
 
-            bool infer_call_type_parameters(ast::Call *call, std::vector<typesystem::Type *> parameter_types,
-                                            std::vector<typesystem::Type *> argument_types);
+        typesystem::Type *builtin_type_from_name(ast::Name *node);
 
-            typesystem::Type *replace_type_parameters(typesystem::Type *type,
-                                                      std::map<typesystem::ParameterType *, typesystem::Type *> replacements);
+        bool infer_call_type_parameters(ast::Call *call, std::vector<typesystem::Type *> parameter_types,
+                                        std::vector<typesystem::Type *> argument_types);
 
-        public:
-            void visit(ast::Block *node) override;
-            void visit(ast::Name *node) override;
-            void visit(ast::VariableDeclaration *node) override;
-            void visit(ast::Int *node) override;
-            void visit(ast::Float *node) override;
-            void visit(ast::Complex *node) override;
-            void visit(ast::String *node) override;
-            void visit(ast::List *node) override;
-            void visit(ast::Dictionary *node) override;
-            void visit(ast::Tuple *node) override;
-            void visit(ast::Call *node) override;
-            void visit(ast::CCall *node) override;
-            void visit(ast::Cast *node) override;
-            void visit(ast::Assignment *node) override;
-            void visit(ast::Selector *node) override;
-            void visit(ast::While *node) override;
-            void visit(ast::If *node) override;
-            void visit(ast::Return *node) override;
-            void visit(ast::Spawn *node) override;
-            void visit(ast::Switch *node) override;
-            void visit(ast::Parameter *node) override;
-            void visit(ast::Let *node) override;
-            void visit(ast::Def *node) override;
-            void visit(ast::Type *node) override;
-            void visit(ast::Module *node) override;
-            void visit(ast::Import *node) override;
-            void visit(ast::SourceFile *node) override;
+        typesystem::Type *replace_type_parameters(typesystem::Type *type,
+                                                  std::map<typesystem::ParameterType *, typesystem::Type *> replacements);
 
-        private:
-            std::vector<ast::Def *> m_function_stack;
+    public:
+        void visit(ast::Block *node) override;
+        void visit(ast::Name *node) override;
+        void visit(ast::VariableDeclaration *node) override;
+        void visit(ast::Int *node) override;
+        void visit(ast::Float *node) override;
+        void visit(ast::Complex *node) override;
+        void visit(ast::String *node) override;
+        void visit(ast::List *node) override;
+        void visit(ast::Dictionary *node) override;
+        void visit(ast::Tuple *node) override;
+        void visit(ast::Call *node) override;
+        void visit(ast::CCall *node) override;
+        void visit(ast::Cast *node) override;
+        void visit(ast::Assignment *node) override;
+        void visit(ast::Selector *node) override;
+        void visit(ast::While *node) override;
+        void visit(ast::If *node) override;
+        void visit(ast::Return *node) override;
+        void visit(ast::Spawn *node) override;
+        void visit(ast::Switch *node) override;
+        void visit(ast::Parameter *node) override;
+        void visit(ast::Let *node) override;
+        void visit(ast::Def *node) override;
+        void visit(ast::Type *node) override;
+        void visit(ast::Module *node) override;
+        void visit(ast::Import *node) override;
+        void visit(ast::SourceFile *node) override;
 
-        };
+    private:
+        std::vector<ast::Def *> m_function_stack;
 
-    }
+    };
 
 }
