@@ -13,7 +13,7 @@
 using namespace acorn;
 using namespace acorn::ast;
 
-Node::Node(NodeKind kind, Token token) : m_kind(kind), m_token(token) {
+Node::Node(NodeKind kind, Token token) : m_kind(kind), m_token(token), m_type(nullptr) {
 
 }
 
@@ -21,25 +21,26 @@ Node::~Node() {
 
 }
 
-Expression::Expression(NodeKind kind, Token token) : Node(kind, token), m_type(nullptr) {
-
+void Node::copy_type_from(Node *node) {
+    set_type(node->type());
 }
 
-void Expression::copy_type_from(Expression *expression) {
-    set_type(expression->type());
-}
-
-bool Expression::has_compatible_type_with(Expression *expression) const {
+bool Node::has_compatible_type_with(Node *node) const {
     // TODO set a warning here if the type is null?
-    return m_type->is_compatible(expression->type());
+    return m_type->is_compatible(node->type());
 }
 
-std::string Expression::type_name() const {
+std::string Node::type_name() const {
     if (m_type) {
         return m_type->name();
     } else {
         return "null";
     }
+}
+
+
+Expression::Expression(NodeKind kind, Token token) : Node(kind, token) {
+
 }
 
 Block::Block(Token token, std::vector<std::unique_ptr<Expression>> expressions) : Expression(NK_Other, token) {
