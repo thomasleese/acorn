@@ -43,20 +43,28 @@ namespace acorn::ast {
         NodeKind kind() const { return m_kind; }
         Token token() const { return m_token; }
 
-        typesystem::Type *type() const { return m_type; }
-        virtual void set_type(typesystem::Type *type) { m_type = type; }
-        bool has_type() const { return m_type != nullptr; }
-        void copy_type_from(Node *node);
-        bool has_compatible_type_with(Node *node) const;
-        std::string type_name() const;
-
     private:
         const NodeKind m_kind;
         Token m_token;
+    };
+
+    class TypedNode {
+    public:
+        TypedNode();
+        virtual ~TypedNode();
+
+        typesystem::Type *type() const { return m_type; }
+        virtual void set_type(typesystem::Type *type) { m_type = type; }
+        bool has_type() const { return m_type != nullptr; }
+        void copy_type_from(TypedNode *node);
+        bool has_compatible_type_with(TypedNode *node) const;
+        std::string type_name() const;
+
+    private:
         typesystem::Type *m_type;
     };
 
-    class Expression : public Node {
+    class Expression : public Node, public TypedNode {
     public:
         Expression(NodeKind kind, Token token);
     };
