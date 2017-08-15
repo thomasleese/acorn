@@ -36,7 +36,6 @@ namespace acorn::ast {
         };
 
         Node(NodeKind kind, Token token);
-        explicit Node(Token token);
         virtual ~Node();
 
         virtual void accept(Visitor *visitor) = 0;
@@ -52,7 +51,6 @@ namespace acorn::ast {
     class Expression : public Node {
     public:
         Expression(NodeKind kind, Token token);
-        explicit Expression(Token token);
 
         typesystem::Type *type() const { return m_type; }
         virtual void set_type(typesystem::Type *type) { m_type = type; }
