@@ -5,8 +5,6 @@
 #pragma once
 
 #include <deque>
-#include <fstream>
-#include <vector>
 
 #include "../diagnostics.h"
 #include "token.h"

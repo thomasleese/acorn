@@ -6,14 +6,9 @@
 
 #include <string>
 
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/LegacyPassManager.h>
-#include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/MDBuilder.h>
-#include <llvm/IR/Module.h>
 
 #include "../ast/visitor.h"
-#include "../diagnostics.h"
 #include "../symboltable/builder.h"
 #include "../typesystem/visitor.h"
 
@@ -23,6 +18,7 @@
 namespace llvm {
     class Module;
     class Function;
+    class MDBuilder;
 }
 
 namespace acorn {
