@@ -46,64 +46,64 @@ Namespace *Builder::root_namespace() {
     return m_root;
 }
 
-void Builder::visit(ast::Block *node) {
+void Builder::visit_block(ast::Block *node) {
     for (auto &expression : node->expressions()) {
         expression->accept(this);
     }
 }
 
-void Builder::visit(ast::Name *node) {
+void Builder::visit_name(ast::Name *node) {
 
 }
 
-void Builder::visit(ast::VariableDeclaration *node) {
+void Builder::visit_variable_declaration(ast::VariableDeclaration *node) {
     assert(!node->name()->has_parameters());
 
     auto symbol = std::make_unique<Symbol>(node->name(), node->builtin());
     scope()->insert(this, node, std::move(symbol));
 }
 
-void Builder::visit(ast::Int *node) {
+void Builder::visit_int(ast::Int *node) {
 
 }
 
-void Builder::visit(ast::Float *node) {
+void Builder::visit_float(ast::Float *node) {
 
 }
 
-void Builder::visit(ast::Complex *node) {
+void Builder::visit_complex(ast::Complex *node) {
 
 }
 
-void Builder::visit(ast::String *node) {
+void Builder::visit_string(ast::String *node) {
 
 }
 
-void Builder::visit(ast::List *node) {
+void Builder::visit_list(ast::List *node) {
 
 }
 
-void Builder::visit(ast::Dictionary *node) {
+void Builder::visit_dictionary(ast::Dictionary *node) {
 
 }
 
-void Builder::visit(ast::Tuple *node) {
+void Builder::visit_tuple(ast::Tuple *node) {
 
 }
 
-void Builder::visit(ast::Call *node) {
+void Builder::visit_call(ast::Call *node) {
 
 }
 
-void Builder::visit(ast::CCall *node) {
+void Builder::visit_ccall(ast::CCall *node) {
 
 }
 
-void Builder::visit(ast::Cast *node) {
+void Builder::visit_cast(ast::Cast *node) {
 
 }
 
-void Builder::visit(ast::Assignment *node) {
+void Builder::visit_assignment(ast::Assignment *node) {
     node->lhs()->accept(this);
 
     if (!node->builtin()) {
@@ -111,16 +111,16 @@ void Builder::visit(ast::Assignment *node) {
     }
 }
 
-void Builder::visit(ast::Selector *node) {
+void Builder::visit_selector(ast::Selector *node) {
 
 }
 
-void Builder::visit(ast::While *node) {
+void Builder::visit_while(ast::While *node) {
     node->condition()->accept(this);
     node->body()->accept(this);
 }
 
-void Builder::visit(ast::If *node) {
+void Builder::visit_if(ast::If *node) {
     node->condition()->accept(this);
 
     node->true_case()->accept(this);
@@ -130,15 +130,15 @@ void Builder::visit(ast::If *node) {
     }
 }
 
-void Builder::visit(ast::Return *node) {
+void Builder::visit_return(ast::Return *node) {
 
 }
 
-void Builder::visit(ast::Spawn *node) {
+void Builder::visit_spawn(ast::Spawn *node) {
 
 }
 
-void Builder::visit(ast::Switch *node) {
+void Builder::visit_switch(ast::Switch *node) {
     for (auto &entry : node->cases()) {
         entry->condition()->accept(this);
 
@@ -152,12 +152,12 @@ void Builder::visit(ast::Switch *node) {
     }
 }
 
-void Builder::visit(ast::Parameter *node) {
+void Builder::visit_parameter(ast::Parameter *node) {
     auto symbol = std::make_unique<Symbol>(node->name(), false);
     scope()->insert(this, node, std::move(symbol));
 }
 
-void Builder::visit(ast::Let *node) {
+void Builder::visit_let(ast::Let *node) {
     node->assignment()->accept(this);
 
     if (node->has_body()) {
@@ -165,7 +165,7 @@ void Builder::visit(ast::Let *node) {
     }
 }
 
-void Builder::visit(ast::Def *node) {
+void Builder::visit_def(ast::Def *node) {
     auto name = node->name()->field();
 
     Symbol *function_symbol;
@@ -206,7 +206,7 @@ void Builder::visit(ast::Def *node) {
     pop_scope();
 }
 
-void Builder::visit(ast::Type *node) {
+void Builder::visit_type(ast::Type *node) {
     auto symbol = new Symbol(node->name(), node->builtin());
     scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
 
@@ -227,7 +227,7 @@ void Builder::visit(ast::Type *node) {
     pop_scope();
 }
 
-void Builder::visit(ast::Module *node) {
+void Builder::visit_module(ast::Module *node) {
     symboltable::Symbol *symbol;
     if (scope()->has(node->name()->value())) {
         symbol = scope()->lookup(this, node->name());
@@ -241,11 +241,11 @@ void Builder::visit(ast::Module *node) {
     pop_scope();
 }
 
-void Builder::visit(ast::Import *node) {
+void Builder::visit_import(ast::Import *node) {
 
 }
 
-void Builder::visit(ast::SourceFile *node) {
+void Builder::visit_source_file(ast::SourceFile *node) {
     for (auto &import : node->imports()) {
         import->accept(this);
     }

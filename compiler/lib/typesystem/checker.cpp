@@ -42,7 +42,7 @@ void TypeChecker::check_not_null(ast::Expression *expression) {
     }
 }
 
-void TypeChecker::visit(ast::Block *node) {
+void TypeChecker::visit_block(ast::Block *node) {
     for (auto &expression : node->expressions()) {
         expression->accept(this);
     }
@@ -50,7 +50,7 @@ void TypeChecker::visit(ast::Block *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Name *node) {
+void TypeChecker::visit_name(ast::Name *node) {
     for (auto &parameter : node->parameters()) {
         parameter->accept(this);
     }
@@ -58,7 +58,7 @@ void TypeChecker::visit(ast::Name *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::VariableDeclaration *node) {
+void TypeChecker::visit_variable_declaration(ast::VariableDeclaration *node) {
     if (node->has_given_type()) {
         node->given_type()->accept(this);
     }
@@ -66,28 +66,28 @@ void TypeChecker::visit(ast::VariableDeclaration *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Int *node) {
+void TypeChecker::visit_int(ast::Int *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Float *node) {
+void TypeChecker::visit_float(ast::Float *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Complex *node) {
+void TypeChecker::visit_complex(ast::Complex *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::String *node) {
+void TypeChecker::visit_string(ast::String *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::List *node) {
+void TypeChecker::visit_list(ast::List *node) {
     accept_many(node->elements());
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Dictionary *node) {
+void TypeChecker::visit_dictionary(ast::Dictionary *node) {
     for (size_t i = 0; i < node->elements_size(); i++) {
         node->key(i)->accept(this);
         node->value(i)->accept(this);
@@ -96,12 +96,12 @@ void TypeChecker::visit(ast::Dictionary *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Tuple *node) {
+void TypeChecker::visit_tuple(ast::Tuple *node) {
     accept_many(node->elements());
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Call *node) {
+void TypeChecker::visit_call(ast::Call *node) {
     node->operand()->accept(this);
 
     for (auto &argument : node->positional_arguments()) {
@@ -115,7 +115,7 @@ void TypeChecker::visit(ast::Call *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::CCall *node) {
+void TypeChecker::visit_ccall(ast::CCall *node) {
     // node->name->accept(this);
 
     accept_many(node->parameters());
@@ -125,14 +125,14 @@ void TypeChecker::visit(ast::CCall *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Cast *node) {
+void TypeChecker::visit_cast(ast::Cast *node) {
     node->operand()->accept(this);
     node->new_type()->accept(this);
 
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Assignment *node) {
+void TypeChecker::visit_assignment(ast::Assignment *node) {
     node->lhs()->accept(this);
 
     if (!node->builtin()) {
@@ -142,7 +142,7 @@ void TypeChecker::visit(ast::Assignment *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Selector *node) {
+void TypeChecker::visit_selector(ast::Selector *node) {
     if (node->has_operand()) {
         node->operand()->accept(this);
     }
@@ -150,13 +150,13 @@ void TypeChecker::visit(ast::Selector *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::While *node) {
+void TypeChecker::visit_while(ast::While *node) {
     node->condition()->accept(this);
     node->body()->accept(this);
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::If *node) {
+void TypeChecker::visit_if(ast::If *node) {
     node->condition()->accept(this);
 
     node->true_case()->accept(this);
@@ -168,17 +168,17 @@ void TypeChecker::visit(ast::If *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Return *node) {
+void TypeChecker::visit_return(ast::Return *node) {
     node->expression()->accept(this);
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Spawn *node) {
+void TypeChecker::visit_spawn(ast::Spawn *node) {
     node->call()->accept(this);
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Switch *node) {
+void TypeChecker::visit_switch(ast::Switch *node) {
     node->expression()->accept(this);
 
     for (auto &entry : node->cases()) {
@@ -199,7 +199,7 @@ void TypeChecker::visit(ast::Switch *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Parameter *node) {
+void TypeChecker::visit_parameter(ast::Parameter *node) {
     if (node->has_given_type()) {
         node->given_type()->accept(this);
     }
@@ -207,7 +207,7 @@ void TypeChecker::visit(ast::Parameter *node) {
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::Let *node) {
+void TypeChecker::visit_let(ast::Let *node) {
     check_not_null(node);
 
     node->assignment()->accept(this);
@@ -220,7 +220,7 @@ void TypeChecker::visit(ast::Let *node) {
     }
 }
 
-void TypeChecker::visit(ast::Def *node) {
+void TypeChecker::visit_def(ast::Def *node) {
     check_not_null(node);
 
     auto name = node->name()->field();
@@ -252,7 +252,7 @@ void TypeChecker::visit(ast::Def *node) {
     pop_scope();
 }
 
-void TypeChecker::visit(ast::Type *node) {
+void TypeChecker::visit_type(ast::Type *node) {
     check_not_null(node);
 
     accept(node->name());
@@ -274,7 +274,7 @@ void TypeChecker::visit(ast::Type *node) {
     pop_scope();
 }
 
-void TypeChecker::visit(ast::Module *node) {
+void TypeChecker::visit_module(ast::Module *node) {
     auto symbol = scope()->lookup(this, node->name());
     return_if_null(symbol);
 
@@ -286,12 +286,12 @@ void TypeChecker::visit(ast::Module *node) {
     pop_scope();
 }
 
-void TypeChecker::visit(ast::Import *node) {
+void TypeChecker::visit_import(ast::Import *node) {
     node->path()->accept(this);
     check_not_null(node);
 }
 
-void TypeChecker::visit(ast::SourceFile *node) {
+void TypeChecker::visit_source_file(ast::SourceFile *node) {
     for (auto &import : node->imports()) {
         import->accept(this);
     }

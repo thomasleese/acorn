@@ -19,7 +19,7 @@ std::string type_of(ast::Expression *node) {
     return node->type_name();
 }
 
-void PrettyPrinter::visit(ast::Block *node) {
+void PrettyPrinter::visit_block(ast::Block *node) {
     ss << indentation() << "(Block [" << type_of(node) << "]\n";
     indent++;
 
@@ -29,7 +29,7 @@ void PrettyPrinter::visit(ast::Block *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Name *node) {
+void PrettyPrinter::visit_name(ast::Name *node) {
     auto &parameters = node->parameters();
 
     if (parameters.empty()) {
@@ -45,7 +45,7 @@ void PrettyPrinter::visit(ast::Name *node) {
     }
 }
 
-void PrettyPrinter::visit(ast::VariableDeclaration *node) {
+void PrettyPrinter::visit_variable_declaration(ast::VariableDeclaration *node) {
     ss << indentation() << "(VariableDeclaration [" << type_of(node) << "]\n";
     indent++;
 
@@ -56,23 +56,23 @@ void PrettyPrinter::visit(ast::VariableDeclaration *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Int *node) {
+void PrettyPrinter::visit_int(ast::Int *node) {
     ss << indentation() << "(Int " << node->value() << " [" << type_of(node) << "])\n";
 }
 
-void PrettyPrinter::visit(ast::Float *node) {
+void PrettyPrinter::visit_float(ast::Float *node) {
     ss << indentation() << "(Float " << node->value() << " [" << type_of(node) << "])\n";
 }
 
-void PrettyPrinter::visit(ast::Complex *node) {
+void PrettyPrinter::visit_complex(ast::Complex *node) {
     ss << indentation() << "(Complex " << "<unknown>" << ")\n";
 }
 
-void PrettyPrinter::visit(ast::String *node) {
+void PrettyPrinter::visit_string(ast::String *node) {
     ss << indentation() << "(String " << node->value() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::List *node) {
+void PrettyPrinter::visit_list(ast::List *node) {
     ss << indentation() << "(List\n";
     indent++;
 
@@ -82,7 +82,7 @@ void PrettyPrinter::visit(ast::List *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Dictionary *node) {
+void PrettyPrinter::visit_dictionary(ast::Dictionary *node) {
     ss << indentation() << "(Dictionary\n";
     indent++;
 
@@ -95,7 +95,7 @@ void PrettyPrinter::visit(ast::Dictionary *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Tuple *node) {
+void PrettyPrinter::visit_tuple(ast::Tuple *node) {
     ss << indentation() << "(Tuple\n";
     indent++;
 
@@ -105,7 +105,7 @@ void PrettyPrinter::visit(ast::Tuple *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Call *node) {
+void PrettyPrinter::visit_call(ast::Call *node) {
     ss << indentation() << "(Call [" << type_of(node) << "]\n";
     indent++;
 
@@ -120,7 +120,7 @@ void PrettyPrinter::visit(ast::Call *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::CCall *node) {
+void PrettyPrinter::visit_ccall(ast::CCall *node) {
     ss << indentation() << "(CCall [" << type_of(node) << "]\n";
     indent++;
 
@@ -133,7 +133,7 @@ void PrettyPrinter::visit(ast::CCall *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Cast *node) {
+void PrettyPrinter::visit_cast(ast::Cast *node) {
     ss << indentation() << "(Cast\n";
     indent++;
 
@@ -144,7 +144,7 @@ void PrettyPrinter::visit(ast::Cast *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Assignment *node) {
+void PrettyPrinter::visit_assignment(ast::Assignment *node) {
     ss << indentation() << "(Assignment [" << type_of(node) << "]\n";
     indent++;
 
@@ -158,7 +158,7 @@ void PrettyPrinter::visit(ast::Assignment *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Selector *node) {
+void PrettyPrinter::visit_selector(ast::Selector *node) {
     ss << indentation() << "(Selector [" << type_of(node) << "]\n";
     indent++;
 
@@ -169,7 +169,7 @@ void PrettyPrinter::visit(ast::Selector *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::While *node) {
+void PrettyPrinter::visit_while(ast::While *node) {
     ss << indentation() << "(While [" << type_of(node) << "]\n";
     indent++;
 
@@ -180,7 +180,7 @@ void PrettyPrinter::visit(ast::While *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::If *node) {
+void PrettyPrinter::visit_if(ast::If *node) {
     ss << indentation() << "(If [" << type_of(node) << "]\n";
     indent++;
 
@@ -193,7 +193,7 @@ void PrettyPrinter::visit(ast::If *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Return *node) {
+void PrettyPrinter::visit_return(ast::Return *node) {
     ss << indentation() << "(Return [" << type_of(node) << "]\n";
     indent++;
 
@@ -203,7 +203,7 @@ void PrettyPrinter::visit(ast::Return *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Spawn *node) {
+void PrettyPrinter::visit_spawn(ast::Spawn *node) {
     ss << indentation() << "(Spawn [" << type_of(node) << "]\n";
     indent++;
 
@@ -213,7 +213,7 @@ void PrettyPrinter::visit(ast::Spawn *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Switch *node) {
+void PrettyPrinter::visit_switch(ast::Switch *node) {
     ss << indentation() << "(Switch [" << type_of(node) << "]\n";
     indent++;
 
@@ -237,7 +237,7 @@ void PrettyPrinter::visit(ast::Switch *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Parameter *node) {
+void PrettyPrinter::visit_parameter(ast::Parameter *node) {
     ss << indentation() << "(Parameter\n";
     indent++;
 
@@ -248,7 +248,7 @@ void PrettyPrinter::visit(ast::Parameter *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Let *node) {
+void PrettyPrinter::visit_let(ast::Let *node) {
     ss << indentation() << "(Let [" << type_of(node) << "]\n";
     indent++;
 
@@ -262,7 +262,7 @@ void PrettyPrinter::visit(ast::Let *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Def *node) {
+void PrettyPrinter::visit_def(ast::Def *node) {
     ss << indentation() << "(Def [" << type_of(node) << "]\n";
     indent++;
 
@@ -280,7 +280,7 @@ void PrettyPrinter::visit(ast::Def *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Type *node) {
+void PrettyPrinter::visit_type(ast::Type *node) {
     ss << indentation() << "(Type\n";
     indent++;
 
@@ -299,7 +299,7 @@ void PrettyPrinter::visit(ast::Type *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Module *node) {
+void PrettyPrinter::visit_module(ast::Module *node) {
     ss << indentation() << "(Module [" << type_of(node) << "]\n";
     indent++;
 
@@ -310,7 +310,7 @@ void PrettyPrinter::visit(ast::Module *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::Import *node) {
+void PrettyPrinter::visit_import(ast::Import *node) {
     ss << indentation() << "(Import [" << type_of(node) << "]\n";
     indent++;
 
@@ -320,7 +320,7 @@ void PrettyPrinter::visit(ast::Import *node) {
     ss << indentation() << ")\n";
 }
 
-void PrettyPrinter::visit(ast::SourceFile *node) {
+void PrettyPrinter::visit_source_file(ast::SourceFile *node) {
     ss << indentation() << "(SourceFile " << node->name() << " [" << type_of(node) << "]\n";
     indent++;
 

@@ -64,6 +64,10 @@ namespace acorn::ast {
         typesystem::Type *m_type;
     };
 
+    class Atom : public Node {
+
+    };
+
     class Expression : public Node, public TypedNode {
     public:
         Expression(NodeKind kind, Token token);
