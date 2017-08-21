@@ -20,137 +20,18 @@
 #include <llvm/Transforms/IPO.h>
 
 #include "acorn/ast/nodes.h"
+#include "acorn/codegen/mangler.h"
 #include "acorn/diagnostics.h"
 #include "acorn/symboltable/namespace.h"
 #include "acorn/symboltable/symbol.h"
 #include "acorn/typesystem/types.h"
 #include "acorn/utils.h"
 
-#include "acorn/codegen/mangler.h"
-#include "acorn/codegen/irbuilder.h"
-#include "acorn/codegen/followers.h"
 #include "acorn/codegen/generator.h"
 
 using namespace acorn;
 using namespace acorn::codegen;
 using namespace acorn::diagnostics;
-
-std::string codegen::mangle(std::string name) {
-    return "_A_" + name;
-}
-
-std::string codegen::mangle_method(std::string name, typesystem::Method *type) {
-    return mangle(name + "_" + type->mangled_name());
-}
-
-void ValueFollower::push_llvm_value(llvm::Value *value) {
-    m_llvm_value_stack.push_back(value);
-}
-
-bool ValueFollower::has_llvm_value() const {
-    return !m_llvm_value_stack.empty();
-}
-
-llvm::Value *ValueFollower::pop_llvm_value() {
-    assert(has_llvm_value());
-    auto value = m_llvm_value_stack.back();
-    m_llvm_value_stack.pop_back();
-    return value;
-}
-
-llvm::Value *ValueFollower::llvm_value() const {
-    return m_llvm_value_stack.back();
-}
-
-void TypeFollower::push_llvm_type(llvm::Type *type) {
-    m_llvm_type_stack.push_back(type);
-}
-
-llvm::Type *TypeFollower::pop_llvm_type() {
-    assert(has_llvm_type());
-    auto value = m_llvm_type_stack.back();
-    m_llvm_type_stack.pop_back();
-    return value;
-}
-
-bool TypeFollower::has_llvm_type() const {
-    return !m_llvm_type_stack.empty();
-}
-
-llvm::Type *TypeFollower::llvm_type() const {
-    return m_llvm_type_stack.back();
-}
-
-void InitialiserFollower::push_llvm_initialiser(llvm::Constant *initialiser) {
-    m_llvm_initialiser_stack.push_back(initialiser);
-}
-
-llvm::Constant *InitialiserFollower::pop_llvm_initialiser() {
-    assert(has_llvm_initialiser());
-    auto value = m_llvm_initialiser_stack.back();
-    m_llvm_initialiser_stack.pop_back();
-    return value;
-}
-
-bool InitialiserFollower::has_llvm_initialiser() const {
-    return !m_llvm_initialiser_stack.empty();
-}
-
-llvm::Constant *InitialiserFollower::llvm_initialiser() const {
-    return m_llvm_initialiser_stack.back();
-}
-
-IrBuilder::IrBuilder(llvm::LLVMContext &context) : m_ir_builder(new llvm::IRBuilder<>(context)) {
-
-}
-
-void IrBuilder::push_insert_point() {
-    m_insert_points.push_back(m_ir_builder->saveIP());
-}
-
-void IrBuilder::pop_insert_point() {
-    m_ir_builder->restoreIP(insert_point());
-    m_insert_points.pop_back();
-}
-
-llvm::IRBuilderBase::InsertPoint IrBuilder::insert_point() const {
-    return m_insert_points.back();
-}
-
-llvm::BasicBlock *IrBuilder::create_basic_block(std::string name, llvm::Function *function, bool set_insert_point) {
-    if (function == nullptr) {
-        function = m_ir_builder->GetInsertBlock()->getParent();
-    }
-
-    auto bb = llvm::BasicBlock::Create(function->getContext(), name, function);
-
-    if (set_insert_point) {
-        m_ir_builder->SetInsertPoint(bb);
-    }
-
-    return bb;
-}
-
-llvm::BasicBlock *IrBuilder::create_entry_basic_block(llvm::Function *function, bool set_insert_point) {
-    return create_basic_block("entry", function, set_insert_point);
-}
-
-std::vector<llvm::Value *> IrBuilder::build_gep_index(std::initializer_list<int> indexes) {
-    std::vector<llvm::Value *> values;
-    for (int index : indexes) {
-        values.push_back(m_ir_builder->getInt32(index));
-    }
-    return values;
-}
-
-llvm::Value *IrBuilder::create_inbounds_gep(llvm::Value *value, std::initializer_list<int> indexes) {
-    return m_ir_builder->CreateInBoundsGEP(value, build_gep_index(indexes));
-}
-
-llvm::Value *IrBuilder::create_store_method_to_function(llvm::Function *method, llvm::Value *function, int method_index, int specialisation_index) {
-    auto method_holder = create_inbounds_gep(function, { 0, method_index, specialisation_index });
-    return m_ir_builder->CreateStore(method, method_holder);
-}
 
 CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout) : IrBuilder(m_context), m_module(nullptr) {
     push_scope(scope);

@@ -1,6 +1,9 @@
 set(LIB_FILES ast/visitor.cpp
               ast/nodes.cpp
-              codegen.cpp
+              codegen/followers.cpp
+              codegen/generator.cpp
+              codegen/irbuilder.cpp
+              codegen/mangler.cpp
               compiler.cpp
               diagnostics.cpp
               parser/keywords.cpp
