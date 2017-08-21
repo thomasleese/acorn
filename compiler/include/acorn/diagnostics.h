@@ -50,18 +50,6 @@ namespace acorn::diagnostics {
         FileNotFoundError(ast::Node *node);
     };
 
-    class InternalError : public CompilerError {
-    public:
-        InternalError(const Token &token, std::string message);
-        InternalError(ast::Node *node, std::string message);
-    };
-
-    class InternalAstError : public InternalError {
-    public:
-        InternalAstError(const Token &token);
-        InternalAstError(ast::Node *node);
-    };
-
     class SyntaxError : public CompilerError {
     public:
         SyntaxError(const parser::SourceLocation &location, std::string got,

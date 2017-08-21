@@ -6,6 +6,8 @@
 #include <memory>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -32,6 +34,8 @@ using namespace acorn;
 using namespace acorn::codegen;
 using namespace acorn::diagnostics;
 
+static auto logger = spdlog::get("acorn");
+
 void ValueFollower::push_llvm_value(llvm::Value *value) {
     m_llvm_value_stack.push_back(value);
 }
@@ -41,7 +45,11 @@ bool ValueFollower::has_llvm_value() const {
 }
 
 llvm::Value *ValueFollower::pop_llvm_value() {
-    assert(has_llvm_value());
+    if (!has_llvm_value()) {
+        logger->warn("ValueFollower::pop_llvm_value with nothing available");
+        return nullptr;
+    }
+
     auto value = m_llvm_value_stack.back();
     m_llvm_value_stack.pop_back();
     return value;
@@ -56,7 +64,11 @@ void TypeFollower::push_llvm_type(llvm::Type *type) {
 }
 
 llvm::Type *TypeFollower::pop_llvm_type() {
-    assert(has_llvm_type());
+    if (!has_llvm_type()) {
+        logger->warn("TypeFollower::pop_llvm_type with nothing available");
+        return nullptr;
+    }
+
     auto value = m_llvm_type_stack.back();
     m_llvm_type_stack.pop_back();
     return value;
@@ -75,7 +87,11 @@ void InitialiserFollower::push_llvm_initialiser(llvm::Constant *initialiser) {
 }
 
 llvm::Constant *InitialiserFollower::pop_llvm_initialiser() {
-    assert(has_llvm_initialiser());
+    if (!has_llvm_initialiser()) {
+        logger->warn("InitialiserFollower::pop_llvm_initialiser with nothing available");
+        return nullptr;
+    }
+
     auto value = m_llvm_initialiser_stack.back();
     m_llvm_initialiser_stack.pop_back();
     return value;

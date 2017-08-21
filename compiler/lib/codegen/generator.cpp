@@ -6,6 +6,8 @@
 #include <memory>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
@@ -33,6 +35,8 @@ using namespace acorn;
 using namespace acorn::codegen;
 using namespace acorn::diagnostics;
 
+static auto logger = spdlog::get("acorn");
+
 CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout) : IrBuilder(m_context), m_module(nullptr) {
     push_scope(scope);
 
@@ -40,41 +44,41 @@ CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *da
     m_data_layout = data_layout;
 }
 
-llvm::Type *CodeGenerator::take_type(ast::Expression *expression) {
+llvm::Type *CodeGenerator::take_type() {
     if (has_llvm_type()) {
         auto result = pop_llvm_type();
 
-        if (expression && result == nullptr) {
-            report(InternalError(expression, "Invalid LLVM type generated. (" + expression->type_name() + ")"));
+        if (result == nullptr) {
+            logger->critical("CodeGenerator::take_type pop_llvm_type returned nullptr");
             return nullptr;
         }
 
         return result;
     } else {
-        report(InternalError(expression, "No LLVM type generated."));
+        logger->critical("CodeGenerator::take_type has_llvm_type was false");
         return nullptr;
     }
 }
 
-llvm::Constant *CodeGenerator::take_initialiser(ast::Node *node) {
+llvm::Constant *CodeGenerator::take_initialiser() {
     if (has_llvm_initialiser()) {
         auto result = pop_llvm_initialiser();
 
-        if (node && result == nullptr) {
-            report(InternalError(node, "Invalid LLVM initialiser generated."));
+        if (result == nullptr) {
+            logger->critical("CodeGenerator::take_initialiser pop_llvm_initialiser returned nullptr");
             return nullptr;
         }
 
         return result;
     } else {
-        report(InternalError(node, "No LLVM initialiser generated."));
+        logger->critical("CodeGenerator::take_initialiser has_llvm_initialiser was false");
         return nullptr;
     }
 }
 
 llvm::Type *CodeGenerator::generate_type(ast::Expression *expression, typesystem::Type *type) {
     type->accept(this);
-    return take_type(expression);
+    return take_type();
 }
 
 llvm::Type *CodeGenerator::generate_type(ast::Expression *expression) {
@@ -123,7 +127,7 @@ bool CodeGenerator::verify_function(ast::Node *node, llvm::Function *function) {
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
         function->dump();
-        report(InternalError(node, stream.str()));
+        logger->critical(stream.str());
         return false;
     } else {
         return true;
@@ -246,7 +250,7 @@ void CodeGenerator::generate_builtin_method_body(ast::Def *node, llvm::Function 
         auto value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "self")->llvm_value());
         push_llvm_value(m_ir_builder->CreateFPToSI(value, function->getReturnType(), "int"));
     } else {
-        report(InternalError(node, "Unknown builtin definition."));
+        logger->critical("Unknown builtin definition.");
     }
 }
 
@@ -255,7 +259,7 @@ llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
     auto value = pop_llvm_value();
 
     if (value == nullptr) {
-        report(InternalError(node, "No LLVM value generated!"));
+        logger->critical("CodeGenerator::generate_llvm_value pop_llvm_value returned null");
     }
 
     return value;
@@ -434,7 +438,7 @@ void CodeGenerator::visit(typesystem::Record *type) {
 
     for (auto field_type : type->field_types()) {
         auto llvm_field_type = generate_type(nullptr, field_type);
-        auto llvm_field_initialiser = take_initialiser(nullptr);
+        auto llvm_field_initialiser = take_initialiser();
 
         if (llvm_field_type == nullptr || llvm_field_initialiser == nullptr) {
             push_null_llvm_type_and_initialiser();
@@ -517,7 +521,7 @@ void CodeGenerator::visit(ast::Name *node) {
     return_and_push_null_if_null(symbol);
 
     if (!symbol->has_llvm_value()) {
-        report(InternalError(node, "The LLVM value of this symbol is null."));
+        logger->critical("LLVM value is null.");
         push_llvm_value(nullptr);
         return;
     }
@@ -534,7 +538,7 @@ void CodeGenerator::visit(ast::VariableDeclaration *node) {
     push_insert_point();
 
     if (scope()->is_root()) {
-        auto llvm_initialiser = take_initialiser(node);
+        auto llvm_initialiser = take_initialiser();
         return_and_push_null_if_null(llvm_initialiser);
 
         auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
@@ -576,12 +580,12 @@ void CodeGenerator::visit(ast::Float *node) {
 }
 
 void CodeGenerator::visit(ast::Complex *node) {
-    report(InternalError(node, "Not yet implemented."));
+    logger->warn("Visit ast::Complex not yet implemented.");
     push_llvm_value(nullptr);
 }
 
 void CodeGenerator::visit(ast::String *node) {
-    report(InternalError(node, "Not yet implemented."));
+    logger->warn("Visit ast::String not yet implemented.");
     push_llvm_value(nullptr);
 }
 
@@ -624,7 +628,7 @@ void CodeGenerator::visit(ast::List *node) {
 }
 
 void CodeGenerator::visit(ast::Dictionary *node) {
-    report(InternalError(node, "N/A"));
+    logger->warn("Visit ast::Dictionary not yet implemented.");
     push_llvm_value(nullptr);
 }
 
@@ -664,7 +668,7 @@ void CodeGenerator::visit(ast::Call *node) {
     auto ir_method = m_ir_builder->CreateLoad(create_inbounds_gep(ir_function, { 0, llvm_method_index, llvm_specialisation_index }));
 
     if (ir_method == nullptr) {
-        report(InternalError(node, "No LLVM function was available!"));
+        logger->critical("No LLVM function was available!");
         push_llvm_value(nullptr);
         return;
     }
@@ -689,7 +693,7 @@ void CodeGenerator::visit(ast::Call *node) {
     }
 
     if (!valid) {
-        report(InternalError(node, "Could not order arguments!"));
+        logger->critical("Could not order arguments!");
         push_llvm_value(nullptr);
         return;
     }
@@ -776,7 +780,7 @@ void CodeGenerator::visit(ast::Selector *node) {
         if (node->field()->value() == "new") {
             push_llvm_value(instance);
         } else {
-            report(InternalError(node, "unsupported selector"));
+            report(UndefinedError(node, "unsupported selector"));
             push_llvm_value(nullptr);
         }
     } else if (record_type) {
@@ -791,7 +795,7 @@ void CodeGenerator::visit(ast::Selector *node) {
         auto value = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(actual_thing, build_gep_index({ 0, index })));
         push_llvm_value(value);
     } else {
-        report(InternalError(node, "unsupported selector"));
+        report(UndefinedError(node, "unsupported selector"));
         push_llvm_value(nullptr);
     }
 }
@@ -869,7 +873,7 @@ void CodeGenerator::visit(ast::Return *node) {
 }
 
 void CodeGenerator::visit(ast::Spawn *node) {
-    report(InternalError(node, "N/A"));
+    logger->warn("Visit ast::Spawn not yet implemented.");
     push_llvm_value(nullptr);
 }
 
@@ -895,12 +899,13 @@ void CodeGenerator::visit(ast::Switch *node) {
     auto exit_block = create_basic_block("switch_exit");
     m_ir_builder->SetInsertPoint(entry_block);*/
 
-    report(InternalError(node, "N/A"));
+    logger->warn("Visit ast::Switch not yet implemented.");
     push_llvm_value(nullptr);
 }
 
 void CodeGenerator::visit(ast::Parameter *node) {
-    report(InternalError(node, "N/A"));
+    logger->warn("Visit ast::Parameter not yet implemented.");
+    push_llvm_value(nullptr);
 }
 
 void CodeGenerator::visit(ast::Let *node) {
@@ -917,7 +922,7 @@ void CodeGenerator::visit(ast::Def *node) {
 
     if (!function_symbol->has_llvm_value()) {
         auto llvm_function_type = generate_type(node, function_type);
-        auto llvm_initialiser = take_initialiser(node);
+        auto llvm_initialiser = take_initialiser();
 
         function_symbol->set_llvm_value(
             create_global_variable(
@@ -1006,7 +1011,7 @@ void CodeGenerator::visit(ast::Type *node) {
         return_and_push_null_if_null(symbol);
 
         auto llvm_type = generate_type(node, node_type->constructor());
-        auto llvm_initialiser = take_initialiser(node);
+        auto llvm_initialiser = take_initialiser();
 
         // variable to hold the type
         auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
@@ -1062,7 +1067,8 @@ void CodeGenerator::visit(ast::Module *node) {
 }
 
 void CodeGenerator::visit(ast::Import *node) {
-    report(InternalError(node, "N/A"));
+    logger->warn("Visit ast::Import not yet implemented.");
+    push_llvm_value(nullptr);
 }
 
 void CodeGenerator::visit(ast::SourceFile *node) {
@@ -1105,7 +1111,7 @@ void CodeGenerator::visit(ast::SourceFile *node) {
         llvm::raw_string_ostream stream(str);
         if (llvm::verifyModule(*m_module, &stream)) {
             m_module->dump();
-            report(InternalError(node, stream.str()));
+            logger->critical(stream.str());
         }
     } else {
         for (auto &import : node->imports()) {

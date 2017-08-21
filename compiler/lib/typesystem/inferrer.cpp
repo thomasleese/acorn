@@ -6,6 +6,8 @@
 #include <set>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
 #include "acorn/symboltable/namespace.h"
@@ -18,6 +20,8 @@
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::typesystem;
+
+static auto logger = spdlog::get("acorn");
 
 TypeInferrer::TypeInferrer(symboltable::Namespace *scope) {
     push_scope(scope);
@@ -127,7 +131,7 @@ typesystem::Type *TypeInferrer::builtin_type_from_name(ast::Name *node) {
     } else if (name == "Type") {
         return new typesystem::TypeDescriptionType();
     } else {
-        report(InternalError(node, "Unknown builtin type."));
+        logger->critical("Unknown builtin type: {}", name);
         return nullptr;
     }
 }
@@ -349,7 +353,7 @@ void TypeInferrer::visit(ast::Call *node) {
 
     if (method->is_generic()) {
         if (!infer_call_type_parameters(node, method->parameter_types(), method->ordered_argument_types(node))) {
-            report(InternalError(node, "Could not infer type parameters."));
+            logger->critical("Could not infer type parameters.");
             return;
         }
 

@@ -50,26 +50,6 @@ FileNotFoundError::FileNotFoundError(ast::Node *node) : CompilerError(node) {
     m_prefix = "File not found";
 }
 
-InternalError::InternalError(const Token &token, std::string message) : CompilerError(token) {
-    m_prefix = "Internal error";
-    m_message = message + "\nNote: You have probably encountered a bug in Acorn, not your code.";
-}
-
-InternalError::InternalError(ast::Node *node, std::string message) : CompilerError(node) {
-    m_prefix = "Internal error";
-    m_message = message + "\nNote: You have probably encountered a bug in Acorn, not your code.";
-}
-
-InternalAstError::InternalAstError(const Token &token) :
-        InternalError(token, "Should not be in lowered AST.") {
-
-}
-
-InternalAstError::InternalAstError(ast::Node *node) :
-        InternalError(node, "Should not be in lowered AST.") {
-
-}
-
 SyntaxError::SyntaxError(const SourceLocation &location, std::string got, std::string expectation) : CompilerError(location) {
     m_prefix = "Invalid syntax";
 

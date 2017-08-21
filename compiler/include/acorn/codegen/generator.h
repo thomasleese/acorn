@@ -38,8 +38,8 @@ namespace acorn::codegen {
 
         llvm::Module *module() const { return m_module.get(); }
 
-        llvm::Type *take_type(ast::Expression *expression);
-        llvm::Constant *take_initialiser(ast::Node *node);
+        llvm::Type *take_type();
+        llvm::Constant *take_initialiser();
 
         llvm::Type *generate_type(ast::Expression *expression, typesystem::Type *type);
         llvm::Type *generate_type(ast::Expression *expression);
