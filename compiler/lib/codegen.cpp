@@ -26,7 +26,10 @@
 #include "acorn/typesystem/types.h"
 #include "acorn/utils.h"
 
-#include "acorn/codegen.h"
+#include "acorn/codegen/mangler.h"
+#include "acorn/codegen/irbuilder.h"
+#include "acorn/codegen/followers.h"
+#include "acorn/codegen/generator.h"
 
 using namespace acorn;
 using namespace acorn::codegen;

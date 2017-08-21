@@ -3,7 +3,7 @@
 #include <spdlog/spdlog.h>
 
 #include "acorn/ast/nodes.h"
-#include "acorn/codegen.h"
+#include "acorn/codegen/generator.h"
 #include "acorn/compiler.h"
 #include "acorn/parser/lexer.h"
 #include "acorn/parser/parser.h"

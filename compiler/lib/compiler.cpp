@@ -20,7 +20,7 @@
 #include <spdlog/spdlog.h>
 
 #include "acorn/ast/nodes.h"
-#include "acorn/codegen.h"
+#include "acorn/codegen/generator.h"
 
 #include "acorn/compiler.h"
 

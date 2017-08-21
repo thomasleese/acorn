@@ -12,10 +12,13 @@
 #include <llvm/IR/MDBuilder.h>
 #include <llvm/IR/Module.h>
 
-#include "ast/visitor.h"
-#include "diagnostics.h"
-#include "symboltable/builder.h"
-#include "typesystem/visitor.h"
+#include "../ast/visitor.h"
+#include "../diagnostics.h"
+#include "../symboltable/builder.h"
+#include "../typesystem/visitor.h"
+
+#include "followers.h"
+#include "irbuilder.h"
 
 namespace llvm {
     class Module;
@@ -31,64 +34,6 @@ namespace acorn {
 }
 
 namespace acorn::codegen {
-
-    std::string mangle(std::string name);
-    std::string mangle_method(std::string name, typesystem::Method *type);
-
-    class ValueFollower {
-    public:
-        void push_llvm_value(llvm::Value *value);
-        llvm::Value *pop_llvm_value();
-        bool has_llvm_value() const;
-        llvm::Value *llvm_value() const;
-
-    private:
-        std::vector<llvm::Value *> m_llvm_value_stack;
-    };
-
-    class TypeFollower {
-    public:
-        void push_llvm_type(llvm::Type *type);
-        llvm::Type *pop_llvm_type();
-        bool has_llvm_type() const;
-        llvm::Type *llvm_type() const;
-
-    private:
-        std::vector<llvm::Type *> m_llvm_type_stack;
-    };
-
-    class InitialiserFollower {
-    public:
-        void push_llvm_initialiser(llvm::Constant *initialiser);
-        llvm::Constant *pop_llvm_initialiser();
-        bool has_llvm_initialiser() const;
-        llvm::Constant *llvm_initialiser() const;
-
-    private:
-        std::vector<llvm::Constant *> m_llvm_initialiser_stack;
-    };
-
-    class IrBuilder {
-    public:
-        explicit IrBuilder(llvm::LLVMContext &context);
-
-        void push_insert_point();
-        void pop_insert_point();
-        llvm::IRBuilderBase::InsertPoint insert_point() const;
-
-        llvm::BasicBlock *create_basic_block(std::string name, llvm::Function *function = nullptr, bool set_insert_point = false);
-        llvm::BasicBlock *create_entry_basic_block(llvm::Function *function = nullptr, bool set_insert_point = false);
-
-        std::vector<llvm::Value *> build_gep_index(std::initializer_list<int> indexes);
-        llvm::Value *create_inbounds_gep(llvm::Value *value, std::initializer_list<int> indexes);
-        llvm::Value *create_store_method_to_function(llvm::Function *method, llvm::Value *function, int method_index, int specialisation_index);
-
-    protected:
-        llvm::IRBuilder<> *m_ir_builder;
-
-    private:
-        std::vector<llvm::IRBuilderBase::InsertPoint> m_insert_points;
-    };
 
     class CodeGenerator : public ast::Visitor, public typesystem::Visitor, public diagnostics::Reporter, public symboltable::ScopeFollower, public ValueFollower, public TypeFollower, public InitialiserFollower, public IrBuilder {
 
