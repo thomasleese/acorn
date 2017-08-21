@@ -55,6 +55,51 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
 
     logger->info("Compiling {} to {}.", filename, output_name);
 
+    auto triple = get_triple();
+    auto target_machine = get_target_machine(triple);
+
+    auto data_layout = target_machine->createDataLayout();
+
+    codegen::CodeGenerator generator(root_namespace, &data_layout);
+    module->accept(&generator);
+
+    if (generator.has_errors()) {
+        return false;
+    }
+
+    auto llvm_module = generator.module();
+
+    delete module;
+
+    logger->debug("Generating object file...");
+
+    llvm_module->setTargetTriple(triple.str());
+
+    llvm_module->dump();
+
+    llvm::legacy::PassManager pass_manager;
+
+    std::error_code error_code;
+    llvm::tool_output_file output_file(output_name, error_code, llvm::sys::fs::F_None);
+
+    target_machine->addPassesToEmitFile(pass_manager, output_file.os(), llvm::TargetMachine::CGFT_ObjectFile);
+
+    pass_manager.run(*llvm_module);
+
+    output_file.keep();
+    output_file.os().close();
+
+    logger->debug("Compiling object file...");
+
+    std::string cmd = "clang " + output_name + " -o " + module_name;
+    system(cmd.c_str());
+
+    remove(output_name.c_str());
+
+    return true;
+}
+
+llvm::Triple Compiler::get_triple() const {
     llvm::Triple triple(llvm::sys::getDefaultTargetTriple());
 
     if (triple.getOS() == llvm::Triple::Darwin &&
@@ -74,6 +119,10 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
         triple.setOSName(osx.str());
     }
 
+    return triple;
+}
+
+llvm::TargetMachine *Compiler::get_target_machine(llvm::Triple triple) const {
     std::string error;
     const auto target = llvm::TargetRegistry::lookupTarget(triple.str(), error);
 
@@ -90,44 +139,8 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
     }
     auto target_features = features.getString();
 
-    auto target_machine = target->createTargetMachine(triple.str(), cpu, target_features, target_options, llvm::Reloc::PIC_, llvm::CodeModel::Default, opt_level);
-
-    auto data_layout = target_machine->createDataLayout();
-
-    codegen::CodeGenerator generator(root_namespace, &data_layout);
-    module->accept(&generator);
-
-    if (generator.has_errors()) {
-        return false;
-    }
-
-    auto llvm_module = generator.module();
-
-    delete module;
-
-    debug("Generating object file...");
-
-    llvm_module->setTargetTriple(triple.str());
-
-    llvm_module->dump();
-
-    llvm::legacy::PassManager pass_manager;
-
-    std::error_code error_code;
-    llvm::tool_output_file output_file(output_name, error_code, llvm::sys::fs::F_None);
-
-    target_machine->addPassesToEmitFile(pass_manager, output_file.os(), llvm::TargetMachine::CGFT_ObjectFile);
-
-    pass_manager.run(*llvm_module);
-
-    output_file.keep();
-
-    output_file.os().close();
-
-    std::string cmd = "clang " + output_name + " -o " + module_name;
-    system(cmd.c_str());
-
-    remove(output_name.c_str());
-
-    return true;
+    return target->createTargetMachine(
+        triple.str(), cpu, target_features, target_options,
+        llvm::Reloc::PIC_, llvm::CodeModel::Default, opt_level
+    );
 }
