@@ -78,10 +78,6 @@ std::unique_ptr<SourceFile> Parser::parse(std::string name) {
     );
 }
 
-void Parser::debug(std::string line) {
-    std::cerr << line << std::endl;
-}
-
 Token Parser::front_token() {
     fill_token();
     return m_tokens.front();

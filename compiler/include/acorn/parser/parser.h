@@ -23,8 +23,6 @@ namespace acorn::parser {
         std::unique_ptr<ast::SourceFile> parse(std::string name);
 
     private:
-        void debug(std::string line);
-
         Token front_token();
         bool next_non_newline_token();
         void collapse_deindent_indent_tokens();
