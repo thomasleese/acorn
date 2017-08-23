@@ -53,7 +53,6 @@ namespace acorn::ast {
             NK_Switch,
             NK_Let,
             NK_Parameter,
-            NK_MethodSignature,
             NK_Def,
             NK_Type,
             NK_Module,
@@ -67,25 +66,22 @@ namespace acorn::ast {
         NodeKind kind() const { return m_kind; }
         Token token() const { return m_token; }
 
+        typesystem::Type *type() const { return m_type; }
+        virtual void set_type(typesystem::Type *type) { m_type = type; }
+        bool has_type() const { return m_type != nullptr; }
+        void copy_type_from(Node *node);
+        bool has_compatible_type_with(Node *node) const;
+        std::string type_name() const;
+
     private:
         const NodeKind m_kind;
         Token m_token;
+        typesystem::Type *m_type;
     };
 
     class Expression : public Node {
     public:
-        Expression(NodeKind kind, Token token);
-        virtual ~Expression();
-
-        typesystem::Type *type() const { return m_type; }
-        virtual void set_type(typesystem::Type *type) { m_type = type; }
-        bool has_type() const { return m_type != nullptr; }
-        void copy_type_from(Expression *node);
-        bool has_compatible_type_with(Expression *node) const;
-        std::string type_name() const;
-
-    private:
-        typesystem::Type *m_type;
+        using Node::Node;
     };
 
     class Block : public Expression {
@@ -520,45 +516,22 @@ namespace acorn::ast {
         std::unique_ptr<Name> m_given_type;
     };
 
-    class MethodSignature : public Node {
+    class Def : public Expression {
     public:
-        MethodSignature(Token token, std::unique_ptr<Selector> name, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Name> given_return_type);
+        Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
 
         Selector *name() const { return m_name.get(); }
+
+        bool builtin() const { return m_builtin; }
 
         const std::vector<std::unique_ptr<Parameter>> &parameters() const {
             return m_parameters;
         }
 
-        bool has_given_return_type() const { return static_cast<bool>(m_given_return_type); }
-        Name *given_return_type() const { return m_given_return_type.get(); }
-
-        static bool classof(const Node *node) {
-            return node->kind() == NK_MethodSignature;
-        }
-
-    private:
-        std::unique_ptr<Selector> m_name;
-        std::vector<std::unique_ptr<Parameter>> m_parameters;
-        std::unique_ptr<Name> m_given_return_type;
-    };
-
-    class Def : public Expression {
-    public:
-        Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
-
-        Selector *name() const { return m_signature->name(); }
-
-        bool builtin() const { return m_builtin; }
-
-        const std::vector<std::unique_ptr<Parameter>> &parameters() const {
-            return m_signature->parameters();
-        }
-
         Expression *body() const { return m_body.get(); }
 
-        bool has_given_return_type() const { return m_signature->has_given_return_type(); }
-        Name *given_return_type() const { return m_signature->given_return_type(); }
+        bool has_given_return_type() const { return static_cast<bool>(m_given_return_type); }
+        Name *given_return_type() const { return m_given_return_type.get(); }
 
         void set_type(typesystem::Type *type) override;
 
@@ -567,8 +540,10 @@ namespace acorn::ast {
         }
 
     private:
-        std::unique_ptr<MethodSignature> m_signature;
         bool m_builtin;
+        std::unique_ptr<Selector> m_name;
+        std::vector<std::unique_ptr<Parameter>> m_parameters;
+        std::unique_ptr<Name> m_given_return_type;
         std::unique_ptr<Expression> m_body;
     };
 

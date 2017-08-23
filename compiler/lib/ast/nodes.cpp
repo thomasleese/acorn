@@ -13,7 +13,7 @@
 using namespace acorn;
 using namespace acorn::ast;
 
-Node::Node(NodeKind kind, Token token) : m_kind(kind), m_token(token) {
+Node::Node(NodeKind kind, Token token) : m_kind(kind), m_token(token), m_type(nullptr) {
 
 }
 
@@ -21,24 +21,16 @@ Node::~Node() {
 
 }
 
-Expression::Expression(NodeKind kind, Token token) : Node(kind, token), m_type(nullptr) {
-
-}
-
-Expression::~Expression() {
-
-}
-
-void Expression::copy_type_from(Expression *node) {
+void Node::copy_type_from(Node *node) {
     set_type(node->type());
 }
 
-bool Expression::has_compatible_type_with(Expression *node) const {
+bool Node::has_compatible_type_with(Node *node) const {
     // TODO set a warning here if the type is null?
     return m_type->is_compatible(node->type());
 }
 
-std::string Expression::type_name() const {
+std::string Node::type_name() const {
     if (m_type) {
         return m_type->name();
     } else {
@@ -237,19 +229,13 @@ Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::u
 
 }
 
-MethodSignature::MethodSignature(Token token, std::unique_ptr<Selector> name, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Name> given_return_type) : Node(NK_MethodSignature, token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
-    for (auto &parameter : parameters) {
-        m_parameters.push_back(std::move(parameter));
-    }
-}
+Def::Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(NK_Def, token), m_builtin(builtin), m_name(std::move(name)), m_parameters(std::move(parameters)), m_given_return_type(std::move(given_return_type)), m_body(std::move(body)) {
 
-Def::Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(NK_Def, token), m_builtin(builtin), m_body(std::move(body)) {
-    m_signature = std::make_unique<MethodSignature>(token, std::move(name), std::move(parameters), std::move(given_return_type));
 }
 
 void Def::set_type(typesystem::Type *type) {
     Expression::set_type(type);
-    m_signature->name()->set_type(type);
+    m_name->set_type(type);
 }
 
 Type::Type(Token token, std::unique_ptr<Name> name) : Expression(NK_Type, token), m_name(std::move(name)), m_builtin(true) {
