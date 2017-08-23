@@ -97,31 +97,14 @@ void Builder::visit_cast(ast::Cast *node) {
 
 }
 
-void Builder::visit_assignment(ast::Assignment *node) {
-    node->lhs()->accept(this);
-
-    if (!node->builtin()) {
-        node->rhs()->accept(this);
-    }
-}
-
 void Builder::visit_selector(ast::Selector *node) {
 
 }
 
-void Builder::visit_while(ast::While *node) {
-    node->condition()->accept(this);
-    node->body()->accept(this);
-}
-
 void Builder::visit_if(ast::If *node) {
-    node->condition()->accept(this);
-
-    node->true_case()->accept(this);
-
-    if (node->has_false_case()) {
-        node->false_case()->accept(this);
-    }
+    visit(node->condition());
+    visit(node->true_case());
+    accept_if_present(node->false_case());
 }
 
 void Builder::visit_return(ast::Return *node) {
@@ -134,16 +117,11 @@ void Builder::visit_spawn(ast::Spawn *node) {
 
 void Builder::visit_switch(ast::Switch *node) {
     for (auto &entry : node->cases()) {
-        entry->condition()->accept(this);
-
-        if (entry->has_assignment()) {
-            entry->assignment()->accept(this);
-        }
+        visit(entry->condition());
+        accept_if_present(entry->assignment());
     }
 
-    if (node->has_default_case()) {
-        node->default_case()->accept(this);
-    }
+    accept_if_present(node->default_case());
 }
 
 void Builder::visit_parameter(ast::Parameter *node) {
@@ -152,11 +130,8 @@ void Builder::visit_parameter(ast::Parameter *node) {
 }
 
 void Builder::visit_let(ast::Let *node) {
-    node->assignment()->accept(this);
-
-    if (node->has_body()) {
-        node->body()->accept(this);
-    }
+    visit(node->assignment());
+    accept_if_present(node->body());
 }
 
 void Builder::visit_def(ast::Def *node) {
@@ -193,7 +168,7 @@ void Builder::visit_def(ast::Def *node) {
     accept_many(node->parameters());
 
     if (!node->builtin()) {
-        node->body()->accept(this);
+        visit(node->body());
     }
 
     pop_scope();
@@ -231,7 +206,7 @@ void Builder::visit_module(ast::Module *node) {
     }
 
     push_scope(symbol);
-    node->body()->accept(this);
+    visit(node->body());
     pop_scope();
 }
 
@@ -240,9 +215,6 @@ void Builder::visit_import(ast::Import *node) {
 }
 
 void Builder::visit_source_file(ast::SourceFile *node) {
-    for (auto &import : node->imports()) {
-        import->accept(this);
-    }
-
-    node->code()->accept(this);
+    accept_many(node->imports());
+    visit(node->code());
 }

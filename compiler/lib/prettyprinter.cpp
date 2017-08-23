@@ -89,8 +89,8 @@ void PrettyPrinter::visit_dictionary(ast::Dictionary *node) {
     indent++;
 
     for (size_t i = 0; i < node->elements_size(); i++) {
-        node->key(i)->accept(this);
-        node->value(i)->accept(this);
+        visit(node->key(i));
+        visit(node->value(i));
     }
 
     indent--;
@@ -175,8 +175,8 @@ void PrettyPrinter::visit_while(ast::While *node) {
     ss << indentation() << "(While [" << type_of(node) << "]\n";
     indent++;
 
-    node->condition()->accept(this);
-    node->body()->accept(this);
+    visit(node->condition());
+    visit(node->body());
 
     indent--;
     ss << indentation() << ")\n";
@@ -186,8 +186,8 @@ void PrettyPrinter::visit_if(ast::If *node) {
     ss << indentation() << "(If [" << type_of(node) << "]\n";
     indent++;
 
-    node->condition()->accept(this);
-    node->true_case()->accept(this);
+    visit(node->condition());
+    visit(node->true_case());
 
     accept_if_present(node->false_case());
 
@@ -199,7 +199,7 @@ void PrettyPrinter::visit_return(ast::Return *node) {
     ss << indentation() << "(Return [" << type_of(node) << "]\n";
     indent++;
 
-    node->expression()->accept(this);
+    visit(node->expression());
 
     indent--;
     ss << indentation() << ")\n";
@@ -209,7 +209,7 @@ void PrettyPrinter::visit_spawn(ast::Spawn *node) {
     ss << indentation() << "(Spawn [" << type_of(node) << "]\n";
     indent++;
 
-    node->call()->accept(this);
+    visit(node->call());
 
     indent--;
     ss << indentation() << ")\n";
@@ -219,21 +219,17 @@ void PrettyPrinter::visit_switch(ast::Switch *node) {
     ss << indentation() << "(Switch [" << type_of(node) << "]\n";
     indent++;
 
-    node->expression()->accept(this);
+    visit(node->expression());
 
     for (auto &entry : node->cases()) {
-        entry->condition()->accept(this);
+        visit(entry->condition());
 
-        if (entry->has_assignment()) {
-            entry->assignment()->accept(this);
-        }
+        accept_if_present(entry->assignment());
 
-        entry->body()->accept(this);
+        visit(entry->body());
     }
 
-    if (node->has_default_case()) {
-        node->default_case()->accept(this);
-    }
+    accept_if_present(node->default_case());
 
     indent--;
     ss << indentation() << ")\n";
@@ -243,8 +239,8 @@ void PrettyPrinter::visit_parameter(ast::Parameter *node) {
     ss << indentation() << "(Parameter\n";
     indent++;
 
-    node->name()->accept(this);
-    node->given_type()->accept(this);
+    visit(node->name());
+    visit(node->given_type());
 
     indent--;
     ss << indentation() << ")\n";
@@ -254,11 +250,8 @@ void PrettyPrinter::visit_let(ast::Let *node) {
     ss << indentation() << "(Let [" << type_of(node) << "]\n";
     indent++;
 
-    node->assignment()->accept(this);
-
-    if (node->has_body()) {
-        node->body()->accept(this);
-    }
+    visit(node->assignment());
+    accept_if_present(node->body());
 
     indent--;
     ss << indentation() << ")\n";
@@ -289,11 +282,11 @@ void PrettyPrinter::visit_type(ast::Type *node) {
     accept(node->name());
 
     if (node->has_alias()) {
-        node->alias()->accept(this);
+        visit(node->alias());
     } else {
         for (size_t i = 0; i < node->field_names().size(); i++) {
-            node->field_names()[i]->accept(this);
-            node->field_types()[i]->accept(this);
+            accept(node->field_names()[i]);
+            accept(node->field_types()[i]);
         }
     }
 
@@ -305,8 +298,8 @@ void PrettyPrinter::visit_module(ast::Module *node) {
     ss << indentation() << "(Module [" << type_of(node) << "]\n";
     indent++;
 
-    node->name()->accept(this);
-    node->body()->accept(this);
+    visit(node->name());
+    visit(node->body());
 
     indent--;
     ss << indentation() << ")\n";
@@ -316,7 +309,7 @@ void PrettyPrinter::visit_import(ast::Import *node) {
     ss << indentation() << "(Import [" << type_of(node) << "]\n";
     indent++;
 
-    node->path()->accept(this);
+    visit(node->path());
 
     indent--;
     ss << indentation() << ")\n";
@@ -326,11 +319,8 @@ void PrettyPrinter::visit_source_file(ast::SourceFile *node) {
     ss << indentation() << "(SourceFile " << node->name() << " [" << type_of(node) << "]\n";
     indent++;
 
-    for (auto &import : node->imports()) {
-        import->accept(this);
-    }
-
-    node->code()->accept(this);
+    accept_many(node->imports());
+    visit(node->code());
 
     indent--;
     ss << indentation() << ")\n";

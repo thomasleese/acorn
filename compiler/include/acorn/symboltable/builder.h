@@ -48,9 +48,7 @@ namespace acorn::symboltable {
         void visit_call(ast::Call *node) override;
         void visit_ccall(ast::CCall *node) override;
         void visit_cast(ast::Cast *node) override;
-        void visit_assignment(ast::Assignment *node) override;
         void visit_selector(ast::Selector *node) override;
-        void visit_while(ast::While *node) override;
         void visit_if(ast::If *node) override;
         void visit_return(ast::Return *node) override;
         void visit_spawn(ast::Spawn *node) override;

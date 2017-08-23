@@ -43,7 +43,7 @@ namespace acorn::ast {
 
         template <typename T>
         void accept(const std::unique_ptr<T> &node) {
-            node->accept(this);
+            visit(node.get());
         }
 
         void accept(Node *node);
@@ -52,7 +52,7 @@ namespace acorn::ast {
         template <typename T>
         void accept_many(const std::vector<std::unique_ptr<T>> &nodes) {
             for (auto &node : nodes) {
-                node->accept(this);
+                accept(node);
             }
         }
 
@@ -71,9 +71,9 @@ namespace acorn::ast {
         virtual void visit_call(Call *node) = 0;
         virtual void visit_ccall(CCall *node) = 0;
         virtual void visit_cast(Cast *node) = 0;
-        virtual void visit_assignment(Assignment *node) = 0;
+        virtual void visit_assignment(Assignment *node);
         virtual void visit_selector(Selector *node) = 0;
-        virtual void visit_while(While *node) = 0;
+        virtual void visit_while(While *node);
         virtual void visit_if(If *node) = 0;
         virtual void visit_return(Return *node) = 0;
         virtual void visit_spawn(Spawn *node) = 0;

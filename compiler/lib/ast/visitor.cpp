@@ -20,7 +20,7 @@ Visitor::~Visitor() {
 }
 
 void Visitor::accept(Node *node) {
-    node->accept(this);
+    visit(node);
 }
 
 void Visitor::accept_if_present(Node *node) {
@@ -46,4 +46,17 @@ Node *Visitor::visit_block(Block *node) {
     }
 
     return node;
+}
+
+void Visitor::visit_assignment(ast::Assignment *node) {
+    visit(node->lhs());
+
+    if (!node->builtin()) {
+        visit(node->rhs());
+    }
+}
+
+void Visitor::visit_while(ast::While *node) {
+    visit(node->condition());
+    visit(node->body());
 }

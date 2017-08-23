@@ -255,7 +255,7 @@ void CodeGenerator::generate_builtin_method_body(ast::Def *node, llvm::Function 
 }
 
 llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
-    node->accept(this);
+    accept(node);
     auto value = pop_llvm_value();
 
     if (value == nullptr) {
@@ -655,8 +655,7 @@ void CodeGenerator::visit_tuple(ast::Tuple *node) {
 
 void CodeGenerator::visit_call(ast::Call *node) {
     auto operand = node->operand();
-
-    operand->accept(this);
+    accept(operand);
 
     auto function_type = dynamic_cast<typesystem::Function *>(operand->type());
 
@@ -679,9 +678,7 @@ void CodeGenerator::visit_call(ast::Call *node) {
     int i = 0;
     bool valid;
     for (auto argument : method->ordered_arguments(node, &valid)) {
-        argument->accept(this);
-
-        auto value = pop_llvm_value();
+        auto value = generate_llvm_value(argument);
 
         if (method->is_parameter_inout(method->parameter_types()[i])) {
             auto load = llvm::dyn_cast<llvm::LoadInst>(value);
@@ -733,8 +730,7 @@ void CodeGenerator::visit_ccall(ast::CCall *node) {
 }
 
 void CodeGenerator::visit_cast(ast::Cast *node) {
-    node->operand()->accept(this);
-    auto value = pop_llvm_value();
+    auto value = generate_llvm_value(node->operand());
 
     auto destination_type = generate_type(node);
     auto new_value = m_ir_builder->CreateBitCast(value, destination_type);
@@ -773,7 +769,7 @@ void CodeGenerator::visit_selector(ast::Selector *node) {
         return_and_push_null_if_null(symbol);
 
         push_scope(symbol);
-        node->field()->accept(this);
+        accept(node->field());
         pop_scope();
     } else if (record_type_type) {
         auto instance = generate_llvm_value(operand);
@@ -810,14 +806,13 @@ void CodeGenerator::visit_while(ast::While *node) {
     m_ir_builder->CreateBr(entry_bb);
 
     m_ir_builder->SetInsertPoint(entry_bb);
-    node->condition()->accept(this);
-    auto condition = m_ir_builder->CreateICmpEQ(pop_llvm_value(), m_ir_builder->getInt1(true), "while_cond");
+    auto condition_value = generate_llvm_value(node->condition());
+    auto condition = m_ir_builder->CreateICmpEQ(condition_value, m_ir_builder->getInt1(true), "while_cond");
     m_ir_builder->CreateCondBr(condition, loop_bb, join_bb);
 
     m_ir_builder->SetInsertPoint(loop_bb);
 
-    node->body()->accept(this);
-    auto then_value = pop_llvm_value();
+    auto then_value = generate_llvm_value(node->body());
     push_llvm_value(then_value);
     m_ir_builder->CreateBr(entry_bb);
 
@@ -911,10 +906,10 @@ void CodeGenerator::visit_parameter(ast::Parameter *node) {
 }
 
 void CodeGenerator::visit_let(ast::Let *node) {
-    node->assignment()->accept(this);
+    accept(node->assignment());
 
     if (node->has_body()) {
-        node->body()->accept(this);
+        accept(node->body());
     }
 }
 
@@ -960,7 +955,7 @@ void CodeGenerator::visit_def(ast::Def *node) {
         if (node->builtin()) {
             generate_builtin_method_body(node, function);
         } else {
-            node->body()->accept(this);
+            accept(node->body());
         }
 
         auto value = pop_llvm_value();
@@ -1064,7 +1059,7 @@ void CodeGenerator::visit_module(ast::Module *node) {
     return_and_push_null_if_null(symbol);
 
     push_scope(symbol);
-    node->body()->accept(this);
+    accept(node->body());
     pop_scope();
 }
 
@@ -1091,11 +1086,8 @@ void CodeGenerator::visit_source_file(ast::SourceFile *node) {
 
         m_ir_builder->SetInsertPoint(user_code_bb);
 
-        for (auto &import : node->imports()) {
-            import->accept(this);
-        }
-
-        node->code()->accept(this);
+        accept_many(node->imports());
+        accept(node->code());
 
         m_ir_builder->CreateRetVoid();
 
@@ -1117,9 +1109,9 @@ void CodeGenerator::visit_source_file(ast::SourceFile *node) {
         }
     } else {
         for (auto &import : node->imports()) {
-            import->accept(this);
+            accept(import);
         }
 
-        node->code()->accept(this);
+        accept(node->code());
     }
 }

@@ -32,7 +32,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
     PrettyPrinter pp;
 
     symboltable::Builder symbol_table_builder(root_namespace);
-    module->accept(&symbol_table_builder);
+    symbol_table_builder.visit(module.get());
     assert(symbolTableBuilder.is_at_root());
 
     return_null_if_has_errors(symbol_table_builder);
@@ -40,7 +40,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
     logger->debug("Running type inferrer...");
 
     typesystem::TypeInferrer inferrer(root_namespace);
-    module->accept(&inferrer);
+    inferrer.visit(module.get());
 
     //std::cout << root_namespace->to_string() << std::endl;
     //module->accept(&pp);
@@ -51,7 +51,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
     logger->debug("Running type checker...");
 
     typesystem::TypeChecker type_checker(root_namespace);
-    module->accept(&type_checker);
+    type_checker.visit(module.get());
 
     return_null_if_has_errors(type_checker);
 
