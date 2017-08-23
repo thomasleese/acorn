@@ -162,7 +162,7 @@ llvm::GlobalVariable *CodeGenerator::create_global_variable(llvm::Type *type, ll
 }
 
 void CodeGenerator::prepare_method_parameters(ast::Def *node, llvm::Function *function) {
-    auto name = node->name()->field();
+    auto name = node->name()->field().get();
 
     for (auto &param : name->parameters()) {
         auto symbol = scope()->lookup(this, node, param->value());
@@ -672,7 +672,8 @@ ast::Node *CodeGenerator::visit_dictionary(ast::Dictionary *node) {
 }
 
 ast::Node *CodeGenerator::visit_call(ast::Call *node) {
-    auto operand = node->operand();
+    auto &operand = node->operand();
+
     accept(operand);
 
     auto function_type = dynamic_cast<typesystem::Function *>(operand->type());
@@ -782,7 +783,7 @@ ast::Node *CodeGenerator::visit_assignment(ast::Assignment *node) {
 }
 
 ast::Node *CodeGenerator::visit_selector(ast::Selector *node) {
-    auto operand = node->operand();
+    auto operand = node->operand().get();
 
     auto module_type = dynamic_cast<typesystem::ModuleType *>(operand->type());
     auto record_type_type = dynamic_cast<typesystem::RecordType *>(operand->type());
@@ -871,7 +872,7 @@ ast::Node *CodeGenerator::visit_if(ast::If *node) {
     m_ir_builder->SetInsertPoint(else_bb);
 
     llvm::Value *else_value = nullptr;
-    if (node->has_false_case()) {
+    if (node->false_case()) {
         else_value = generate_llvm_value(node->false_case());
     } else {
         else_value = m_ir_builder->getInt1(false);
@@ -948,7 +949,7 @@ ast::Node *CodeGenerator::visit_parameter(ast::Parameter *node) {
 ast::Node *CodeGenerator::visit_let(ast::Let *node) {
     accept(node->assignment());
 
-    if (node->has_body()) {
+    if (node->body()) {
         accept(node->body());
     }
 
@@ -956,7 +957,7 @@ ast::Node *CodeGenerator::visit_let(ast::Let *node) {
 }
 
 ast::Node *CodeGenerator::visit_def(ast::Def *node) {
-    auto function_symbol = scope()->lookup(this, node->name()->field());
+    auto function_symbol = scope()->lookup(this, node->name()->field().get());
     auto function_type = static_cast<typesystem::Function *>(function_symbol->type());
 
     if (!function_symbol->has_llvm_value()) {
@@ -1031,7 +1032,7 @@ ast::Node *CodeGenerator::visit_def(ast::Def *node) {
 
 ast::Node *CodeGenerator::visit_type(ast::Type *node) {
     if (node->builtin()) {
-        auto symbol = scope()->lookup(this, node->name());
+        auto symbol = scope()->lookup(this, node->name().get());
         return_null_and_push_null_if_null(symbol);
 
         // FIXME create a proper type
@@ -1040,15 +1041,15 @@ ast::Node *CodeGenerator::visit_type(ast::Type *node) {
         return node;
     }
 
-    if (node->has_alias()) {
-        auto new_symbol = scope()->lookup(this, node->name());
-        auto old_symbol = scope()->lookup(this, node->alias());
+    if (node->alias()) {
+        auto new_symbol = scope()->lookup(this, node->name().get());
+        auto old_symbol = scope()->lookup(this, node->alias().get());
         new_symbol->set_llvm_value(old_symbol->llvm_value());
         push_llvm_value(new_symbol->llvm_value());
     } else {
         auto node_type = dynamic_cast<typesystem::RecordType *>(node->type());
 
-        auto symbol = scope()->lookup(this, node->name());
+        auto symbol = scope()->lookup(this, node->name().get());
         return_null_and_push_null_if_null(symbol);
 
         auto llvm_type = generate_type(node_type->constructor());
@@ -1101,7 +1102,7 @@ ast::Node *CodeGenerator::visit_type(ast::Type *node) {
 }
 
 ast::Node *CodeGenerator::visit_module(ast::Module *node) {
-    auto symbol = scope()->lookup(this, node->name());
+    auto symbol = scope()->lookup(this, node->name().get());
     return_null_and_push_null_if_null(symbol);
 
     push_scope(symbol);

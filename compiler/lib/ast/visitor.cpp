@@ -159,6 +159,60 @@ Node *Visitor::visit_tuple(Tuple *node) {
     return node;
 }
 
+Node *Visitor::visit_dictionary(Dictionary *node) {
+    auto &keys = node->keys();
+    auto &values = node->values();
+
+    for (size_t i = 0; i < keys.size(); i++) {
+        keys[i] = visit(keys[i]);
+        values[i] = visit(values[i]);
+    }
+
+    return node;
+}
+
+Node *Visitor::visit_call(Call *node) {
+    node->operand() = visit(node->operand());
+
+    auto &positional_arguments = node->positional_arguments();
+
+    for (size_t i = 0; i < positional_arguments.size(); i++) {
+        positional_arguments[i] = visit(positional_arguments[i]);
+    }
+
+    for (auto &keyword_argument : node->keyword_arguments()) {
+        keyword_argument.second = visit(keyword_argument.second);
+    }
+
+    return node;
+}
+
+Node *Visitor::visit_ccall(CCall *node) {
+    auto &parameters = node->parameters();
+
+    for (size_t i = 0; i < parameters.size(); i++) {
+        parameters[i] = unique_ptr<Name>(llvm::cast<Name>(visit(parameters[i]).release()));
+    }
+
+    auto &arguments = node->arguments();
+
+    for (size_t i = 0; i < arguments.size(); i++) {
+        arguments[i] = visit(arguments[i]);
+    }
+
+    node->given_return_type() = unique_ptr<Name>(llvm::cast<Name>(visit(node->given_return_type()).release()));
+
+    return node;
+}
+
+Node *Visitor::visit_cast(Cast *node) {
+    node->operand() = visit(node->operand());
+
+    node->new_type() = unique_ptr<Name>(llvm::cast<Name>(visit(node->operand()).release()));
+
+    return node;
+}
+
 Node *Visitor::visit_assignment(Assignment *node) {
     node->lhs() = unique_ptr<VariableDeclaration>(llvm::cast<VariableDeclaration>(visit(node->lhs()).release()));
 
@@ -169,9 +223,42 @@ Node *Visitor::visit_assignment(Assignment *node) {
     return node;
 }
 
+Node *Visitor::visit_selector(Selector *node) {
+    node->operand() = visit(node->operand());
+
+    node->field() = unique_ptr<Name>(llvm::cast<Name>(visit(node->field()).release()));
+
+    return node;
+}
+
 Node *Visitor::visit_while(While *node) {
     node->condition() = visit(node->condition());
+
     node->body() = visit(node->body());
+
+    return node;
+}
+
+Node *Visitor::visit_if(If *node) {
+    node->condition() = visit(node->condition());
+
+    node->true_case() = visit(node->true_case());
+
+    if (node->false_case()) {
+        node->false_case() = visit(node->false_case());
+    }
+
+    return node;
+}
+
+Node *Visitor::visit_return(Return *node) {
+    node->expression() = visit(node->expression());
+
+    return node;
+}
+
+Node *Visitor::visit_spawn(Spawn *node) {
+    node->call() = unique_ptr<Call>(llvm::cast<Call>(visit(node->call()).release()));
 
     return node;
 }

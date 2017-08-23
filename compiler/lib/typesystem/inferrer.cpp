@@ -318,7 +318,7 @@ ast::Node *TypeInferrer::visit_dictionary(ast::Dictionary *node) {
 }
 
 ast::Node *TypeInferrer::visit_call(ast::Call *node) {
-    visit(node->operand());
+    visit(node->operand().get());
     return_null_if_null_type(node->operand());
 
     for (auto &argument : node->positional_arguments()) {
@@ -327,14 +327,14 @@ ast::Node *TypeInferrer::visit_call(ast::Call *node) {
     }
 
     for (auto &entry : node->keyword_arguments()) {
-        visit(entry.second);
+        visit(entry.second.get());
         return_null_if_null_type(entry.second);
     }
 
     auto function = dynamic_cast<typesystem::Function *>(node->operand_type());
     if (function == nullptr) {
         node->set_type(new typesystem::Function());
-        report(TypeMismatchError(node->operand(), node));
+        report(TypeMismatchError(node->operand().get(), node));
         delete node->type();
         node->set_type(nullptr);
         // FIXME make the construct accept a type directly
@@ -384,29 +384,22 @@ ast::Node *TypeInferrer::visit_call(ast::Call *node) {
 }
 
 ast::Node *TypeInferrer::visit_ccall(ast::CCall *node) {
-    accept_many(node->parameters());
+    ast::Visitor::visit_ccall(node);
 
     for (auto &param : node->parameters()) {
         param->set_type(instance_type(param.get()));
     }
 
-    accept_many(node->arguments());
-
     // TODO check arg and param typesystem match
 
-    accept(node->given_return_type());
-
-    node->set_type(instance_type(node->given_return_type()));
+    node->set_type(instance_type(node->given_return_type().get()));
 
     return node;
 }
 
 ast::Node *TypeInferrer::visit_cast(ast::Cast *node) {
-    visit(node->operand());
-    visit(node->new_type());
-
-    node->set_type(instance_type(node->new_type()));
-
+    ast::Visitor::visit_cast(node);
+    node->set_type(instance_type(node->new_type().get()));
     return node;
 }
 
@@ -444,11 +437,11 @@ ast::Node *TypeInferrer::visit_assignment(ast::Assignment *node) {
 }
 
 ast::Node *TypeInferrer::visit_selector(ast::Selector *node) {
-    if (!node->has_operand()) {
+    if (!node->operand()) {
         return node;
     }
 
-    auto operand = node->operand();
+    auto operand = node->operand().get();
 
     visit(operand);
     return_null_if_null_type(operand);
@@ -463,7 +456,7 @@ ast::Node *TypeInferrer::visit_selector(ast::Selector *node) {
         auto symbol = scope()->lookup(this, module_name);
         return_null_if_null(symbol);
 
-        auto child_symbol = symbol->scope()->lookup(this, node->field());
+        auto child_symbol = symbol->scope()->lookup(this, node->field().get());
         return_null_if_null(child_symbol);
 
         node->set_type(child_symbol->type());
@@ -471,10 +464,10 @@ ast::Node *TypeInferrer::visit_selector(ast::Selector *node) {
         if (node->field()->value() == "new") {
             node->set_type(record_type->constructor());
         } else {
-            report(UndefinedError(node->field(), "new"));
+            report(UndefinedError(node->field().get(), "new"));
         }
     } else if (record != nullptr) {
-        auto field = node->field();
+        auto field = node->field().get();
 
         auto field_type = record->child_type(field->value());
         if (field_type != nullptr) {
@@ -498,12 +491,7 @@ ast::Node *TypeInferrer::visit_while(ast::While *node) {
 }
 
 ast::Node *TypeInferrer::visit_if(ast::If *node) {
-    visit(node->condition());
-
-    visit(node->true_case());
-    if (node->has_false_case()) {
-        visit(node->false_case());
-    }
+    Visitor::visit_if(node);
 
     // FIXME return a union type
     node->copy_type_from(node->true_case());
@@ -512,7 +500,7 @@ ast::Node *TypeInferrer::visit_if(ast::If *node) {
 }
 
 ast::Node *TypeInferrer::visit_return(ast::Return *node) {
-    auto expression = node->expression();
+    auto expression = node->expression().get();
 
     visit(expression);
     return_null_if_null_type(expression)
@@ -523,7 +511,7 @@ ast::Node *TypeInferrer::visit_return(ast::Return *node) {
         return_null_if_null(method);
 
         if (!method->return_type()->is_compatible(expression->type())) {
-            report(TypeMismatchError(expression, def->given_return_type()));
+            report(TypeMismatchError(expression, def->given_return_type().get()));
             return nullptr;
         }
     } else {
@@ -537,9 +525,9 @@ ast::Node *TypeInferrer::visit_return(ast::Return *node) {
 }
 
 ast::Node *TypeInferrer::visit_spawn(ast::Spawn *node) {
-    auto call = node->call();
-    accept(call);
-    node->copy_type_from(call);
+    Visitor::visit_spawn(node);
+
+    node->copy_type_from(node->call().get());
 
     return node;
 }
@@ -568,11 +556,11 @@ ast::Node *TypeInferrer::visit_parameter(ast::Parameter *node) {
     auto symbol = scope()->lookup(this, node, node->name()->value());
     return_null_if_null(symbol);
 
-    if (node->has_given_type()) {
-        visit(node->given_type());
+    if (node->given_type()) {
+        visit(node->given_type().get());
         return_null_if_null(node->given_type());
 
-        node->set_type(instance_type(node->given_type()));
+        node->set_type(instance_type(node->given_type().get()));
     } else {
         auto type = new typesystem::ParameterType();
         node->set_type(type->create(this, node));
@@ -586,20 +574,20 @@ ast::Node *TypeInferrer::visit_parameter(ast::Parameter *node) {
 }
 
 ast::Node *TypeInferrer::visit_let(ast::Let *node) {
-    visit(node->assignment());
+    visit(node->assignment().get());
 
-    if (node->has_body()) {
-        visit(node->body());
+    if (node->body()) {
+        visit(node->body().get());
         node->copy_type_from(node->body());
     } else {
-        node->copy_type_from(node->assignment());
+        node->copy_type_from(node->assignment().get());
     }
 
     return node;
 }
 
 ast::Node *TypeInferrer::visit_def(ast::Def *node) {
-    auto name = node->name()->field();
+    auto name = node->name()->field().get();
 
     auto function_symbol = scope()->lookup(this, name);
     if (!function_symbol->has_type()) {
@@ -632,13 +620,13 @@ ast::Node *TypeInferrer::visit_def(ast::Def *node) {
     }
 
     if (!node->builtin()) {
-        visit(node->body());
+        visit(node->body().get());
     }
 
     typesystem::Type *return_type = nullptr;
-    if (node->builtin() || node->has_given_return_type()) {
-        visit(node->given_return_type());
-        return_type = instance_type(node->given_return_type());
+    if (node->builtin() || node->given_return_type()) {
+        visit(node->given_return_type().get());
+        return_type = instance_type(node->given_return_type().get());
     } else {
         return_type = node->body()->type();
     }
@@ -682,7 +670,7 @@ ast::Node *TypeInferrer::visit_type(ast::Type *node) {
     auto symbol = scope()->lookup(this, node, node->name()->value());
 
     if (node->builtin()) {
-        node->set_type(builtin_type_from_name(node->name()));
+        node->set_type(builtin_type_from_name(node->name().get()));
         symbol->copy_type_from(node);
         return node;
     }
@@ -703,8 +691,8 @@ ast::Node *TypeInferrer::visit_type(ast::Type *node) {
     }
 
     typesystem::Type *type;
-    if (node->has_alias()) {
-        visit(node->alias());
+    if (node->alias()) {
+        visit(node->alias().get());
 
         auto alias = dynamic_cast<typesystem::TypeType *>(node->alias()->type());
         assert(alias);
@@ -738,14 +726,14 @@ ast::Node *TypeInferrer::visit_type(ast::Type *node) {
 }
 
 ast::Node *TypeInferrer::visit_module(ast::Module *node) {
-    auto symbol = scope()->lookup(this, node->name());
+    auto symbol = scope()->lookup(this, node->name().get());
     return_null_if_null(symbol);
 
     push_scope(symbol);
 
     auto module = new typesystem::ModuleType();
 
-    visit(node->body());
+    visit(node->body().get());
 
     node->set_type(module);
     symbol->copy_type_from(node);
@@ -756,9 +744,8 @@ ast::Node *TypeInferrer::visit_module(ast::Module *node) {
 }
 
 ast::Node *TypeInferrer::visit_import(ast::Import *node) {
-    visit(node->path());
+    visit(node->path().get());
     node->set_type(new typesystem::Void());
-
     return node;
 }
 
@@ -767,9 +754,9 @@ ast::Node *TypeInferrer::visit_source_file(ast::SourceFile *node) {
         visit(import.get());
     }
 
-    visit(node->code());
+    visit(node->code().get());
 
-    node->copy_type_from(node->code());
+    node->copy_type_from(node->code().get());
 
     return node;
 }

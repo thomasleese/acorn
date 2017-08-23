@@ -139,14 +139,6 @@ std::vector<typesystem::Type *> Call::positional_argument_types() const {
     return types;
 }
 
-std::map<std::string, Node *> Call::keyword_arguments() const {
-    std::map<std::string, Node *> expressions;
-    for (auto &entry : m_keyword_arguments) {
-        expressions[entry.first] = entry.second.get();
-    }
-    return expressions;
-}
-
 std::map<std::string, typesystem::Type *> Call::keyword_argument_types() const {
     std::map<std::string, typesystem::Type *> types;
     for (auto &entry : m_keyword_arguments) {

@@ -37,14 +37,6 @@ namespace acorn::symboltable {
         Namespace *root_namespace();
 
         ast::Node *visit_variable_declaration(ast::VariableDeclaration *node) override;
-        ast::Node *visit_dictionary(ast::Dictionary *node) override;
-        ast::Node *visit_call(ast::Call *node) override;
-        ast::Node *visit_ccall(ast::CCall *node) override;
-        ast::Node *visit_cast(ast::Cast *node) override;
-        ast::Node *visit_selector(ast::Selector *node) override;
-        ast::Node *visit_if(ast::If *node) override;
-        ast::Node *visit_return(ast::Return *node) override;
-        ast::Node *visit_spawn(ast::Spawn *node) override;
         ast::Node *visit_switch(ast::Switch *node) override;
         ast::Node *visit_parameter(ast::Parameter *node) override;
         ast::Node *visit_let(ast::Let *node) override;
