@@ -46,7 +46,7 @@ std::string Expression::type_name() const {
     }
 }
 
-Block::Block(Token token, std::vector<std::unique_ptr<Expression>> expressions) : Expression(NK_Other, token) {
+Block::Block(Token token, std::vector<std::unique_ptr<Expression>> expressions) : Expression(NK_Block, token) {
     for (auto &expression : expressions) {
         m_expressions.push_back(std::move(expression));
     }
@@ -70,7 +70,7 @@ void Name::accept(Visitor *visitor) {
     visitor->visit_name(this);
 }
 
-VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type, bool builtin) : Expression(NK_Other, token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {
+VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type, bool builtin) : Expression(NK_VariableDeclaration, token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {
 
 }
 
@@ -83,7 +83,7 @@ void VariableDeclaration::accept(Visitor *visitor) {
     visitor->visit_variable_declaration(this);
 }
 
-Int::Int(Token token, std::string value) : Expression(NK_Other, token), m_value(value) {
+Int::Int(Token token, std::string value) : Expression(NK_Int, token), m_value(value) {
 
 }
 
@@ -91,7 +91,7 @@ void Int::accept(Visitor *visitor) {
     visitor->visit_int(this);
 }
 
-Float::Float(Token token, std::string value) : Expression(NK_Other, token), m_value(value) {
+Float::Float(Token token, std::string value) : Expression(NK_Float, token), m_value(value) {
 
 }
 
@@ -103,7 +103,7 @@ void Complex::accept(Visitor *visitor) {
     visitor->visit_complex(this);
 }
 
-String::String(Token token, std::string value) : Expression(NK_Other, token), m_value(value) {
+String::String(Token token, std::string value) : Expression(NK_String, token), m_value(value) {
 
 }
 
@@ -111,21 +111,29 @@ void String::accept(Visitor *visitor) {
     visitor->visit_string(this);
 }
 
-Sequence::Sequence(Token token, std::vector<std::unique_ptr<Expression>> elements) : Expression(NK_Other, token) {
+Sequence::Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Expression>> elements) : Expression(kind, token) {
     for (auto &element : elements) {
         m_elements.push_back(std::move(element));
     }
+}
+
+List::List(Token token, std::vector<std::unique_ptr<Expression>> elements) : Sequence(NK_List, token, std::move(elements)) {
+
 }
 
 void List::accept(Visitor *visitor) {
     visitor->visit_list(this);
 }
 
+Tuple::Tuple(Token token, std::vector<std::unique_ptr<Expression>> elements) : Sequence(NK_Tuple, token, std::move(elements)) {
+
+}
+
 void Tuple::accept(Visitor *visitor) {
     visitor->visit_tuple(this);
 }
 
-Dictionary::Dictionary(Token token, std::vector<std::unique_ptr<Expression>> keys, std::vector<std::unique_ptr<Expression>> values) : Expression(NK_Other, token) {
+Dictionary::Dictionary(Token token, std::vector<std::unique_ptr<Expression>> keys, std::vector<std::unique_ptr<Expression>> values) : Expression(NK_Dictionary, token) {
     assert(keys.size() == values.size());
 
     for (auto &key : keys) {
@@ -199,7 +207,7 @@ void Call::accept(Visitor *visitor) {
     visitor->visit_call(this);
 }
 
-CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Expression>> arguments) : Expression(NK_Other, token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
+CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Expression>> arguments) : Expression(NK_CCall, token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
     for (auto &parameter : parameters) {
         m_parameters.push_back(std::move(parameter));
     }
@@ -213,7 +221,7 @@ void CCall::accept(Visitor *visitor) {
     visitor->visit_ccall(this);
 }
 
-Cast::Cast(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> new_type) : Expression(NK_Other, token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) {
+Cast::Cast(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> new_type) : Expression(NK_Cast, token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) {
 
 }
 
@@ -221,7 +229,7 @@ void Cast::accept(Visitor *visitor) {
     visitor->visit_cast(this);
 }
 
-Assignment::Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Expression> rhs) : Expression(NK_Other, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
+Assignment::Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Expression> rhs) : Expression(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
 
 }
 
@@ -229,7 +237,7 @@ void Assignment::accept(Visitor *visitor) {
     visitor->visit_assignment(this);
 }
 
-Selector::Selector(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> field) : Expression(NK_Other, token), m_operand(std::move(operand)), m_field(std::move(field)) {
+Selector::Selector(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> field) : Expression(NK_Selector, token), m_operand(std::move(operand)), m_field(std::move(field)) {
 
 }
 
@@ -241,7 +249,7 @@ void Selector::accept(Visitor *visitor) {
     visitor->visit_selector(this);
 }
 
-While::While(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> body) : Expression(NK_Other, token), m_condition(std::move(condition)), m_body(std::move(body)) {
+While::While(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> body) : Expression(NK_While, token), m_condition(std::move(condition)), m_body(std::move(body)) {
 
 }
 
@@ -249,7 +257,7 @@ void While::accept(Visitor *visitor) {
     visitor->visit_while(this);
 }
 
-If::If(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> true_case, std::unique_ptr<Expression> false_case) : Expression(NK_Other, token), m_condition(std::move(condition)), m_true_case(std::move(true_case)), m_false_case(std::move(false_case)) {
+If::If(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> true_case, std::unique_ptr<Expression> false_case) : Expression(NK_If, token), m_condition(std::move(condition)), m_true_case(std::move(true_case)), m_false_case(std::move(false_case)) {
 
 }
 
@@ -257,7 +265,7 @@ void If::accept(Visitor *visitor) {
     visitor->visit_if(this);
 }
 
-Return::Return(Token token, std::unique_ptr<Expression> expression) : Expression(NK_Other, token), m_expression(std::move(expression)) {
+Return::Return(Token token, std::unique_ptr<Expression> expression) : Expression(NK_Return, token), m_expression(std::move(expression)) {
 
 }
 
@@ -265,7 +273,7 @@ void Return::accept(Visitor *visitor) {
     visitor->visit_return(this);
 }
 
-Spawn::Spawn(Token token, std::unique_ptr<Call> call) : Expression(NK_Other, token), m_call(std::move(call)) {
+Spawn::Spawn(Token token, std::unique_ptr<Call> call) : Expression(NK_Spawn, token), m_call(std::move(call)) {
 
 }
 
@@ -274,7 +282,7 @@ void Spawn::accept(Visitor *visitor) {
 }
 
 Case::Case(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> assignment, std::unique_ptr<Expression> body) :
-        Expression(NK_Other, token), m_condition(std::move(condition)), m_assignment(std::move(assignment)), m_body(std::move(body))
+        Expression(NK_Case, token), m_condition(std::move(condition)), m_assignment(std::move(assignment)), m_body(std::move(body))
 {
 
 }
@@ -283,7 +291,7 @@ void Case::accept(Visitor *visitor) {
     // visitor->visit_case(this);
 }
 
-Switch::Switch(Token token, std::unique_ptr<Expression> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Expression> default_case) : Expression(NK_Other, token), m_expression(std::move(expression)), m_default_case(std::move(default_case)) {
+Switch::Switch(Token token, std::unique_ptr<Expression> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Expression> default_case) : Expression(NK_Switch, token), m_expression(std::move(expression)), m_default_case(std::move(default_case)) {
     for (auto &entry : cases) {
         m_cases.push_back(std::move(entry));
     }
@@ -293,11 +301,11 @@ void Switch::accept(Visitor *visitor) {
     visitor->visit_switch(this);
 }
 
-Let::Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Expression> body) : Expression(NK_Other, token), m_assignment(std::move(assignment)), m_body(std::move(body)) {
+Let::Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Expression> body) : Expression(NK_Let, token), m_assignment(std::move(assignment)), m_body(std::move(body)) {
 
 }
 
-Let::Let(Token token, std::string name, std::unique_ptr<Expression> value, std::unique_ptr<Expression> body) : Expression(NK_Other, token), m_body(std::move(body)) {
+Let::Let(Token token, std::string name, std::unique_ptr<Expression> value, std::unique_ptr<Expression> body) : Expression(NK_Let, token), m_body(std::move(body)) {
     auto name_node = std::make_unique<Name>(token, name);
 
     auto variable_declaration = std::make_unique<VariableDeclaration>(
@@ -313,7 +321,7 @@ void Let::accept(Visitor *visitor) {
     visitor->visit_let(this);
 }
 
-Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type) : Expression(NK_Other, token), m_inout(inout), m_name(std::move(name)), m_given_type(std::move(given_type)) {
+Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type) : Expression(NK_Parameter, token), m_inout(inout), m_name(std::move(name)), m_given_type(std::move(given_type)) {
 
 }
 
@@ -321,7 +329,7 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit_parameter(this);
 }
 
-MethodSignature::MethodSignature(Token token, std::unique_ptr<Selector> name, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Name> given_return_type) : Node(NK_Other, token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
+MethodSignature::MethodSignature(Token token, std::unique_ptr<Selector> name, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Name> given_return_type) : Node(NK_MethodSignature, token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
     for (auto &parameter : parameters) {
         m_parameters.push_back(std::move(parameter));
     }
@@ -331,7 +339,7 @@ void MethodSignature::accept(Visitor *visitor) {
 
 }
 
-Def::Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(NK_Other, token), m_builtin(builtin), m_body(std::move(body)) {
+Def::Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(NK_Def, token), m_builtin(builtin), m_body(std::move(body)) {
     m_signature = std::make_unique<MethodSignature>(token, std::move(name), std::move(parameters), std::move(given_return_type));
 }
 
@@ -344,15 +352,15 @@ void Def::accept(Visitor *visitor) {
     visitor->visit_def(this);
 }
 
-Type::Type(Token token, std::unique_ptr<Name> name) : Expression(NK_Other, token), m_name(std::move(name)), m_builtin(true) {
+Type::Type(Token token, std::unique_ptr<Name> name) : Expression(NK_Type, token), m_name(std::move(name)), m_builtin(true) {
 
 }
 
-Type::Type(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias) : Expression(NK_Other, token), m_name(std::move(name)), m_builtin(false), m_alias(std::move(alias)) {
+Type::Type(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias) : Expression(NK_Type, token), m_name(std::move(name)), m_builtin(false), m_alias(std::move(alias)) {
 
 }
 
-Type::Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types) : Expression(NK_Other, token), m_name(std::move(name)), m_builtin(false) {
+Type::Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types) : Expression(NK_Type, token), m_name(std::move(name)), m_builtin(false) {
     for (auto &field_name : field_names) {
         m_field_names.push_back(std::move(field_name));
     }
@@ -371,7 +379,7 @@ void Type::accept(Visitor *visitor) {
     visitor->visit_type(this);
 }
 
-Module::Module(Token token, std::unique_ptr<Name> name, std::unique_ptr<Block> body) : Expression(NK_Other, token), m_name(std::move(name)), m_body(std::move(body)) {
+Module::Module(Token token, std::unique_ptr<Name> name, std::unique_ptr<Block> body) : Expression(NK_Module, token), m_name(std::move(name)), m_body(std::move(body)) {
 
 }
 
@@ -379,7 +387,7 @@ void Module::accept(Visitor *visitor) {
     visitor->visit_module(this);
 }
 
-Import::Import(Token token, std::unique_ptr<String> path) : Expression(NK_Other, token), m_path(std::move(path)) {
+Import::Import(Token token, std::unique_ptr<String> path) : Expression(NK_Import, token), m_path(std::move(path)) {
 
 }
 
@@ -387,7 +395,7 @@ void Import::accept(Visitor *visitor) {
     visitor->visit_import(this);
 }
 
-SourceFile::SourceFile(Token token, std::string name, std::vector<std::unique_ptr<SourceFile>> imports, std::unique_ptr<Block> code) : Expression(NK_Other, token), m_name(name), m_code(std::move(code)) {
+SourceFile::SourceFile(Token token, std::string name, std::vector<std::unique_ptr<SourceFile>> imports, std::unique_ptr<Block> code) : Expression(NK_SourceFile, token), m_name(name), m_code(std::move(code)) {
     for (auto &import : imports) {
         m_imports.push_back(std::move(import));
     }

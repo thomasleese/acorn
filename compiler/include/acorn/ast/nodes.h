@@ -30,9 +30,35 @@ namespace acorn::ast {
     class Node {
     public:
         enum NodeKind {
+            NK_Block,
             NK_Name,
+            NK_VariableDeclaration,
+            NK_Int,
+            NK_Float,
+            NK_Complex,
+            NK_String,
+            NK_List,
+            NK_Tuple,
+            NK_Dictionary,
             NK_Call,
-            NK_Other
+            NK_CCall,
+            NK_Cast,
+            NK_Assignment,
+            NK_Selector,
+            NK_While,
+            NK_If,
+            NK_Return,
+            NK_Spawn,
+            NK_Case,
+            NK_Switch,
+            NK_Let,
+            NK_Parameter,
+            NK_MethodSignature,
+            NK_Def,
+            NK_Type,
+            NK_Module,
+            NK_Import,
+            NK_SourceFile,
         };
 
         Node(NodeKind kind, Token token);
@@ -71,6 +97,10 @@ namespace acorn::ast {
         const std::vector<std::unique_ptr<Expression>> &expressions() const { return m_expressions; }
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Block;
+        }
 
     private:
         std::vector<std::unique_ptr<Expression>> m_expressions;
@@ -115,6 +145,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor) override;
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_VariableDeclaration;
+        }
+
     private:
         std::unique_ptr<Name> m_name;
         std::unique_ptr<Name> m_given_type;
@@ -129,6 +163,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Int;
+        }
+
     private:
         std::string m_value;
     };
@@ -141,6 +179,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Float;
+        }
+
     private:
         std::string m_value;
     };
@@ -150,6 +192,10 @@ namespace acorn::ast {
         using Expression::Expression;
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Complex;
+        }
     };
 
     class String : public Expression {
@@ -160,13 +206,17 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_String;
+        }
+
     private:
         std::string m_value;
     };
 
     class Sequence : public Expression {
     public:
-        Sequence(Token token, std::vector<std::unique_ptr<Expression>> elements);
+        Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Expression>> elements);
 
         const std::vector<std::unique_ptr<Expression>> &elements() const {
             return m_elements;
@@ -178,14 +228,24 @@ namespace acorn::ast {
 
     class List : public Sequence {
     public:
-        using Sequence::Sequence;
+        List(Token token, std::vector<std::unique_ptr<Expression>> elements);
+
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_List;
+        }
     };
 
     class Tuple : public Sequence {
     public:
-        using Sequence::Sequence;
+        Tuple(Token token, std::vector<std::unique_ptr<Expression>> elements);
+
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Tuple;
+        }
     };
 
     class Dictionary : public Expression {
@@ -198,6 +258,10 @@ namespace acorn::ast {
         Expression *value(size_t index) const { return m_values[index].get(); }
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Dictionary;
+        }
 
     private:
         std::vector<std::unique_ptr<Expression>> m_keys;
@@ -268,6 +332,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_CCall;
+        }
+
     private:
         std::unique_ptr<Name> m_name;
         std::vector<std::unique_ptr<Name>> m_parameters;
@@ -283,6 +351,10 @@ namespace acorn::ast {
         Name *new_type() const { return m_new_type.get(); }
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Cast;
+        }
 
     private:
         std::unique_ptr<Expression> m_operand;
@@ -300,6 +372,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor) override;
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Assignment;
+        }
+
     private:
         std::unique_ptr<VariableDeclaration> m_lhs;
         std::unique_ptr<Expression> m_rhs;
@@ -316,6 +392,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Selector;
+        }
+
     private:
         std::unique_ptr<Expression> m_operand;
         std::unique_ptr<Name> m_field;
@@ -329,6 +409,10 @@ namespace acorn::ast {
         Expression *body() const { return m_condition.get(); }
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_While;
+        }
 
     private:
         std::unique_ptr<Expression> m_condition;
@@ -348,6 +432,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_If;
+        }
+
     private:
         std::unique_ptr<Expression> m_condition;
         std::unique_ptr<Expression> m_true_case;
@@ -362,6 +450,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Return;
+        }
+
     private:
         std::unique_ptr<Expression> m_expression;
     };
@@ -373,6 +465,10 @@ namespace acorn::ast {
         Call *call() const { return m_call.get(); }
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Spawn;
+        }
 
     private:
         std::unique_ptr<Call> m_call;
@@ -390,6 +486,10 @@ namespace acorn::ast {
         Expression *body() const { return m_body.get(); }
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Case;
+        }
 
     private:
         std::unique_ptr<Expression> m_condition;
@@ -412,6 +512,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Switch;
+        }
+
     private:
         std::unique_ptr<Expression> m_expression;
         std::vector<std::unique_ptr<Case>> m_cases;
@@ -430,6 +534,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Let;
+        }
+
     private:
         std::unique_ptr<Assignment> m_assignment;
         std::unique_ptr<Expression> m_body;
@@ -447,6 +555,10 @@ namespace acorn::ast {
         Name *given_type() const { return m_given_type.get(); }
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Parameter;
+        }
 
     private:
         bool m_inout;
@@ -468,6 +580,10 @@ namespace acorn::ast {
         Name *given_return_type() const { return m_given_return_type.get(); }
 
         void accept(Visitor *visitor) override;
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_MethodSignature;
+        }
 
     private:
         std::unique_ptr<Selector> m_name;
@@ -495,6 +611,10 @@ namespace acorn::ast {
         void set_type(typesystem::Type *type) override;
 
         void accept(Visitor *visitor) override;
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Def;
+        }
 
     private:
         std::unique_ptr<MethodSignature> m_signature;
@@ -527,6 +647,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor) override;
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Type;
+        }
+
     private:
         std::unique_ptr<Name> m_name;
         bool m_builtin;
@@ -544,6 +668,10 @@ namespace acorn::ast {
 
         void accept(Visitor *visitor);
 
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Module;
+        }
+
     private:
         std::unique_ptr<Name> m_name;
         std::unique_ptr<Block> m_body;
@@ -556,6 +684,10 @@ namespace acorn::ast {
         String *path() const { return m_path.get(); }
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Import;
+        }
 
     private:
         std::unique_ptr<String> m_path;
@@ -574,6 +706,10 @@ namespace acorn::ast {
         Block *code() const { return m_code.get(); }
 
         void accept(Visitor *visitor);
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_SourceFile;
+        }
 
     private:
         std::string m_name;
