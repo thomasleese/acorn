@@ -13,7 +13,7 @@ namespace acorn {
 
     namespace ast {
         class Node;
-        class Expression;
+        class Node;
         class Name;
     }
 
@@ -89,7 +89,7 @@ namespace acorn::diagnostics {
 
     class TypeMismatchError : public CompilerError {
     public:
-        TypeMismatchError(ast::Expression *node1, ast::Expression *node2);
+        TypeMismatchError(ast::Node *node1, ast::Node *node2);
         TypeMismatchError(ast::Node *node, typesystem::Type *type1, typesystem::Type *type2);
         TypeMismatchError(ast::Node *node, std::string type1, std::string type2);
     };

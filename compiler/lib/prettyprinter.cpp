@@ -15,7 +15,7 @@ PrettyPrinter::PrettyPrinter() : indent(0) {
 
 }
 
-std::string type_of(ast::Expression *node) {
+std::string type_of(ast::Node *node) {
     return node->type_name();
 }
 

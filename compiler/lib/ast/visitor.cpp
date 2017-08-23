@@ -42,7 +42,7 @@ Node *Visitor::visit_block(Block *node) {
 
     for (size_t i = 0; i < expressions.size(); i++) {
         auto expression = expressions[i].release();
-        expressions[i] = std::unique_ptr<Expression>(llvm::cast<Expression>(visit(expression)));
+        expressions[i] = std::unique_ptr<Node>(llvm::cast<Node>(visit(expression)));
     }
 
     return node;

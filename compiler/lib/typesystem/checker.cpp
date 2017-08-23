@@ -26,7 +26,7 @@ TypeChecker::TypeChecker(symboltable::Namespace *scope) {
     push_scope(scope);
 }
 
-void TypeChecker::check_types(ast::Expression *lhs, ast::Expression *rhs) {
+void TypeChecker::check_types(ast::Node *lhs, ast::Node *rhs) {
     check_not_null(lhs);
     check_not_null(rhs);
 
@@ -35,7 +35,7 @@ void TypeChecker::check_types(ast::Expression *lhs, ast::Expression *rhs) {
     }
 }
 
-void TypeChecker::check_not_null(ast::Expression *node) {
+void TypeChecker::check_not_null(ast::Node *node) {
     if (!node->has_type()) {
         auto message = "No type given for: " + node->token().to_string();
         logger->critical(message);

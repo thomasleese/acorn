@@ -1105,8 +1105,8 @@ std::vector<T> Method::ordered_arguments(std::vector<T> positional_arguments, st
     return ordered_arguments;
 }
 
-std::vector<ast::Expression *> Method::ordered_arguments(ast::Call *call, bool *valid) {
-    std::vector<ast::Expression *> positional_arguments;
+std::vector<ast::Node *> Method::ordered_arguments(ast::Call *call, bool *valid) {
+    std::vector<ast::Node *> positional_arguments;
     for (auto &p : call->positional_arguments()) {
         positional_arguments.push_back(p.get());
     }

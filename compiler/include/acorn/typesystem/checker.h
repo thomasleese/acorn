@@ -30,8 +30,8 @@ namespace acorn::typesystem {
         explicit TypeChecker(symboltable::Namespace *scope);
 
     private:
-        void check_types(ast::Expression *lhs, ast::Expression *rhs);
-        void check_not_null(ast::Expression *expression);
+        void check_types(ast::Node *lhs, ast::Node *rhs);
+        void check_not_null(ast::Node *expression);
 
     public:
         ast::Node *visit_block(ast::Block *node) override;

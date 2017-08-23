@@ -54,7 +54,7 @@ bool Symbol::is_variable() const {
     return dynamic_cast<ast::Let *>(m_node) != nullptr;
 }
 
-void Symbol::copy_type_from(ast::Expression *node) {
+void Symbol::copy_type_from(ast::Node *node) {
     if (node == nullptr || node->type() == nullptr) {
         logger->critical("Symbol::copy_type_from given a nullptr");
         return;

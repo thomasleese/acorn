@@ -38,13 +38,13 @@ std::string Node::type_name() const {
     }
 }
 
-Block::Block(Token token, std::vector<std::unique_ptr<Expression>> expressions) : Expression(NK_Block, token) {
+Block::Block(Token token, std::vector<std::unique_ptr<Node>> expressions) : Node(NK_Block, token) {
     for (auto &expression : expressions) {
         m_expressions.push_back(std::move(expression));
     }
 }
 
-Name::Name(Token token, std::string value) : Expression(NK_Name, token), m_value(value) {
+Name::Name(Token token, std::string value) : Node(NK_Name, token), m_value(value) {
 
 }
 
@@ -54,42 +54,42 @@ Name::Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> pa
     }
 }
 
-VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type, bool builtin) : Expression(NK_VariableDeclaration, token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {
+VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type, bool builtin) : Node(NK_VariableDeclaration, token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {
 
 }
 
 void VariableDeclaration::set_type(typesystem::Type *type) {
-    Expression::set_type(type);
+    Node::set_type(type);
     m_name->set_type(type);
 }
 
-Int::Int(Token token, std::string value) : Expression(NK_Int, token), m_value(value) {
+Int::Int(Token token, std::string value) : Node(NK_Int, token), m_value(value) {
 
 }
 
-Float::Float(Token token, std::string value) : Expression(NK_Float, token), m_value(value) {
+Float::Float(Token token, std::string value) : Node(NK_Float, token), m_value(value) {
 
 }
 
-String::String(Token token, std::string value) : Expression(NK_String, token), m_value(value) {
+String::String(Token token, std::string value) : Node(NK_String, token), m_value(value) {
 
 }
 
-Sequence::Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Expression>> elements) : Expression(kind, token) {
+Sequence::Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Node>> elements) : Node(kind, token) {
     for (auto &element : elements) {
         m_elements.push_back(std::move(element));
     }
 }
 
-List::List(Token token, std::vector<std::unique_ptr<Expression>> elements) : Sequence(NK_List, token, std::move(elements)) {
+List::List(Token token, std::vector<std::unique_ptr<Node>> elements) : Sequence(NK_List, token, std::move(elements)) {
 
 }
 
-Tuple::Tuple(Token token, std::vector<std::unique_ptr<Expression>> elements) : Sequence(NK_Tuple, token, std::move(elements)) {
+Tuple::Tuple(Token token, std::vector<std::unique_ptr<Node>> elements) : Sequence(NK_Tuple, token, std::move(elements)) {
 
 }
 
-Dictionary::Dictionary(Token token, std::vector<std::unique_ptr<Expression>> keys, std::vector<std::unique_ptr<Expression>> values) : Expression(NK_Dictionary, token) {
+Dictionary::Dictionary(Token token, std::vector<std::unique_ptr<Node>> keys, std::vector<std::unique_ptr<Node>> values) : Node(NK_Dictionary, token) {
     assert(keys.size() == values.size());
 
     for (auto &key : keys) {
@@ -101,7 +101,7 @@ Dictionary::Dictionary(Token token, std::vector<std::unique_ptr<Expression>> key
     }
 }
 
-Call::Call(Token token, std::unique_ptr<Expression> operand, std::vector<std::unique_ptr<Expression>> positional_arguments, std::map<std::string, std::unique_ptr<Expression>> keyword_arguments) : Expression(NK_Call, token), m_operand(std::move(operand)), m_method_index(0), m_method_specialisation_index(0) {
+Call::Call(Token token, std::unique_ptr<Node> operand, std::vector<std::unique_ptr<Node>> positional_arguments, std::map<std::string, std::unique_ptr<Node>> keyword_arguments) : Node(NK_Call, token), m_operand(std::move(operand)), m_method_index(0), m_method_specialisation_index(0) {
     for (auto &argument : positional_arguments) {
         m_positional_arguments.push_back(std::move(argument));
     }
@@ -111,7 +111,7 @@ Call::Call(Token token, std::unique_ptr<Expression> operand, std::vector<std::un
     }
 }
 
-Call::Call(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Expression> arg1, std::unique_ptr<Expression> arg2) : Expression(NK_Call, token), m_operand(std::move(operand)), m_method_index(0), m_method_specialisation_index(0) {
+Call::Call(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Node> arg1, std::unique_ptr<Node> arg2) : Node(NK_Call, token), m_operand(std::move(operand)), m_method_index(0), m_method_specialisation_index(0) {
     if (arg1) {
         m_positional_arguments.push_back(std::move(arg1));
     }
@@ -121,11 +121,11 @@ Call::Call(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Exp
     }
 }
 
-Call::Call(Token token, std::string name, std::unique_ptr<Expression> arg1, std::unique_ptr<Expression> arg2) : Call(token, std::make_unique<Name>(token, name), std::move(arg1), std::move(arg2)) {
+Call::Call(Token token, std::string name, std::unique_ptr<Node> arg1, std::unique_ptr<Node> arg2) : Call(token, std::make_unique<Name>(token, name), std::move(arg1), std::move(arg2)) {
 
 }
 
-Call::Call(Token token, std::string name, std::vector<std::unique_ptr<Expression>> arguments) : Call(token, name) {
+Call::Call(Token token, std::string name, std::vector<std::unique_ptr<Node>> arguments) : Call(token, name) {
     for (auto &argument : arguments) {
         m_positional_arguments.push_back(std::move(argument));
     }
@@ -139,8 +139,8 @@ std::vector<typesystem::Type *> Call::positional_argument_types() const {
     return types;
 }
 
-std::map<std::string, Expression *> Call::keyword_arguments() const {
-    std::map<std::string, Expression *> expressions;
+std::map<std::string, Node *> Call::keyword_arguments() const {
+    std::map<std::string, Node *> expressions;
     for (auto &entry : m_keyword_arguments) {
         expressions[entry.first] = entry.second.get();
     }
@@ -155,7 +155,7 @@ std::map<std::string, typesystem::Type *> Call::keyword_argument_types() const {
     return types;
 }
 
-CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Expression>> arguments) : Expression(NK_CCall, token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
+CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Node>> arguments) : Node(NK_CCall, token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
     for (auto &parameter : parameters) {
         m_parameters.push_back(std::move(parameter));
     }
@@ -165,55 +165,55 @@ CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_pt
     }
 }
 
-Cast::Cast(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> new_type) : Expression(NK_Cast, token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) {
+Cast::Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> new_type) : Node(NK_Cast, token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) {
 
 }
 
-Assignment::Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Expression> rhs) : Expression(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
+Assignment::Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Node> rhs) : Node(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
 
 }
 
-Selector::Selector(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> field) : Expression(NK_Selector, token), m_operand(std::move(operand)), m_field(std::move(field)) {
+Selector::Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> field) : Node(NK_Selector, token), m_operand(std::move(operand)), m_field(std::move(field)) {
 
 }
 
-Selector::Selector(Token token, std::unique_ptr<Expression> operand, std::string field) : Selector(token, std::move(operand), std::make_unique<Name>(token, field)) {
+Selector::Selector(Token token, std::unique_ptr<Node> operand, std::string field) : Selector(token, std::move(operand), std::make_unique<Name>(token, field)) {
 
 }
 
-While::While(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> body) : Expression(NK_While, token), m_condition(std::move(condition)), m_body(std::move(body)) {
+While::While(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> body) : Node(NK_While, token), m_condition(std::move(condition)), m_body(std::move(body)) {
 
 }
 
-If::If(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> true_case, std::unique_ptr<Expression> false_case) : Expression(NK_If, token), m_condition(std::move(condition)), m_true_case(std::move(true_case)), m_false_case(std::move(false_case)) {
+If::If(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> true_case, std::unique_ptr<Node> false_case) : Node(NK_If, token), m_condition(std::move(condition)), m_true_case(std::move(true_case)), m_false_case(std::move(false_case)) {
 
 }
 
-Return::Return(Token token, std::unique_ptr<Expression> expression) : Expression(NK_Return, token), m_expression(std::move(expression)) {
+Return::Return(Token token, std::unique_ptr<Node> expression) : Node(NK_Return, token), m_expression(std::move(expression)) {
 
 }
 
-Spawn::Spawn(Token token, std::unique_ptr<Call> call) : Expression(NK_Spawn, token), m_call(std::move(call)) {
+Spawn::Spawn(Token token, std::unique_ptr<Call> call) : Node(NK_Spawn, token), m_call(std::move(call)) {
 
 }
 
-Case::Case(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> assignment, std::unique_ptr<Expression> body) :
-        Expression(NK_Case, token), m_condition(std::move(condition)), m_assignment(std::move(assignment)), m_body(std::move(body))
+Case::Case(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> assignment, std::unique_ptr<Node> body) :
+        Node(NK_Case, token), m_condition(std::move(condition)), m_assignment(std::move(assignment)), m_body(std::move(body))
 {
 
 }
 
-Switch::Switch(Token token, std::unique_ptr<Expression> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Expression> default_case) : Expression(NK_Switch, token), m_expression(std::move(expression)), m_default_case(std::move(default_case)) {
+Switch::Switch(Token token, std::unique_ptr<Node> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Node> default_case) : Node(NK_Switch, token), m_expression(std::move(expression)), m_default_case(std::move(default_case)) {
     for (auto &entry : cases) {
         m_cases.push_back(std::move(entry));
     }
 }
 
-Let::Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Expression> body) : Expression(NK_Let, token), m_assignment(std::move(assignment)), m_body(std::move(body)) {
+Let::Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body) : Node(NK_Let, token), m_assignment(std::move(assignment)), m_body(std::move(body)) {
 
 }
 
-Let::Let(Token token, std::string name, std::unique_ptr<Expression> value, std::unique_ptr<Expression> body) : Expression(NK_Let, token), m_body(std::move(body)) {
+Let::Let(Token token, std::string name, std::unique_ptr<Node> value, std::unique_ptr<Node> body) : Node(NK_Let, token), m_body(std::move(body)) {
     auto name_node = std::make_unique<Name>(token, name);
 
     auto variable_declaration = std::make_unique<VariableDeclaration>(
@@ -225,28 +225,28 @@ Let::Let(Token token, std::string name, std::unique_ptr<Expression> value, std::
     );
 }
 
-Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type) : Expression(NK_Parameter, token), m_inout(inout), m_name(std::move(name)), m_given_type(std::move(given_type)) {
+Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type) : Node(NK_Parameter, token), m_inout(inout), m_name(std::move(name)), m_given_type(std::move(given_type)) {
 
 }
 
-Def::Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type) : Expression(NK_Def, token), m_builtin(builtin), m_name(std::move(name)), m_parameters(std::move(parameters)), m_given_return_type(std::move(given_return_type)), m_body(std::move(body)) {
+Def::Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<Name> given_return_type) : Node(NK_Def, token), m_builtin(builtin), m_name(std::move(name)), m_parameters(std::move(parameters)), m_given_return_type(std::move(given_return_type)), m_body(std::move(body)) {
 
 }
 
 void Def::set_type(typesystem::Type *type) {
-    Expression::set_type(type);
+    Node::set_type(type);
     m_name->set_type(type);
 }
 
-Type::Type(Token token, std::unique_ptr<Name> name) : Expression(NK_Type, token), m_name(std::move(name)), m_builtin(true) {
+Type::Type(Token token, std::unique_ptr<Name> name) : Node(NK_Type, token), m_name(std::move(name)), m_builtin(true) {
 
 }
 
-Type::Type(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias) : Expression(NK_Type, token), m_name(std::move(name)), m_builtin(false), m_alias(std::move(alias)) {
+Type::Type(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias) : Node(NK_Type, token), m_name(std::move(name)), m_builtin(false), m_alias(std::move(alias)) {
 
 }
 
-Type::Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types) : Expression(NK_Type, token), m_name(std::move(name)), m_builtin(false) {
+Type::Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types) : Node(NK_Type, token), m_name(std::move(name)), m_builtin(false) {
     for (auto &field_name : field_names) {
         m_field_names.push_back(std::move(field_name));
     }
@@ -257,19 +257,19 @@ Type::Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<
 }
 
 void Type::set_type(typesystem::Type *type) {
-    Expression::set_type(type);
+    Node::set_type(type);
     m_name->set_type(type);
 }
 
-Module::Module(Token token, std::unique_ptr<Name> name, std::unique_ptr<Block> body) : Expression(NK_Module, token), m_name(std::move(name)), m_body(std::move(body)) {
+Module::Module(Token token, std::unique_ptr<Name> name, std::unique_ptr<Block> body) : Node(NK_Module, token), m_name(std::move(name)), m_body(std::move(body)) {
 
 }
 
-Import::Import(Token token, std::unique_ptr<String> path) : Expression(NK_Import, token), m_path(std::move(path)) {
+Import::Import(Token token, std::unique_ptr<String> path) : Node(NK_Import, token), m_path(std::move(path)) {
 
 }
 
-SourceFile::SourceFile(Token token, std::string name, std::vector<std::unique_ptr<SourceFile>> imports, std::unique_ptr<Block> code) : Expression(NK_SourceFile, token), m_name(name), m_code(std::move(code)) {
+SourceFile::SourceFile(Token token, std::string name, std::vector<std::unique_ptr<SourceFile>> imports, std::unique_ptr<Block> code) : Node(NK_SourceFile, token), m_name(name), m_code(std::move(code)) {
     for (auto &import : imports) {
         m_imports.push_back(std::move(import));
     }

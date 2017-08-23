@@ -41,7 +41,7 @@ namespace acorn::parser {
         bool is_and_skip_keyword(const std::string &name);
 
         std::unique_ptr<ast::Block> read_block(bool read_end = true);
-        std::unique_ptr<ast::Expression> read_expression(bool parse_comma = true);
+        std::unique_ptr<ast::Node> read_expression(bool parse_comma = true);
         std::unique_ptr<ast::Name> read_name_or_operator(Token::Kind kind, bool accept_parameters);
         std::unique_ptr<ast::Name> read_name(bool accept_parameters);
         std::unique_ptr<ast::Name> read_operator(bool accept_parameters);
@@ -51,11 +51,11 @@ namespace acorn::parser {
         std::unique_ptr<ast::String> read_string();
         std::unique_ptr<ast::List> read_list();
         std::unique_ptr<ast::Dictionary> read_dictionary();
-        std::unique_ptr<ast::Call> read_call(std::unique_ptr<ast::Expression> operand);
+        std::unique_ptr<ast::Call> read_call(std::unique_ptr<ast::Node> operand);
         std::unique_ptr<ast::CCall> read_ccall();
-        std::unique_ptr<ast::Cast> read_cast(std::unique_ptr<ast::Expression> operand);
-        std::unique_ptr<ast::Selector> read_selector(std::unique_ptr<ast::Expression> operand, bool allow_operators = false);
-        std::unique_ptr<ast::Call> read_index(std::unique_ptr<ast::Expression> operand);
+        std::unique_ptr<ast::Cast> read_cast(std::unique_ptr<ast::Node> operand);
+        std::unique_ptr<ast::Selector> read_selector(std::unique_ptr<ast::Node> operand, bool allow_operators = false);
+        std::unique_ptr<ast::Call> read_index(std::unique_ptr<ast::Node> operand);
         std::unique_ptr<ast::While> read_while();
         std::unique_ptr<ast::Block> read_for();
         std::unique_ptr<ast::If> read_if();
@@ -63,11 +63,11 @@ namespace acorn::parser {
         std::unique_ptr<ast::Spawn> read_spawn();
         std::unique_ptr<ast::Case> read_case();
         std::unique_ptr<ast::Switch> read_switch();
-        std::unique_ptr<ast::Expression> read_unary_expression(bool parse_comma);
-        std::unique_ptr<ast::Expression> read_binary_expression(std::unique_ptr<ast::Expression> lhs, int min_precedence);
-        std::unique_ptr<ast::Expression> read_parenthesis_expression();
-        std::unique_ptr<ast::Expression> read_primary_expression();
-        std::unique_ptr<ast::Expression> read_operand_expression(bool parse_comma);
+        std::unique_ptr<ast::Node> read_unary_expression(bool parse_comma);
+        std::unique_ptr<ast::Node> read_binary_expression(std::unique_ptr<ast::Node> lhs, int min_precedence);
+        std::unique_ptr<ast::Node> read_parenthesis_expression();
+        std::unique_ptr<ast::Node> read_primary_expression();
+        std::unique_ptr<ast::Node> read_operand_expression(bool parse_comma);
         std::unique_ptr<ast::Parameter> read_parameter();
         std::unique_ptr<ast::Let> read_let();
         std::unique_ptr<ast::Selector> read_method_signature_name();

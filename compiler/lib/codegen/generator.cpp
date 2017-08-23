@@ -81,7 +81,7 @@ llvm::Type *CodeGenerator::generate_type(typesystem::Type *type) {
     return take_type();
 }
 
-llvm::Type *CodeGenerator::generate_type(ast::Expression *node) {
+llvm::Type *CodeGenerator::generate_type(ast::Node *node) {
     return generate_type(node->type());
 }
 

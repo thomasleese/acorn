@@ -79,16 +79,11 @@ namespace acorn::ast {
         typesystem::Type *m_type;
     };
 
-    class Expression : public Node {
+    class Block : public Node {
     public:
-        using Node::Node;
-    };
+        Block(Token token, std::vector<std::unique_ptr<Node>> expressions);
 
-    class Block : public Expression {
-    public:
-        Block(Token token, std::vector<std::unique_ptr<Expression>> expressions);
-
-        std::vector<std::unique_ptr<Expression>> &expressions() {
+        std::vector<std::unique_ptr<Node>> &expressions() {
             return m_expressions;
         }
 
@@ -97,10 +92,10 @@ namespace acorn::ast {
         }
 
     private:
-        std::vector<std::unique_ptr<Expression>> m_expressions;
+        std::vector<std::unique_ptr<Node>> m_expressions;
     };
 
-    class Name : public Expression {
+    class Name : public Node {
     public:
         Name(Token token, std::string value);
         Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> parameters);
@@ -122,7 +117,7 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<Name>> m_parameters;
     };
 
-    class VariableDeclaration : public Expression {
+    class VariableDeclaration : public Node {
     public:
         VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type = nullptr, bool builtin = false);
 
@@ -145,7 +140,7 @@ namespace acorn::ast {
         bool m_builtin;
     };
 
-    class Int : public Expression {
+    class Int : public Node {
     public:
         Int(Token token, std::string value);
 
@@ -159,7 +154,7 @@ namespace acorn::ast {
         std::string m_value;
     };
 
-    class Float : public Expression {
+    class Float : public Node {
     public:
         Float(Token token, std::string value);
 
@@ -173,16 +168,16 @@ namespace acorn::ast {
         std::string m_value;
     };
 
-    class Complex : public Expression {
+    class Complex : public Node {
     public:
-        using Expression::Expression;
+        using Node::Node;
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Complex;
         }
     };
 
-    class String : public Expression {
+    class String : public Node {
     public:
         String(Token token, std::string value);
 
@@ -196,21 +191,21 @@ namespace acorn::ast {
         std::string m_value;
     };
 
-    class Sequence : public Expression {
+    class Sequence : public Node {
     public:
-        Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Expression>> elements);
+        Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Node>> elements);
 
-        const std::vector<std::unique_ptr<Expression>> &elements() const {
+        const std::vector<std::unique_ptr<Node>> &elements() const {
             return m_elements;
         };
 
     private:
-        std::vector<std::unique_ptr<Expression>> m_elements;
+        std::vector<std::unique_ptr<Node>> m_elements;
     };
 
     class List : public Sequence {
     public:
-        List(Token token, std::vector<std::unique_ptr<Expression>> elements);
+        List(Token token, std::vector<std::unique_ptr<Node>> elements);
 
         static bool classof(const Node *node) {
             return node->kind() == NK_List;
@@ -219,48 +214,48 @@ namespace acorn::ast {
 
     class Tuple : public Sequence {
     public:
-        Tuple(Token token, std::vector<std::unique_ptr<Expression>> elements);
+        Tuple(Token token, std::vector<std::unique_ptr<Node>> elements);
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Tuple;
         }
     };
 
-    class Dictionary : public Expression {
+    class Dictionary : public Node {
     public:
-        Dictionary(Token token, std::vector<std::unique_ptr<Expression>> keys, std::vector<std::unique_ptr<Expression>> values);
+        Dictionary(Token token, std::vector<std::unique_ptr<Node>> keys, std::vector<std::unique_ptr<Node>> values);
 
         bool has_elements() const { return !m_keys.empty(); }
         size_t elements_size() const { return m_keys.size(); }
-        Expression *key(size_t index) const { return m_keys[index].get(); }
-        Expression *value(size_t index) const { return m_values[index].get(); }
+        Node *key(size_t index) const { return m_keys[index].get(); }
+        Node *value(size_t index) const { return m_values[index].get(); }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Dictionary;
         }
 
     private:
-        std::vector<std::unique_ptr<Expression>> m_keys;
-        std::vector<std::unique_ptr<Expression>> m_values;
+        std::vector<std::unique_ptr<Node>> m_keys;
+        std::vector<std::unique_ptr<Node>> m_values;
     };
 
-    class Call : public Expression {
+    class Call : public Node {
     public:
-        Call(Token token, std::unique_ptr<Expression> operand, std::vector<std::unique_ptr<Expression>> positional_arguments, std::map<std::string, std::unique_ptr<Expression>> keyword_arguments);
-        Call(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Expression> arg1 = nullptr, std::unique_ptr<Expression> arg2 = nullptr);
-        Call(Token token, std::string name, std::unique_ptr<Expression> arg1 = nullptr, std::unique_ptr<Expression> arg2 = nullptr);
-        Call(Token token, std::string name, std::vector<std::unique_ptr<Expression>> arguments);
+        Call(Token token, std::unique_ptr<Node> operand, std::vector<std::unique_ptr<Node>> positional_arguments, std::map<std::string, std::unique_ptr<Node>> keyword_arguments);
+        Call(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Node> arg1 = nullptr, std::unique_ptr<Node> arg2 = nullptr);
+        Call(Token token, std::string name, std::unique_ptr<Node> arg1 = nullptr, std::unique_ptr<Node> arg2 = nullptr);
+        Call(Token token, std::string name, std::vector<std::unique_ptr<Node>> arguments);
 
-        Expression *operand() const { return m_operand.get(); }
+        Node *operand() const { return m_operand.get(); }
         typesystem::Type *operand_type() const { return m_operand->type(); }
 
-        const std::vector<std::unique_ptr<Expression>> &positional_arguments() const {
+        const std::vector<std::unique_ptr<Node>> &positional_arguments() const {
             return m_positional_arguments;
         };
 
         std::vector<typesystem::Type *> positional_argument_types() const;
 
-        std::map<std::string, Expression *> keyword_arguments() const;
+        std::map<std::string, Node *> keyword_arguments() const;
         std::map<std::string, typesystem::Type *> keyword_argument_types() const;
 
         void add_inferred_type_parameter(typesystem::ParameterType *parameter, typesystem::Type *type) { m_inferred_type_parameters[parameter] = type; }
@@ -277,10 +272,10 @@ namespace acorn::ast {
         }
 
     private:
-        std::unique_ptr<Expression> m_operand;
+        std::unique_ptr<Node> m_operand;
 
-        std::vector<std::unique_ptr<Expression>> m_positional_arguments;
-        std::map<std::string, std::unique_ptr<Expression>> m_keyword_arguments;
+        std::vector<std::unique_ptr<Node>> m_positional_arguments;
+        std::map<std::string, std::unique_ptr<Node>> m_keyword_arguments;
 
         std::map<typesystem::ParameterType *, typesystem::Type *> m_inferred_type_parameters;
 
@@ -288,9 +283,9 @@ namespace acorn::ast {
         int m_method_specialisation_index;
     };
 
-    class CCall : public Expression {
+    class CCall : public Node {
     public:
-        CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Expression>> arguments);
+        CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Node>> arguments);
 
         Name *name() const { return m_name.get(); }
 
@@ -300,7 +295,7 @@ namespace acorn::ast {
 
         Name *given_return_type() const { return m_given_return_type.get(); }
 
-        const std::vector<std::unique_ptr<Expression>> &arguments() const {
+        const std::vector<std::unique_ptr<Node>> &arguments() const {
             return m_arguments;
         }
 
@@ -312,14 +307,14 @@ namespace acorn::ast {
         std::unique_ptr<Name> m_name;
         std::vector<std::unique_ptr<Name>> m_parameters;
         std::unique_ptr<Name> m_given_return_type;
-        std::vector<std::unique_ptr<Expression>> m_arguments;
+        std::vector<std::unique_ptr<Node>> m_arguments;
     };
 
-    class Cast : public Expression {
+    class Cast : public Node {
     public:
-        Cast(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> new_type);
+        Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> new_type);
 
-        Expression *operand() const { return m_operand.get(); }
+        Node *operand() const { return m_operand.get(); }
         Name *new_type() const { return m_new_type.get(); }
 
         static bool classof(const Node *node) {
@@ -327,16 +322,16 @@ namespace acorn::ast {
         }
 
     private:
-        std::unique_ptr<Expression> m_operand;
+        std::unique_ptr<Node> m_operand;
         std::unique_ptr<Name> m_new_type;
     };
 
-    class Assignment : public Expression {
+    class Assignment : public Node {
     public:
-        Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Expression> rhs);
+        Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Node> rhs);
 
         VariableDeclaration *lhs() const { return m_lhs.get(); }
-        Expression *rhs() const { return m_rhs.get(); }
+        Node *rhs() const { return m_rhs.get(); }
 
         bool builtin() const { return lhs()->builtin(); }
 
@@ -346,16 +341,16 @@ namespace acorn::ast {
 
     private:
         std::unique_ptr<VariableDeclaration> m_lhs;
-        std::unique_ptr<Expression> m_rhs;
+        std::unique_ptr<Node> m_rhs;
     };
 
-    class Selector : public Expression {
+    class Selector : public Node {
     public:
-        Selector(Token token, std::unique_ptr<Expression> operand, std::unique_ptr<Name> field);
-        Selector(Token token, std::unique_ptr<Expression> operand, std::string field);
+        Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> field);
+        Selector(Token token, std::unique_ptr<Node> operand, std::string field);
 
         bool has_operand() const { return m_operand != nullptr; }
-        Expression *operand() const { return m_operand.get(); }
+        Node *operand() const { return m_operand.get(); }
         Name *field() const { return m_field.get(); }
 
         static bool classof(const Node *node) {
@@ -363,62 +358,62 @@ namespace acorn::ast {
         }
 
     private:
-        std::unique_ptr<Expression> m_operand;
+        std::unique_ptr<Node> m_operand;
         std::unique_ptr<Name> m_field;
     };
 
-    class While : public Expression {
+    class While : public Node {
     public:
-        While(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> body);
+        While(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> body);
 
-        Expression *condition() const { return m_condition.get(); }
-        Expression *body() const { return m_condition.get(); }
+        Node *condition() const { return m_condition.get(); }
+        Node *body() const { return m_condition.get(); }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_While;
         }
 
     private:
-        std::unique_ptr<Expression> m_condition;
-        std::unique_ptr<Expression> m_body;
+        std::unique_ptr<Node> m_condition;
+        std::unique_ptr<Node> m_body;
     };
 
-    class If : public Expression {
+    class If : public Node {
     public:
-        If(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> true_case, std::unique_ptr<Expression> false_case);
+        If(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> true_case, std::unique_ptr<Node> false_case);
 
-        Expression *condition() const { return m_condition.get(); }
+        Node *condition() const { return m_condition.get(); }
 
-        Expression *true_case() const { return m_true_case.get(); }
+        Node *true_case() const { return m_true_case.get(); }
 
         bool has_false_case() const { return static_cast<bool>(m_false_case); }
-        Expression *false_case() const { return m_false_case.get(); }
+        Node *false_case() const { return m_false_case.get(); }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_If;
         }
 
     private:
-        std::unique_ptr<Expression> m_condition;
-        std::unique_ptr<Expression> m_true_case;
-        std::unique_ptr<Expression> m_false_case;
+        std::unique_ptr<Node> m_condition;
+        std::unique_ptr<Node> m_true_case;
+        std::unique_ptr<Node> m_false_case;
     };
 
-    class Return : public Expression {
+    class Return : public Node {
     public:
-        Return(Token token, std::unique_ptr<Expression> expression);
+        Return(Token token, std::unique_ptr<Node> expression);
 
-        Expression *expression() const { return m_expression.get(); }
+        Node *expression() const { return m_expression.get(); }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Return;
         }
 
     private:
-        std::unique_ptr<Expression> m_expression;
+        std::unique_ptr<Node> m_expression;
     };
 
-    class Spawn : public Expression {
+    class Spawn : public Node {
     public:
         Spawn(Token token, std::unique_ptr<Call> call);
 
@@ -432,59 +427,59 @@ namespace acorn::ast {
         std::unique_ptr<Call> m_call;
     };
 
-    class Case : public Expression {
+    class Case : public Node {
     public:
-        Case(Token token, std::unique_ptr<Expression> condition, std::unique_ptr<Expression> assignment, std::unique_ptr<Expression> body);
+        Case(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> assignment, std::unique_ptr<Node> body);
 
-        Expression *condition() const { return m_condition.get(); }
+        Node *condition() const { return m_condition.get(); }
 
         bool has_assignment() const { return static_cast<bool>(m_assignment); }
-        Expression *assignment() const { return m_assignment.get(); }
+        Node *assignment() const { return m_assignment.get(); }
 
-        Expression *body() const { return m_body.get(); }
+        Node *body() const { return m_body.get(); }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Case;
         }
 
     private:
-        std::unique_ptr<Expression> m_condition;
-        std::unique_ptr<Expression> m_assignment;
-        std::unique_ptr<Expression> m_body;
+        std::unique_ptr<Node> m_condition;
+        std::unique_ptr<Node> m_assignment;
+        std::unique_ptr<Node> m_body;
     };
 
-    class Switch : public Expression {
+    class Switch : public Node {
     public:
-        Switch(Token token, std::unique_ptr<Expression> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Expression> default_case = nullptr);
+        Switch(Token token, std::unique_ptr<Node> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Node> default_case = nullptr);
 
-        Expression *expression() const { return m_expression.get(); }
+        Node *expression() const { return m_expression.get(); }
 
         const std::vector<std::unique_ptr<Case>> &cases() const {
             return m_cases;
         }
 
         bool has_default_case() const { return static_cast<bool>(m_default_case); }
-        Expression *default_case() const { return m_default_case.get(); }
+        Node *default_case() const { return m_default_case.get(); }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Switch;
         }
 
     private:
-        std::unique_ptr<Expression> m_expression;
+        std::unique_ptr<Node> m_expression;
         std::vector<std::unique_ptr<Case>> m_cases;
-        std::unique_ptr<Expression> m_default_case;
+        std::unique_ptr<Node> m_default_case;
     };
 
-    class Let : public Expression {
+    class Let : public Node {
     public:
-        Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Expression> body);
-        Let(Token token, std::string name, std::unique_ptr<Expression> value = nullptr, std::unique_ptr<Expression> body = nullptr);
+        Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body);
+        Let(Token token, std::string name, std::unique_ptr<Node> value = nullptr, std::unique_ptr<Node> body = nullptr);
 
         Assignment *assignment() const { return m_assignment.get(); }
 
         bool has_body() const { return static_cast<bool>(m_body); }
-        Expression *body() const { return m_body.get(); }
+        Node *body() const { return m_body.get(); }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Let;
@@ -492,10 +487,10 @@ namespace acorn::ast {
 
     private:
         std::unique_ptr<Assignment> m_assignment;
-        std::unique_ptr<Expression> m_body;
+        std::unique_ptr<Node> m_body;
     };
 
-    class Parameter : public Expression {
+    class Parameter : public Node {
     public:
         explicit Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type);
 
@@ -516,9 +511,9 @@ namespace acorn::ast {
         std::unique_ptr<Name> m_given_type;
     };
 
-    class Def : public Expression {
+    class Def : public Node {
     public:
-        Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Expression> body, std::unique_ptr<Name> given_return_type = nullptr);
+        Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<Name> given_return_type = nullptr);
 
         Selector *name() const { return m_name.get(); }
 
@@ -528,7 +523,7 @@ namespace acorn::ast {
             return m_parameters;
         }
 
-        Expression *body() const { return m_body.get(); }
+        Node *body() const { return m_body.get(); }
 
         bool has_given_return_type() const { return static_cast<bool>(m_given_return_type); }
         Name *given_return_type() const { return m_given_return_type.get(); }
@@ -544,10 +539,10 @@ namespace acorn::ast {
         std::unique_ptr<Selector> m_name;
         std::vector<std::unique_ptr<Parameter>> m_parameters;
         std::unique_ptr<Name> m_given_return_type;
-        std::unique_ptr<Expression> m_body;
+        std::unique_ptr<Node> m_body;
     };
 
-    class Type : public Expression {
+    class Type : public Node {
     public:
         Type(Token token, std::unique_ptr<Name> name);
         Type(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias);
@@ -582,7 +577,7 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<Name>> m_field_types;
     };
 
-    class Module : public Expression {
+    class Module : public Node {
     public:
         Module(Token token, std::unique_ptr<Name> name, std::unique_ptr<Block> body);
 
@@ -598,7 +593,7 @@ namespace acorn::ast {
         std::unique_ptr<Block> m_body;
     };
 
-    class Import : public Expression {
+    class Import : public Node {
     public:
         Import(Token token, std::unique_ptr<String> path);
 
@@ -612,7 +607,7 @@ namespace acorn::ast {
         std::unique_ptr<String> m_path;
     };
 
-    class SourceFile : public Expression {
+    class SourceFile : public Node {
     public:
         SourceFile(Token token, std::string name, std::vector<std::unique_ptr<SourceFile>> imports, std::unique_ptr<Block> code);
 
