@@ -42,21 +42,24 @@ Node *Visitor::visit_block(Block *node) {
 
     for (size_t i = 0; i < expressions.size(); i++) {
         auto expression = expressions[i].release();
-        expressions[i] = std::unique_ptr<Node>(llvm::cast<Node>(visit(expression)));
+        expressions[i] = std::unique_ptr<Node>(visit(expression));
     }
 
     return node;
 }
 
-void Visitor::visit_assignment(ast::Assignment *node) {
+Node *Visitor::visit_assignment(ast::Assignment *node) {
     visit(node->lhs());
 
     if (!node->builtin()) {
         visit(node->rhs());
     }
+
+    return node;
 }
 
-void Visitor::visit_while(ast::While *node) {
+Node *Visitor::visit_while(ast::While *node) {
     visit(node->condition());
     visit(node->body());
+    return node;
 }
