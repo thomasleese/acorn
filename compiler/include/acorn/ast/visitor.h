@@ -91,8 +91,8 @@ namespace acorn::ast {
         virtual Node *visit_return(Return *node);
         virtual Node *visit_spawn(Spawn *node);
         virtual Node *visit_case(Case *node);
-        virtual Node *visit_switch(Switch *node) = 0;
-        virtual Node *visit_parameter(Parameter *node) = 0;
+        virtual Node *visit_switch(Switch *node);
+        virtual Node *visit_parameter(Parameter *node);
         virtual Node *visit_let(Let *node) = 0;
         virtual Node *visit_def(Def *node) = 0;
         virtual Node *visit_type(Type *node) = 0;

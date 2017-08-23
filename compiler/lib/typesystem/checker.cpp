@@ -152,27 +152,20 @@ ast::Node *TypeChecker::visit_spawn(ast::Spawn *node) {
     return node;
 }
 
-ast::Node *TypeChecker::visit_switch(ast::Switch *node) {
-    visit(node->expression().get());
-
-    for (auto &entry : node->cases()) {
-        visit(entry->condition().get());
-        accept_if_present(entry->assignment());
-        visit(entry->body().get());
-        check_not_null(entry.get());
-    }
-
-    if (node->default_case()) {
-        check_not_null(node->default_case().get());
-    }
-
+ast::Node *TypeChecker::visit_case(ast::Case *node) {
+    Visitor::visit_case(node);
     check_not_null(node);
+    return node;
+}
 
+ast::Node *TypeChecker::visit_switch(ast::Switch *node) {
+    Visitor::visit_switch(node);
+    check_not_null(node);
     return node;
 }
 
 ast::Node *TypeChecker::visit_parameter(ast::Parameter *node) {
-    accept_if_present(node->given_type());
+    Visitor::visit_parameter(node);
     check_not_null(node);
     return node;
 }

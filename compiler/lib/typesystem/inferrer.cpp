@@ -526,24 +526,18 @@ ast::Node *TypeInferrer::visit_return(ast::Return *node) {
 
 ast::Node *TypeInferrer::visit_spawn(ast::Spawn *node) {
     Visitor::visit_spawn(node);
-
     node->copy_type_from(node->call().get());
+    return node;
+}
 
+ast::Node *TypeInferrer::visit_case(ast::Case *node) {
+    Visitor::visit_case(node);
+    node->copy_type_from(node->body().get());
     return node;
 }
 
 ast::Node *TypeInferrer::visit_switch(ast::Switch *node) {
-    accept(node->expression());
-
-    for (auto &entry : node->cases()) {
-        accept(entry->condition());
-        accept_if_present(entry->assignment());
-        accept(entry->body());
-
-        entry->copy_type_from(entry->body().get());
-    }
-
-    accept_if_present(node->default_case());
+    Visitor::visit_switch(node);
 
     // FIXME make this a union of the typesystem
 

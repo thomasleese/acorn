@@ -63,18 +63,9 @@ ast::Node *Builder::visit_variable_declaration(ast::VariableDeclaration *node) {
     return node;
 }
 
-ast::Node *Builder::visit_switch(ast::Switch *node) {
-    for (auto &entry : node->cases()) {
-        visit(entry->condition().get());
-        accept_if_present(entry->assignment());
-    }
-
-    accept_if_present(node->default_case());
-
-    return node;
-}
-
 ast::Node *Builder::visit_parameter(ast::Parameter *node) {
+    Visitor::visit_parameter(node);
+
     auto symbol = std::make_unique<Symbol>(node->name().get(), false);
     scope()->insert(this, node, std::move(symbol));
 

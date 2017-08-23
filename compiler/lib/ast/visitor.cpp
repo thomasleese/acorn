@@ -265,8 +265,36 @@ Node *Visitor::visit_spawn(Spawn *node) {
 
 Node *Visitor::visit_case(Case *node) {
     node->condition() = visit(node->condition());
-    node->assignment() = visit(node->assignment());
+
+    if (node->assignment()) {
+        node->assignment() = visit(node->assignment());
+    }
+
     node->body() = visit(node->body());
+
+    return node;
+}
+
+Node *Visitor::visit_switch(Switch *node) {
+    node->expression() = visit(node->expression());
+
+    auto &cases = node->cases();
+
+    for (size_t i = 0; i < cases.size(); i++) {
+        cases[i] = unique_ptr<Case>(llvm::cast<Case>(visit(cases[i]).release()));
+    }
+
+    if (node->default_case()) {
+        node->default_case() = visit(node->default_case());
+    }
+
+    return node;
+}
+
+Node *Visitor::visit_parameter(Parameter *node) {
+    node->name() = unique_ptr<Name>(llvm::cast<Name>(visit(node->name()).release()));
+
+    node->given_type() = unique_ptr<Name>(llvm::cast<Name>(visit(node->given_type()).release()));
 
     return node;
 }

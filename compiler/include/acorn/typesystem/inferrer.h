@@ -69,6 +69,7 @@ namespace acorn::typesystem {
         ast::Node *visit_if(ast::If *node) override;
         ast::Node *visit_return(ast::Return *node) override;
         ast::Node *visit_spawn(ast::Spawn *node) override;
+        ast::Node *visit_case(ast::Case *node) override;
         ast::Node *visit_switch(ast::Switch *node) override;
         ast::Node *visit_parameter(ast::Parameter *node) override;
         ast::Node *visit_let(ast::Let *node) override;
