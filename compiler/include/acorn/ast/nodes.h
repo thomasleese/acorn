@@ -48,29 +48,20 @@ namespace acorn::ast {
         Token m_token;
     };
 
-    class TypedNode {
+    class Expression : public Node {
     public:
-        TypedNode();
-        virtual ~TypedNode();
+        Expression(NodeKind kind, Token token);
+        virtual ~Expression();
 
         typesystem::Type *type() const { return m_type; }
         virtual void set_type(typesystem::Type *type) { m_type = type; }
         bool has_type() const { return m_type != nullptr; }
-        void copy_type_from(TypedNode *node);
-        bool has_compatible_type_with(TypedNode *node) const;
+        void copy_type_from(Expression *node);
+        bool has_compatible_type_with(Expression *node) const;
         std::string type_name() const;
 
     private:
         typesystem::Type *m_type;
-    };
-
-    class Atom : public Node {
-
-    };
-
-    class Expression : public Node, public TypedNode {
-    public:
-        Expression(NodeKind kind, Token token);
     };
 
     class Block : public Expression {

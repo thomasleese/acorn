@@ -41,8 +41,8 @@ namespace acorn::codegen {
         llvm::Type *take_type();
         llvm::Constant *take_initialiser();
 
-        llvm::Type *generate_type(ast::Expression *expression, typesystem::Type *type);
-        llvm::Type *generate_type(ast::Expression *expression);
+        llvm::Type *generate_type(typesystem::Type *type);
+        llvm::Type *generate_type(ast::Expression *node);
 
         void push_replacement_type_parameter(typesystem::ParameterType *key, typesystem::Type *value);
         void pop_replacement_type_parameter(typesystem::ParameterType *key);

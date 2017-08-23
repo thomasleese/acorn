@@ -21,34 +21,29 @@ Node::~Node() {
 
 }
 
-TypedNode::TypedNode() : m_type(nullptr) {
+Expression::Expression(NodeKind kind, Token token) : Node(kind, token), m_type(nullptr) {
 
 }
 
-TypedNode::~TypedNode() {
+Expression::~Expression() {
 
 }
 
-void TypedNode::copy_type_from(TypedNode *node) {
+void Expression::copy_type_from(Expression *node) {
     set_type(node->type());
 }
 
-bool TypedNode::has_compatible_type_with(TypedNode *node) const {
+bool Expression::has_compatible_type_with(Expression *node) const {
     // TODO set a warning here if the type is null?
     return m_type->is_compatible(node->type());
 }
 
-std::string TypedNode::type_name() const {
+std::string Expression::type_name() const {
     if (m_type) {
         return m_type->name();
     } else {
         return "null";
     }
-}
-
-
-Expression::Expression(NodeKind kind, Token token) : Node(kind, token), TypedNode() {
-
 }
 
 Block::Block(Token token, std::vector<std::unique_ptr<Expression>> expressions) : Expression(NK_Other, token) {

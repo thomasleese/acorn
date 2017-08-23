@@ -35,9 +35,9 @@ void TypeChecker::check_types(ast::Expression *lhs, ast::Expression *rhs) {
     }
 }
 
-void TypeChecker::check_not_null(ast::Expression *expression) {
-    if (!expression->has_type()) {
-        auto message = "No type given for: " + expression->token().to_string();
+void TypeChecker::check_not_null(ast::Expression *node) {
+    if (!node->has_type()) {
+        auto message = "No type given for: " + node->token().to_string();
         logger->critical(message);
     }
 }

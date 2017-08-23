@@ -76,13 +76,13 @@ llvm::Constant *CodeGenerator::take_initialiser() {
     }
 }
 
-llvm::Type *CodeGenerator::generate_type(ast::Expression *expression, typesystem::Type *type) {
+llvm::Type *CodeGenerator::generate_type(typesystem::Type *type) {
     type->accept(this);
     return take_type();
 }
 
-llvm::Type *CodeGenerator::generate_type(ast::Expression *expression) {
-    return generate_type(expression, expression->type());
+llvm::Type *CodeGenerator::generate_type(ast::Expression *node) {
+    return generate_type(node->type());
 }
 
 void CodeGenerator::push_replacement_type_parameter(typesystem::ParameterType *key, typesystem::Type *value) {
@@ -266,12 +266,12 @@ llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
 }
 
 llvm::FunctionType *CodeGenerator::generate_function_type_for_method(typesystem::Method *method) {
-    auto llvm_return_type = generate_type(nullptr, method->return_type());
+    auto llvm_return_type = generate_type(method->return_type());
     return_null_if_null(llvm_return_type);
 
     std::vector<llvm::Type *> llvm_parameter_types;
     for (auto parameter_type : method->parameter_types()) {
-        auto llvm_parameter_type = generate_type(nullptr, parameter_type);
+        auto llvm_parameter_type = generate_type(parameter_type);
         return_null_if_null(llvm_parameter_type);
 
         if (method->is_parameter_inout(parameter_type)) {
@@ -421,7 +421,7 @@ void CodeGenerator::visit(typesystem::Float *type) {
 }
 
 void CodeGenerator::visit(typesystem::UnsafePointer *type) {
-    auto llvm_element_type = generate_type(nullptr, type->element_type());
+    auto llvm_element_type = generate_type(type->element_type());
     if (llvm_element_type == nullptr) {
         push_null_llvm_type_and_initialiser();
         return;
@@ -437,7 +437,7 @@ void CodeGenerator::visit(typesystem::Record *type) {
     std::vector<llvm::Constant *> llvm_initialisers;
 
     for (auto field_type : type->field_types()) {
-        auto llvm_field_type = generate_type(nullptr, field_type);
+        auto llvm_field_type = generate_type(field_type);
         auto llvm_field_initialiser = take_initialiser();
 
         if (llvm_field_type == nullptr || llvm_field_initialiser == nullptr) {
@@ -492,7 +492,7 @@ void CodeGenerator::visit(typesystem::Function *type) {
         auto method = type->get_method(i);
         type->set_llvm_index(method, i);
 
-        auto llvm_type_for_method = generate_type(nullptr, method);
+        auto llvm_type_for_method = generate_type(method);
         auto llvm_initialiser_for_method = pop_llvm_initialiser();
 
         llvm_types.push_back(llvm_type_for_method);
@@ -921,7 +921,7 @@ void CodeGenerator::visit_def(ast::Def *node) {
     auto function_type = static_cast<typesystem::Function *>(function_symbol->type());
 
     if (!function_symbol->has_llvm_value()) {
-        auto llvm_function_type = generate_type(node, function_type);
+        auto llvm_function_type = generate_type(function_type);
         auto llvm_initialiser = take_initialiser();
 
         function_symbol->set_llvm_value(
@@ -1010,7 +1010,7 @@ void CodeGenerator::visit_type(ast::Type *node) {
         auto symbol = scope()->lookup(this, node->name());
         return_and_push_null_if_null(symbol);
 
-        auto llvm_type = generate_type(node, node_type->constructor());
+        auto llvm_type = generate_type(node_type->constructor());
         auto llvm_initialiser = take_initialiser();
 
         // variable to hold the type
@@ -1025,7 +1025,7 @@ void CodeGenerator::visit_type(ast::Type *node) {
 
         std::string mangled_name = codegen::mangle_method(node->name()->value(), method_type);
 
-        auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(node, method_type));
+        auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(method_type));
 
         auto llvm_specialised_method_type = llvm::cast<llvm::FunctionType>(llvm::cast<llvm::PointerType>(llvm_method_type->getElementType(0))->getElementType());
 

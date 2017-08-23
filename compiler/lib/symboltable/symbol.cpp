@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
 #include "acorn/typesystem/types.h"
@@ -16,6 +18,8 @@
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::symboltable;
+
+static auto logger = spdlog::get("acorn");
 
 Symbol::Symbol(std::string name, bool builtin) : m_name(name), m_builtin(builtin), m_type(nullptr), m_llvm_value(nullptr), m_scope(nullptr), m_node(nullptr) {
 
@@ -50,9 +54,13 @@ bool Symbol::is_variable() const {
     return dynamic_cast<ast::Let *>(m_node) != nullptr;
 }
 
-void Symbol::copy_type_from(ast::Expression *expression) {
-    // TODO check type is not null?
-    set_type(expression->type());
+void Symbol::copy_type_from(ast::Expression *node) {
+    if (node == nullptr || node->type() == nullptr) {
+        logger->critical("Symbol::copy_type_from given a nullptr");
+        return;
+    }
+
+    set_type(node->type());
 }
 
 std::string Symbol::to_string(int indent) const {
