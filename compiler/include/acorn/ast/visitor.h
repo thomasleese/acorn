@@ -56,7 +56,9 @@ namespace acorn::ast {
             }
         }
 
-        virtual void visit_block(Block *node) = 0;
+        Node *visit(Node *node);
+
+        virtual Node *visit_block(Block *node);
         virtual void visit_name(Name *node) = 0;
         virtual void visit_variable_declaration(VariableDeclaration *node) = 0;
         virtual void visit_int(Int *node) = 0;

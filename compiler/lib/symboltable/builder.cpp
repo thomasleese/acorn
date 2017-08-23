@@ -46,12 +46,6 @@ Namespace *Builder::root_namespace() {
     return m_root;
 }
 
-void Builder::visit_block(ast::Block *node) {
-    for (auto &expression : node->expressions()) {
-        expression->accept(this);
-    }
-}
-
 void Builder::visit_name(ast::Name *node) {
 
 }

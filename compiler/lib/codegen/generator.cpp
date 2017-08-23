@@ -505,15 +505,17 @@ void CodeGenerator::visit(typesystem::Function *type) {
     push_llvm_type_and_initialiser(llvm_type, struct_initialiser);
 }
 
-void CodeGenerator::visit_block(ast::Block *node) {
+ast::Node *CodeGenerator::visit_block(ast::Block *node) {
     llvm::Value *last_value = nullptr;
 
     for (auto &expression : node->expressions()) {
         last_value = generate_llvm_value(expression.get());
-        return_and_push_null_if_null(last_value);
+        return_null_and_push_null_if_null(last_value);
     }
 
     push_llvm_value(last_value);
+
+    return node;
 }
 
 void CodeGenerator::visit_name(ast::Name *node) {

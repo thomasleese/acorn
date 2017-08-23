@@ -94,7 +94,9 @@ namespace acorn::ast {
     public:
         Block(Token token, std::vector<std::unique_ptr<Expression>> expressions);
 
-        const std::vector<std::unique_ptr<Expression>> &expressions() const { return m_expressions; }
+        std::vector<std::unique_ptr<Expression>> &expressions() {
+            return m_expressions;
+        }
 
         void accept(Visitor *visitor);
 

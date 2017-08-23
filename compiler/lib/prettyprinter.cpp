@@ -19,7 +19,7 @@ std::string type_of(ast::Expression *node) {
     return node->type_name();
 }
 
-void PrettyPrinter::visit_block(ast::Block *node) {
+ast::Node *PrettyPrinter::visit_block(ast::Block *node) {
     ss << indentation() << "(Block [" << type_of(node) << "]\n";
     indent++;
 
@@ -27,6 +27,8 @@ void PrettyPrinter::visit_block(ast::Block *node) {
 
     indent--;
     ss << indentation() << ")\n";
+
+    return node;
 }
 
 void PrettyPrinter::visit_name(ast::Name *node) {

@@ -50,7 +50,7 @@ namespace acorn::typesystem {
                                                   std::map<typesystem::ParameterType *, typesystem::Type *> replacements);
 
     public:
-        void visit_block(ast::Block *node) override;
+        ast::Node *visit_block(ast::Block *node) override;
         void visit_name(ast::Name *node) override;
         void visit_variable_declaration(ast::VariableDeclaration *node) override;
         void visit_int(ast::Int *node) override;

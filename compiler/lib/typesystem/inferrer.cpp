@@ -200,7 +200,7 @@ typesystem::Type *TypeInferrer::replace_type_parameters(typesystem::Type *type, 
     return type->with_parameters(parameters);
 }
 
-void TypeInferrer::visit_block(ast::Block *node) {
+ast::Node *TypeInferrer::visit_block(ast::Block *node) {
     for (auto &expression : node->expressions()) {
         expression->accept(this);
     }
@@ -212,6 +212,8 @@ void TypeInferrer::visit_block(ast::Block *node) {
     } else {
         node->copy_type_from(expressions.back().get());
     }
+
+    return node;
 }
 
 void TypeInferrer::visit_name(ast::Name *node) {

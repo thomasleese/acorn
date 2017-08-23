@@ -42,12 +42,10 @@ void TypeChecker::check_not_null(ast::Expression *node) {
     }
 }
 
-void TypeChecker::visit_block(ast::Block *node) {
-    for (auto &expression : node->expressions()) {
-        expression->accept(this);
-    }
-
-    check_not_null(node);
+ast::Node *TypeChecker::visit_block(ast::Block *node) {
+    auto new_node = ast::Visitor::visit_block(node);
+    check_not_null(llvm::cast<ast::Expression>(new_node));
+    return new_node;
 }
 
 void TypeChecker::visit_name(ast::Name *node) {
