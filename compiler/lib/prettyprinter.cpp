@@ -203,8 +203,7 @@ ast::Node *PrettyPrinter::visit_while(ast::While *node) {
     ss << indentation() << "(While [" << type_of(node) << "]\n";
     indent++;
 
-    visit(node->condition());
-    visit(node->body());
+    Visitor::visit_while(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -258,11 +257,11 @@ ast::Node *PrettyPrinter::visit_switch(ast::Switch *node) {
     visit(node->expression());
 
     for (auto &entry : node->cases()) {
-        visit(entry->condition());
+        visit(entry->condition().get());
 
         accept_if_present(entry->assignment());
 
-        visit(entry->body());
+        visit(entry->body().get());
     }
 
     accept_if_present(node->default_case());

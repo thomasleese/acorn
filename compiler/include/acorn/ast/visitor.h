@@ -28,6 +28,7 @@ namespace acorn::ast {
     class If;
     class Return;
     class Spawn;
+    class Case;
     class Switch;
     class Parameter;
     class Let;
@@ -46,6 +47,11 @@ namespace acorn::ast {
             visit(node.get());
         }
 
+        template <typename T>
+        void accept_if_present(const std::unique_ptr<T> &node) {
+            accept_if_present(node.get());
+        }
+
         void accept(Node *node);
         void accept_if_present(Node *node);
 
@@ -58,6 +64,13 @@ namespace acorn::ast {
 
         Node *visit(Node *node);
 
+    private:
+        template <typename T>
+        std::unique_ptr<Node> visit(std::unique_ptr<T> &node) {
+            return std::unique_ptr<Node>(visit(node.release()));
+        }
+
+    public:
         virtual Node *visit_block(Block *node);
         virtual Node *visit_name(Name *node) = 0;
         virtual Node *visit_variable_declaration(VariableDeclaration *node) = 0;
@@ -77,6 +90,7 @@ namespace acorn::ast {
         virtual Node *visit_if(If *node) = 0;
         virtual Node *visit_return(Return *node) = 0;
         virtual Node *visit_spawn(Spawn *node) = 0;
+        virtual Node *visit_case(Case *node);
         virtual Node *visit_switch(Switch *node) = 0;
         virtual Node *visit_parameter(Parameter *node) = 0;
         virtual Node *visit_let(Let *node) = 0;

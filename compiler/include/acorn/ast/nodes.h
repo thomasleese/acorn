@@ -67,10 +67,19 @@ namespace acorn::ast {
         Token token() const { return m_token; }
 
         typesystem::Type *type() const { return m_type; }
+
         virtual void set_type(typesystem::Type *type) { m_type = type; }
+
         bool has_type() const { return m_type != nullptr; }
+
         void copy_type_from(Node *node);
+
+        void copy_type_from(std::unique_ptr<Node> &node) {
+            copy_type_from(node.get());
+        }
+
         bool has_compatible_type_with(Node *node) const;
+
         std::string type_name() const;
 
     private:
@@ -330,10 +339,11 @@ namespace acorn::ast {
     public:
         Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Node> rhs);
 
-        VariableDeclaration *lhs() const { return m_lhs.get(); }
-        Node *rhs() const { return m_rhs.get(); }
+        std::unique_ptr<VariableDeclaration> &lhs() { return m_lhs; }
 
-        bool builtin() const { return lhs()->builtin(); }
+        std::unique_ptr<Node> &rhs() { return m_rhs; }
+
+        bool builtin() const { return m_lhs->builtin(); }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Assignment;
@@ -366,8 +376,8 @@ namespace acorn::ast {
     public:
         While(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> body);
 
-        Node *condition() const { return m_condition.get(); }
-        Node *body() const { return m_condition.get(); }
+        std::unique_ptr<Node> &condition() { return m_condition; }
+        std::unique_ptr<Node> &body() { return m_body; }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_While;
@@ -431,12 +441,9 @@ namespace acorn::ast {
     public:
         Case(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> assignment, std::unique_ptr<Node> body);
 
-        Node *condition() const { return m_condition.get(); }
-
-        bool has_assignment() const { return static_cast<bool>(m_assignment); }
-        Node *assignment() const { return m_assignment.get(); }
-
-        Node *body() const { return m_body.get(); }
+        std::unique_ptr<Node> &condition() { return m_condition; }
+        std::unique_ptr<Node> &assignment() { return m_assignment; }
+        std::unique_ptr<Node> &body() { return m_body; }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Case;

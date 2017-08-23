@@ -65,6 +65,10 @@ namespace acorn::codegen {
 
         llvm::Value *generate_llvm_value(ast::Node *node);
 
+        llvm::Value *generate_llvm_value(std::unique_ptr<ast::Node> &node) {
+            return generate_llvm_value(node.get());
+        }
+
         llvm::FunctionType *generate_function_type_for_method(typesystem::Method *method);
 
         void visit_constructor(typesystem::TypeType *type);

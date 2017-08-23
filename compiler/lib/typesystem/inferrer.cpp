@@ -414,14 +414,14 @@ ast::Node *TypeInferrer::visit_assignment(ast::Assignment *node) {
     auto symbol = scope()->lookup(this, node->lhs()->name());
     return_null_if_null(symbol);
 
-    auto rhs = node->rhs();
+    auto rhs = node->rhs().get();
 
     if (!node->builtin()) {
         visit(rhs);
         return_null_if_null_type(rhs);
     }
 
-    auto lhs = node->lhs();
+    auto lhs = node->lhs().get();
 
     visit(lhs);
     if (!lhs->has_type()) {
@@ -490,8 +490,7 @@ ast::Node *TypeInferrer::visit_selector(ast::Selector *node) {
 }
 
 ast::Node *TypeInferrer::visit_while(ast::While *node) {
-    visit(node->condition());
-    visit(node->body());
+    Visitor::visit_while(node);
 
     node->copy_type_from(node->body());
 
@@ -553,7 +552,7 @@ ast::Node *TypeInferrer::visit_switch(ast::Switch *node) {
         accept_if_present(entry->assignment());
         accept(entry->body());
 
-        entry->copy_type_from(entry->body());
+        entry->copy_type_from(entry->body().get());
     }
 
     accept_if_present(node->default_case());

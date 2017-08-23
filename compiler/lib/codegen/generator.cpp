@@ -765,14 +765,14 @@ ast::Node *CodeGenerator::visit_assignment(ast::Assignment *node) {
     llvm::Value *rhs_value = nullptr;
 
     if (node->builtin()) {
-        rhs_value = generate_builtin_variable(node->lhs());
+        rhs_value = generate_builtin_variable(node->lhs().get());
     } else {
         rhs_value = generate_llvm_value(node->rhs());
     }
 
     return_null_if_null(rhs_value);
 
-    auto lhs_pointer = generate_llvm_value(node->lhs());
+    auto lhs_pointer = generate_llvm_value(node->lhs().get());
     return_null_if_null(lhs_pointer);
 
     m_ir_builder->CreateStore(rhs_value, lhs_pointer);

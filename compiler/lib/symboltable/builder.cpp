@@ -120,7 +120,7 @@ ast::Node *Builder::visit_spawn(ast::Spawn *node) {
 
 ast::Node *Builder::visit_switch(ast::Switch *node) {
     for (auto &entry : node->cases()) {
-        visit(entry->condition());
+        visit(entry->condition().get());
         accept_if_present(entry->assignment());
     }
 

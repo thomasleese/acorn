@@ -11,6 +11,8 @@
 
 #include "acorn/ast/visitor.h"
 
+using std::unique_ptr;
+
 using namespace acorn::ast;
 
 static auto logger = spdlog::get("acorn");
@@ -68,8 +70,7 @@ Node *Visitor::visit(Node *node) {
     } else if (auto spawn = llvm::dyn_cast<Spawn>(node)) {
         return visit_spawn(spawn);
     } else if (auto case_ = llvm::dyn_cast<Case>(node)) {
-        //return visit_case(case_);
-        return node;
+        return visit_case(case_);
     } else if (auto switch_ = llvm::dyn_cast<Switch>(node)) {
         return visit_switch(switch_);
     } else if (auto let = llvm::dyn_cast<Let>(node)) {
@@ -96,25 +97,33 @@ Node *Visitor::visit_block(Block *node) {
     auto &expressions = node->expressions();
 
     for (size_t i = 0; i < expressions.size(); i++) {
-        auto expression = expressions[i].release();
-        expressions[i] = std::unique_ptr<Node>(visit(expression));
+        expressions[i] = visit(expressions[i]);
     }
 
     return node;
 }
 
-Node *Visitor::visit_assignment(ast::Assignment *node) {
-    visit(node->lhs());
+Node *Visitor::visit_assignment(Assignment *node) {
+    node->lhs() = unique_ptr<VariableDeclaration>(llvm::cast<VariableDeclaration>(visit(node->lhs()).release()));
 
     if (!node->builtin()) {
-        visit(node->rhs());
+        node->rhs() = visit(node->rhs());
     }
 
     return node;
 }
 
-Node *Visitor::visit_while(ast::While *node) {
-    visit(node->condition());
-    visit(node->body());
+Node *Visitor::visit_while(While *node) {
+    node->condition() = visit(node->condition());
+    node->body() = visit(node->body());
+
+    return node;
+}
+
+Node *Visitor::visit_case(Case *node) {
+    node->condition() = visit(node->condition());
+    node->assignment() = visit(node->assignment());
+    node->body() = visit(node->body());
+
     return node;
 }

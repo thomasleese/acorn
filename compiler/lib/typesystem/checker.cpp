@@ -138,11 +138,7 @@ ast::Node *TypeChecker::visit_cast(ast::Cast *node) {
 }
 
 ast::Node *TypeChecker::visit_assignment(ast::Assignment *node) {
-    visit(node->lhs());
-
-    if (!node->builtin()) {
-        visit(node->rhs());
-    }
+    Visitor::visit_assignment(node);
 
     check_not_null(node);
 
@@ -158,8 +154,7 @@ ast::Node *TypeChecker::visit_selector(ast::Selector *node) {
 }
 
 ast::Node *TypeChecker::visit_while(ast::While *node) {
-    visit(node->condition());
-    visit(node->body());
+    Visitor::visit_while(node);
     check_not_null(node);
     return node;
 }
@@ -190,9 +185,9 @@ ast::Node *TypeChecker::visit_switch(ast::Switch *node) {
     visit(node->expression());
 
     for (auto &entry : node->cases()) {
-        visit(entry->condition());
+        visit(entry->condition().get());
         accept_if_present(entry->assignment());
-        visit(entry->body());
+        visit(entry->body().get());
         check_not_null(entry.get());
     }
 
