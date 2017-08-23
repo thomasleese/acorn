@@ -113,8 +113,12 @@ namespace acorn::ast {
             return m_value;
         }
 
-        const std::vector<std::unique_ptr<Name>> &parameters() const {
+        std::vector<std::unique_ptr<Name>> &parameters() {
             return m_parameters;
+        }
+
+        bool has_parameters() const {
+            return m_parameters.size() > 0;
         }
 
         static bool classof(const Node *node) {
@@ -130,10 +134,9 @@ namespace acorn::ast {
     public:
         VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type = nullptr, bool builtin = false);
 
-        Name *name() const { return m_name.get(); }
+        std::unique_ptr<Name> &name() { return m_name; }
 
-        bool has_given_type() { return static_cast<bool>(m_given_type); }
-        Name *given_type() const { return m_given_type.get(); }
+        std::unique_ptr<Name> &given_type() { return m_given_type; }
 
         bool builtin() const { return m_builtin; }
 
@@ -204,9 +207,9 @@ namespace acorn::ast {
     public:
         Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Node>> elements);
 
-        const std::vector<std::unique_ptr<Node>> &elements() const {
+        std::vector<std::unique_ptr<Node>> &elements() {
             return m_elements;
-        };
+        }
 
     private:
         std::vector<std::unique_ptr<Node>> m_elements;

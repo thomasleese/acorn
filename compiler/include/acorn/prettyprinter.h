@@ -25,8 +25,8 @@ namespace acorn {
         ast::Node *visit_complex(ast::Complex *node) override;
         ast::Node *visit_string(ast::String *node) override;
         ast::Node *visit_list(ast::List *node) override;
-        ast::Node *visit_dictionary(ast::Dictionary *node) override;
         ast::Node *visit_tuple(ast::Tuple *node) override;
+        ast::Node *visit_dictionary(ast::Dictionary *node) override;
         ast::Node *visit_call(ast::Call *node) override;
         ast::Node *visit_ccall(ast::CCall *node) override;
         ast::Node *visit_cast(ast::Cast *node) override;

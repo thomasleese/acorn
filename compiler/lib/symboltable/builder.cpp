@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
 #include "acorn/typesystem/types.h"
@@ -17,6 +19,8 @@
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::symboltable;
+
+static auto logger = spdlog::get("acorn");
 
 void ScopeFollower::push_scope(symboltable::Symbol *symbol) {
     push_scope(symbol->scope());
@@ -46,44 +50,20 @@ Namespace *Builder::root_namespace() {
     return m_root;
 }
 
-ast::Node *Builder::visit_name(ast::Name *node) {
-    return node;
-}
-
 ast::Node *Builder::visit_variable_declaration(ast::VariableDeclaration *node) {
-    assert(!node->name()->has_parameters());
+    Visitor::visit_variable_declaration(node);
 
-    auto symbol = std::make_unique<Symbol>(node->name(), node->builtin());
+    if (node->name()->has_parameters()) {
+        logger->warn("Builder::visit_variable_declaration name has parameters");
+    }
+
+    auto symbol = std::make_unique<Symbol>(node->name().get(), node->builtin());
     scope()->insert(this, node, std::move(symbol));
 
     return node;
 }
 
-ast::Node *Builder::visit_int(ast::Int *node) {
-    return node;
-}
-
-ast::Node *Builder::visit_float(ast::Float *node) {
-    return node;
-}
-
-ast::Node *Builder::visit_complex(ast::Complex *node) {
-    return node;
-}
-
-ast::Node *Builder::visit_string(ast::String *node) {
-    return node;
-}
-
-ast::Node *Builder::visit_list(ast::List *node) {
-    return node;
-}
-
 ast::Node *Builder::visit_dictionary(ast::Dictionary *node) {
-    return node;
-}
-
-ast::Node *Builder::visit_tuple(ast::Tuple *node) {
     return node;
 }
 

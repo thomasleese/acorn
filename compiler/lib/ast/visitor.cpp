@@ -103,6 +103,62 @@ Node *Visitor::visit_block(Block *node) {
     return node;
 }
 
+Node *Visitor::visit_name(Name *node) {
+    auto &parameters = node->parameters();
+
+    for (size_t i = 0; i < parameters.size(); i++) {
+        parameters[i] = unique_ptr<Name>(llvm::cast<Name>(visit(parameters[i]).release()));
+    }
+
+    return node;
+}
+
+Node *Visitor::visit_variable_declaration(VariableDeclaration *node) {
+    node->name() = unique_ptr<Name>(llvm::cast<Name>(visit(node->name()).release()));
+
+    if (node->given_type()) {
+        node->given_type() = unique_ptr<Name>(llvm::cast<Name>(visit(node->given_type()).release()));
+    }
+
+    return node;
+}
+
+Node *Visitor::visit_int(Int *node) {
+    return node;
+}
+
+Node *Visitor::visit_float(Float *node) {
+    return node;
+}
+
+Node *Visitor::visit_complex(Complex *node) {
+    return node;
+}
+
+Node *Visitor::visit_string(String *node) {
+    return node;
+}
+
+Node *Visitor::visit_list(List *node) {
+    auto &elements = node->elements();
+
+    for (size_t i = 0; i < elements.size(); i++) {
+        elements[i] = visit(elements[i]);
+    }
+
+    return node;
+}
+
+Node *Visitor::visit_tuple(Tuple *node) {
+    auto &elements = node->elements();
+
+    for (size_t i = 0; i < elements.size(); i++) {
+        elements[i] = visit(elements[i]);
+    }
+
+    return node;
+}
+
 Node *Visitor::visit_assignment(Assignment *node) {
     node->lhs() = unique_ptr<VariableDeclaration>(llvm::cast<VariableDeclaration>(visit(node->lhs()).release()));
 

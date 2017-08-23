@@ -534,7 +534,7 @@ ast::Node *CodeGenerator::visit_name(ast::Name *node) {
 }
 
 ast::Node *CodeGenerator::visit_variable_declaration(ast::VariableDeclaration *node) {
-    auto symbol = scope()->lookup(this, node->name());
+    auto symbol = scope()->lookup(this, node->name().get());
 
     auto llvm_type = generate_type(node);
     return_null_and_push_null_if_null(llvm_type);
@@ -643,13 +643,6 @@ ast::Node *CodeGenerator::visit_list(ast::List *node) {
     return node;
 }
 
-ast::Node *CodeGenerator::visit_dictionary(ast::Dictionary *node) {
-    logger->warn("Visit ast::Dictionary not yet implemented.");
-    push_llvm_value(nullptr);
-
-    return node;
-}
-
 ast::Node *CodeGenerator::visit_tuple(ast::Tuple *node) {
     auto llvm_type = generate_type(node);
 
@@ -667,6 +660,13 @@ ast::Node *CodeGenerator::visit_tuple(ast::Tuple *node) {
     }
 
     push_llvm_value(m_ir_builder->CreateLoad(instance));
+
+    return node;
+}
+
+ast::Node *CodeGenerator::visit_dictionary(ast::Dictionary *node) {
+    logger->warn("Visit ast::Dictionary not yet implemented.");
+    push_llvm_value(nullptr);
 
     return node;
 }

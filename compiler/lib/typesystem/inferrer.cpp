@@ -230,14 +230,14 @@ ast::Node *TypeInferrer::visit_name(ast::Name *node) {
 }
 
 ast::Node *TypeInferrer::visit_variable_declaration(ast::VariableDeclaration *node) {
-    visit(node->name());
+    visit(node->name().get());
 
-    auto symbol = scope()->lookup(this, node->name());
+    auto symbol = scope()->lookup(this, node->name().get());
 
-    if (node->has_given_type()) {
-        visit(node->given_type());
+    if (node->given_type()) {
+        visit(node->given_type().get());
 
-        node->set_type(instance_type(node->given_type()));
+        node->set_type(instance_type(node->given_type().get()));
         symbol->copy_type_from(node);
     }
 
@@ -265,9 +265,9 @@ ast::Node *TypeInferrer::visit_string(ast::String *node) {
 }
 
 ast::Node *TypeInferrer::visit_list(ast::List *node) {
-    auto &elements = node->elements();
+    ast::Visitor::visit_list(node);
 
-    accept_many(elements);
+    auto &elements = node->elements();
 
     std::vector<typesystem::Type *> types;
     for (auto &element : elements) {
@@ -297,13 +297,8 @@ ast::Node *TypeInferrer::visit_list(ast::List *node) {
     return node;
 }
 
-ast::Node *TypeInferrer::visit_dictionary(ast::Dictionary *node) {
-    report(TypeInferenceError(node));
-    return node;
-}
-
 ast::Node *TypeInferrer::visit_tuple(ast::Tuple *node) {
-    accept_many(node->elements());
+    ast::Visitor::visit_tuple(node);
 
     std::vector<typesystem::Type *> element_types;
 
@@ -314,6 +309,11 @@ ast::Node *TypeInferrer::visit_tuple(ast::Tuple *node) {
 
     node->set_type(new typesystem::Tuple(element_types));
 
+    return node;
+}
+
+ast::Node *TypeInferrer::visit_dictionary(ast::Dictionary *node) {
+    report(TypeInferenceError(node));
     return node;
 }
 
@@ -411,7 +411,7 @@ ast::Node *TypeInferrer::visit_cast(ast::Cast *node) {
 }
 
 ast::Node *TypeInferrer::visit_assignment(ast::Assignment *node) {
-    auto symbol = scope()->lookup(this, node->lhs()->name());
+    auto symbol = scope()->lookup(this, node->lhs()->name().get());
     return_null_if_null(symbol);
 
     auto rhs = node->rhs().get();

@@ -72,15 +72,15 @@ namespace acorn::ast {
 
     public:
         virtual Node *visit_block(Block *node);
-        virtual Node *visit_name(Name *node) = 0;
-        virtual Node *visit_variable_declaration(VariableDeclaration *node) = 0;
-        virtual Node *visit_int(Int *node) = 0;
-        virtual Node *visit_float(Float *node) = 0;
-        virtual Node *visit_complex(Complex *node) = 0;
-        virtual Node *visit_string(String *node) = 0;
-        virtual Node *visit_list(List *node) = 0;
+        virtual Node *visit_name(Name *node);
+        virtual Node *visit_variable_declaration(VariableDeclaration *node);
+        virtual Node *visit_int(Int *node);
+        virtual Node *visit_float(Float *node);
+        virtual Node *visit_complex(Complex *node);
+        virtual Node *visit_string(String *node);
+        virtual Node *visit_list(List *node);
+        virtual Node *visit_tuple(Tuple *node);
         virtual Node *visit_dictionary(Dictionary *node) = 0;
-        virtual Node *visit_tuple(Tuple *node) = 0;
         virtual Node *visit_call(Call *node) = 0;
         virtual Node *visit_ccall(CCall *node) = 0;
         virtual Node *visit_cast(Cast *node) = 0;

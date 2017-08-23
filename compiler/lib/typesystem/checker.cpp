@@ -16,11 +16,11 @@
 
 #include "acorn/typesystem/checker.h"
 
-static auto logger = spdlog::get("acorn");
-
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::typesystem;
+
+static auto logger = spdlog::get("acorn");
 
 TypeChecker::TypeChecker(symboltable::Namespace *scope) {
     push_scope(scope);
@@ -49,13 +49,13 @@ ast::Node *TypeChecker::visit_block(ast::Block *node) {
 }
 
 ast::Node *TypeChecker::visit_name(ast::Name *node) {
-    accept_many(node->parameters());
+    ast::Visitor::visit_name(node);
     check_not_null(node);
     return node;
 }
 
 ast::Node *TypeChecker::visit_variable_declaration(ast::VariableDeclaration *node) {
-    visit(node->given_type());
+    ast::Visitor::visit_variable_declaration(node);
     check_not_null(node);
     return node;
 }
@@ -81,7 +81,13 @@ ast::Node *TypeChecker::visit_string(ast::String *node) {
 }
 
 ast::Node *TypeChecker::visit_list(ast::List *node) {
-    accept_many(node->elements());
+    ast::Visitor::visit_list(node);
+    check_not_null(node);
+    return node;
+}
+
+ast::Node *TypeChecker::visit_tuple(ast::Tuple *node) {
+    ast::Visitor::visit_tuple(node);
     check_not_null(node);
     return node;
 }
@@ -94,12 +100,6 @@ ast::Node *TypeChecker::visit_dictionary(ast::Dictionary *node) {
 
     check_not_null(node);
 
-    return node;
-}
-
-ast::Node *TypeChecker::visit_tuple(ast::Tuple *node) {
-    accept_many(node->elements());
-    check_not_null(node);
     return node;
 }
 

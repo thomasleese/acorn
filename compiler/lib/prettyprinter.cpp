@@ -23,7 +23,7 @@ ast::Node *PrettyPrinter::visit_block(ast::Block *node) {
     ss << indentation() << "(Block [" << type_of(node) << "]\n";
     indent++;
 
-    accept_many(node->expressions());
+    ast::Visitor::visit_block(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -90,7 +90,19 @@ ast::Node *PrettyPrinter::visit_list(ast::List *node) {
     ss << indentation() << "(List\n";
     indent++;
 
-    accept_many(node->elements());
+    ast::Visitor::visit_list(node);
+
+    indent--;
+    ss << indentation() << ")\n";
+
+    return node;
+}
+
+ast::Node *PrettyPrinter::visit_tuple(ast::Tuple *node) {
+    ss << indentation() << "(Tuple\n";
+    indent++;
+
+    ast::Visitor::visit_tuple(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -106,18 +118,6 @@ ast::Node *PrettyPrinter::visit_dictionary(ast::Dictionary *node) {
         visit(node->key(i));
         visit(node->value(i));
     }
-
-    indent--;
-    ss << indentation() << ")\n";
-
-    return node;
-}
-
-ast::Node *PrettyPrinter::visit_tuple(ast::Tuple *node) {
-    ss << indentation() << "(Tuple\n";
-    indent++;
-
-    accept_many(node->elements());
 
     indent--;
     ss << indentation() << ")\n";
