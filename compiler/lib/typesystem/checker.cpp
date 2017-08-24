@@ -336,16 +336,15 @@ ast::Node *TypeChecker::visit_dictionary(ast::Dictionary *node) {
 }
 
 ast::Node *TypeChecker::visit_call(ast::Call *node) {
-    visit(node->operand().get());
+    Visitor::visit_call(node);
+
     return_null_if_null_type(node->operand());
 
     for (auto &argument : node->positional_arguments()) {
-        visit(argument.get());
         return_null_if_null_type(argument);
     }
 
     for (auto &entry : node->keyword_arguments()) {
-        visit(entry.second.get());
         return_null_if_null_type(entry.second);
     }
 
@@ -387,7 +386,7 @@ ast::Node *TypeChecker::visit_call(ast::Call *node) {
         }
 
         auto return_type = replace_type_parameters(
-                method->return_type(), node->inferred_type_parameters()
+            method->return_type(), node->inferred_type_parameters()
         );
 
         node->set_method_specialisation_index(method->no_generic_specialisation());
