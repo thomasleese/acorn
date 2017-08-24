@@ -9,7 +9,7 @@ def test(filename):
     executable_name = filename.name.split('.')[0]
 
     try:
-        subprocess.run(['../build/acorn', filename],
+        subprocess.run(['../build/compiler/src/acornc', filename],
                        check=True,
                        stdout=subprocess.PIPE,
                        stderr=subprocess.STDOUT)
