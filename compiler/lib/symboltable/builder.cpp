@@ -103,7 +103,9 @@ ast::Node *Builder::visit_def(ast::Def *node) {
         scope()->insert(this, parameter.get(), std::move(sym));
     }
 
-    accept_many(node->parameters());
+    for (auto &parameter : node->parameters()) {
+        visit(parameter.get());
+    }
 
     if (!node->builtin()) {
         visit(node->body().get());

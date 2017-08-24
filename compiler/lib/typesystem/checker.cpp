@@ -199,18 +199,7 @@ ast::Node *TypeChecker::visit_def(ast::Def *node) {
 
     push_scope(symbol);
 
-    accept(node->name());
-    accept_many(name->parameters());
-
-    if (node->builtin() || node->given_return_type()) {
-        visit(node->given_return_type().get());
-    }
-
-    accept_many(node->parameters());
-
-    if (!node->builtin()) {
-        visit(node->body().get());
-    }
+    Visitor::visit_def(node);
 
     pop_scope();
     pop_scope();
@@ -221,20 +210,18 @@ ast::Node *TypeChecker::visit_def(ast::Def *node) {
 ast::Node *TypeChecker::visit_type(ast::Type *node) {
     check_not_null(node);
 
-    accept(node->name());
+    visit(node->name().get());
 
     auto symbol = scope()->lookup(this, node->name().get());
 
     push_scope(symbol);
 
     if (node->alias()) {
-        accept(node->alias().get());
+        visit(node->alias().get());
     } else {
-        /*for (auto name : node->field_names) {
-            name->accept(this);
-        }*/
-
-        accept_many(node->field_types());
+        for (auto &field_type : node->field_types()) {
+            visit(field_type.get());
+        }
     }
 
     pop_scope();

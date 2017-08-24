@@ -21,15 +21,6 @@ Visitor::~Visitor() {
 
 }
 
-void Visitor::accept(Node *node) {
-    visit(node);
-}
-
-void Visitor::accept_if_present(Node *node) {
-    return_if_null(node);
-    accept(node);
-}
-
 Node *Visitor::visit(Node *node) {
     if (auto block = llvm::dyn_cast<Block>(node)) {
         return visit_block(block);
@@ -318,7 +309,7 @@ Node *Visitor::visit_def(Def *node) {
         parameters[i] = unique_ptr<Parameter>(llvm::cast<Parameter>(visit(parameters[i]).release()));
     }
 
-    if (node->given_return_type()) {
+    if (node->builtin() || node->given_return_type()) {
         node->given_return_type() = unique_ptr<Name>(llvm::cast<Name>(visit(node->given_return_type()).release()));
     }
 
@@ -332,18 +323,18 @@ Node *Visitor::visit_type(Type *node) {
 
     if (node->alias()) {
         node->alias() = unique_ptr<Name>(llvm::cast<Name>(visit(node->alias()).release()));
-    }
+    } else {
+        auto &field_names = node->field_names();
 
-    auto &field_names = node->field_names();
+        for (size_t i = 0; i < field_names.size(); i++) {
+            field_names[i] = unique_ptr<Name>(llvm::cast<Name>(visit(field_names[i]).release()));
+        }
 
-    for (size_t i = 0; i < field_names.size(); i++) {
-        field_names[i] = unique_ptr<Name>(llvm::cast<Name>(visit(field_names[i]).release()));
-    }
+        auto &field_types = node->field_types();
 
-    auto &field_types = node->field_types();
-
-    for (size_t i = 0; i < field_types.size(); i++) {
-        field_types[i] = unique_ptr<Name>(llvm::cast<Name>(visit(field_types[i]).release()));
+        for (size_t i = 0; i < field_types.size(); i++) {
+            field_types[i] = unique_ptr<Name>(llvm::cast<Name>(visit(field_types[i]).release()));
+        }
     }
 
     return node;

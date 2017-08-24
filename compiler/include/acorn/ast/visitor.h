@@ -42,27 +42,11 @@ namespace acorn::ast {
     public:
         virtual ~Visitor();
 
-        template <typename T>
-        void accept(const std::unique_ptr<T> &node) {
-            visit(node.get());
-        }
-
-        template <typename T>
-        void accept_if_present(const std::unique_ptr<T> &node) {
-            accept_if_present(node.get());
-        }
-
-        void accept(Node *node);
-        void accept_if_present(Node *node);
-
-        template <typename T>
-        void accept_many(const std::vector<std::unique_ptr<T>> &nodes) {
-            for (auto &node : nodes) {
-                accept(node);
-            }
-        }
-
         Node *visit(Node *node);
+
+        Node *visit_node(Node *node) {
+            return visit(node);
+        }
 
     private:
         template <typename T>

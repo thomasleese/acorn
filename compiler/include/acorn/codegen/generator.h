@@ -120,7 +120,6 @@ namespace acorn::codegen {
         ast::Node *visit_spawn(ast::Spawn *node) override;
         ast::Node *visit_switch(ast::Switch *node) override;
         ast::Node *visit_parameter(ast::Parameter *node) override;
-        ast::Node *visit_let(ast::Let *node) override;
         ast::Node *visit_def(ast::Def *node) override;
         ast::Node *visit_type(ast::Type *node) override;
         ast::Node *visit_module(ast::Module *node) override;

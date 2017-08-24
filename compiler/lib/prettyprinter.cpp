@@ -40,7 +40,9 @@ ast::Node *PrettyPrinter::visit_name(ast::Name *node) {
         ss << indentation() << "(Name " << node->value() << " [" << type_of(node) << "]\n";
         indent++;
 
-        accept_many(parameters);
+        for (auto &parameter : node->parameters()) {
+            visit(parameter.get());
+        }
 
         indent--;
         ss << indentation() << ")\n";
@@ -53,8 +55,7 @@ ast::Node *PrettyPrinter::visit_variable_declaration(ast::VariableDeclaration *n
     ss << indentation() << "(VariableDeclaration [" << type_of(node) << "]\n";
     indent++;
 
-    accept(node->name());
-    accept_if_present(node->given_type());
+    Visitor::visit_variable_declaration(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -102,7 +103,7 @@ ast::Node *PrettyPrinter::visit_tuple(ast::Tuple *node) {
     ss << indentation() << "(Tuple\n";
     indent++;
 
-    ast::Visitor::visit_tuple(node);
+    Visitor::visit_tuple(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -126,12 +127,7 @@ ast::Node *PrettyPrinter::visit_call(ast::Call *node) {
     ss << indentation() << "(Call [" << type_of(node) << "]\n";
     indent++;
 
-    accept(node->operand());
-    accept_many(node->positional_arguments());
-
-    for (auto &entry : node->keyword_arguments()) {
-        accept(entry.second);
-    }
+    Visitor::visit_call(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -143,10 +139,7 @@ ast::Node *PrettyPrinter::visit_ccall(ast::CCall *node) {
     ss << indentation() << "(CCall [" << type_of(node) << "]\n";
     indent++;
 
-    accept(node->name());
-    accept_many(node->parameters());
-    accept(node->given_return_type());
-    accept_many(node->arguments());
+    Visitor::visit_ccall(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -158,8 +151,7 @@ ast::Node *PrettyPrinter::visit_cast(ast::Cast *node) {
     ss << indentation() << "(Cast\n";
     indent++;
 
-    accept(node->operand());
-    accept(node->new_type());
+    Visitor::visit_cast(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -171,11 +163,7 @@ ast::Node *PrettyPrinter::visit_assignment(ast::Assignment *node) {
     ss << indentation() << "(Assignment [" << type_of(node) << "]\n";
     indent++;
 
-    accept(node->lhs());
-
-    if (!node->builtin()) {
-        accept(node->rhs());
-    }
+    Visitor::visit_assignment(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -187,8 +175,7 @@ ast::Node *PrettyPrinter::visit_selector(ast::Selector *node) {
     ss << indentation() << "(Selector [" << type_of(node) << "]\n";
     indent++;
 
-    accept(node->operand());
-    accept(node->field());
+    Visitor::visit_selector(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -248,17 +235,7 @@ ast::Node *PrettyPrinter::visit_switch(ast::Switch *node) {
     ss << indentation() << "(Switch [" << type_of(node) << "]\n";
     indent++;
 
-    visit(node->expression().get());
-
-    for (auto &entry : node->cases()) {
-        visit(entry->condition().get());
-
-        accept_if_present(entry->assignment());
-
-        visit(entry->body().get());
-    }
-
-    accept_if_present(node->default_case());
+    Visitor::visit_switch(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -270,8 +247,7 @@ ast::Node *PrettyPrinter::visit_parameter(ast::Parameter *node) {
     ss << indentation() << "(Parameter\n";
     indent++;
 
-    visit(node->name().get());
-    visit(node->given_type().get());
+    Visitor::visit_parameter(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -283,8 +259,7 @@ ast::Node *PrettyPrinter::visit_let(ast::Let *node) {
     ss << indentation() << "(Let [" << type_of(node) << "]\n";
     indent++;
 
-    visit(node->assignment().get());
-    accept_if_present(node->body());
+    Visitor::visit_let(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -296,15 +271,11 @@ ast::Node *PrettyPrinter::visit_def(ast::Def *node) {
     ss << indentation() << "(Def [" << type_of(node) << "]\n";
     indent++;
 
-    accept(node->name());
-    accept_many(node->parameters());
-    accept_if_present(node->given_return_type());
-
     if (node->builtin()) {
         ss << "<builtin>";
-    } else {
-        accept(node->body());
     }
+
+    Visitor::visit_def(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -316,16 +287,7 @@ ast::Node *PrettyPrinter::visit_type(ast::Type *node) {
     ss << indentation() << "(Type\n";
     indent++;
 
-    accept(node->name());
-
-    if (node->alias()) {
-        visit(node->alias().get());
-    } else {
-        for (size_t i = 0; i < node->field_names().size(); i++) {
-            accept(node->field_names()[i]);
-            accept(node->field_types()[i]);
-        }
-    }
+    Visitor::visit_type(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -337,8 +299,7 @@ ast::Node *PrettyPrinter::visit_module(ast::Module *node) {
     ss << indentation() << "(Module [" << type_of(node) << "]\n";
     indent++;
 
-    visit(node->name().get());
-    visit(node->body().get());
+    Visitor::visit_module(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -350,7 +311,7 @@ ast::Node *PrettyPrinter::visit_import(ast::Import *node) {
     ss << indentation() << "(Import [" << type_of(node) << "]\n";
     indent++;
 
-    visit(node->path().get());
+    Visitor::visit_import(node);
 
     indent--;
     ss << indentation() << ")\n";
@@ -362,8 +323,7 @@ ast::Node *PrettyPrinter::visit_source_file(ast::SourceFile *node) {
     ss << indentation() << "(SourceFile " << node->name() << " [" << type_of(node) << "]\n";
     indent++;
 
-    accept_many(node->imports());
-    visit(node->code().get());
+    Visitor::visit_source_file(node);
 
     indent--;
     ss << indentation() << ")\n";

@@ -255,7 +255,7 @@ void CodeGenerator::generate_builtin_method_body(ast::Def *node, llvm::Function 
 }
 
 llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
-    accept(node);
+    visit_node(node);
     auto value = pop_llvm_value();
 
     if (value == nullptr) {
@@ -674,7 +674,7 @@ ast::Node *CodeGenerator::visit_dictionary(ast::Dictionary *node) {
 ast::Node *CodeGenerator::visit_call(ast::Call *node) {
     auto &operand = node->operand();
 
-    accept(operand);
+    visit_node(operand.get());
 
     auto function_type = dynamic_cast<typesystem::Function *>(operand->type());
 
@@ -796,7 +796,7 @@ ast::Node *CodeGenerator::visit_selector(ast::Selector *node) {
         return_null_and_push_null_if_null(symbol);
 
         push_scope(symbol);
-        accept(node->field());
+        visit_node(node->field().get());
         pop_scope();
     } else if (record_type_type) {
         auto instance = generate_llvm_value(operand);
@@ -946,16 +946,6 @@ ast::Node *CodeGenerator::visit_parameter(ast::Parameter *node) {
     return node;
 }
 
-ast::Node *CodeGenerator::visit_let(ast::Let *node) {
-    accept(node->assignment());
-
-    if (node->body()) {
-        accept(node->body());
-    }
-
-    return node;
-}
-
 ast::Node *CodeGenerator::visit_def(ast::Def *node) {
     auto function_symbol = scope()->lookup(this, node->name()->field().get());
     auto function_type = static_cast<typesystem::Function *>(function_symbol->type());
@@ -998,7 +988,7 @@ ast::Node *CodeGenerator::visit_def(ast::Def *node) {
         if (node->builtin()) {
             generate_builtin_method_body(node, function);
         } else {
-            accept(node->body());
+            visit_node(node->body().get());
         }
 
         auto value = pop_llvm_value();
@@ -1106,7 +1096,7 @@ ast::Node *CodeGenerator::visit_module(ast::Module *node) {
     return_null_and_push_null_if_null(symbol);
 
     push_scope(symbol);
-    accept(node->body());
+    ast::Visitor::visit_module(node);
     pop_scope();
 
     return node;
@@ -1137,8 +1127,7 @@ ast::Node *CodeGenerator::visit_source_file(ast::SourceFile *node) {
 
         m_ir_builder->SetInsertPoint(user_code_bb);
 
-        accept_many(node->imports());
-        accept(node->code());
+        ast::Visitor::visit_source_file(node);
 
         m_ir_builder->CreateRetVoid();
 
@@ -1159,11 +1148,7 @@ ast::Node *CodeGenerator::visit_source_file(ast::SourceFile *node) {
             logger->critical(stream.str());
         }
     } else {
-        for (auto &import : node->imports()) {
-            accept(import);
-        }
-
-        accept(node->code());
+        ast::Visitor::visit_source_file(node);
     }
 
     return node;
