@@ -72,13 +72,6 @@ ast::Node *Builder::visit_parameter(ast::Parameter *node) {
     return node;
 }
 
-ast::Node *Builder::visit_let(ast::Let *node) {
-    visit(node->assignment().get());
-    accept_if_present(node->body());
-
-    return node;
-}
-
 ast::Node *Builder::visit_def(ast::Def *node) {
     auto name = node->name()->field().get();
 
@@ -158,15 +151,5 @@ ast::Node *Builder::visit_module(ast::Module *node) {
     visit(node->body().get());
     pop_scope();
 
-    return node;
-}
-
-ast::Node *Builder::visit_import(ast::Import *node) {
-    return node;
-}
-
-ast::Node *Builder::visit_source_file(ast::SourceFile *node) {
-    accept_many(node->imports());
-    visit(node->code().get());
     return node;
 }

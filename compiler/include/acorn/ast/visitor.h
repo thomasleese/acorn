@@ -93,12 +93,12 @@ namespace acorn::ast {
         virtual Node *visit_case(Case *node);
         virtual Node *visit_switch(Switch *node);
         virtual Node *visit_parameter(Parameter *node);
-        virtual Node *visit_let(Let *node) = 0;
-        virtual Node *visit_def(Def *node) = 0;
-        virtual Node *visit_type(Type *node) = 0;
-        virtual Node *visit_module(Module *node) = 0;
-        virtual Node *visit_import(Import *node) = 0;
-        virtual Node *visit_source_file(SourceFile *node) = 0;
+        virtual Node *visit_let(Let *node);
+        virtual Node *visit_def(Def *node);
+        virtual Node *visit_type(Type *node);
+        virtual Node *visit_module(Module *node);
+        virtual Node *visit_import(Import *node);
+        virtual Node *visit_source_file(SourceFile *node);
     };
 
 }

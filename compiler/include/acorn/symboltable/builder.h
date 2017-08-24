@@ -38,12 +38,9 @@ namespace acorn::symboltable {
 
         ast::Node *visit_variable_declaration(ast::VariableDeclaration *node) override;
         ast::Node *visit_parameter(ast::Parameter *node) override;
-        ast::Node *visit_let(ast::Let *node) override;
         ast::Node *visit_def(ast::Def *node) override;
         ast::Node *visit_type(ast::Type *node) override;
         ast::Node *visit_module(ast::Module *node) override;
-        ast::Node *visit_import(ast::Import *node) override;
-        ast::Node *visit_source_file(ast::SourceFile *node) override;
 
     private:
         Namespace *m_root;

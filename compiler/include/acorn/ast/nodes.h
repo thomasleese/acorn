@@ -480,24 +480,6 @@ namespace acorn::ast {
         std::unique_ptr<Node> m_default_case;
     };
 
-    class Let : public Node {
-    public:
-        Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body);
-        Let(Token token, std::string name, std::unique_ptr<Node> value = nullptr, std::unique_ptr<Node> body = nullptr);
-
-        std::unique_ptr<Assignment> &assignment() { return m_assignment; }
-
-        std::unique_ptr<Node> &body() { return m_body; }
-
-        static bool classof(const Node *node) {
-            return node->kind() == NK_Let;
-        }
-
-    private:
-        std::unique_ptr<Assignment> m_assignment;
-        std::unique_ptr<Node> m_body;
-    };
-
     class Parameter : public Node {
     public:
         explicit Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type);
@@ -516,6 +498,24 @@ namespace acorn::ast {
         bool m_inout;
         std::unique_ptr<Name> m_name;
         std::unique_ptr<Name> m_given_type;
+    };
+
+    class Let : public Node {
+    public:
+        Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body);
+        Let(Token token, std::string name, std::unique_ptr<Node> value = nullptr, std::unique_ptr<Node> body = nullptr);
+
+        std::unique_ptr<Assignment> &assignment() { return m_assignment; }
+
+        std::unique_ptr<Node> &body() { return m_body; }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Let;
+        }
+
+    private:
+        std::unique_ptr<Assignment> m_assignment;
+        std::unique_ptr<Node> m_body;
     };
 
     class Def : public Node {

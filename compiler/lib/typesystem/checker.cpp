@@ -171,12 +171,11 @@ ast::Node *TypeChecker::visit_parameter(ast::Parameter *node) {
 }
 
 ast::Node *TypeChecker::visit_let(ast::Let *node) {
+    Visitor::visit_let(node);
+
     check_not_null(node);
 
-    visit(node->assignment().get());
-
     if (node->body()) {
-        visit(node->body().get());
         check_types(node, node->body().get());
     } else {
         check_types(node, node->assignment().get());
@@ -258,14 +257,13 @@ ast::Node *TypeChecker::visit_module(ast::Module *node) {
 }
 
 ast::Node *TypeChecker::visit_import(ast::Import *node) {
-    visit(node->path().get());
+    Visitor::visit_import(node);
     check_not_null(node);
     return node;
 }
 
 ast::Node *TypeChecker::visit_source_file(ast::SourceFile *node) {
-    accept_many(node->imports());
-    visit(node->code().get());
+    Visitor::visit_source_file(node);
     check_not_null(node);
     return node;
 }

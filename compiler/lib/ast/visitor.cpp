@@ -298,3 +298,79 @@ Node *Visitor::visit_parameter(Parameter *node) {
 
     return node;
 }
+
+Node *Visitor::visit_let(Let *node) {
+    node->assignment() = unique_ptr<Assignment>(llvm::cast<Assignment>(visit(node->assignment()).release()));
+
+    if (node->body()) {
+        node->body() = visit(node->body());
+    }
+
+    return node;
+}
+
+Node *Visitor::visit_def(Def *node) {
+    node->name() = unique_ptr<Selector>(llvm::cast<Selector>(visit(node->name()).release()));
+
+    auto &parameters = node->parameters();
+
+    for (size_t i = 0; i < parameters.size(); i++) {
+        parameters[i] = unique_ptr<Parameter>(llvm::cast<Parameter>(visit(parameters[i]).release()));
+    }
+
+    if (node->given_return_type()) {
+        node->given_return_type() = unique_ptr<Name>(llvm::cast<Name>(visit(node->given_return_type()).release()));
+    }
+
+    node->body() = visit(node->body());
+
+    return node;
+}
+
+Node *Visitor::visit_type(Type *node) {
+    node->name() = unique_ptr<Name>(llvm::cast<Name>(visit(node->name()).release()));
+
+    if (node->alias()) {
+        node->alias() = unique_ptr<Name>(llvm::cast<Name>(visit(node->alias()).release()));
+    }
+
+    auto &field_names = node->field_names();
+
+    for (size_t i = 0; i < field_names.size(); i++) {
+        field_names[i] = unique_ptr<Name>(llvm::cast<Name>(visit(field_names[i]).release()));
+    }
+
+    auto &field_types = node->field_types();
+
+    for (size_t i = 0; i < field_types.size(); i++) {
+        field_types[i] = unique_ptr<Name>(llvm::cast<Name>(visit(field_types[i]).release()));
+    }
+
+    return node;
+}
+
+Node *Visitor::visit_module(Module *node) {
+    node->name() = unique_ptr<Name>(llvm::cast<Name>(visit(node->name()).release()));
+
+    node->body() = unique_ptr<Block>(llvm::cast<Block>(visit(node->body()).release()));
+
+    return node;
+}
+
+Node *Visitor::visit_import(Import *node) {
+    node->path() = unique_ptr<String>(llvm::cast<String>(visit(node->path()).release()));
+
+    return node;
+}
+
+Node *Visitor::visit_source_file(SourceFile *node) {
+    auto &imports = node->imports();
+
+    for (size_t i = 0; i < imports.size(); i++) {
+        imports[i] = unique_ptr<SourceFile>(llvm::cast<SourceFile>(visit(imports[i]).release()));
+    }
+
+    node->code() = unique_ptr<Block>(llvm::cast<Block>(visit(node->code()).release()));
+
+    return node;
+}

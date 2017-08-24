@@ -568,10 +568,9 @@ ast::Node *TypeInferrer::visit_parameter(ast::Parameter *node) {
 }
 
 ast::Node *TypeInferrer::visit_let(ast::Let *node) {
-    visit(node->assignment().get());
+    Visitor::visit_let(node);
 
     if (node->body()) {
-        visit(node->body().get());
         node->copy_type_from(node->body());
     } else {
         node->copy_type_from(node->assignment().get());
@@ -738,19 +737,13 @@ ast::Node *TypeInferrer::visit_module(ast::Module *node) {
 }
 
 ast::Node *TypeInferrer::visit_import(ast::Import *node) {
-    visit(node->path().get());
+    Visitor::visit_import(node);
     node->set_type(new typesystem::Void());
     return node;
 }
 
 ast::Node *TypeInferrer::visit_source_file(ast::SourceFile *node) {
-    for (auto &import : node->imports()) {
-        visit(import.get());
-    }
-
-    visit(node->code().get());
-
+    Visitor::visit_source_file(node);
     node->copy_type_from(node->code().get());
-
     return node;
 }
