@@ -16,17 +16,17 @@
 
 #include "acorn/typesystem/checker.h"
 
-static auto logger = spdlog::get("acorn");
-
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::typesystem;
+
+static auto logger = spdlog::get("acorn");
 
 TypeChecker::TypeChecker(symboltable::Namespace *scope) {
     push_scope(scope);
 }
 
-void TypeChecker::check_types(ast::Expression *lhs, ast::Expression *rhs) {
+void TypeChecker::check_types(ast::Node *lhs, ast::Node *rhs) {
     check_not_null(lhs);
     check_not_null(rhs);
 
@@ -35,195 +35,159 @@ void TypeChecker::check_types(ast::Expression *lhs, ast::Expression *rhs) {
     }
 }
 
-void TypeChecker::check_not_null(ast::Expression *expression) {
-    if (!expression->has_type()) {
-        auto message = "No type given for: " + expression->token().to_string();
+void TypeChecker::check_not_null(ast::Node *node) {
+    if (!node->has_type()) {
+        auto message = "No type given for: " + node->token().to_string();
         logger->critical(message);
     }
 }
 
-void TypeChecker::visit(ast::Block *node) {
-    for (auto &expression : node->expressions()) {
-        expression->accept(this);
-    }
-
+ast::Node *TypeChecker::visit_block(ast::Block *node) {
+    ast::Visitor::visit_block(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Name *node) {
-    for (auto &parameter : node->parameters()) {
-        parameter->accept(this);
-    }
-
+ast::Node *TypeChecker::visit_name(ast::Name *node) {
+    ast::Visitor::visit_name(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::VariableDeclaration *node) {
-    if (node->has_given_type()) {
-        node->given_type()->accept(this);
-    }
-
+ast::Node *TypeChecker::visit_variable_declaration(ast::VariableDeclaration *node) {
+    ast::Visitor::visit_variable_declaration(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Int *node) {
+ast::Node *TypeChecker::visit_int(ast::Int *node) {
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Float *node) {
+ast::Node *TypeChecker::visit_float(ast::Float *node) {
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Complex *node) {
+ast::Node *TypeChecker::visit_complex(ast::Complex *node) {
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::String *node) {
+ast::Node *TypeChecker::visit_string(ast::String *node) {
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::List *node) {
-    accept_many(node->elements());
+ast::Node *TypeChecker::visit_list(ast::List *node) {
+    ast::Visitor::visit_list(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Dictionary *node) {
-    for (size_t i = 0; i < node->elements_size(); i++) {
-        node->key(i)->accept(this);
-        node->value(i)->accept(this);
-    }
-
+ast::Node *TypeChecker::visit_tuple(ast::Tuple *node) {
+    ast::Visitor::visit_tuple(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Tuple *node) {
-    accept_many(node->elements());
+ast::Node *TypeChecker::visit_dictionary(ast::Dictionary *node) {
+    ast::Visitor::visit_dictionary(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Call *node) {
-    node->operand()->accept(this);
-
-    for (auto &argument : node->positional_arguments()) {
-        argument->accept(this);
-    }
-
-    for (auto &entry : node->keyword_arguments()) {
-        entry.second->accept(this);
-    }
-
+ast::Node *TypeChecker::visit_call(ast::Call *node) {
+    ast::Visitor::visit_call(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::CCall *node) {
-    // node->name->accept(this);
-
-    accept_many(node->parameters());
-    accept(node->given_return_type());
-    accept_many(node->arguments());
-
+ast::Node *TypeChecker::visit_ccall(ast::CCall *node) {
+    ast::Visitor::visit_ccall(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Cast *node) {
-    node->operand()->accept(this);
-    node->new_type()->accept(this);
-
+ast::Node *TypeChecker::visit_cast(ast::Cast *node) {
+    ast::Visitor::visit_cast(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Assignment *node) {
-    node->lhs()->accept(this);
-
-    if (!node->builtin()) {
-        node->rhs()->accept(this);
-    }
-
+ast::Node *TypeChecker::visit_assignment(ast::Assignment *node) {
+    Visitor::visit_assignment(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Selector *node) {
-    if (node->has_operand()) {
-        node->operand()->accept(this);
-    }
-
+ast::Node *TypeChecker::visit_selector(ast::Selector *node) {
+    Visitor::visit_selector(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::While *node) {
-    node->condition()->accept(this);
-    node->body()->accept(this);
+ast::Node *TypeChecker::visit_while(ast::While *node) {
+    Visitor::visit_while(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::If *node) {
-    node->condition()->accept(this);
-
-    node->true_case()->accept(this);
-
-    if (node->has_false_case()) {
-        node->false_case()->accept(this);
-    }
-
+ast::Node *TypeChecker::visit_if(ast::If *node) {
+    Visitor::visit_if(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Return *node) {
-    node->expression()->accept(this);
+ast::Node *TypeChecker::visit_return(ast::Return *node) {
+    Visitor::visit_return(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Spawn *node) {
-    node->call()->accept(this);
+ast::Node *TypeChecker::visit_spawn(ast::Spawn *node) {
+    Visitor::visit_spawn(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Switch *node) {
-    node->expression()->accept(this);
-
-    for (auto &entry : node->cases()) {
-        entry->condition()->accept(this);
-
-        if (entry->has_assignment()) {
-            entry->assignment()->accept(this);
-        }
-
-        entry->body()->accept(this);
-        check_not_null(entry.get());
-    }
-
-    if (node->has_default_case()) {
-        check_not_null(node->default_case());
-    }
-
+ast::Node *TypeChecker::visit_case(ast::Case *node) {
+    Visitor::visit_case(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Parameter *node) {
-    if (node->has_given_type()) {
-        node->given_type()->accept(this);
-    }
-
+ast::Node *TypeChecker::visit_switch(ast::Switch *node) {
+    Visitor::visit_switch(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::Let *node) {
+ast::Node *TypeChecker::visit_parameter(ast::Parameter *node) {
+    Visitor::visit_parameter(node);
+    check_not_null(node);
+    return node;
+}
+
+ast::Node *TypeChecker::visit_let(ast::Let *node) {
+    Visitor::visit_let(node);
+
     check_not_null(node);
 
-    node->assignment()->accept(this);
-
-    if (node->has_body()) {
-        node->body()->accept(this);
-        check_types(node, node->body());
+    if (node->body()) {
+        check_types(node, node->body().get());
     } else {
-        check_types(node, node->assignment());
+        check_types(node, node->assignment().get());
     }
+
+    return node;
 }
 
-void TypeChecker::visit(ast::Def *node) {
+ast::Node *TypeChecker::visit_def(ast::Def *node) {
     check_not_null(node);
 
-    auto name = node->name()->field();
+    auto name = node->name()->field().get();
 
     auto function_symbol = scope()->lookup(this, name);
 
@@ -235,68 +199,58 @@ void TypeChecker::visit(ast::Def *node) {
 
     push_scope(symbol);
 
-    accept(node->name());
-    accept_many(name->parameters());
-
-    if (node->builtin() || node->has_given_return_type()) {
-        node->given_return_type()->accept(this);
-    }
-
-    accept_many(node->parameters());
-
-    if (!node->builtin()) {
-        node->body()->accept(this);
-    }
+    Visitor::visit_def(node);
 
     pop_scope();
     pop_scope();
+
+    return node;
 }
 
-void TypeChecker::visit(ast::Type *node) {
+ast::Node *TypeChecker::visit_type(ast::Type *node) {
     check_not_null(node);
 
-    accept(node->name());
+    visit(node->name().get());
 
-    auto symbol = scope()->lookup(this, node->name());
+    auto symbol = scope()->lookup(this, node->name().get());
 
     push_scope(symbol);
 
-    if (node->has_alias()) {
-        accept(node->alias());
+    if (node->alias()) {
+        visit(node->alias().get());
     } else {
-        /*for (auto name : node->field_names) {
-            name->accept(this);
-        }*/
-
-        accept_many(node->field_types());
+        for (auto &field_type : node->field_types()) {
+            visit(field_type.get());
+        }
     }
 
     pop_scope();
+
+    return node;
 }
 
-void TypeChecker::visit(ast::Module *node) {
-    auto symbol = scope()->lookup(this, node->name());
-    return_if_null(symbol);
+ast::Node *TypeChecker::visit_module(ast::Module *node) {
+    auto symbol = scope()->lookup(this, node->name().get());
+    return_null_if_null(symbol);
 
     push_scope(symbol);
 
-    node->body()->accept(this);
+    visit(node->body().get());
     check_not_null(node);
 
     pop_scope();
+
+    return node;
 }
 
-void TypeChecker::visit(ast::Import *node) {
-    node->path()->accept(this);
+ast::Node *TypeChecker::visit_import(ast::Import *node) {
+    Visitor::visit_import(node);
     check_not_null(node);
+    return node;
 }
 
-void TypeChecker::visit(ast::SourceFile *node) {
-    for (auto &import : node->imports()) {
-        import->accept(this);
-    }
-
-    node->code()->accept(this);
-
+ast::Node *TypeChecker::visit_source_file(ast::SourceFile *node) {
+    Visitor::visit_source_file(node);
     check_not_null(node);
+    return node;
 }

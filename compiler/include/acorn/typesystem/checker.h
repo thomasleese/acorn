@@ -30,37 +30,38 @@ namespace acorn::typesystem {
         explicit TypeChecker(symboltable::Namespace *scope);
 
     private:
-        void check_types(ast::Expression *lhs, ast::Expression *rhs);
-        void check_not_null(ast::Expression *expression);
+        void check_types(ast::Node *lhs, ast::Node *rhs);
+        void check_not_null(ast::Node *expression);
 
     public:
-        void visit(ast::Block *node) override;
-        void visit(ast::Name *node) override;
-        void visit(ast::VariableDeclaration *node) override;
-        void visit(ast::Int *node) override;
-        void visit(ast::Float *node) override;
-        void visit(ast::Complex *node) override;
-        void visit(ast::String *node) override;
-        void visit(ast::List *node) override;
-        void visit(ast::Dictionary *node) override;
-        void visit(ast::Tuple *node) override;
-        void visit(ast::Call *node) override;
-        void visit(ast::CCall *node) override;
-        void visit(ast::Cast *node) override;
-        void visit(ast::Assignment *node) override;
-        void visit(ast::Selector *node) override;
-        void visit(ast::While *node) override;
-        void visit(ast::If *node) override;
-        void visit(ast::Return *node) override;
-        void visit(ast::Spawn *node) override;
-        void visit(ast::Switch *node) override;
-        void visit(ast::Parameter *node) override;
-        void visit(ast::Let *node) override;
-        void visit(ast::Def *node) override;
-        void visit(ast::Type *node) override;
-        void visit(ast::Module *node) override;
-        void visit(ast::Import *node) override;
-        void visit(ast::SourceFile *node) override;
+        ast::Node *visit_block(ast::Block *node) override;
+        ast::Node *visit_name(ast::Name *node) override;
+        ast::Node *visit_variable_declaration(ast::VariableDeclaration *node) override;
+        ast::Node *visit_int(ast::Int *node) override;
+        ast::Node *visit_float(ast::Float *node) override;
+        ast::Node *visit_complex(ast::Complex *node) override;
+        ast::Node *visit_string(ast::String *node) override;
+        ast::Node *visit_list(ast::List *node) override;
+        ast::Node *visit_tuple(ast::Tuple *node) override;
+        ast::Node *visit_dictionary(ast::Dictionary *node) override;
+        ast::Node *visit_call(ast::Call *node) override;
+        ast::Node *visit_ccall(ast::CCall *node) override;
+        ast::Node *visit_cast(ast::Cast *node) override;
+        ast::Node *visit_assignment(ast::Assignment *node) override;
+        ast::Node *visit_selector(ast::Selector *node) override;
+        ast::Node *visit_while(ast::While *node) override;
+        ast::Node *visit_if(ast::If *node) override;
+        ast::Node *visit_return(ast::Return *node) override;
+        ast::Node *visit_spawn(ast::Spawn *node) override;
+        ast::Node *visit_case(ast::Case *node) override;
+        ast::Node *visit_switch(ast::Switch *node) override;
+        ast::Node *visit_parameter(ast::Parameter *node) override;
+        ast::Node *visit_let(ast::Let *node) override;
+        ast::Node *visit_def(ast::Def *node) override;
+        ast::Node *visit_type(ast::Type *node) override;
+        ast::Node *visit_module(ast::Module *node) override;
+        ast::Node *visit_import(ast::Import *node) override;
+        ast::Node *visit_source_file(ast::SourceFile *node) override;
 
     };
 

@@ -41,8 +41,8 @@ namespace acorn::codegen {
         llvm::Type *take_type();
         llvm::Constant *take_initialiser();
 
-        llvm::Type *generate_type(ast::Expression *expression, typesystem::Type *type);
-        llvm::Type *generate_type(ast::Expression *expression);
+        llvm::Type *generate_type(typesystem::Type *type);
+        llvm::Type *generate_type(ast::Node *node);
 
         void push_replacement_type_parameter(typesystem::ParameterType *key, typesystem::Type *value);
         void pop_replacement_type_parameter(typesystem::ParameterType *key);
@@ -65,63 +65,66 @@ namespace acorn::codegen {
 
         llvm::Value *generate_llvm_value(ast::Node *node);
 
+        llvm::Value *generate_llvm_value(std::unique_ptr<ast::Node> &node) {
+            return generate_llvm_value(node.get());
+        }
+
         llvm::FunctionType *generate_function_type_for_method(typesystem::Method *method);
 
         void visit_constructor(typesystem::TypeType *type);
 
-        void visit(typesystem::ParameterType *type);
-        void visit(typesystem::VoidType *type);
-        void visit(typesystem::BooleanType *type);
-        void visit(typesystem::IntegerType *type);
-        void visit(typesystem::UnsignedIntegerType *type);
-        void visit(typesystem::FloatType *type);
-        void visit(typesystem::UnsafePointerType *type);
-        void visit(typesystem::FunctionType *type);
-        void visit(typesystem::MethodType *type);
-        void visit(typesystem::RecordType *type);
-        void visit(typesystem::TupleType *type);
-        void visit(typesystem::AliasType *type);
-        void visit(typesystem::ModuleType *type);
-        void visit(typesystem::TypeDescriptionType *type);
-        void visit(typesystem::Parameter *type);
-        void visit(typesystem::Void *type);
-        void visit(typesystem::Boolean *type);
-        void visit(typesystem::Integer *type);
-        void visit(typesystem::UnsignedInteger *type);
-        void visit(typesystem::Float *type);
-        void visit(typesystem::UnsafePointer *type);
-        void visit(typesystem::Record *type);
-        void visit(typesystem::Tuple *type);
-        void visit(typesystem::Method *type);
-        void visit(typesystem::Function *type);
+        void visit(typesystem::ParameterType *type) override;
+        void visit(typesystem::VoidType *type) override;
+        void visit(typesystem::BooleanType *type) override;
+        void visit(typesystem::IntegerType *type) override;
+        void visit(typesystem::UnsignedIntegerType *type) override;
+        void visit(typesystem::FloatType *type) override;
+        void visit(typesystem::UnsafePointerType *type) override;
+        void visit(typesystem::FunctionType *type) override;
+        void visit(typesystem::MethodType *type) override;
+        void visit(typesystem::RecordType *type) override;
+        void visit(typesystem::TupleType *type) override;
+        void visit(typesystem::AliasType *type) override;
+        void visit(typesystem::ModuleType *type) override;
+        void visit(typesystem::TypeDescriptionType *type) override;
+        void visit(typesystem::Parameter *type) override;
+        void visit(typesystem::Void *type) override;
+        void visit(typesystem::Boolean *type) override;
+        void visit(typesystem::Integer *type) override;
+        void visit(typesystem::UnsignedInteger *type) override;
+        void visit(typesystem::Float *type) override;
+        void visit(typesystem::UnsafePointer *type) override;
+        void visit(typesystem::Record *type) override;
+        void visit(typesystem::Tuple *type) override;
+        void visit(typesystem::Method *type) override;
+        void visit(typesystem::Function *type) override;
 
-        void visit(ast::Block *node);
-        void visit(ast::Name *node);
-        void visit(ast::VariableDeclaration *node);
-        void visit(ast::Int *node);
-        void visit(ast::Float *node);
-        void visit(ast::Complex *node);
-        void visit(ast::String *node);
-        void visit(ast::List *node);
-        void visit(ast::Dictionary *node);
-        void visit(ast::Tuple *node);
-        void visit(ast::Call *node);
-        void visit(ast::CCall *node);
-        void visit(ast::Cast *node);
-        void visit(ast::Assignment *node);
-        void visit(ast::Selector *node);
-        void visit(ast::While *node);
-        void visit(ast::If *node);
-        void visit(ast::Return *node);
-        void visit(ast::Spawn *node);
-        void visit(ast::Switch *node);
-        void visit(ast::Parameter *node);
-        void visit(ast::Let *node);
-        void visit(ast::Def *node);
-        void visit(ast::Type *node);
-        void visit(ast::Module *node);
-        void visit(ast::Import *node);
-        void visit(ast::SourceFile *node);
+        ast::Node *visit_block(ast::Block *node) override;
+        ast::Node *visit_name(ast::Name *node) override;
+        ast::Node *visit_variable_declaration(ast::VariableDeclaration *node) override;
+        ast::Node *visit_int(ast::Int *node) override;
+        ast::Node *visit_float(ast::Float *node) override;
+        ast::Node *visit_complex(ast::Complex *node) override;
+        ast::Node *visit_string(ast::String *node) override;
+        ast::Node *visit_list(ast::List *node) override;
+        ast::Node *visit_tuple(ast::Tuple *node) override;
+        ast::Node *visit_dictionary(ast::Dictionary *node) override;
+        ast::Node *visit_call(ast::Call *node) override;
+        ast::Node *visit_ccall(ast::CCall *node) override;
+        ast::Node *visit_cast(ast::Cast *node) override;
+        ast::Node *visit_assignment(ast::Assignment *node) override;
+        ast::Node *visit_selector(ast::Selector *node) override;
+        ast::Node *visit_while(ast::While *node) override;
+        ast::Node *visit_if(ast::If *node) override;
+        ast::Node *visit_return(ast::Return *node) override;
+        ast::Node *visit_spawn(ast::Spawn *node) override;
+        ast::Node *visit_switch(ast::Switch *node) override;
+        ast::Node *visit_parameter(ast::Parameter *node) override;
+        ast::Node *visit_def(ast::Def *node) override;
+        ast::Node *visit_type(ast::Type *node) override;
+        ast::Node *visit_module(ast::Module *node) override;
+        ast::Node *visit_import(ast::Import *node) override;
+        ast::Node *visit_source_file(ast::SourceFile *node) override;
 
     private:
         llvm::LLVMContext m_context;

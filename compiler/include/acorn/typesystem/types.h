@@ -13,7 +13,7 @@ namespace acorn {
 
     namespace ast {
         class Node;
-        class Expression;
+        class Node;
         class Call;
     }
 
@@ -467,7 +467,7 @@ namespace acorn::typesystem {
         Type *return_type() const;
 
         template<typename T> std::vector<T> ordered_arguments(std::vector<T> positional_arguments, std::map<std::string, T> keyword_arguments, bool *valid = nullptr);
-        std::vector<ast::Expression *> ordered_arguments(ast::Call *call, bool *valid = nullptr);
+        std::vector<ast::Node *> ordered_arguments(ast::Call *call, bool *valid = nullptr);
         std::vector<Type *> ordered_argument_types(ast::Call *call, bool *valid = nullptr);
 
         bool could_be_called_with(std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments);

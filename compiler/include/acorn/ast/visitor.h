@@ -28,6 +28,7 @@ namespace acorn::ast {
     class If;
     class Return;
     class Spawn;
+    class Case;
     class Switch;
     class Parameter;
     class Let;
@@ -41,48 +42,47 @@ namespace acorn::ast {
     public:
         virtual ~Visitor();
 
-        template <typename T>
-        void accept(const std::unique_ptr<T> &node) {
-            node->accept(this);
+        Node *visit(Node *node);
+
+        Node *visit_node(Node *node) {
+            return visit(node);
         }
 
-        void accept(Node *node);
-        void accept_if_present(Node *node);
-
+    private:
         template <typename T>
-        void accept_many(const std::vector<std::unique_ptr<T>> &nodes) {
-            for (auto &node : nodes) {
-                node->accept(this);
-            }
+        std::unique_ptr<Node> visit(std::unique_ptr<T> &node) {
+            return std::unique_ptr<Node>(visit(node.release()));
         }
 
-        virtual void visit(Block *node) = 0;
-        virtual void visit(Name *node) = 0;
-        virtual void visit(VariableDeclaration *node) = 0;
-        virtual void visit(Int *node) = 0;
-        virtual void visit(Float *node) = 0;
-        virtual void visit(Complex *node) = 0;
-        virtual void visit(String *node) = 0;
-        virtual void visit(List *node) = 0;
-        virtual void visit(Dictionary *node) = 0;
-        virtual void visit(Tuple *node) = 0;
-        virtual void visit(Call *node) = 0;
-        virtual void visit(CCall *node) = 0;
-        virtual void visit(Cast *node) = 0;
-        virtual void visit(Assignment *node) = 0;
-        virtual void visit(Selector *node) = 0;
-        virtual void visit(While *node) = 0;
-        virtual void visit(If *node) = 0;
-        virtual void visit(Return *node) = 0;
-        virtual void visit(Spawn *node) = 0;
-        virtual void visit(Switch *node) = 0;
-        virtual void visit(Parameter *node) = 0;
-        virtual void visit(Let *node) = 0;
-        virtual void visit(Def *node) = 0;
-        virtual void visit(Type *node) = 0;
-        virtual void visit(Module *node) = 0;
-        virtual void visit(Import *node) = 0;
-        virtual void visit(SourceFile *node) = 0;
+    public:
+        virtual Node *visit_block(Block *node);
+        virtual Node *visit_name(Name *node);
+        virtual Node *visit_variable_declaration(VariableDeclaration *node);
+        virtual Node *visit_int(Int *node);
+        virtual Node *visit_float(Float *node);
+        virtual Node *visit_complex(Complex *node);
+        virtual Node *visit_string(String *node);
+        virtual Node *visit_list(List *node);
+        virtual Node *visit_tuple(Tuple *node);
+        virtual Node *visit_dictionary(Dictionary *node);
+        virtual Node *visit_call(Call *node);
+        virtual Node *visit_ccall(CCall *node);
+        virtual Node *visit_cast(Cast *node);
+        virtual Node *visit_assignment(Assignment *node);
+        virtual Node *visit_selector(Selector *node);
+        virtual Node *visit_while(While *node);
+        virtual Node *visit_if(If *node);
+        virtual Node *visit_return(Return *node);
+        virtual Node *visit_spawn(Spawn *node);
+        virtual Node *visit_case(Case *node);
+        virtual Node *visit_switch(Switch *node);
+        virtual Node *visit_parameter(Parameter *node);
+        virtual Node *visit_let(Let *node);
+        virtual Node *visit_def(Def *node);
+        virtual Node *visit_type(Type *node);
+        virtual Node *visit_module(Module *node);
+        virtual Node *visit_import(Import *node);
+        virtual Node *visit_source_file(SourceFile *node);
     };
 
 }

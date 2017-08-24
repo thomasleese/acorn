@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+#include <spdlog/spdlog.h>
+
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
 #include "acorn/typesystem/types.h"
@@ -17,6 +19,8 @@
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::symboltable;
+
+static auto logger = spdlog::get("acorn");
 
 void ScopeFollower::push_scope(symboltable::Symbol *symbol) {
     push_scope(symbol->scope());
@@ -46,127 +50,30 @@ Namespace *Builder::root_namespace() {
     return m_root;
 }
 
-void Builder::visit(ast::Block *node) {
-    for (auto &expression : node->expressions()) {
-        expression->accept(this);
+ast::Node *Builder::visit_variable_declaration(ast::VariableDeclaration *node) {
+    Visitor::visit_variable_declaration(node);
+
+    if (node->name()->has_parameters()) {
+        logger->warn("Builder::visit_variable_declaration name has parameters");
     }
-}
 
-void Builder::visit(ast::Name *node) {
-
-}
-
-void Builder::visit(ast::VariableDeclaration *node) {
-    assert(!node->name()->has_parameters());
-
-    auto symbol = std::make_unique<Symbol>(node->name(), node->builtin());
+    auto symbol = std::make_unique<Symbol>(node->name().get(), node->builtin());
     scope()->insert(this, node, std::move(symbol));
+
+    return node;
 }
 
-void Builder::visit(ast::Int *node) {
+ast::Node *Builder::visit_parameter(ast::Parameter *node) {
+    Visitor::visit_parameter(node);
 
-}
-
-void Builder::visit(ast::Float *node) {
-
-}
-
-void Builder::visit(ast::Complex *node) {
-
-}
-
-void Builder::visit(ast::String *node) {
-
-}
-
-void Builder::visit(ast::List *node) {
-
-}
-
-void Builder::visit(ast::Dictionary *node) {
-
-}
-
-void Builder::visit(ast::Tuple *node) {
-
-}
-
-void Builder::visit(ast::Call *node) {
-
-}
-
-void Builder::visit(ast::CCall *node) {
-
-}
-
-void Builder::visit(ast::Cast *node) {
-
-}
-
-void Builder::visit(ast::Assignment *node) {
-    node->lhs()->accept(this);
-
-    if (!node->builtin()) {
-        node->rhs()->accept(this);
-    }
-}
-
-void Builder::visit(ast::Selector *node) {
-
-}
-
-void Builder::visit(ast::While *node) {
-    node->condition()->accept(this);
-    node->body()->accept(this);
-}
-
-void Builder::visit(ast::If *node) {
-    node->condition()->accept(this);
-
-    node->true_case()->accept(this);
-
-    if (node->has_false_case()) {
-        node->false_case()->accept(this);
-    }
-}
-
-void Builder::visit(ast::Return *node) {
-
-}
-
-void Builder::visit(ast::Spawn *node) {
-
-}
-
-void Builder::visit(ast::Switch *node) {
-    for (auto &entry : node->cases()) {
-        entry->condition()->accept(this);
-
-        if (entry->has_assignment()) {
-            entry->assignment()->accept(this);
-        }
-    }
-
-    if (node->has_default_case()) {
-        node->default_case()->accept(this);
-    }
-}
-
-void Builder::visit(ast::Parameter *node) {
-    auto symbol = std::make_unique<Symbol>(node->name(), false);
+    auto symbol = std::make_unique<Symbol>(node->name().get(), false);
     scope()->insert(this, node, std::move(symbol));
+
+    return node;
 }
 
-void Builder::visit(ast::Let *node) {
-    node->assignment()->accept(this);
-
-    if (node->has_body()) {
-        node->body()->accept(this);
-    }
-}
-
-void Builder::visit(ast::Def *node) {
-    auto name = node->name()->field();
+ast::Node *Builder::visit_def(ast::Def *node) {
+    auto name = node->name()->field().get();
 
     Symbol *function_symbol;
     if (scope()->has(name->value(), false)) {
@@ -196,18 +103,22 @@ void Builder::visit(ast::Def *node) {
         scope()->insert(this, parameter.get(), std::move(sym));
     }
 
-    accept_many(node->parameters());
+    for (auto &parameter : node->parameters()) {
+        visit(parameter.get());
+    }
 
     if (!node->builtin()) {
-        node->body()->accept(this);
+        visit(node->body().get());
     }
 
     pop_scope();
     pop_scope();
+
+    return node;
 }
 
-void Builder::visit(ast::Type *node) {
-    auto symbol = new Symbol(node->name(), node->builtin());
+ast::Node *Builder::visit_type(ast::Type *node) {
+    auto symbol = new Symbol(node->name().get(), node->builtin());
     scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
 
     push_scope(symbol);
@@ -217,7 +128,7 @@ void Builder::visit(ast::Type *node) {
         scope()->insert(this, parameter.get(), std::move(sym));
     }
 
-    if (node->has_alias()) {
+    if (node->alias()) {
         // do nothing
     } else {
         auto constructor_symbol = std::make_unique<Symbol>("new", true);
@@ -225,30 +136,22 @@ void Builder::visit(ast::Type *node) {
     }
 
     pop_scope();
+
+    return node;
 }
 
-void Builder::visit(ast::Module *node) {
+ast::Node *Builder::visit_module(ast::Module *node) {
     symboltable::Symbol *symbol;
     if (scope()->has(node->name()->value())) {
-        symbol = scope()->lookup(this, node->name());
+        symbol = scope()->lookup(this, node->name().get());
     } else {
-        symbol = new Symbol(node->name(), false);
+        symbol = new Symbol(node->name().get(), false);
         scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
     }
 
     push_scope(symbol);
-    node->body()->accept(this);
+    visit(node->body().get());
     pop_scope();
-}
 
-void Builder::visit(ast::Import *node) {
-
-}
-
-void Builder::visit(ast::SourceFile *node) {
-    for (auto &import : node->imports()) {
-        import->accept(this);
-    }
-
-    node->code()->accept(this);
+    return node;
 }
