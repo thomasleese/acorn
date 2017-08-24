@@ -14,9 +14,8 @@ set(LIB_FILES ast/visitor.cpp
               symboltable/builder.cpp
               symboltable/namespace.cpp
               symboltable/symbol.cpp
-              typesystem/checker.cpp
               typesystem/types.cpp
               typesystem/visitor.cpp
-              typesystem/inferrer.cpp)
+              typesystem/checker.cpp)
 
 add_library(acorn ${LIB_FILES})

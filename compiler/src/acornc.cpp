@@ -10,7 +10,6 @@
 #include "acorn/prettyprinter.h"
 #include "acorn/symboltable/builder.h"
 #include "acorn/symboltable/namespace.h"
-#include "acorn/typesystem/inferrer.h"
 #include "acorn/typesystem/checker.h"
 #include "acorn/utils.h"
 
@@ -39,21 +38,14 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
 
     logger->debug("Running type inferrer...");
 
-    typesystem::TypeInferrer inferrer(root_namespace);
+    typesystem::TypeChecker inferrer(root_namespace);
     inferrer.visit(module.get());
+
+    return_null_if_has_errors(inferrer);
 
     //std::cout << root_namespace->to_string() << std::endl;
     //module->accept(&pp);
     //pp.print();
-
-    return_null_if_has_errors(inferrer);
-
-    logger->debug("Running type checker...");
-
-    typesystem::TypeChecker type_checker(root_namespace);
-    type_checker.visit(module.get());
-
-    return_null_if_has_errors(type_checker);
 
     return module.release();
 }

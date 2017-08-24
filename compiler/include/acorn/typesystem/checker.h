@@ -18,6 +18,7 @@ namespace acorn {
     namespace typesystem {
         class Type;
         class TypeType;
+        class ParameterType;
     }
 
 }
@@ -28,6 +29,25 @@ namespace acorn::typesystem {
 
     public:
         explicit TypeChecker(symboltable::Namespace *scope);
+
+    private:
+        typesystem::TypeType *find_type_constructor(ast::Node *node, std::string name);
+
+        typesystem::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
+        typesystem::TypeType *find_type(ast::Node *node, std::string name);
+        typesystem::TypeType *find_type(ast::Name *name);
+
+        typesystem::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
+        typesystem::Type *instance_type(ast::Node *node, std::string name);
+        typesystem::Type *instance_type(ast::Name *name);
+
+        typesystem::Type *builtin_type_from_name(ast::Name *node);
+
+        bool infer_call_type_parameters(ast::Call *call, std::vector<typesystem::Type *> parameter_types,
+                                        std::vector<typesystem::Type *> argument_types);
+
+        typesystem::Type *replace_type_parameters(typesystem::Type *type,
+                                                  std::map<typesystem::ParameterType *, typesystem::Type *> replacements);
 
     private:
         void check_types(ast::Node *lhs, ast::Node *rhs);
@@ -62,6 +82,9 @@ namespace acorn::typesystem {
         ast::Node *visit_module(ast::Module *node) override;
         ast::Node *visit_import(ast::Import *node) override;
         ast::Node *visit_source_file(ast::SourceFile *node) override;
+
+    private:
+        std::vector<ast::Def *> m_function_stack;
 
     };
 
