@@ -221,11 +221,11 @@ Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::u
 
 }
 
-Def::Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<Name> given_return_type) : Node(NK_Def, token), m_builtin(builtin), m_name(std::move(name)), m_parameters(std::move(parameters)), m_given_return_type(std::move(given_return_type)), m_body(std::move(body)) {
+DefInstance::DefInstance(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<Name> given_return_type) : Node(NK_DefInstance, token), m_builtin(builtin), m_name(std::move(name)), m_parameters(std::move(parameters)), m_given_return_type(std::move(given_return_type)), m_body(std::move(body)) {
 
 }
 
-void Def::set_type(typesystem::Type *type) {
+void DefInstance::set_type(typesystem::Type *type) {
     Node::set_type(type);
     m_name->set_type(type);
 }

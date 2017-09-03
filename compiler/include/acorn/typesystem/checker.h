@@ -77,14 +77,14 @@ namespace acorn::typesystem {
         void visit_switch(ast::Switch *node) override;
         void visit_parameter(ast::Parameter *node) override;
         void visit_let(ast::Let *node) override;
-        void visit_def(ast::Def *node) override;
+        void visit_def_instance(ast::DefInstance *node) override;
         void visit_type(ast::Type *node) override;
         void visit_module(ast::Module *node) override;
         void visit_import(ast::Import *node) override;
         void visit_source_file(ast::SourceFile *node) override;
 
     private:
-        std::vector<ast::Def *> m_function_stack;
+        std::vector<ast::DefInstance *> m_function_stack;
 
     };
 

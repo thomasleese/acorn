@@ -58,10 +58,10 @@ namespace acorn::codegen {
 
         llvm::Function *create_function(llvm::Type *type, std::string name) const;
         llvm::GlobalVariable *create_global_variable(llvm::Type *type, llvm::Constant *initialiser, std::string name);
-        void prepare_method_parameters(ast::Def *node, llvm::Function *function);
+        void prepare_method_parameters(ast::DefInstance *node, llvm::Function *function);
 
         llvm::Value *generate_builtin_variable(ast::VariableDeclaration *node);
-        void generate_builtin_method_body(ast::Def *node, llvm::Function *function);
+        void generate_builtin_method_body(ast::DefInstance *node, llvm::Function *function);
 
         llvm::Value *generate_llvm_value(ast::Node *node);
 
@@ -120,7 +120,7 @@ namespace acorn::codegen {
         void visit_spawn(ast::Spawn *node) override;
         void visit_switch(ast::Switch *node) override;
         void visit_parameter(ast::Parameter *node) override;
-        void visit_def(ast::Def *node) override;
+        void visit_def_instance(ast::DefInstance *node) override;
         void visit_type(ast::Type *node) override;
         void visit_module(ast::Module *node) override;
         void visit_import(ast::Import *node) override;

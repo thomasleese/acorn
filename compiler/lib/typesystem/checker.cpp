@@ -573,7 +573,7 @@ void TypeChecker::visit_let(ast::Let *node) {
 
 }
 
-void TypeChecker::visit_def(ast::Def *node) {
+void TypeChecker::visit_def_instance(ast::DefInstance *node) {
     auto name = node->name()->field().get();
 
     auto function_symbol = scope()->lookup(this, name);

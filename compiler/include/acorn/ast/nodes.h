@@ -53,7 +53,7 @@ namespace acorn::ast {
             NK_Switch,
             NK_Let,
             NK_Parameter,
-            NK_Def,
+            NK_DefInstance,
             NK_Type,
             NK_Module,
             NK_Import,
@@ -518,9 +518,9 @@ namespace acorn::ast {
         std::unique_ptr<Node> m_body;
     };
 
-    class Def : public Node {
+    class DefInstance : public Node {
     public:
-        Def(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<Name> given_return_type = nullptr);
+        DefInstance(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<Name> given_return_type = nullptr);
 
         std::unique_ptr<Selector> &name() { return m_name; }
 
@@ -537,7 +537,7 @@ namespace acorn::ast {
         void set_type(typesystem::Type *type) override;
 
         static bool classof(const Node *node) {
-            return node->kind() == NK_Def;
+            return node->kind() == NK_DefInstance;
         }
 
     private:

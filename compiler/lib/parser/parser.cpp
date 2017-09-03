@@ -897,7 +897,7 @@ std::unique_ptr<ast::Selector> Parser::read_method_signature_name() {
     return name;
 }
 
-std::unique_ptr<Def> Parser::read_def() {
+std::unique_ptr<DefInstance> Parser::read_def() {
     Token def_token;
     return_null_if_false(read_keyword("def", def_token));
 
@@ -943,7 +943,7 @@ std::unique_ptr<Def> Parser::read_def() {
         return_null_if_false(skip_deindent_and_end_token());
     }
 
-    return std::make_unique<Def>(
+    return std::make_unique<DefInstance>(
         def_token, std::move(name), builtin, std::move(parameters),
         std::move(body), std::move(given_return_type)
     );
