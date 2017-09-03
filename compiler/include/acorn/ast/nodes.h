@@ -54,6 +54,7 @@ namespace acorn::ast {
             NK_Let,
             NK_Parameter,
             NK_DefInstance,
+            NK_Def,
             NK_Type,
             NK_Module,
             NK_Import,
@@ -546,6 +547,26 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<Parameter>> m_parameters;
         std::unique_ptr<Name> m_given_return_type;
         std::unique_ptr<Node> m_body;
+    };
+
+    class Def : public Node {
+    public:
+        Def(Token token, std::unique_ptr<DefInstance> main_instance);
+
+        std::unique_ptr<DefInstance> &main_instance() {
+            return m_instances[0];
+        }
+
+        std::vector<std::unique_ptr<DefInstance>> &instances() {
+            return m_instances;
+        }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Def;
+        }
+
+    private:
+        std::vector<std::unique_ptr<DefInstance>> m_instances;
     };
 
     class Type : public Node {

@@ -32,6 +32,7 @@ namespace acorn::ast {
     class Switch;
     class Parameter;
     class Let;
+    class Def;
     class DefInstance;
     class Type;
     class Module;
@@ -78,6 +79,7 @@ namespace acorn::ast {
         virtual void visit_switch(Switch *node);
         virtual void visit_parameter(Parameter *node);
         virtual void visit_let(Let *node);
+        virtual void visit_def(Def *node);
         virtual void visit_def_instance(DefInstance *node);
         virtual void visit_type(Type *node);
         virtual void visit_module(Module *node);

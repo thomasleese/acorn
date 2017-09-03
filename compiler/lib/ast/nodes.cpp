@@ -230,6 +230,10 @@ void DefInstance::set_type(typesystem::Type *type) {
     m_name->set_type(type);
 }
 
+Def::Def(Token token, std::unique_ptr<DefInstance> main_instance) : Node(NK_DefInstance, token) {
+    m_instances.push_back(std::move(main_instance));
+}
+
 Type::Type(Token token, std::unique_ptr<Name> name) : Node(NK_Type, token), m_name(std::move(name)), m_builtin(true) {
 
 }
