@@ -14,7 +14,70 @@ using namespace acorn;
 using namespace acorn::ast;
 
 Node::Node(NodeKind kind, Token token) : m_kind(std::move(kind)), m_token(std::move(token)), m_type(nullptr) {
-    
+
+}
+
+std::string Node::kind_string() const {
+    switch (m_kind) {
+    case NK_Block:
+        return "Block";
+    case NK_Name:
+        return "Name";
+    case NK_VariableDeclaration:
+        return "VariableDeclaration";
+    case NK_Int:
+        return "Int";
+    case NK_Float:
+        return "Float";
+    case NK_Complex:
+        return "Complex";
+    case NK_String:
+        return "String";
+    case NK_List:
+        return "List";
+    case NK_Tuple:
+        return "Tuple";
+    case NK_Dictionary:
+        return "Dictionary";
+    case NK_Call:
+        return "Call";
+    case NK_CCall:
+        return "CCall";
+    case NK_Cast:
+        return "Cast";
+    case NK_Assignment:
+        return "Assignment";
+    case NK_Selector:
+        return "Selector";
+    case NK_While:
+        return "While";
+    case NK_If:
+        return "If";
+    case NK_Return:
+        return "Return";
+    case NK_Spawn:
+        return "Spawn";
+    case NK_Case:
+        return "Case";
+    case NK_Switch:
+        return "Switch";
+    case NK_Let:
+        return "Let";
+    case NK_Parameter:
+        return "Parameter";
+    case NK_DefInstance:
+        return "DefInstance";
+    case NK_Def:
+        return "Def";
+    case NK_Type:
+        return "Type";
+    case NK_Module:
+        return "Module";
+    case NK_Import:
+        return "Import";
+    case NK_SourceFile:
+        return "SourceFile";
+    }
 }
 
 void Node::copy_type_from(Node *node) {
