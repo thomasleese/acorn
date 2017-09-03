@@ -1,7 +1,7 @@
 import 'json'
 
 
-let data = JSON.parse("filename.json")
+let data = JSON.parse("filename.json") as Dict{String, JSON.Value}
 
 let list1 = data['list1'] as Array{Int}
 let list2 = data['list2'] as Array{Int}

@@ -572,10 +572,13 @@ void TypeChecker::visit_def_instance(ast::DefInstance *node) {
 
     push_scope(symbol);
 
+    bool is_generic = false;
+
     for (auto &parameter : name->parameters()) {
         auto parameter_symbol = scope()->lookup(this, parameter.get());
         parameter_symbol->set_type(new typesystem::ParameterType());
         visit(parameter.get());
+        is_generic = true;
     }
 
     std::vector<typesystem::Type *> parameter_types;
@@ -591,7 +594,7 @@ void TypeChecker::visit_def_instance(ast::DefInstance *node) {
         parameter_types.push_back(parameter->type());
     }
 
-    if (!node->builtin()) {
+    if (!node->builtin() && !is_generic) {
         visit(node->body().get());
     }
 
@@ -617,7 +620,7 @@ void TypeChecker::visit_def_instance(ast::DefInstance *node) {
         method->set_parameter_name(i, parameter->name()->value());
     }
 
-    method->set_is_generic(false);
+    method->set_is_generic(is_generic);
 
     auto function_type = static_cast<typesystem::Function *>(function_symbol->type());
     function_type->add_method(method);
