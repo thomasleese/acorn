@@ -18,41 +18,44 @@ using namespace acorn::parser;
 
 static auto logger = spdlog::stdout_color_mt("acorn");
 
+void pretty_print(std::unique_ptr<ast::SourceFile> &source_file) {
+    PrettyPrinter pp;
+    pp.visit(source_file.get());
+    pp.print();
+}
+
 ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_namespace) {
     Lexer lexer(filename);
 
     Parser parser(lexer);
-    auto module = parser.parse(filename);
+    auto source_file = parser.parse(filename);
 
-    if (lexer.has_errors() || parser.has_errors() || !module) {
+    if (lexer.has_errors() || parser.has_errors() || !source_file) {
         return nullptr;
     }
-
-    PrettyPrinter pp;
-
-    pp.visit(module.get());
-    pp.print();
 
     logger->info("Building symbol table...");
 
     symboltable::Builder symbol_table_builder(root_namespace);
-    symbol_table_builder.visit(module.get());
+    symbol_table_builder.visit(source_file.get());
     assert(symbolTableBuilder.is_at_root());
 
     return_null_if_has_errors(symbol_table_builder);
 
+    pretty_print(source_file);
+
     logger->info("Running type checker...");
 
     typesystem::TypeChecker type_checker(root_namespace);
-    type_checker.visit(module.get());
+    type_checker.visit(source_file.get());
 
     return_null_if_has_errors(type_checker);
 
-    //std::cout << root_namespace->to_string() << std::endl;
-    //module->accept(&pp);
-    //pp.print();
+    pretty_print(source_file);
 
-    return module.release();
+    //std::cout << root_namespace->to_string() << std::endl;
+
+    return source_file.release();
 }
 
 int main(int argc, char *argv[]) {
@@ -62,14 +65,14 @@ int main(int argc, char *argv[]) {
     std::string filename = argv[1];
 
     auto root_namespace = std::make_unique<symboltable::Namespace>(nullptr);
-    auto module = parse(filename, root_namespace.get());
+    auto source_file = parse(filename, root_namespace.get());
 
-    if (module == nullptr) {
+    if (source_file == nullptr) {
         return 1;
     }
 
     compiler::Compiler compiler;
-    if (!compiler.compile(module, root_namespace.get(), filename)) {
+    if (!compiler.compile(source_file, root_namespace.get(), filename)) {
         return 2;
     }
 
