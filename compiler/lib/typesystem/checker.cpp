@@ -228,7 +228,6 @@ void TypeChecker::visit_block(ast::Block *node) {
     }
 
     check_not_null(node);
-
 }
 
 void TypeChecker::visit_name(ast::Name *node) {
@@ -242,7 +241,6 @@ void TypeChecker::visit_name(ast::Name *node) {
         assert(node->parameters.empty());
         node->set_type(symbol->type());
     }
-
 }
 
 void TypeChecker::visit_variable_declaration(ast::VariableDeclaration *node) {
@@ -256,7 +254,6 @@ void TypeChecker::visit_variable_declaration(ast::VariableDeclaration *node) {
         node->set_type(instance_type(node->given_type().get()));
         symbol->copy_type_from(node);
     }
-
 }
 
 void TypeChecker::visit_int(ast::Int *node) {
@@ -304,7 +301,6 @@ void TypeChecker::visit_list(ast::List *node) {
         // FIXME show error
         node->set_type(nullptr);
     }
-
 }
 
 void TypeChecker::visit_tuple(ast::Tuple *node) {
@@ -318,7 +314,6 @@ void TypeChecker::visit_tuple(ast::Tuple *node) {
     }
 
     node->set_type(new typesystem::Tuple(element_types));
-
 }
 
 void TypeChecker::visit_dictionary(ast::Dictionary *node) {
@@ -386,7 +381,6 @@ void TypeChecker::visit_call(ast::Call *node) {
     } else {
         node->set_type(method->return_type());
     }
-
 }
 
 void TypeChecker::visit_ccall(ast::CCall *node) {
@@ -399,7 +393,6 @@ void TypeChecker::visit_ccall(ast::CCall *node) {
     // TODO check arg and param typesystem match
 
     node->set_type(instance_type(node->given_return_type().get()));
-
 }
 
 void TypeChecker::visit_cast(ast::Cast *node) {
@@ -436,7 +429,6 @@ void TypeChecker::visit_assignment(ast::Assignment *node) {
 
     node->copy_type_from(lhs);
     symbol->copy_type_from(node);
-
 }
 
 void TypeChecker::visit_selector(ast::Selector *node) {
@@ -481,14 +473,12 @@ void TypeChecker::visit_selector(ast::Selector *node) {
     } else {
         report(TypeMismatchError(operand, operand->type()->name(), "module, record type or record"));
     }
-
 }
 
 void TypeChecker::visit_while(ast::While *node) {
     Visitor::visit_while(node);
 
     node->copy_type_from(node->body());
-
 }
 
 void TypeChecker::visit_if(ast::If *node) {
@@ -496,7 +486,6 @@ void TypeChecker::visit_if(ast::If *node) {
 
     // FIXME return a union type
     node->copy_type_from(node->true_case());
-
 }
 
 void TypeChecker::visit_return(ast::Return *node) {
@@ -520,7 +509,6 @@ void TypeChecker::visit_return(ast::Return *node) {
     }
 
     expression->copy_type_from(expression);
-
 }
 
 void TypeChecker::visit_spawn(ast::Spawn *node) {
@@ -539,7 +527,6 @@ void TypeChecker::visit_switch(ast::Switch *node) {
     // FIXME make this a union of the typesystem
 
     node->copy_type_from(node->cases()[0].get());
-
 }
 
 void TypeChecker::visit_parameter(ast::Parameter *node) {
@@ -559,7 +546,6 @@ void TypeChecker::visit_parameter(ast::Parameter *node) {
     return_if_null_type(node);
 
     symbol->copy_type_from(node);
-
 }
 
 void TypeChecker::visit_let(ast::Let *node) {
@@ -570,7 +556,6 @@ void TypeChecker::visit_let(ast::Let *node) {
     } else {
         node->copy_type_from(node->assignment().get());
     }
-
 }
 
 void TypeChecker::visit_def_instance(ast::DefInstance *node) {
@@ -649,7 +634,6 @@ void TypeChecker::visit_def_instance(ast::DefInstance *node) {
     m_function_stack.pop_back();
 
     pop_scope();
-
 }
 
 void TypeChecker::visit_type(ast::Type *node) {
@@ -707,7 +691,6 @@ void TypeChecker::visit_type(ast::Type *node) {
     symbol->copy_type_from(node);
 
     pop_scope();
-
 }
 
 void TypeChecker::visit_module(ast::Module *node) {
@@ -724,7 +707,6 @@ void TypeChecker::visit_module(ast::Module *node) {
     symbol->copy_type_from(node);
 
     pop_scope();
-
 }
 
 void TypeChecker::visit_import(ast::Import *node) {
