@@ -50,7 +50,7 @@ Namespace *Builder::root_namespace() {
     return m_root;
 }
 
-ast::Node *Builder::visit_variable_declaration(ast::VariableDeclaration *node) {
+void Builder::visit_variable_declaration(ast::VariableDeclaration *node) {
     Visitor::visit_variable_declaration(node);
 
     if (node->name()->has_parameters()) {
@@ -59,20 +59,16 @@ ast::Node *Builder::visit_variable_declaration(ast::VariableDeclaration *node) {
 
     auto symbol = std::make_unique<Symbol>(node->name().get(), node->builtin());
     scope()->insert(this, node, std::move(symbol));
-
-    return node;
 }
 
-ast::Node *Builder::visit_parameter(ast::Parameter *node) {
+void Builder::visit_parameter(ast::Parameter *node) {
     Visitor::visit_parameter(node);
 
     auto symbol = std::make_unique<Symbol>(node->name().get(), false);
     scope()->insert(this, node, std::move(symbol));
-
-    return node;
 }
 
-ast::Node *Builder::visit_def(ast::Def *node) {
+void Builder::visit_def(ast::Def *node) {
     auto name = node->name()->field().get();
 
     Symbol *function_symbol;
@@ -113,11 +109,9 @@ ast::Node *Builder::visit_def(ast::Def *node) {
 
     pop_scope();
     pop_scope();
-
-    return node;
 }
 
-ast::Node *Builder::visit_type(ast::Type *node) {
+void Builder::visit_type(ast::Type *node) {
     auto symbol = new Symbol(node->name().get(), node->builtin());
     scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
 
@@ -136,11 +130,9 @@ ast::Node *Builder::visit_type(ast::Type *node) {
     }
 
     pop_scope();
-
-    return node;
 }
 
-ast::Node *Builder::visit_module(ast::Module *node) {
+void Builder::visit_module(ast::Module *node) {
     symboltable::Symbol *symbol;
     if (scope()->has(node->name()->value())) {
         symbol = scope()->lookup(this, node->name().get());
@@ -152,6 +144,4 @@ ast::Node *Builder::visit_module(ast::Module *node) {
     push_scope(symbol);
     visit(node->body().get());
     pop_scope();
-
-    return node;
 }
