@@ -22,7 +22,7 @@ void Visitor::visit(Node *node) {
         logger->warn("Visitor::visit given a null node");
     }
 
-    logger->debug("Visitor::visit {}({}) -> {}", node->kind_string(), reinterpret_cast<long>(node), node->token().to_string());
+    logger->debug("Visitor::visit {}", node->to_string());
 
     if (auto block = llvm::dyn_cast<Block>(node)) {
         visit_block(block);

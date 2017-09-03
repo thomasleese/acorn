@@ -17,6 +17,12 @@ Node::Node(NodeKind kind, Token token) : m_kind(std::move(kind)), m_token(std::m
 
 }
 
+std::string Node::to_string() const {
+    std::stringstream ss;
+    ss << kind_string() << "(" << m_token.to_string() << ")";
+    return ss.str();
+}
+
 std::string Node::kind_string() const {
     switch (m_kind) {
     case NK_Block:

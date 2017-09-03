@@ -64,6 +64,8 @@ namespace acorn::ast {
         Node(NodeKind kind, Token token);
         virtual ~Node() = default;
 
+        std::string to_string() const;
+
         NodeKind kind() const { return m_kind; }
         std::string kind_string() const;
 
