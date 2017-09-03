@@ -17,11 +17,13 @@ using namespace acorn::ast;
 
 static auto logger = spdlog::get("acorn");
 
-Visitor::~Visitor() {
-
-}
-
 void Visitor::visit(Node *node) {
+    if (node == nullptr) {
+        logger->warn("Visitor::visit given a null node");
+    }
+
+    logger->debug("Visitor::visit -> {}", node->token().to_string());
+
     if (auto block = llvm::dyn_cast<Block>(node)) {
         visit_block(block);
     } else if (auto name = llvm::dyn_cast<Name>(node)) {
@@ -183,7 +185,10 @@ void Visitor::visit_assignment(Assignment *node) {
 }
 
 void Visitor::visit_selector(Selector *node) {
-    visit(node->operand());
+    if (node->operand()) {
+        visit(node->operand());
+    }
+
     visit(node->field());
 }
 
@@ -262,7 +267,9 @@ void Visitor::visit_def_instance(DefInstance *node) {
         visit(node->given_return_type());
     }
 
-    visit(node->body());
+    if (!node->builtin()) {
+        visit(node->body());
+    }
 }
 
 void Visitor::visit_type(Type *node) {

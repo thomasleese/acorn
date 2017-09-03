@@ -62,7 +62,7 @@ namespace acorn::ast {
         };
 
         Node(NodeKind kind, Token token);
-        virtual ~Node();
+        virtual ~Node() = default;
 
         NodeKind kind() const { return m_kind; }
         Token token() const { return m_token; }
@@ -85,7 +85,7 @@ namespace acorn::ast {
 
     private:
         const NodeKind m_kind;
-        Token m_token;
+        const Token m_token;
         typesystem::Type *m_type;
     };
 

@@ -18,7 +18,7 @@ namespace acorn::parser {
 
     public:
         explicit Parser(Lexer &lexer);
-        ~Parser();
+        ~Parser() = default;
 
         std::unique_ptr<ast::SourceFile> parse(std::string name);
 

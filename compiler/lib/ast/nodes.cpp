@@ -13,12 +13,8 @@
 using namespace acorn;
 using namespace acorn::ast;
 
-Node::Node(NodeKind kind, Token token) : m_kind(kind), m_token(token), m_type(nullptr) {
-
-}
-
-Node::~Node() {
-
+Node::Node(NodeKind kind, Token token) : m_kind(std::move(kind)), m_token(std::move(token)), m_type(nullptr) {
+    
 }
 
 void Node::copy_type_from(Node *node) {
@@ -31,11 +27,11 @@ bool Node::has_compatible_type_with(Node *node) const {
 }
 
 std::string Node::type_name() const {
-    if (m_type) {
-        return m_type->name();
-    } else {
+    if (m_type == nullptr) {
         return "null";
     }
+
+    return m_type->name();
 }
 
 Block::Block(Token token, std::vector<std::unique_ptr<Node>> expressions) : Node(NK_Block, token) {

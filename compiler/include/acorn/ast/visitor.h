@@ -41,7 +41,7 @@ namespace acorn::ast {
 
     class Visitor {
     public:
-        virtual ~Visitor();
+        virtual ~Visitor() = default;
 
         void visit(Node *node);
 

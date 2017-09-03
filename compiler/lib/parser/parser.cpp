@@ -32,10 +32,6 @@ Parser::Parser(Lexer &lexer) : m_lexer(lexer) {
     m_operator_precendence["-"] = 1;
 }
 
-Parser::~Parser() {
-
-}
-
 std::unique_ptr<SourceFile> Parser::parse(std::string name) {
     logger->info("Parsing: {}", name);
 

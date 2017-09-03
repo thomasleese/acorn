@@ -245,8 +245,19 @@ void PrettyPrinter::visit_let(ast::Let *node) {
 
 }
 
-void PrettyPrinter::visit_def_instance(ast::DefInstance *node) {
+void PrettyPrinter::visit_def(ast::Def *node) {
     ss << indentation() << "(Def [" << type_of(node) << "]\n";
+    indent++;
+
+    Visitor::visit_def(node);
+
+    indent--;
+    ss << indentation() << ")\n";
+
+}
+
+void PrettyPrinter::visit_def_instance(ast::DefInstance *node) {
+    ss << indentation() << "(DefInstance [" << type_of(node) << "]\n";
     indent++;
 
     if (node->builtin()) {
