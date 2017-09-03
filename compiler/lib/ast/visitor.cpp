@@ -246,8 +246,8 @@ void Visitor::visit_let(Let *node) {
 }
 
 void Visitor::visit_def(Def *node) {
-    for (auto &def : node->instances()) {
-        visit(def);
+    for (auto &instance : node->instances()) {
+        visit(instance);
     }
 }
 

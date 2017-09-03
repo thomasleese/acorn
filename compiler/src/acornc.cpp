@@ -30,18 +30,23 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
 
     PrettyPrinter pp;
 
+    pp.visit(module.get());
+    pp.print();
+
+    logger->info("Building symbol table...");
+
     symboltable::Builder symbol_table_builder(root_namespace);
     symbol_table_builder.visit(module.get());
     assert(symbolTableBuilder.is_at_root());
 
     return_null_if_has_errors(symbol_table_builder);
 
-    logger->debug("Running type inferrer...");
+    logger->info("Running type checker...");
 
-    typesystem::TypeChecker inferrer(root_namespace);
-    inferrer.visit(module.get());
+    typesystem::TypeChecker type_checker(root_namespace);
+    type_checker.visit(module.get());
 
-    return_null_if_has_errors(inferrer);
+    return_null_if_has_errors(type_checker);
 
     //std::cout << root_namespace->to_string() << std::endl;
     //module->accept(&pp);
