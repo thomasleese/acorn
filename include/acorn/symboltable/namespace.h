@@ -33,8 +33,9 @@ namespace acorn::symboltable {
         bool has(std::string name, bool follow_parents = true) const;
         Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Node *current_node, std::string name) const;
         Symbol *lookup(diagnostics::Reporter *diagnostics, ast::Name *name) const;
-        Symbol *lookup(diagnostics::Reporter *diagnostics, ast::ParamName *name) const;
         Symbol *lookup(diagnostics::Reporter *diagnostics, ast::TypeName *name) const;
+        Symbol *lookup(diagnostics::Reporter *diagnostics, ast::DeclName *name) const;
+        Symbol *lookup(diagnostics::Reporter *diagnostics, ast::ParamName *name) const;
         Symbol *lookup_by_node(diagnostics::Reporter *diagnostics, ast::Node *node) const;
         void insert(diagnostics::Reporter *diagnostics, ast::Node *current_node, std::unique_ptr<Symbol> symbol);
         void rename(diagnostics::Reporter *diagnostics, Symbol *symbol, std::string new_name);

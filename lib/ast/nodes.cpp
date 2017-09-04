@@ -137,20 +137,19 @@ Selector::Selector(Token token, std::unique_ptr<Node> operand, std::string field
 
 }
 
-TypeName::TypeName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters) : Node(NK_TypeName, token), m_value(value) {
-    for (auto &parameter : parameters) {
-        m_parameters.push_back(std::move(parameter));
-    }
+TypeName::TypeName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters)
+    : Node(NK_TypeName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) {
+
 }
 
-DeclName::DeclName(Token token, std::unique_ptr<Selector> selector, std::vector<std::unique_ptr<Name>> parameters) : Node(NK_DeclName, token), m_selector(std::move(selector)) {
-    for (auto &parameter : parameters) {
-        m_parameters.push_back(std::move(parameter));
-    }
+DeclName::DeclName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters)
+    : Node(NK_DeclName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) {
+
 }
 
-DeclName::DeclName(Token token, std::string name) : Node(NK_DeclName, token) {
-    m_selector = std::make_unique<Selector>(token, nullptr, name);
+DeclName::DeclName(Token token, std::string name)
+    : Node(NK_DeclName, token), m_name(std::make_unique<Name>(token, name)) {
+
 }
 
 VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin) : Node(NK_VariableDeclaration, token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {

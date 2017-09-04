@@ -104,13 +104,15 @@ void Visitor::visit_name(Name *node) {
 }
 
 void Visitor::visit_type_name(TypeName *node) {
+    visit(node->name());
+
     for (auto &parameter : node->parameters()) {
         visit(parameter);
     }
 }
 
 void Visitor::visit_decl_name(DeclName *node) {
-    visit(node->selector());
+    visit(node->name());
 
     for (auto &parameter : node->parameters()) {
         visit(parameter);

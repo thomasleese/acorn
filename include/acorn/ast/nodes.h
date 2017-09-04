@@ -130,10 +130,14 @@ namespace acorn::ast {
 
     class TypeName : public Node {
     public:
-        TypeName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters);
+        TypeName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters);
+
+        std::unique_ptr<Name> &name() {
+            return m_name;
+        }
 
         const std::string &value() const {
-            return m_value;
+            return m_name->value();
         }
 
         std::vector<std::unique_ptr<TypeName>> &parameters() {
@@ -149,19 +153,21 @@ namespace acorn::ast {
         }
 
     private:
-        std::string m_value;
+        std::unique_ptr<Name> m_name;
         std::vector<std::unique_ptr<TypeName>> m_parameters;
     };
 
-    class Selector;
-
     class DeclName : public Node {
     public:
-        DeclName(Token token, std::unique_ptr<Selector> selector, std::vector<std::unique_ptr<Name>> parameters);
+        DeclName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters);
         DeclName(Token token, std::string name);
 
-        std::unique_ptr<Selector> &selector() {
-            return m_selector;
+        std::unique_ptr<Name> &name() {
+            return m_name;
+        }
+
+        const std::string &value() const {
+            return m_name->value();
         }
 
         std::vector<std::unique_ptr<Name>> &parameters() {
@@ -177,7 +183,7 @@ namespace acorn::ast {
         }
 
     private:
-        std::unique_ptr<Selector> m_selector;
+        std::unique_ptr<Name> m_name;
         std::vector<std::unique_ptr<Name>> m_parameters;
     };
 

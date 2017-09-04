@@ -18,6 +18,6 @@ def times_four{T}(a as T) as T
   times_two{T}(a) + times_two{T}(a)
 end
 
-let a = times_four{Int}(10)
+let a as Int = times_four{Int}(10)
   exit(a)
 end

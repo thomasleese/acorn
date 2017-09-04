@@ -162,10 +162,10 @@ llvm::GlobalVariable *CodeGenerator::create_global_variable(llvm::Type *type, ll
 }
 
 void CodeGenerator::prepare_method_parameters(ast::DefInstance *node, llvm::Function *function) {
-    auto name = node->name()->selector()->field().get();
+    auto name = node->name().get();
 
     for (auto &param : name->parameters()) {
-        auto symbol = scope()->lookup(this, node, param->value());
+        auto symbol = scope()->lookup(this, param.get());
         auto alloca = m_ir_builder->CreateAlloca(m_ir_builder->getInt1Ty(), 0, param->value());
         m_ir_builder->CreateStore(m_ir_builder->getInt1(false), alloca);
         symbol->set_llvm_value(alloca);
@@ -193,7 +193,7 @@ void CodeGenerator::prepare_method_parameters(ast::DefInstance *node, llvm::Func
 }
 
 llvm::Value *CodeGenerator::generate_builtin_variable(ast::VariableDeclaration *node) {
-    auto name = node->name()->selector()->field()->value();
+    auto name = node->name()->value();
 
     if (name == "true") {
         return m_ir_builder->getInt1(1);
@@ -206,7 +206,7 @@ llvm::Value *CodeGenerator::generate_builtin_variable(ast::VariableDeclaration *
 }
 
 void CodeGenerator::generate_builtin_method_body(ast::DefInstance *node, llvm::Function *function) {
-    std::string name = node->name()->selector()->field()->value();
+    std::string name = node->name()->value();
 
     if (name == "*") {
         auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
@@ -535,7 +535,7 @@ void CodeGenerator::visit_name(ast::Name *node) {
 }
 
 void CodeGenerator::visit_variable_declaration(ast::VariableDeclaration *node) {
-    auto symbol = scope()->lookup(this, node->name()->selector()->field().get());
+    auto symbol = scope()->lookup(this, node->name().get());
 
     auto llvm_type = generate_type(node);
     return_and_push_null_if_null(llvm_type);
@@ -546,7 +546,7 @@ void CodeGenerator::visit_variable_declaration(ast::VariableDeclaration *node) {
         auto llvm_initialiser = take_initialiser();
         return_and_push_null_if_null(llvm_initialiser);
 
-        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->selector()->field()->value());
+        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
         symbol->set_llvm_value(variable);
 
         m_ir_builder->SetInsertPoint(&m_init_variables_function->getEntryBlock());
@@ -554,7 +554,7 @@ void CodeGenerator::visit_variable_declaration(ast::VariableDeclaration *node) {
         auto insert_function = m_ir_builder->GetInsertBlock()->getParent();
         m_ir_builder->SetInsertPoint(&insert_function->getEntryBlock().front());
 
-        symbol->set_llvm_value(m_ir_builder->CreateAlloca(llvm_type, 0, node->name()->selector()->field()->value()));
+        symbol->set_llvm_value(m_ir_builder->CreateAlloca(llvm_type, 0, node->name()->value()));
     }
 
     pop_insert_point();
@@ -910,7 +910,7 @@ void CodeGenerator::visit_parameter(ast::Parameter *node) {
 }
 
 void CodeGenerator::visit_def_instance(ast::DefInstance *node) {
-    auto function_symbol = scope()->lookup(this, node->name()->selector()->field().get());
+    auto function_symbol = scope()->lookup(this, node->name().get());
     auto function_type = static_cast<typesystem::Function *>(function_symbol->type());
 
     if (!function_symbol->has_llvm_value()) {
@@ -920,7 +920,7 @@ void CodeGenerator::visit_def_instance(ast::DefInstance *node) {
         function_symbol->set_llvm_value(
             create_global_variable(
                 llvm_function_type, llvm_initialiser,
-                node->name()->selector()->field()->value()
+                node->name()->value()
             )
         );
     }
@@ -983,7 +983,7 @@ void CodeGenerator::visit_def_instance(ast::DefInstance *node) {
 
 void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
     if (node->builtin()) {
-        auto symbol = scope()->lookup(this, node->name()->selector()->field().get());
+        auto symbol = scope()->lookup(this, node->name().get());
         return_and_push_null_if_null(symbol);
 
         // FIXME create a proper type
@@ -993,21 +993,21 @@ void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
     }
 
     if (node->alias()) {
-        auto new_symbol = scope()->lookup(this, node->name()->selector()->field().get());
-        auto old_symbol = scope()->lookup(this, node->alias().get(), node->alias()->value());
+        auto new_symbol = scope()->lookup(this, node->name().get());
+        auto old_symbol = scope()->lookup(this, node->alias().get());
         new_symbol->set_llvm_value(old_symbol->llvm_value());
         push_llvm_value(new_symbol->llvm_value());
     } else {
         auto node_type = dynamic_cast<typesystem::RecordType *>(node->type());
 
-        auto symbol = scope()->lookup(this, node->name()->selector()->field().get());
+        auto symbol = scope()->lookup(this, node->name().get());
         return_and_push_null_if_null(symbol);
 
         auto llvm_type = generate_type(node_type->constructor());
         auto llvm_initialiser = take_initialiser();
 
         // variable to hold the type
-        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->selector()->field()->value());
+        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
         return_and_push_null_if_null(variable);
 
         symbol->set_llvm_value(variable);
@@ -1016,7 +1016,7 @@ void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
         auto function_type = node_type->constructor();
         auto method_type = function_type->get_method(0);
 
-        std::string mangled_name = codegen::mangle_method(node->name()->selector()->field()->value(), method_type);
+        std::string mangled_name = codegen::mangle_method(node->name()->value(), method_type);
 
         auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(method_type));
 
@@ -1051,7 +1051,7 @@ void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
 }
 
 void CodeGenerator::visit_module(ast::Module *node) {
-    auto symbol = scope()->lookup(this, node->name()->selector()->field().get());
+    auto symbol = scope()->lookup(this, node->name().get());
     return_and_push_null_if_null(symbol);
 
     push_scope(symbol);

@@ -311,8 +311,7 @@ std::unique_ptr<ParamName> Parser::read_param_operator() {
 }
 
 std::unique_ptr<TypeName> Parser::read_type_name() {
-    Token type_name_token;
-    return_null_if_false(read_token(Token::Name, type_name_token));
+    auto name = read_name();
 
     std::vector<std::unique_ptr<TypeName>> parameters;
 
@@ -331,13 +330,18 @@ std::unique_ptr<TypeName> Parser::read_type_name() {
     }
 
     return std::make_unique<TypeName>(
-        type_name_token, type_name_token.lexeme, std::move(parameters)
+        name->token(), std::move(name), std::move(parameters)
     );
 }
 
-std::unique_ptr<ast::DeclName> Parser::read_decl_name() {
-    Token decl_name_token;
-    return_null_if_false(read_token(Token::Name, decl_name_token));
+std::unique_ptr<ast::DeclName> Parser::read_decl_name(bool can_be_operator) {
+    std::unique_ptr<Name> name;
+
+    if (can_be_operator && is_token(Token::Operator)) {
+        name = read_operator();
+    } else {
+        name = read_name();
+    }
 
     std::vector<std::unique_ptr<Name>> parameters;
 
@@ -355,10 +359,8 @@ std::unique_ptr<ast::DeclName> Parser::read_decl_name() {
         return_null_if_false(skip_token(Token::CloseBrace));
     }
 
-    auto selector = std::make_unique<Selector>(decl_name_token, nullptr, decl_name_token.lexeme);
-
     return std::make_unique<DeclName>(
-        decl_name_token, std::move(selector), std::move(parameters)
+        name->token(), std::move(name), std::move(parameters)
     );
 }
 
@@ -954,37 +956,13 @@ std::unique_ptr<Let> Parser::read_let() {
     );
 }
 
-std::unique_ptr<ast::Selector> Parser::read_method_signature_name() {
-    auto token = front_token();
-
-    std::unique_ptr<Selector> name;
-
-    if (is_token(Token::Name)) {
-        name = std::make_unique<Selector>(token, nullptr, read_param_name());
-    } else if (is_token(Token::Operator)) {
-        name = std::make_unique<Selector>(token, nullptr, read_param_operator());
-    } else {
-        report(SyntaxError(token, "identifier or operator"));
-        return nullptr;
-    }
-
-    return_null_if_null(name);
-
-    while (is_token(Token::Dot)) {
-        name = read_selector(std::move(name), true);
-        return_null_if_null(name);
-    }
-
-    return name;
-}
-
 std::unique_ptr<DefInstance> Parser::read_def_instance() {
     Token def_token;
     return_null_if_false(read_keyword("def", def_token));
 
     bool builtin = is_and_skip_keyword("builtin");
 
-    auto name = read_decl_name();
+    auto name = read_decl_name(true);
     return_null_if_null(name);
 
     std::vector<std::unique_ptr<Parameter>> parameters;

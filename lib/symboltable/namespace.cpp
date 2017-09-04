@@ -56,11 +56,15 @@ Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *name) const {
     return lookup(diagnostics, name, name->value());
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::ParamName *name) const {
-    return lookup(diagnostics, name, name->value());
+Symbol *Namespace::lookup(Reporter *diagnostics, ast::TypeName *name) const {
+    return lookup(diagnostics, name->name().get());
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::TypeName *name) const {
+Symbol *Namespace::lookup(Reporter *diagnostics, ast::DeclName *name) const {
+    return lookup(diagnostics, name->name().get());
+}
+
+Symbol *Namespace::lookup(Reporter *diagnostics, ast::ParamName *name) const {
     return lookup(diagnostics, name, name->value());
 }
 
