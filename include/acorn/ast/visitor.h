@@ -13,6 +13,7 @@ namespace acorn::ast {
     class Name;
     class TypeName;
     class DeclName;
+    class ParamName;
     class VariableDeclaration;
     class Int;
     class Float;
@@ -60,6 +61,7 @@ namespace acorn::ast {
     public:
         virtual void visit_block(Block *node);
         virtual void visit_name(Name *node);
+        virtual void visit_param_name(ParamName *node);
         virtual void visit_selector(Selector *node);
         virtual void visit_type_name(TypeName *node);
         virtual void visit_decl_name(DeclName *node);

@@ -42,9 +42,10 @@ namespace acorn::parser {
 
         std::unique_ptr<ast::Block> read_block(bool read_end = true);
         std::unique_ptr<ast::Node> read_expression(bool parse_comma = true);
-        std::unique_ptr<ast::Name> read_name_or_operator(Token::Kind kind, bool accept_parameters);
-        std::unique_ptr<ast::Name> read_name(bool accept_parameters);
-        std::unique_ptr<ast::Name> read_operator(bool accept_parameters);
+        std::unique_ptr<ast::Name> read_name();
+        std::unique_ptr<ast::Name> read_operator();
+        std::unique_ptr<ast::ParamName> read_param_name();
+        std::unique_ptr<ast::ParamName> read_param_operator();
         std::unique_ptr<ast::TypeName> read_type_name();
         std::unique_ptr<ast::DeclName> read_decl_name();
         std::unique_ptr<ast::VariableDeclaration> read_variable_declaration();

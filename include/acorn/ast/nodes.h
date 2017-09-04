@@ -35,6 +35,7 @@ namespace acorn::ast {
             NK_Selector,
             NK_TypeName,
             NK_DeclName,
+            NK_ParamName,
             NK_VariableDeclaration,
             NK_Int,
             NK_Float,
@@ -137,14 +138,42 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<Name>> m_parameters;
     };
 
+    class TypeName;
+
+    class ParamName : public Node {
+    public:
+        ParamName(Token token, std::string value);
+        ParamName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters);
+
+        const std::string &value() const {
+            return m_value;
+        }
+
+        std::vector<std::unique_ptr<TypeName>> &parameters() {
+            return m_parameters;
+        }
+
+        bool has_parameters() const {
+            return m_parameters.size() > 0;
+        }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_ParamName;
+        }
+
+    private:
+        std::string m_value;
+        std::vector<std::unique_ptr<TypeName>> m_parameters;
+    };
+
     class Selector : public Node {
     public:
-        Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> field);
+        Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<ParamName> field);
         Selector(Token token, std::unique_ptr<Node> operand, std::string field);
 
         std::unique_ptr<Node> &operand() { return m_operand; }
 
-        std::unique_ptr<Name> &field() { return m_field; }
+        std::unique_ptr<ParamName> &field() { return m_field; }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Selector;
@@ -152,7 +181,7 @@ namespace acorn::ast {
 
     private:
         std::unique_ptr<Node> m_operand;
-        std::unique_ptr<Name> m_field;
+        std::unique_ptr<ParamName> m_field;
     };
 
     class TypeName : public Node {
@@ -204,31 +233,6 @@ namespace acorn::ast {
     private:
         std::unique_ptr<Selector> m_selector;
         std::vector<std::unique_ptr<Name>> m_parameters;
-    };
-
-    class ParamName : public Node {
-    public:
-        TypeName(Token token, std::string value, std::vector<std::unique_ptr<ParamName>> parameters);
-
-        const std::string &value() const {
-            return m_value;
-        }
-
-        std::vector<std::unique_ptr<ParamName>> &parameters() {
-            return m_parameters;
-        }
-
-        bool has_parameters() const {
-            return m_parameters.size() > 0;
-        }
-
-        static bool classof(const Node *node) {
-            return node->kind() == NK_ParamName;
-        }
-
-    private:
-        std::string m_value;
-        std::vector<std::unique_ptr<ParamName>> m_parameters;
     };
 
     class VariableDeclaration : public Node {

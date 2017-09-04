@@ -246,15 +246,29 @@ std::unique_ptr<Node> Parser::read_expression(bool parse_comma) {
     }
 }
 
-std::unique_ptr<Name> Parser::read_name_or_operator(Token::Kind kind, bool accept_parameters) {
+std::unique_ptr<Name> Parser::read_name() {
     Token name_token;
-    return_null_if_false(read_token(kind, name_token));
+    return_null_if_false(read_token(Token::Name, name_token));
 
-    std::vector<std::unique_ptr<Name>> parameters;
+    return std::make_unique<Name>(name_token, name_token.lexeme);
+}
 
-    if (accept_parameters && is_and_skip_token(Token::OpenBrace)) {
+std::unique_ptr<Name> Parser::read_operator() {
+    Token name_token;
+    return_null_if_false(read_token(Token::Operator, name_token));
+
+    return std::make_unique<Name>(name_token, name_token.lexeme);
+}
+
+std::unique_ptr<ParamName> Parser::read_param_name() {
+    Token name_token;
+    return_null_if_false(read_token(Token::Name, name_token));
+
+    std::vector<std::unique_ptr<TypeName>> parameters;
+
+    if (is_and_skip_token(Token::OpenBrace)) {
         while (!is_token(Token::CloseBrace)) {
-            auto parameter = read_name(true);
+            auto parameter = read_type_name();
             return_null_if_null(parameter);
             parameters.push_back(std::move(parameter));
 
@@ -266,17 +280,34 @@ std::unique_ptr<Name> Parser::read_name_or_operator(Token::Kind kind, bool accep
         return_null_if_false(skip_token(Token::CloseBrace));
     }
 
-    return std::make_unique<Name>(
+    return std::make_unique<ParamName>(
         name_token, name_token.lexeme, std::move(parameters)
     );
 }
 
-std::unique_ptr<Name> Parser::read_name(bool accept_parameters) {
-    return read_name_or_operator(Token::Name, accept_parameters);
-}
+std::unique_ptr<ParamName> Parser::read_param_operator() {
+    Token name_token;
+    return_null_if_false(read_token(Token::Operator, name_token));
 
-std::unique_ptr<Name> Parser::read_operator(bool accept_parameters) {
-    return read_name_or_operator(Token::Operator, accept_parameters);
+    std::vector<std::unique_ptr<TypeName>> parameters;
+
+    if (is_and_skip_token(Token::OpenBrace)) {
+        while (!is_token(Token::CloseBrace)) {
+            auto parameter = read_type_name();
+            return_null_if_null(parameter);
+            parameters.push_back(std::move(parameter));
+
+            if (!is_and_skip_token(Token::Comma)) {
+                break;
+            }
+        }
+
+        return_null_if_false(skip_token(Token::CloseBrace));
+    }
+
+    return std::make_unique<ParamName>(
+        name_token, name_token.lexeme, std::move(parameters)
+    );
 }
 
 std::unique_ptr<TypeName> Parser::read_type_name() {
@@ -312,7 +343,7 @@ std::unique_ptr<ast::DeclName> Parser::read_decl_name() {
 
     if (is_and_skip_token(Token::OpenBrace)) {
         while (!is_token(Token::CloseBrace)) {
-            auto parameter = read_name(false);
+            auto parameter = read_name();
             return_null_if_null(parameter);
             parameters.push_back(std::move(parameter));
 
@@ -465,7 +496,7 @@ std::unique_ptr<CCall> Parser::read_ccall() {
     Token ccall_token;
     return_null_if_false(read_keyword("ccall", ccall_token));
 
-    auto name = read_name(false);
+    auto name = read_name();
     return_null_if_null(name);
 
     return_null_if_false(skip_token(Token::OpenParenthesis));
@@ -520,16 +551,16 @@ std::unique_ptr<Cast> Parser::read_cast(std::unique_ptr<Node> operand) {
 std::unique_ptr<Selector> Parser::read_selector(std::unique_ptr<Node> operand, bool allow_operators) {
     return_null_if_false(read_token(Token::Dot, token));
 
-    std::unique_ptr<Name> name;
+    std::unique_ptr<ParamName> name;
 
     if (is_token(Token::Int)) {
         auto il = read_int();
-        name = std::make_unique<Name>(il->token(), il->value());
+        name = std::make_unique<ParamName>(il->token(), il->value());
     } else {
         if (allow_operators && is_token(Token::Operator)) {
-            name = read_operator(true);
+            name = read_param_operator();
         } else {
-            name = read_name(true);
+            name = read_param_name();
         }
     }
 
@@ -599,7 +630,7 @@ std::unique_ptr<Block> Parser::read_for() {
 
     return_null_if_false(read_keyword("for", token));
 
-    auto variable = read_name(false);
+    auto variable = read_name();
     return_null_if_null(variable);
 
     return_null_if_false(skip_keyword("in"));
@@ -775,7 +806,7 @@ std::unique_ptr<Switch> Parser::read_switch() {
 
 std::unique_ptr<Node> Parser::read_unary_expression(bool parse_comma) {
     if (is_token(Token::Operator)) {
-        auto operand = read_operator(true);
+        auto operand = read_param_operator();
         return_null_if_null(operand);
 
         auto argument = read_unary_expression(false);
@@ -793,7 +824,7 @@ std::unique_ptr<Node> Parser::read_binary_expression(std::unique_ptr<Node> lhs, 
     while ((is_token(Token::Operator) || is_token(Token::Assignment)) && m_operator_precendence[front_token().lexeme] >= min_precedence) {
         auto saved_token = front_token();
 
-        auto op = read_operator(true);
+        auto op = read_param_operator();
         return_null_if_null(op);
 
         auto rhs = read_operand_expression(true);
@@ -845,7 +876,7 @@ std::unique_ptr<Node> Parser::read_primary_expression() {
     } else if (is_keyword("ccall")) {
         return std::unique_ptr<Node>(read_ccall());
     } else if (is_token(Token::Name)) {
-        return std::unique_ptr<Node>(read_name(true));
+        return std::unique_ptr<Node>(read_param_name());
     } else {
         report(SyntaxError(front_token(), "primary expression"));
         return nullptr;
@@ -878,7 +909,7 @@ std::unique_ptr<Parameter> Parser::read_parameter() {
 
     bool inout = is_and_skip_keyword("inout");
 
-    auto name = read_name(false);
+    auto name = read_name();
     return_null_if_null(name);
 
     std::unique_ptr<TypeName> given_type;
@@ -929,9 +960,9 @@ std::unique_ptr<ast::Selector> Parser::read_method_signature_name() {
     std::unique_ptr<Selector> name;
 
     if (is_token(Token::Name)) {
-        name = std::make_unique<Selector>(token, nullptr, read_name(true));
+        name = std::make_unique<Selector>(token, nullptr, read_param_name());
     } else if (is_token(Token::Operator)) {
-        name = std::make_unique<Selector>(token, nullptr, read_operator(true));
+        name = std::make_unique<Selector>(token, nullptr, read_param_operator());
     } else {
         report(SyntaxError(token, "identifier or operator"));
         return nullptr;
@@ -1035,7 +1066,7 @@ std::unique_ptr<TypeDecl> Parser::read_type_decl() {
         std::vector<std::unique_ptr<TypeName>> field_types;
 
         while (!is_token(Token::Deindent)) {
-            auto field_name = read_name(false);
+            auto field_name = read_name();
             return_null_if_null(field_name);
             field_names.push_back(std::move(field_name));
 

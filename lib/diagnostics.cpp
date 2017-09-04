@@ -89,6 +89,10 @@ UndefinedError::UndefinedError(ast::Name *name) : UndefinedError(name, name->val
 
 }
 
+UndefinedError::UndefinedError(ast::ParamName *name) : UndefinedError(name, name->value() + " is not defined in scope.") {
+
+}
+
 TooManyDefinedError::TooManyDefinedError(ast::Node *node, std::string name) :
         CompilerError(node) {
     m_prefix = "Too many defined error";

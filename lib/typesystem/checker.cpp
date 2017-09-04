@@ -85,7 +85,7 @@ typesystem::Type *TypeChecker::instance_type(ast::TypeName *name) {
     return instance_type(name, name->value(), parameters);
 }
 
-typesystem::Type *TypeChecker::builtin_type_from_name(ast::Name *node) {
+typesystem::Type *TypeChecker::builtin_type_from_name(ast::ParamName *node) {
     auto name = node->value();
 
     if (name == "Void") {

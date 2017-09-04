@@ -29,6 +29,14 @@ Symbol::Symbol(ast::Name *name, bool builtin) : Symbol(name->value(), builtin) {
 
 }
 
+Symbol::Symbol(ast::ParamName *name, bool builtin) : Symbol(name->value(), builtin) {
+
+}
+
+Symbol::Symbol(ast::TypeName *name, bool builtin) : Symbol(name->value(), builtin) {
+
+}
+
 void Symbol::initialise_scope(Namespace *parent) {
     if (m_scope) {
         assert(m_scope->parent() == parent);

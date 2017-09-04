@@ -13,8 +13,8 @@ namespace acorn {
 
     namespace ast {
         class Node;
-        class Node;
         class Name;
+        class ParamName;
     }
 
     namespace typesystem {
@@ -65,6 +65,7 @@ namespace acorn::diagnostics {
     public:
         UndefinedError(ast::Node *node, std::string message);
         explicit UndefinedError(ast::Name *name);
+        explicit UndefinedError(ast::ParamName *name);
     };
 
     class TooManyDefinedError : public CompilerError {

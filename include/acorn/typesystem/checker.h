@@ -41,7 +41,7 @@ namespace acorn::typesystem {
         typesystem::Type *instance_type(ast::Node *node, std::string name);
         typesystem::Type *instance_type(ast::TypeName *name);
 
-        typesystem::Type *builtin_type_from_name(ast::Name *node);
+        typesystem::Type *builtin_type_from_name(ast::ParamName *node);
 
         bool infer_call_type_parameters(ast::Call *call, std::vector<typesystem::Type *> parameter_types,
                                         std::vector<typesystem::Type *> argument_types);

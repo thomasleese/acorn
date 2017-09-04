@@ -31,6 +31,8 @@ namespace acorn::symboltable {
     public:
         Symbol(std::string name, bool builtin);
         Symbol(ast::Name *name, bool builtin);
+        Symbol(ast::ParamName *name, bool builtin);
+        Symbol(ast::TypeName *name, bool builtin);
 
         std::string name() const { return m_name; }
         void set_name(std::string name) { m_name = name; }

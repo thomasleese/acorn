@@ -35,6 +35,8 @@ std::string Node::kind_string() const {
         return "TypeName";
     case NK_DeclName:
         return "DeclName";
+    case NK_ParamName:
+        return "ParamName";
     case NK_VariableDeclaration:
         return "VariableDeclaration";
     case NK_Int:
@@ -123,11 +125,21 @@ Name::Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> pa
     }
 }
 
-Selector::Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> field) : Node(NK_Selector, token), m_operand(std::move(operand)), m_field(std::move(field)) {
+ParamName::ParamName(Token token, std::string value) : Node(NK_ParamName, token), m_value(value) {
 
 }
 
-Selector::Selector(Token token, std::unique_ptr<Node> operand, std::string field) : Selector(token, std::move(operand), std::make_unique<Name>(token, field)) {
+ParamName::ParamName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters) : ParamName(token, value) {
+    for (auto &parameter : parameters) {
+        m_parameters.push_back(std::move(parameter));
+    }
+}
+
+Selector::Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<ParamName> field) : Node(NK_Selector, token), m_operand(std::move(operand)), m_field(std::move(field)) {
+
+}
+
+Selector::Selector(Token token, std::unique_ptr<Node> operand, std::string field) : Selector(token, std::move(operand), std::make_unique<ParamName>(token, field)) {
 
 }
 
