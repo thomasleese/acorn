@@ -100,6 +100,18 @@ void Visitor::visit_block(Block *node) {
 }
 
 void Visitor::visit_name(Name *node) {
+
+}
+
+void Visitor::visit_type_name(TypeName *node) {
+    for (auto &parameter : node->parameters()) {
+        visit(parameter);
+    }
+}
+
+void Visitor::visit_decl_name(DeclName *node) {
+    visit(node->selector());
+
     for (auto &parameter : node->parameters()) {
         visit(parameter);
     }
@@ -117,20 +129,6 @@ void Visitor::visit_selector(Selector *node) {
     }
 
     visit(node->field());
-}
-
-void Visitor::visit_type_name(TypeName *node) {
-    for (auto &parameter : node->parameters()) {
-        visit(parameter);
-    }
-}
-
-void Visitor::visit_decl_name(DeclName *node) {
-    visit(node->selector());
-
-    for (auto &parameter : node->parameters()) {
-        visit(parameter);
-    }
 }
 
 void Visitor::visit_variable_declaration(VariableDeclaration *node) {

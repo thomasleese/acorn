@@ -61,10 +61,10 @@ namespace acorn::ast {
     public:
         virtual void visit_block(Block *node);
         virtual void visit_name(Name *node);
-        virtual void visit_param_name(ParamName *node);
-        virtual void visit_selector(Selector *node);
         virtual void visit_type_name(TypeName *node);
         virtual void visit_decl_name(DeclName *node);
+        virtual void visit_param_name(ParamName *node);
+        virtual void visit_selector(Selector *node);
         virtual void visit_variable_declaration(VariableDeclaration *node);
         virtual void visit_int(Int *node);
         virtual void visit_float(Float *node);

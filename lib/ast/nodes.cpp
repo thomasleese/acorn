@@ -119,12 +119,6 @@ Name::Name(Token token, std::string value) : Node(NK_Name, token), m_value(value
 
 }
 
-Name::Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> parameters) : Name(token, value) {
-    for (auto &parameter : parameters) {
-        m_parameters.push_back(std::move(parameter));
-    }
-}
-
 ParamName::ParamName(Token token, std::string value) : Node(NK_ParamName, token), m_value(value) {
 
 }

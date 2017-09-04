@@ -31,22 +31,7 @@ void PrettyPrinter::visit_block(ast::Block *node) {
 }
 
 void PrettyPrinter::visit_name(ast::Name *node) {
-    auto &parameters = node->parameters();
-
-    if (parameters.empty()) {
-        ss << indentation() << "(Name " << node->value() << " [" << type_of(node) << "])\n";
-    } else {
-        ss << indentation() << "(Name " << node->value() << " [" << type_of(node) << "]\n";
-        indent++;
-
-        for (auto &parameter : node->parameters()) {
-            visit(parameter.get());
-        }
-
-        indent--;
-        ss << indentation() << ")\n";
-    }
-
+    ss << indentation() << "(Name " << node->value() << " [" << type_of(node) << "])\n";
 }
 
 void PrettyPrinter::visit_selector(ast::Selector *node) {
