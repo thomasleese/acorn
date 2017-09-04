@@ -119,16 +119,6 @@ Name::Name(Token token, std::string value) : Node(NK_Name, token), m_value(value
 
 }
 
-ParamName::ParamName(Token token, std::string value) : Node(NK_ParamName, token), m_value(value) {
-
-}
-
-ParamName::ParamName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters) : ParamName(token, value) {
-    for (auto &parameter : parameters) {
-        m_parameters.push_back(std::move(parameter));
-    }
-}
-
 TypeName::TypeName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters)
     : Node(NK_TypeName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) {
 
@@ -139,18 +129,43 @@ DeclName::DeclName(Token token, std::unique_ptr<Name> name, std::vector<std::uni
 
 }
 
-DeclName::DeclName(Token token, std::string name)
-    : Node(NK_DeclName, token), m_name(std::make_unique<Name>(token, name)) {
+DeclName::DeclName(Token token, std::unique_ptr<Name> name) : Node(NK_DeclName, token), m_name(std::move(name)) {
 
 }
 
-VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin) : Node(NK_VariableDeclaration, token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {
+DeclName::DeclName(Token token, std::string name) : DeclName(token, std::make_unique<Name>(token, name)) {
 
 }
 
-void VariableDeclaration::set_type(typesystem::Type *type) {
+ParamName::ParamName(Token token, std::string value) : Node(NK_ParamName, token), m_value(value) {
+
+}
+
+ParamName::ParamName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters) : ParamName(token, value) {
+    for (auto &parameter : parameters) {
+        m_parameters.push_back(std::move(parameter));
+    }
+}
+
+DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<DeclName> name) : Node(kind, token), m_builtin(builtin), m_name(std::move(name)) {
+
+}
+
+DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<Name> name) : DeclNode(kind, token, builtin, std::make_unique<DeclName>(token, std::move(name))) {
+
+}
+
+DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::string name) : DeclNode(kind, token, builtin, std::make_unique<Name>(token, name)) {
+
+}
+
+void DeclNode::set_type(typesystem::Type *type) {
     Node::set_type(type);
     m_name->set_type(type);
+}
+
+VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin) : DeclNode(NK_VariableDeclaration, token, builtin, std::move(name)), m_given_type(std::move(type)) {
+
 }
 
 Int::Int(Token token, std::string value) : Node(NK_Int, token), m_value(value) {
@@ -311,28 +326,23 @@ Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::u
 
 }
 
-DefInstance::DefInstance(Token token, std::unique_ptr<DeclName> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type) : Node(NK_DefInstance, token), m_builtin(builtin), m_name(std::move(name)), m_parameters(std::move(parameters)), m_return_type(std::move(return_type)), m_body(std::move(body)) {
+DefInstance::DefInstance(Token token, std::unique_ptr<DeclName> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type) : DeclNode(NK_DefInstance, token, builtin, std::move(name)), m_parameters(std::move(parameters)), m_return_type(std::move(return_type)), m_body(std::move(body)) {
 
-}
-
-void DefInstance::set_type(typesystem::Type *type) {
-    Node::set_type(type);
-    m_name->set_type(type);
 }
 
 Def::Def(Token token, std::unique_ptr<DefInstance> main_instance) : Node(NK_Def, std::move(token)) {
     m_instances.push_back(std::move(main_instance));
 }
 
-TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(true) {
+TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name) : DeclNode(NK_TypeDecl, token, true, std::move(name)) {
 
 }
 
-TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> alias) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(false), m_alias(std::move(alias)) {
+TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> alias) : DeclNode(NK_TypeDecl, token, false, std::move(name)), m_alias(std::move(alias)) {
 
 }
 
-TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<TypeName>> field_types) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(false) {
+TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<TypeName>> field_types) : DeclNode(NK_TypeDecl, token, false, std::move(name)) {
     for (auto &field_name : field_names) {
         m_field_names.push_back(std::move(field_name));
     }
@@ -342,12 +352,7 @@ TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name, std::vector<std:
     }
 }
 
-void TypeDecl::set_type(typesystem::Type *type) {
-    Node::set_type(type);
-    m_name->set_type(type);
-}
-
-Module::Module(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<Block> body) : Node(NK_Module, token), m_name(std::move(name)), m_body(std::move(body)) {
+Module::Module(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<Block> body) : DeclNode(NK_Module, token, false, std::move(name)), m_body(std::move(body)) {
 
 }
 
