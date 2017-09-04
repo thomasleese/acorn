@@ -304,6 +304,33 @@ std::unique_ptr<TypeName> Parser::read_type_name() {
     );
 }
 
+std::unique_ptr<ast::DeclName> Parser::read_decl_name() {
+    Token decl_name_token;
+    return_null_if_false(read_token(Token::Name, decl_name_token));
+
+    std::vector<std::unique_ptr<Name>> parameters;
+
+    if (is_and_skip_token(Token::OpenBrace)) {
+        while (!is_token(Token::CloseBrace)) {
+            auto parameter = read_name(false);
+            return_null_if_null(parameter);
+            parameters.push_back(std::move(parameter));
+
+            if (!is_and_skip_token(Token::Comma)) {
+                break;
+            }
+        }
+
+        return_null_if_false(skip_token(Token::CloseBrace));
+    }
+
+    auto selector = std::make_unique<Selector>(decl_name_token, nullptr, decl_name_token.lexeme);
+
+    return std::make_unique<DeclName>(
+        decl_name_token, std::move(selector), std::move(parameters)
+    );
+}
+
 std::unique_ptr<VariableDeclaration> Parser::read_variable_declaration() {
     Token let_token;
     return_null_if_false(read_keyword("let", let_token));

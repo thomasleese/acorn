@@ -137,6 +137,12 @@ TypeName::TypeName(Token token, std::string value, std::vector<std::unique_ptr<T
     }
 }
 
+DeclName::DeclName(Token token, std::unique_ptr<Selector> selector, std::vector<std::unique_ptr<Name>> parameters) : Node(NK_DeclName, token), m_selector(std::move(selector)) {
+    for (auto &parameter : parameters) {
+        m_parameters.push_back(std::move(parameter));
+    }
+}
+
 VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<TypeName> type, bool builtin) : Node(NK_VariableDeclaration, token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {
 
 }
