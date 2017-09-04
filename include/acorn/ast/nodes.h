@@ -163,11 +163,11 @@ namespace acorn::ast {
 
     class VariableDeclaration : public Node {
     public:
-        VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type = nullptr, bool builtin = false);
+        VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<TypeName> type = nullptr, bool builtin = false);
 
         std::unique_ptr<Name> &name() { return m_name; }
 
-        std::unique_ptr<Name> &given_type() { return m_given_type; }
+        std::unique_ptr<TypeName> &given_type() { return m_given_type; }
 
         bool builtin() const { return m_builtin; }
 
@@ -179,7 +179,7 @@ namespace acorn::ast {
 
     private:
         std::unique_ptr<Name> m_name;
-        std::unique_ptr<Name> m_given_type;
+        std::unique_ptr<TypeName> m_given_type;
         bool m_builtin;
     };
 
@@ -331,13 +331,13 @@ namespace acorn::ast {
 
     class CCall : public Node {
     public:
-        CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Node>> arguments);
+        CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters, std::unique_ptr<TypeName> given_return_type, std::vector<std::unique_ptr<Node>> arguments);
 
         std::unique_ptr<Name> &name() { return m_name; }
 
-        std::vector<std::unique_ptr<Name>> &parameters() { return m_parameters; }
+        std::vector<std::unique_ptr<TypeName>> &parameters() { return m_parameters; }
 
-        std::unique_ptr<Name> &given_return_type() { return m_given_return_type; }
+        std::unique_ptr<TypeName> &return_type() { return m_return_type; }
 
         std::vector<std::unique_ptr<Node>> &arguments() { return m_arguments; }
 
@@ -347,18 +347,18 @@ namespace acorn::ast {
 
     private:
         std::unique_ptr<Name> m_name;
-        std::vector<std::unique_ptr<Name>> m_parameters;
-        std::unique_ptr<Name> m_given_return_type;
+        std::vector<std::unique_ptr<TypeName>> m_parameters;
+        std::unique_ptr<TypeName> m_return_type;
         std::vector<std::unique_ptr<Node>> m_arguments;
     };
 
     class Cast : public Node {
     public:
-        Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> new_type);
+        Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<TypeName> new_type);
 
         std::unique_ptr<Node> &operand() { return m_operand; }
 
-        std::unique_ptr<Name> &new_type() { return m_new_type; }
+        std::unique_ptr<TypeName> &new_type() { return m_new_type; }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Cast;
@@ -366,7 +366,7 @@ namespace acorn::ast {
 
     private:
         std::unique_ptr<Node> m_operand;
-        std::unique_ptr<Name> m_new_type;
+        std::unique_ptr<TypeName> m_new_type;
     };
 
     class Assignment : public Node {
@@ -513,13 +513,13 @@ namespace acorn::ast {
 
     class Parameter : public Node {
     public:
-        explicit Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type);
+        explicit Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<TypeName> given_type);
 
         bool inout() const { return m_inout; }
 
         std::unique_ptr<Name> &name() { return m_name; }
 
-        std::unique_ptr<Name> &given_type() { return m_given_type; }
+        std::unique_ptr<TypeName> &given_type() { return m_given_type; }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Parameter;
@@ -528,7 +528,7 @@ namespace acorn::ast {
     private:
         bool m_inout;
         std::unique_ptr<Name> m_name;
-        std::unique_ptr<Name> m_given_type;
+        std::unique_ptr<TypeName> m_given_type;
     };
 
     class Let : public Node {
@@ -551,7 +551,7 @@ namespace acorn::ast {
 
     class DefInstance : public Node {
     public:
-        DefInstance(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<Name> given_return_type = nullptr);
+        DefInstance(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type = nullptr);
 
         std::unique_ptr<Selector> &name() { return m_name; }
 
@@ -563,7 +563,7 @@ namespace acorn::ast {
 
         std::unique_ptr<Node> &body() { return m_body; }
 
-        std::unique_ptr<Name> &given_return_type() { return m_given_return_type; }
+        std::unique_ptr<TypeName> &return_type() { return m_return_type; }
 
         void set_type(typesystem::Type *type) override;
 
@@ -575,7 +575,7 @@ namespace acorn::ast {
         bool m_builtin;
         std::unique_ptr<Selector> m_name;
         std::vector<std::unique_ptr<Parameter>> m_parameters;
-        std::unique_ptr<Name> m_given_return_type;
+        std::unique_ptr<TypeName> m_return_type;
         std::unique_ptr<Node> m_body;
     };
 
@@ -602,20 +602,20 @@ namespace acorn::ast {
     class TypeDecl : public Node {
     public:
         TypeDecl(Token token, std::unique_ptr<Name> name);
-        TypeDecl(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias);
-        TypeDecl(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types);
+        TypeDecl(Token token, std::unique_ptr<Name> name, std::unique_ptr<TypeName> alias);
+        TypeDecl(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<TypeName>> field_types);
 
         std::unique_ptr<Name> &name() { return m_name; }
 
         bool builtin() const { return m_builtin; }
 
-        std::unique_ptr<Name> &alias() { return m_alias; }
+        std::unique_ptr<TypeName> &alias() { return m_alias; }
 
         std::vector<std::unique_ptr<Name>> &field_names() {
             return m_field_names;
         }
 
-        std::vector<std::unique_ptr<Name>> &field_types() {
+        std::vector<std::unique_ptr<TypeName>> &field_types() {
             return m_field_types;
         }
 
@@ -628,9 +628,9 @@ namespace acorn::ast {
     private:
         std::unique_ptr<Name> m_name;
         bool m_builtin;
-        std::unique_ptr<Name> m_alias;
+        std::unique_ptr<TypeName> m_alias;
         std::vector<std::unique_ptr<Name>> m_field_names;
-        std::vector<std::unique_ptr<Name>> m_field_types;
+        std::vector<std::unique_ptr<TypeName>> m_field_types;
     };
 
     class Module : public Node {

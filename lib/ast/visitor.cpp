@@ -172,11 +172,11 @@ void Visitor::visit_ccall(CCall *node) {
         visit(parameter);
     }
 
+    visit(node->return_type());
+
     for (auto &argument : node->arguments()) {
         visit(argument);
     }
-
-    visit(node->given_return_type());
 }
 
 void Visitor::visit_cast(Cast *node) {
@@ -271,8 +271,8 @@ void Visitor::visit_def_instance(DefInstance *node) {
         visit(parameter);
     }
 
-    if (node->builtin() || node->given_return_type()) {
-        visit(node->given_return_type());
+    if (node->builtin() || node->return_type()) {
+        visit(node->return_type());
     }
 
     if (!node->builtin()) {

@@ -989,7 +989,7 @@ void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
 
     if (node->alias()) {
         auto new_symbol = scope()->lookup(this, node->name().get());
-        auto old_symbol = scope()->lookup(this, node->alias().get());
+        auto old_symbol = scope()->lookup(this, node->alias().get(), node->alias()->value());
         new_symbol->set_llvm_value(old_symbol->llvm_value());
         push_llvm_value(new_symbol->llvm_value());
     } else {

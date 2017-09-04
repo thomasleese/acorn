@@ -33,13 +33,13 @@ namespace acorn::typesystem {
     private:
         typesystem::TypeType *find_type_constructor(ast::Node *node, std::string name);
 
-        typesystem::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
+        typesystem::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters);
         typesystem::TypeType *find_type(ast::Node *node, std::string name);
-        typesystem::TypeType *find_type(ast::Name *name);
+        typesystem::TypeType *find_type(ast::TypeName *name);
 
-        typesystem::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters);
+        typesystem::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters);
         typesystem::Type *instance_type(ast::Node *node, std::string name);
-        typesystem::Type *instance_type(ast::Name *name);
+        typesystem::Type *instance_type(ast::TypeName *name);
 
         typesystem::Type *builtin_type_from_name(ast::Name *node);
 
@@ -56,6 +56,7 @@ namespace acorn::typesystem {
     public:
         void visit_block(ast::Block *node) override;
         void visit_name(ast::Name *node) override;
+        void visit_type_name(ast::TypeName *node) override;
         void visit_variable_declaration(ast::VariableDeclaration *node) override;
         void visit_int(ast::Int *node) override;
         void visit_float(ast::Float *node) override;

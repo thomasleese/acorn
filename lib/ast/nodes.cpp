@@ -127,7 +127,7 @@ TypeName::TypeName(Token token, std::string value, std::vector<std::unique_ptr<T
     }
 }
 
-VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> type, bool builtin) : Node(NK_VariableDeclaration, token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {
+VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<TypeName> type, bool builtin) : Node(NK_VariableDeclaration, token), m_name(std::move(name)), m_given_type(std::move(type)), m_builtin(builtin) {
 
 }
 
@@ -220,7 +220,7 @@ std::map<std::string, typesystem::Type *> Call::keyword_argument_types() const {
     return types;
 }
 
-CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters, std::unique_ptr<Name> given_return_type, std::vector<std::unique_ptr<Node>> arguments) : Node(NK_CCall, token), m_name(std::move(name)), m_given_return_type(std::move(given_return_type)) {
+CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters, std::unique_ptr<TypeName> return_type, std::vector<std::unique_ptr<Node>> arguments) : Node(NK_CCall, token), m_name(std::move(name)), m_return_type(std::move(return_type)) {
     for (auto &parameter : parameters) {
         m_parameters.push_back(std::move(parameter));
     }
@@ -230,7 +230,7 @@ CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_pt
     }
 }
 
-Cast::Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> new_type) : Node(NK_Cast, token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) {
+Cast::Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<TypeName> new_type) : Node(NK_Cast, token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) {
 
 }
 
@@ -290,11 +290,11 @@ Let::Let(Token token, std::string name, std::unique_ptr<Node> value, std::unique
     );
 }
 
-Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<Name> given_type) : Node(NK_Parameter, token), m_inout(inout), m_name(std::move(name)), m_given_type(std::move(given_type)) {
+Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<TypeName> given_type) : Node(NK_Parameter, token), m_inout(inout), m_name(std::move(name)), m_given_type(std::move(given_type)) {
 
 }
 
-DefInstance::DefInstance(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<Name> given_return_type) : Node(NK_DefInstance, token), m_builtin(builtin), m_name(std::move(name)), m_parameters(std::move(parameters)), m_given_return_type(std::move(given_return_type)), m_body(std::move(body)) {
+DefInstance::DefInstance(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type) : Node(NK_DefInstance, token), m_builtin(builtin), m_name(std::move(name)), m_parameters(std::move(parameters)), m_return_type(std::move(return_type)), m_body(std::move(body)) {
 
 }
 
@@ -311,11 +311,11 @@ TypeDecl::TypeDecl(Token token, std::unique_ptr<Name> name) : Node(NK_TypeDecl, 
 
 }
 
-TypeDecl::TypeDecl(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(false), m_alias(std::move(alias)) {
+TypeDecl::TypeDecl(Token token, std::unique_ptr<Name> name, std::unique_ptr<TypeName> alias) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(false), m_alias(std::move(alias)) {
 
 }
 
-TypeDecl::TypeDecl(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(false) {
+TypeDecl::TypeDecl(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<TypeName>> field_types) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(false) {
     for (auto &field_name : field_names) {
         m_field_names.push_back(std::move(field_name));
     }

@@ -33,7 +33,7 @@ typesystem::TypeType *TypeChecker::find_type_constructor(ast::Node *node, std::s
     return dynamic_cast<typesystem::TypeType *>(symbol->type());
 }
 
-typesystem::TypeType *TypeChecker::find_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
+typesystem::TypeType *TypeChecker::find_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters) {
     std::vector<typesystem::Type *> parameterTypes;
 
     for (auto parameter : parameters) {
@@ -51,11 +51,11 @@ typesystem::TypeType *TypeChecker::find_type(ast::Node *node, std::string name, 
 }
 
 typesystem::TypeType *TypeChecker::find_type(ast::Node *node, std::string name) {
-    return find_type(node, name, std::vector<ast::Name *>());
+    return find_type(node, name, std::vector<ast::TypeName *>());
 }
 
-typesystem::TypeType *TypeChecker::find_type(ast::Name *type) {
-    std::vector<ast::Name *> parameters;
+typesystem::TypeType *TypeChecker::find_type(ast::TypeName *type) {
+    std::vector<ast::TypeName *> parameters;
     for (auto &p : type->parameters()) {
         parameters.push_back(p.get());
     }
@@ -63,7 +63,7 @@ typesystem::TypeType *TypeChecker::find_type(ast::Name *type) {
     return find_type(type, type->value(), parameters);
 }
 
-typesystem::Type *TypeChecker::instance_type(ast::Node *node, std::string name, std::vector<ast::Name *> parameters) {
+typesystem::Type *TypeChecker::instance_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters) {
     auto type_constructor = find_type(node, name, parameters);
     if (type_constructor == nullptr) {
         return nullptr;
@@ -73,11 +73,11 @@ typesystem::Type *TypeChecker::instance_type(ast::Node *node, std::string name, 
 }
 
 typesystem::Type *TypeChecker::instance_type(ast::Node *node, std::string name) {
-    return instance_type(node, name, std::vector<ast::Name *>());
+    return instance_type(node, name, std::vector<ast::TypeName *>());
 }
 
-typesystem::Type *TypeChecker::instance_type(ast::Name *name) {
-    std::vector<ast::Name *> parameters;
+typesystem::Type *TypeChecker::instance_type(ast::TypeName *name) {
+    std::vector<ast::TypeName *> parameters;
     for (auto &p : name->parameters()) {
         parameters.push_back(p.get());
     }
@@ -234,13 +234,14 @@ void TypeChecker::visit_name(ast::Name *node) {
     auto symbol = scope()->lookup(this, node);
     return_if_null(symbol);
 
-    if (dynamic_cast<typesystem::TypeType *>(symbol->type()) != nullptr) {
-        node->set_type(find_type(node));
-    } else {
-        // it *must* be empty
-        assert(node->parameters.empty());
-        node->set_type(symbol->type());
-    }
+    node->set_type(symbol->type());
+}
+
+void TypeChecker::visit_type_name(ast::TypeName *node) {
+    auto symbol = scope()->lookup(this, node, node->value());
+    return_if_null(symbol);
+
+    node->set_type(find_type(node));
 }
 
 void TypeChecker::visit_variable_declaration(ast::VariableDeclaration *node) {
@@ -392,7 +393,7 @@ void TypeChecker::visit_ccall(ast::CCall *node) {
 
     // TODO check arg and param typesystem match
 
-    node->set_type(instance_type(node->given_return_type().get()));
+    node->set_type(instance_type(node->return_type().get()));
 }
 
 void TypeChecker::visit_cast(ast::Cast *node) {
@@ -500,7 +501,7 @@ void TypeChecker::visit_return(ast::Return *node) {
         return_if_null(method);
 
         if (!method->return_type()->is_compatible(expression->type())) {
-            report(TypeMismatchError(expression, def->given_return_type().get()));
+            report(TypeMismatchError(expression, def->return_type().get()));
             return;
         }
     } else {
@@ -599,9 +600,9 @@ void TypeChecker::visit_def_instance(ast::DefInstance *node) {
     }
 
     typesystem::Type *return_type = nullptr;
-    if (node->builtin() || node->given_return_type()) {
-        visit(node->given_return_type().get());
-        return_type = instance_type(node->given_return_type().get());
+    if (node->builtin() || node->return_type()) {
+        visit(node->return_type().get());
+        return_type = instance_type(node->return_type().get());
     } else {
         return_type = node->body()->type();
     }

@@ -313,14 +313,14 @@ std::unique_ptr<VariableDeclaration> Parser::read_variable_declaration() {
     auto name = read_name(false);
     return_null_if_null(name);
 
-    std::unique_ptr<Name> type;
+    std::unique_ptr<TypeName> type_name;
     if (is_and_skip_keyword("as")) {
-        type = read_name(true);
-        return_null_if_null(type);
+        type_name = read_type_name();
+        return_null_if_null(type_name);
     }
 
     return std::make_unique<VariableDeclaration>(
-        let_token, std::move(name), std::move(type), builtin
+        let_token, std::move(name), std::move(type_name), builtin
     );
 }
 
@@ -443,11 +443,12 @@ std::unique_ptr<CCall> Parser::read_ccall() {
 
     return_null_if_false(skip_token(Token::OpenParenthesis));
 
-    std::vector<std::unique_ptr<Name>> parameters;
+    std::vector<std::unique_ptr<TypeName>> parameters;
     while (!is_token(Token::CloseParenthesis)) {
-        auto parameter = read_name(true);
+        auto parameter = read_type_name();
         return_null_if_null(parameter);
         parameters.push_back(std::move(parameter));
+
         if (!is_and_skip_token(Token::Comma)) {
             break;
         }
@@ -456,8 +457,8 @@ std::unique_ptr<CCall> Parser::read_ccall() {
     return_null_if_false(skip_token(Token::CloseParenthesis));
     return_null_if_false(skip_keyword("as"));
 
-    auto given_return_type = read_name(true);
-    return_null_if_null(given_return_type);
+    auto return_type = read_type_name();
+    return_null_if_null(return_type);
 
     std::vector<std::unique_ptr<Node>> arguments;
     if (is_and_skip_keyword("using")) {
@@ -472,7 +473,8 @@ std::unique_ptr<CCall> Parser::read_ccall() {
     }
 
     return std::make_unique<CCall>(
-        ccall_token, std::move(name), std::move(parameters), std::move(given_return_type), std::move(arguments)
+        ccall_token, std::move(name), std::move(parameters),
+        std::move(return_type), std::move(arguments)
     );
 }
 
@@ -480,7 +482,7 @@ std::unique_ptr<Cast> Parser::read_cast(std::unique_ptr<Node> operand) {
     Token as_token;
     return_null_if_false(read_keyword("as", as_token));
 
-    auto new_type = read_name(true);
+    auto new_type = read_type_name();
     return_null_if_null(new_type);
 
     return std::make_unique<Cast>(
@@ -852,10 +854,10 @@ std::unique_ptr<Parameter> Parser::read_parameter() {
     auto name = read_name(false);
     return_null_if_null(name);
 
-    std::unique_ptr<Name> given_type;
+    std::unique_ptr<TypeName> given_type;
 
     if (is_and_skip_keyword("as")) {
-        given_type = read_name(true);
+        given_type = read_type_name();
         return_null_if_null(given_type);
     }
 
@@ -944,15 +946,15 @@ std::unique_ptr<DefInstance> Parser::read_def_instance() {
         return_null_if_false(skip_token(Token::CloseParenthesis));
     }
 
-    std::unique_ptr<Name> given_return_type;
+    std::unique_ptr<TypeName> return_type;
 
     if (builtin) {
         return_null_if_false(skip_keyword("as"));
-        given_return_type = read_name(true);
-        return_null_if_null(given_return_type);
+        return_type = read_type_name();
+        return_null_if_null(return_type);
     } else if (is_and_skip_keyword("as")) {
-        given_return_type = read_name(true);
-        return_null_if_null(given_return_type);
+        return_type = read_type_name();
+        return_null_if_null(return_type);
     }
 
     std::unique_ptr<Node> body;
@@ -966,7 +968,7 @@ std::unique_ptr<DefInstance> Parser::read_def_instance() {
 
     return std::make_unique<DefInstance>(
         def_token, std::move(name), builtin, std::move(parameters),
-        std::move(body), std::move(given_return_type)
+        std::move(body), std::move(return_type)
     );
 }
 
@@ -993,7 +995,7 @@ std::unique_ptr<TypeDecl> Parser::read_type_decl() {
     }
 
     if (is_and_skip_keyword("as")) {
-        auto alias = read_name(true);
+        auto alias = read_type_name();
         return_null_if_null(alias);
 
         return std::make_unique<TypeDecl>(
@@ -1003,7 +1005,7 @@ std::unique_ptr<TypeDecl> Parser::read_type_decl() {
         return_null_if_false(skip_token(Token::Indent));
 
         std::vector<std::unique_ptr<Name>> field_names;
-        std::vector<std::unique_ptr<Name>> field_types;
+        std::vector<std::unique_ptr<TypeName>> field_types;
 
         while (!is_token(Token::Deindent)) {
             auto field_name = read_name(false);
@@ -1012,7 +1014,7 @@ std::unique_ptr<TypeDecl> Parser::read_type_decl() {
 
             return_null_if_false(skip_keyword("as"));
 
-            auto field_type = read_name(true);
+            auto field_type = read_type_name();
             return_null_if_null(field_type);
             field_types.push_back(std::move(field_type));
         }
@@ -1020,7 +1022,8 @@ std::unique_ptr<TypeDecl> Parser::read_type_decl() {
         return_null_if_false(skip_deindent_and_end_token());
 
         return std::make_unique<TypeDecl>(
-            type_token, std::move(name), std::move(field_names), std::move(field_types)
+            type_token, std::move(name),
+            std::move(field_names), std::move(field_types)
         );
     }
 }
