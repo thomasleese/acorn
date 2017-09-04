@@ -129,14 +129,6 @@ ParamName::ParamName(Token token, std::string value, std::vector<std::unique_ptr
     }
 }
 
-Selector::Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<ParamName> field) : Node(NK_Selector, token), m_operand(std::move(operand)), m_field(std::move(field)) {
-
-}
-
-Selector::Selector(Token token, std::unique_ptr<Node> operand, std::string field) : Selector(token, std::move(operand), std::make_unique<ParamName>(token, field)) {
-
-}
-
 TypeName::TypeName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters)
     : Node(NK_TypeName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) {
 
@@ -260,6 +252,14 @@ Cast::Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<TypeName>
 }
 
 Assignment::Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Node> rhs) : Node(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
+
+}
+
+Selector::Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<ParamName> field) : Node(NK_Selector, token), m_operand(std::move(operand)), m_field(std::move(field)) {
+
+}
+
+Selector::Selector(Token token, std::unique_ptr<Node> operand, std::string field) : Selector(token, std::move(operand), std::make_unique<ParamName>(token, field)) {
 
 }
 

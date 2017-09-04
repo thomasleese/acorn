@@ -28,8 +28,6 @@ void Visitor::visit(Node *node) {
         visit_block(block);
     } else if (auto name = llvm::dyn_cast<Name>(node)) {
         visit_name(name);
-    } else if (auto selector = llvm::dyn_cast<Selector>(node)) {
-        visit_selector(selector);
     } else if (auto type_name = llvm::dyn_cast<TypeName>(node)) {
         visit_type_name(type_name);
     } else if (auto decl_name = llvm::dyn_cast<DeclName>(node)) {
@@ -60,6 +58,8 @@ void Visitor::visit(Node *node) {
         visit_cast(cast);
     } else if (auto assignment = llvm::dyn_cast<Assignment>(node)) {
         visit_assignment(assignment);
+    } else if (auto selector = llvm::dyn_cast<Selector>(node)) {
+        visit_selector(selector);
     } else if (auto while_ = llvm::dyn_cast<While>(node)) {
         visit_while(while_);
     } else if (auto if_ = llvm::dyn_cast<If>(node)) {
@@ -123,14 +123,6 @@ void Visitor::visit_param_name(ParamName *node) {
     for (auto &parameter : node->parameters()) {
         visit(parameter);
     }
-}
-
-void Visitor::visit_selector(Selector *node) {
-    if (node->operand()) {
-        visit(node->operand());
-    }
-
-    visit(node->field());
 }
 
 void Visitor::visit_variable_declaration(VariableDeclaration *node) {
@@ -216,6 +208,14 @@ void Visitor::visit_assignment(Assignment *node) {
     if (!node->builtin()) {
         visit(node->rhs());
     }
+}
+
+void Visitor::visit_selector(Selector *node) {
+    if (node->operand()) {
+        visit(node->operand());
+    }
+
+    visit(node->field());
 }
 
 void Visitor::visit_while(While *node) {

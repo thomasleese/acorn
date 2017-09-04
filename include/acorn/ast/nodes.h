@@ -213,24 +213,6 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<TypeName>> m_parameters;
     };
 
-    class Selector : public Node {
-    public:
-        Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<ParamName> field);
-        Selector(Token token, std::unique_ptr<Node> operand, std::string field);
-
-        std::unique_ptr<Node> &operand() { return m_operand; }
-
-        std::unique_ptr<ParamName> &field() { return m_field; }
-
-        static bool classof(const Node *node) {
-            return node->kind() == NK_Selector;
-        }
-
-    private:
-        std::unique_ptr<Node> m_operand;
-        std::unique_ptr<ParamName> m_field;
-    };
-
     class VariableDeclaration : public Node {
     public:
         VariableDeclaration(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type = nullptr, bool builtin = false);
@@ -456,6 +438,24 @@ namespace acorn::ast {
     private:
         std::unique_ptr<VariableDeclaration> m_lhs;
         std::unique_ptr<Node> m_rhs;
+    };
+
+    class Selector : public Node {
+    public:
+        Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<ParamName> field);
+        Selector(Token token, std::unique_ptr<Node> operand, std::string field);
+
+        std::unique_ptr<Node> &operand() { return m_operand; }
+
+        std::unique_ptr<ParamName> &field() { return m_field; }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Selector;
+        }
+
+    private:
+        std::unique_ptr<Node> m_operand;
+        std::unique_ptr<ParamName> m_field;
     };
 
     class While : public Node {
