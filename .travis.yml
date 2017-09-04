@@ -7,7 +7,7 @@ script:
   - cd build
   - CC=clang-4.0 CXX=clang++-4.0 cmake ..
   - CC=clang-4.0 CXX=clang++-4.0 make
-  - ./compiler/test/acorntest
+  - ./test/acorntest
 
 addons:
   apt:
