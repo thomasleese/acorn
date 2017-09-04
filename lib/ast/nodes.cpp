@@ -29,6 +29,8 @@ std::string Node::kind_string() const {
         return "Block";
     case NK_Name:
         return "Name";
+    case NK_TypeName:
+        return "TypeName";
     case NK_VariableDeclaration:
         return "VariableDeclaration";
     case NK_Int:
@@ -114,6 +116,12 @@ Name::Name(Token token, std::string value) : Node(NK_Name, token), m_value(value
 }
 
 Name::Name(Token token, std::string value, std::vector<std::unique_ptr<Name>> parameters) : Name(token, value) {
+    for (auto &parameter : parameters) {
+        m_parameters.push_back(std::move(parameter));
+    }
+}
+
+TypeName::TypeName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters) : Node(NK_TypeName, token), m_value(value) {
     for (auto &parameter : parameters) {
         m_parameters.push_back(std::move(parameter));
     }

@@ -32,6 +32,7 @@ namespace acorn::ast {
         enum NodeKind {
             NK_Block,
             NK_Name,
+            NK_TypeName,
             NK_VariableDeclaration,
             NK_Int,
             NK_Float,
@@ -133,6 +134,31 @@ namespace acorn::ast {
     private:
         std::string m_value;
         std::vector<std::unique_ptr<Name>> m_parameters;
+    };
+
+    class TypeName : public Node {
+    public:
+        TypeName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters);
+
+        const std::string &value() const {
+            return m_value;
+        }
+
+        std::vector<std::unique_ptr<TypeName>> &parameters() {
+            return m_parameters;
+        }
+
+        bool has_parameters() const {
+            return m_parameters.size() > 0;
+        }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_TypeName;
+        }
+
+    private:
+        std::string m_value;
+        std::vector<std::unique_ptr<TypeName>> m_parameters;
     };
 
     class VariableDeclaration : public Node {

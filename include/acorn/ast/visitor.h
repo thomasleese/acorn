@@ -11,6 +11,7 @@ namespace acorn::ast {
     class Node;
     class Block;
     class Name;
+    class TypeName;
     class VariableDeclaration;
     class Int;
     class Float;
@@ -58,6 +59,7 @@ namespace acorn::ast {
     public:
         virtual void visit_block(Block *node);
         virtual void visit_name(Name *node);
+        virtual void visit_type_name(TypeName *node);
         virtual void visit_variable_declaration(VariableDeclaration *node);
         virtual void visit_int(Int *node);
         virtual void visit_float(Float *node);

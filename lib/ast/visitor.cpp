@@ -28,6 +28,8 @@ void Visitor::visit(Node *node) {
         visit_block(block);
     } else if (auto name = llvm::dyn_cast<Name>(node)) {
         visit_name(name);
+    } else if (auto type_name = llvm::dyn_cast<TypeName>(node)) {
+        visit_type_name(type_name);
     } else if (auto var_decl = llvm::dyn_cast<VariableDeclaration>(node)) {
         visit_variable_declaration(var_decl);
     } else if (auto int_ = llvm::dyn_cast<Int>(node)) {
@@ -94,6 +96,12 @@ void Visitor::visit_block(Block *node) {
 }
 
 void Visitor::visit_name(Name *node) {
+    for (auto &parameter : node->parameters()) {
+        visit(parameter);
+    }
+}
+
+void Visitor::visit_type_name(TypeName *node) {
     for (auto &parameter : node->parameters()) {
         visit(parameter);
     }
