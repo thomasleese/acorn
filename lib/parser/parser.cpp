@@ -337,7 +337,7 @@ std::unique_ptr<VariableDeclaration> Parser::read_variable_declaration() {
 
     bool builtin = is_and_skip_keyword("builtin");
 
-    auto name = read_name(false);
+    auto name = read_decl_name();
     return_null_if_null(name);
 
     std::unique_ptr<TypeName> type_name;
@@ -953,7 +953,7 @@ std::unique_ptr<DefInstance> Parser::read_def_instance() {
 
     bool builtin = is_and_skip_keyword("builtin");
 
-    auto name = read_method_signature_name();
+    auto name = read_decl_name();
     return_null_if_null(name);
 
     std::vector<std::unique_ptr<Parameter>> parameters;
@@ -1014,7 +1014,7 @@ std::unique_ptr<TypeDecl> Parser::read_type_decl() {
 
     bool builtin = is_and_skip_keyword("builtin");
 
-    auto name = read_name(true);
+    auto name = read_decl_name();
     return_null_if_null(name);
 
     if (builtin) {
@@ -1059,7 +1059,7 @@ std::unique_ptr<Module> Parser::read_module() {
     Token module_token;
     return_null_if_false(read_keyword("module", module_token));
 
-    auto name = read_name(false);
+    auto name = read_decl_name();
     return_null_if_null(name);
 
     auto body = read_block();

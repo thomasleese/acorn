@@ -247,7 +247,7 @@ void TypeChecker::visit_type_name(ast::TypeName *node) {
 void TypeChecker::visit_variable_declaration(ast::VariableDeclaration *node) {
     visit(node->name().get());
 
-    auto symbol = scope()->lookup(this, node->name().get());
+    auto symbol = scope()->lookup(this, node->name()->selector()->field().get());
 
     if (node->given_type()) {
         visit(node->given_type().get());
@@ -402,7 +402,7 @@ void TypeChecker::visit_cast(ast::Cast *node) {
 }
 
 void TypeChecker::visit_assignment(ast::Assignment *node) {
-    auto symbol = scope()->lookup(this, node->lhs()->name().get());
+    auto symbol = scope()->lookup(this, node->lhs()->name()->selector()->field().get());
     return_if_null(symbol);
 
     auto rhs = node->rhs().get();
@@ -560,7 +560,7 @@ void TypeChecker::visit_let(ast::Let *node) {
 }
 
 void TypeChecker::visit_def_instance(ast::DefInstance *node) {
-    auto name = node->name()->field().get();
+    auto name = node->name()->selector()->field().get();
 
     auto function_symbol = scope()->lookup(this, name);
     if (!function_symbol->has_type()) {
@@ -641,10 +641,10 @@ void TypeChecker::visit_def_instance(ast::DefInstance *node) {
 }
 
 void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
-    auto symbol = scope()->lookup(this, node, node->name()->value());
+    auto symbol = scope()->lookup(this, node, node->name()->selector()->field()->value());
 
     if (node->builtin()) {
-        node->set_type(builtin_type_from_name(node->name().get()));
+        node->set_type(builtin_type_from_name(node->name()->selector()->field().get()));
         symbol->copy_type_from(node);
         return;
     }
@@ -698,7 +698,7 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
 }
 
 void TypeChecker::visit_module(ast::Module *node) {
-    auto symbol = scope()->lookup(this, node->name().get());
+    auto symbol = scope()->lookup(this, node->name()->selector()->field().get());
     return_if_null(symbol);
 
     push_scope(symbol);

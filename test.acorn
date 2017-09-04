@@ -3,7 +3,7 @@ type builtin Void
 
 type Int as Int64
 
-def exit(code as Int)
+def exit(code as Int) as Void
   ccall exit(Int) as Void using code
 end
 
@@ -15,9 +15,9 @@ def times_two{T}(a as T) as T
 end
 
 def times_four{T}(a as T) as T
-  times_two(a) + times_two(a)
+  times_two{T}(a) + times_two{T}(a)
 end
 
-let a = times_four(10)
+let a = times_four{Int}(10)
   exit(a)
 end

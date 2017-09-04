@@ -183,6 +183,7 @@ namespace acorn::ast {
     class DeclName : public Node {
     public:
         DeclName(Token token, std::unique_ptr<Selector> selector, std::vector<std::unique_ptr<Name>> parameters);
+        DeclName(Token token, std::string name);
 
         std::unique_ptr<Selector> &selector() {
             return m_selector;
@@ -205,11 +206,36 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<Name>> m_parameters;
     };
 
+    class ParamName : public Node {
+    public:
+        TypeName(Token token, std::string value, std::vector<std::unique_ptr<ParamName>> parameters);
+
+        const std::string &value() const {
+            return m_value;
+        }
+
+        std::vector<std::unique_ptr<ParamName>> &parameters() {
+            return m_parameters;
+        }
+
+        bool has_parameters() const {
+            return m_parameters.size() > 0;
+        }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_ParamName;
+        }
+
+    private:
+        std::string m_value;
+        std::vector<std::unique_ptr<ParamName>> m_parameters;
+    };
+
     class VariableDeclaration : public Node {
     public:
-        VariableDeclaration(Token token, std::unique_ptr<Name> name, std::unique_ptr<TypeName> type = nullptr, bool builtin = false);
+        VariableDeclaration(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type = nullptr, bool builtin = false);
 
-        std::unique_ptr<Name> &name() { return m_name; }
+        std::unique_ptr<DeclName> &name() { return m_name; }
 
         std::unique_ptr<TypeName> &given_type() { return m_given_type; }
 
@@ -222,7 +248,7 @@ namespace acorn::ast {
         }
 
     private:
-        std::unique_ptr<Name> m_name;
+        std::unique_ptr<DeclName> m_name;
         std::unique_ptr<TypeName> m_given_type;
         bool m_builtin;
     };
@@ -577,9 +603,9 @@ namespace acorn::ast {
 
     class DefInstance : public Node {
     public:
-        DefInstance(Token token, std::unique_ptr<Selector> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type = nullptr);
+        DefInstance(Token token, std::unique_ptr<DeclName> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type = nullptr);
 
-        std::unique_ptr<Selector> &name() { return m_name; }
+        std::unique_ptr<DeclName> &name() { return m_name; }
 
         bool builtin() const { return m_builtin; }
 
@@ -599,7 +625,7 @@ namespace acorn::ast {
 
     private:
         bool m_builtin;
-        std::unique_ptr<Selector> m_name;
+        std::unique_ptr<DeclName> m_name;
         std::vector<std::unique_ptr<Parameter>> m_parameters;
         std::unique_ptr<TypeName> m_return_type;
         std::unique_ptr<Node> m_body;
@@ -627,11 +653,11 @@ namespace acorn::ast {
 
     class TypeDecl : public Node {
     public:
-        TypeDecl(Token token, std::unique_ptr<Name> name);
-        TypeDecl(Token token, std::unique_ptr<Name> name, std::unique_ptr<TypeName> alias);
-        TypeDecl(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<TypeName>> field_types);
+        TypeDecl(Token token, std::unique_ptr<DeclName> name);
+        TypeDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> alias);
+        TypeDecl(Token token, std::unique_ptr<DeclName> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<TypeName>> field_types);
 
-        std::unique_ptr<Name> &name() { return m_name; }
+        std::unique_ptr<DeclName> &name() { return m_name; }
 
         bool builtin() const { return m_builtin; }
 
@@ -652,7 +678,7 @@ namespace acorn::ast {
         }
 
     private:
-        std::unique_ptr<Name> m_name;
+        std::unique_ptr<DeclName> m_name;
         bool m_builtin;
         std::unique_ptr<TypeName> m_alias;
         std::vector<std::unique_ptr<Name>> m_field_names;
@@ -661,9 +687,9 @@ namespace acorn::ast {
 
     class Module : public Node {
     public:
-        Module(Token token, std::unique_ptr<Name> name, std::unique_ptr<Block> body);
+        Module(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<Block> body);
 
-        std::unique_ptr<Name> &name() { return m_name; }
+        std::unique_ptr<DeclName> &name() { return m_name; }
 
         std::unique_ptr<Block> &body() { return m_body; }
 
@@ -672,7 +698,7 @@ namespace acorn::ast {
         }
 
     private:
-        std::unique_ptr<Name> m_name;
+        std::unique_ptr<DeclName> m_name;
         std::unique_ptr<Block> m_body;
     };
 

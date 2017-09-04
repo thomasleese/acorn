@@ -57,7 +57,7 @@ void Builder::visit_variable_declaration(ast::VariableDeclaration *node) {
         logger->warn("Builder::visit_variable_declaration name has parameters");
     }
 
-    auto symbol = std::make_unique<Symbol>(node->name().get(), node->builtin());
+    auto symbol = std::make_unique<Symbol>(node->name()->selector()->field().get(), node->builtin());
     scope()->insert(this, node, std::move(symbol));
 }
 
@@ -69,7 +69,7 @@ void Builder::visit_parameter(ast::Parameter *node) {
 }
 
 void Builder::visit_def_instance(ast::DefInstance *node) {
-    auto name = node->name()->field().get();
+    auto name = node->name()->selector()->field().get();
 
     Symbol *function_symbol;
     if (scope()->has(name->value(), false)) {
@@ -112,7 +112,7 @@ void Builder::visit_def_instance(ast::DefInstance *node) {
 }
 
 void Builder::visit_type_decl(ast::TypeDecl *node) {
-    auto symbol = new Symbol(node->name().get(), node->builtin());
+    auto symbol = new Symbol(node->name()->selector()->field().get(), node->builtin());
     scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
 
     push_scope(symbol);
@@ -134,10 +134,10 @@ void Builder::visit_type_decl(ast::TypeDecl *node) {
 
 void Builder::visit_module(ast::Module *node) {
     symboltable::Symbol *symbol;
-    if (scope()->has(node->name()->value())) {
-        symbol = scope()->lookup(this, node->name().get());
+    if (scope()->has(node->name()->selector()->field()->value())) {
+        symbol = scope()->lookup(this, node->name()->selector()->field().get());
     } else {
-        symbol = new Symbol(node->name().get(), false);
+        symbol = new Symbol(node->name()->selector()->field().get(), false);
         scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
     }
 
