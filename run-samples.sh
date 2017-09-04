@@ -7,6 +7,6 @@ cmake -DCMAKE_BUILD_TYPE=Debug ..
 make
 popd
 
-pushd tests
+pushd samples
 python3 run.py
 popd
