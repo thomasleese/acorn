@@ -49,6 +49,17 @@ void PrettyPrinter::visit_name(ast::Name *node) {
 
 }
 
+void PrettyPrinter::visit_selector(ast::Selector *node) {
+    ss << indentation() << "(Selector [" << type_of(node) << "]\n";
+    indent++;
+
+    Visitor::visit_selector(node);
+
+    indent--;
+    ss << indentation() << ")\n";
+
+}
+
 void PrettyPrinter::visit_variable_declaration(ast::VariableDeclaration *node) {
     ss << indentation() << "(VariableDeclaration [" << type_of(node) << "]\n";
     indent++;
@@ -151,17 +162,6 @@ void PrettyPrinter::visit_assignment(ast::Assignment *node) {
     indent++;
 
     Visitor::visit_assignment(node);
-
-    indent--;
-    ss << indentation() << ")\n";
-
-}
-
-void PrettyPrinter::visit_selector(ast::Selector *node) {
-    ss << indentation() << "(Selector [" << type_of(node) << "]\n";
-    indent++;
-
-    Visitor::visit_selector(node);
 
     indent--;
     ss << indentation() << ")\n";

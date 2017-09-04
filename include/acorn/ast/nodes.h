@@ -32,7 +32,9 @@ namespace acorn::ast {
         enum NodeKind {
             NK_Block,
             NK_Name,
+            NK_Selector,
             NK_TypeName,
+            NK_DeclName,
             NK_VariableDeclaration,
             NK_Int,
             NK_Float,
@@ -45,7 +47,6 @@ namespace acorn::ast {
             NK_CCall,
             NK_Cast,
             NK_Assignment,
-            NK_Selector,
             NK_While,
             NK_If,
             NK_Return,
@@ -136,6 +137,24 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<Name>> m_parameters;
     };
 
+    class Selector : public Node {
+    public:
+        Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> field);
+        Selector(Token token, std::unique_ptr<Node> operand, std::string field);
+
+        std::unique_ptr<Node> &operand() { return m_operand; }
+
+        std::unique_ptr<Name> &field() { return m_field; }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_Selector;
+        }
+
+    private:
+        std::unique_ptr<Node> m_operand;
+        std::unique_ptr<Name> m_field;
+    };
+
     class TypeName : public Node {
     public:
         TypeName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters);
@@ -159,6 +178,31 @@ namespace acorn::ast {
     private:
         std::string m_value;
         std::vector<std::unique_ptr<TypeName>> m_parameters;
+    };
+
+    class DeclName : public Node {
+    public:
+        DeclName(Token token, std::unique_ptr<Selector> selector, std::vector<std::unique_ptr<Name>> parameters);
+
+        std::unique_ptr<Selector> &selector() {
+            return m_selector;
+        }
+
+        std::vector<std::unique_ptr<Name>> &parameters() {
+            return m_parameters;
+        }
+
+        bool has_parameters() const {
+            return m_parameters.size() > 0;
+        }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_DeclName;
+        }
+
+    private:
+        std::unique_ptr<Selector> m_selector;
+        std::vector<std::unique_ptr<Name>> m_parameters;
     };
 
     class VariableDeclaration : public Node {
@@ -386,24 +430,6 @@ namespace acorn::ast {
     private:
         std::unique_ptr<VariableDeclaration> m_lhs;
         std::unique_ptr<Node> m_rhs;
-    };
-
-    class Selector : public Node {
-    public:
-        Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Name> field);
-        Selector(Token token, std::unique_ptr<Node> operand, std::string field);
-
-        std::unique_ptr<Node> &operand() { return m_operand; }
-
-        std::unique_ptr<Name> &field() { return m_field; }
-
-        static bool classof(const Node *node) {
-            return node->kind() == NK_Selector;
-        }
-
-    private:
-        std::unique_ptr<Node> m_operand;
-        std::unique_ptr<Name> m_field;
     };
 
     class While : public Node {
