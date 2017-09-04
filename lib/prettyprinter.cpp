@@ -271,11 +271,11 @@ void PrettyPrinter::visit_def_instance(ast::DefInstance *node) {
 
 }
 
-void PrettyPrinter::visit_type(ast::Type *node) {
+void PrettyPrinter::visit_type_decl(ast::TypeDecl *node) {
     ss << indentation() << "(Type\n";
     indent++;
 
-    Visitor::visit_type(node);
+    Visitor::visit_type_decl(node);
 
     indent--;
     ss << indentation() << ")\n";

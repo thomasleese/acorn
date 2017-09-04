@@ -639,7 +639,7 @@ void TypeChecker::visit_def_instance(ast::DefInstance *node) {
     pop_scope();
 }
 
-void TypeChecker::visit_type(ast::Type *node) {
+void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
     auto symbol = scope()->lookup(this, node, node->name()->value());
 
     if (node->builtin()) {

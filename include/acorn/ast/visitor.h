@@ -34,7 +34,7 @@ namespace acorn::ast {
     class Let;
     class Def;
     class DefInstance;
-    class Type;
+    class TypeDecl;
     class Module;
     class Import;
     class SourceFile;
@@ -81,7 +81,7 @@ namespace acorn::ast {
         virtual void visit_let(Let *node);
         virtual void visit_def(Def *node);
         virtual void visit_def_instance(DefInstance *node);
-        virtual void visit_type(Type *node);
+        virtual void visit_type_decl(TypeDecl *node);
         virtual void visit_module(Module *node);
         virtual void visit_import(Import *node);
         virtual void visit_source_file(SourceFile *node);

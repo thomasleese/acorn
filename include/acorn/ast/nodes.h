@@ -55,7 +55,7 @@ namespace acorn::ast {
             NK_Parameter,
             NK_DefInstance,
             NK_Def,
-            NK_Type,
+            NK_TypeDecl,
             NK_Module,
             NK_Import,
             NK_SourceFile,
@@ -573,11 +573,11 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<DefInstance>> m_instances;
     };
 
-    class Type : public Node {
+    class TypeDecl : public Node {
     public:
-        Type(Token token, std::unique_ptr<Name> name);
-        Type(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias);
-        Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types);
+        TypeDecl(Token token, std::unique_ptr<Name> name);
+        TypeDecl(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias);
+        TypeDecl(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types);
 
         std::unique_ptr<Name> &name() { return m_name; }
 
@@ -596,7 +596,7 @@ namespace acorn::ast {
         void set_type(typesystem::Type *type) override;
 
         static bool classof(const Node *node) {
-            return node->kind() == NK_Type;
+            return node->kind() == NK_TypeDecl;
         }
 
     private:

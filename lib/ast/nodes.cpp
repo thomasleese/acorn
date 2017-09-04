@@ -75,8 +75,8 @@ std::string Node::kind_string() const {
         return "DefInstance";
     case NK_Def:
         return "Def";
-    case NK_Type:
-        return "Type";
+    case NK_TypeDecl:
+        return "TypeDecl";
     case NK_Module:
         return "Module";
     case NK_Import:
@@ -299,15 +299,15 @@ Def::Def(Token token, std::unique_ptr<DefInstance> main_instance) : Node(NK_Def,
     m_instances.push_back(std::move(main_instance));
 }
 
-Type::Type(Token token, std::unique_ptr<Name> name) : Node(NK_Type, token), m_name(std::move(name)), m_builtin(true) {
+TypeDecl::TypeDecl(Token token, std::unique_ptr<Name> name) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(true) {
 
 }
 
-Type::Type(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias) : Node(NK_Type, token), m_name(std::move(name)), m_builtin(false), m_alias(std::move(alias)) {
+TypeDecl::TypeDecl(Token token, std::unique_ptr<Name> name, std::unique_ptr<Name> alias) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(false), m_alias(std::move(alias)) {
 
 }
 
-Type::Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types) : Node(NK_Type, token), m_name(std::move(name)), m_builtin(false) {
+TypeDecl::TypeDecl(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<Name>> field_types) : Node(NK_TypeDecl, token), m_name(std::move(name)), m_builtin(false) {
     for (auto &field_name : field_names) {
         m_field_names.push_back(std::move(field_name));
     }
@@ -317,7 +317,7 @@ Type::Type(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<
     }
 }
 
-void Type::set_type(typesystem::Type *type) {
+void TypeDecl::set_type(typesystem::Type *type) {
     Node::set_type(type);
     m_name->set_type(type);
 }

@@ -74,8 +74,8 @@ void Visitor::visit(Node *node) {
         visit_def(def);
     } else if (auto def_instance = llvm::dyn_cast<DefInstance>(node)) {
         visit_def_instance(def_instance);
-    } else if (auto type = llvm::dyn_cast<Type>(node)) {
-        visit_type(type);
+    } else if (auto type_decl = llvm::dyn_cast<TypeDecl>(node)) {
+        visit_type_decl(type_decl);
     } else if (auto module = llvm::dyn_cast<Module>(node)) {
         visit_module(module);
     } else if (auto import = llvm::dyn_cast<Import>(node)) {
@@ -272,7 +272,7 @@ void Visitor::visit_def_instance(DefInstance *node) {
     }
 }
 
-void Visitor::visit_type(Type *node) {
+void Visitor::visit_type_decl(TypeDecl *node) {
     visit(node->name());
 
     if (node->alias()) {

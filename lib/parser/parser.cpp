@@ -231,7 +231,7 @@ std::unique_ptr<Node> Parser::read_expression(bool parse_comma) {
     } else if (is_keyword("def")) {
         return read_def();
     } else if (is_keyword("type")) {
-        return read_type();
+        return read_type_decl();
     } else if (is_keyword("module")) {
         return read_module();
     } else {
@@ -954,7 +954,7 @@ std::unique_ptr<Def> Parser::read_def() {
     return std::make_unique<Def>(def_token, std::move(instance));
 }
 
-std::unique_ptr<Type> Parser::read_type() {
+std::unique_ptr<TypeDecl> Parser::read_type_decl() {
     Token type_token;
     return_null_if_false(read_keyword("type", type_token));
 
@@ -964,14 +964,14 @@ std::unique_ptr<Type> Parser::read_type() {
     return_null_if_null(name);
 
     if (builtin) {
-        return std::make_unique<Type>(type_token, std::move(name));
+        return std::make_unique<TypeDecl>(type_token, std::move(name));
     }
 
     if (is_and_skip_keyword("as")) {
         auto alias = read_name(true);
         return_null_if_null(alias);
 
-        return std::make_unique<Type>(
+        return std::make_unique<TypeDecl>(
             type_token, std::move(name), std::move(alias)
         );
     } else {
@@ -994,7 +994,7 @@ std::unique_ptr<Type> Parser::read_type() {
 
         return_null_if_false(skip_deindent_and_end_token());
 
-        return std::make_unique<Type>(
+        return std::make_unique<TypeDecl>(
             type_token, std::move(name), std::move(field_names), std::move(field_types)
         );
     }

@@ -976,7 +976,7 @@ void CodeGenerator::visit_def_instance(ast::DefInstance *node) {
     push_llvm_value(symbol->llvm_value());
 }
 
-void CodeGenerator::visit_type(ast::Type *node) {
+void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
     if (node->builtin()) {
         auto symbol = scope()->lookup(this, node->name().get());
         return_and_push_null_if_null(symbol);

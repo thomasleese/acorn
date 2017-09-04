@@ -111,7 +111,7 @@ void Builder::visit_def_instance(ast::DefInstance *node) {
     pop_scope();
 }
 
-void Builder::visit_type(ast::Type *node) {
+void Builder::visit_type_decl(ast::TypeDecl *node) {
     auto symbol = new Symbol(node->name().get(), node->builtin());
     scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
 

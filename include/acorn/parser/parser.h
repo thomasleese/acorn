@@ -73,7 +73,7 @@ namespace acorn::parser {
         std::unique_ptr<ast::Selector> read_method_signature_name();
         std::unique_ptr<ast::DefInstance> read_def_instance();
         std::unique_ptr<ast::Def> read_def();
-        std::unique_ptr<ast::Type> read_type();
+        std::unique_ptr<ast::TypeDecl> read_type_decl();
         std::unique_ptr<ast::Module> read_module();
         std::unique_ptr<ast::Import> read_import_expression();
 
