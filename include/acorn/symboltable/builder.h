@@ -36,7 +36,7 @@ namespace acorn::symboltable {
         bool is_at_root() const;
         Namespace *root_namespace();
 
-        void visit_variable_declaration(ast::VariableDeclaration *node) override;
+        void visit_var_decl(ast::VarDecl *node) override;
         void visit_parameter(ast::Parameter *node) override;
         void visit_def_instance(ast::DefInstance *node) override;
         void visit_type_decl(ast::TypeDecl *node) override;

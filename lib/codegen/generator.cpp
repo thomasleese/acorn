@@ -192,7 +192,7 @@ void CodeGenerator::prepare_method_parameters(ast::DefInstance *node, llvm::Func
     }
 }
 
-llvm::Value *CodeGenerator::generate_builtin_variable(ast::VariableDeclaration *node) {
+llvm::Value *CodeGenerator::generate_builtin_variable(ast::VarDecl *node) {
     auto name = node->name()->value();
 
     if (name == "true") {
@@ -534,7 +534,7 @@ void CodeGenerator::visit_name(ast::Name *node) {
     push_llvm_value(m_ir_builder->CreateLoad(symbol->llvm_value()));
 }
 
-void CodeGenerator::visit_variable_declaration(ast::VariableDeclaration *node) {
+void CodeGenerator::visit_var_decl(ast::VarDecl *node) {
     auto symbol = scope()->lookup(this, node->name().get());
 
     auto llvm_type = generate_type(node);

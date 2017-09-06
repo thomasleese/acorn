@@ -32,10 +32,12 @@ void Visitor::visit(Node *node) {
         visit_type_name(type_name);
     } else if (auto decl_name = llvm::dyn_cast<DeclName>(node)) {
         visit_decl_name(decl_name);
-    } else if (auto decl_name = llvm::dyn_cast<ParamName>(node)) {
-        visit_param_name(decl_name);
-    } else if (auto var_decl = llvm::dyn_cast<VariableDeclaration>(node)) {
-        visit_variable_declaration(var_decl);
+    } else if (auto param_name = llvm::dyn_cast<ParamName>(node)) {
+        visit_param_name(param_name);
+    } else if (auto decl_holder = llvm::dyn_cast<DeclHolder>(node)) {
+        visit_decl_holder(decl_holder);
+    } else if (auto var_decl = llvm::dyn_cast<VarDecl>(node)) {
+        visit_var_decl(var_decl);
     } else if (auto int_ = llvm::dyn_cast<Int>(node)) {
         visit_int(int_);
     } else if (auto float_ = llvm::dyn_cast<Float>(node)) {
@@ -125,7 +127,13 @@ void Visitor::visit_param_name(ParamName *node) {
     }
 }
 
-void Visitor::visit_variable_declaration(VariableDeclaration *node) {
+void Visitor::visit_decl_holder(DeclHolder *node) {
+    for (auto &instance : node->instances()) {
+        visit(instance);
+    }
+}
+
+void Visitor::visit_var_decl(VarDecl *node) {
     visit(node->name());
 
     if (node->given_type()) {

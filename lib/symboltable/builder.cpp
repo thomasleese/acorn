@@ -50,11 +50,11 @@ Namespace *Builder::root_namespace() {
     return m_root;
 }
 
-void Builder::visit_variable_declaration(ast::VariableDeclaration *node) {
-    Visitor::visit_variable_declaration(node);
+void Builder::visit_var_decl(ast::VarDecl *node) {
+    Visitor::visit_var_decl(node);
 
     if (node->name()->has_parameters()) {
-        logger->warn("Builder::visit_variable_declaration name has parameters");
+        logger->warn("Builder::visit_var_decl name has parameters");
     }
 
     auto symbol = std::make_unique<Symbol>(node->name().get(), node->builtin());

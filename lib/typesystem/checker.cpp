@@ -244,7 +244,7 @@ void TypeChecker::visit_type_name(ast::TypeName *node) {
     node->set_type(find_type(node));
 }
 
-void TypeChecker::visit_variable_declaration(ast::VariableDeclaration *node) {
+void TypeChecker::visit_var_decl(ast::VarDecl *node) {
     visit(node->name().get());
 
     auto symbol = scope()->lookup(this, node->name().get());

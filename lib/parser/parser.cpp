@@ -364,7 +364,7 @@ std::unique_ptr<ast::DeclName> Parser::read_decl_name(bool can_be_operator) {
     );
 }
 
-std::unique_ptr<VariableDeclaration> Parser::read_variable_declaration() {
+std::unique_ptr<VarDecl> Parser::read_var_decl() {
     Token let_token;
     return_null_if_false(read_keyword("let", let_token));
 
@@ -379,7 +379,7 @@ std::unique_ptr<VariableDeclaration> Parser::read_variable_declaration() {
         return_null_if_null(type_name);
     }
 
-    return std::make_unique<VariableDeclaration>(
+    return std::make_unique<VarDecl>(
         let_token, std::move(name), std::move(type_name), builtin
     );
 }
@@ -658,13 +658,13 @@ std::unique_ptr<Block> Parser::read_for() {
     auto state_variable = std::make_unique<Let>(token, state_variable_name, new Call(token, "start", std::move(iterator)));
     code_block->add_expression(std::move(state_variable));
 
-    auto condition = new Call(token, "not", new Call(token, "done", iterator, static_cast<VariableDeclaration *>(&state_variable->assignment->lhs())->name()));
+    auto condition = new Call(token, "not", new Call(token, "done", iterator, static_cast<VarDecl *>(&state_variable->assignment->lhs())->name()));
     auto while_code = new While(token, condition, std::move(loop_code));
 
-    auto next_state_variable = new Let(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<VariableDeclaration *>(&state_variable->assignment->lhs())->name()));
+    auto next_state_variable = new Let(token, next_state_variable_name, new Call(token, "next", iterator, static_cast<VarDecl *>(&state_variable->assignment->lhs())->name()));
     loop_code->insert_expression(0, next_state_variable);
-    loop_code->insert_expression(1, new Assignment(token, static_cast<VariableDeclaration *>(&state_variable->assignment->lhs()), new Selector(token, static_cast<VariableDeclaration *>(&next_state_variable->assignment->lhs())->name(), "1")));
-    loop_code->insert_expression(1, new Assignment(token, new VariableDeclaration(token, new Name(token, next_state_variable_name), nullptr, false), new Selector(token, static_cast<VariableDeclaration *>(&next_state_variable->assignment->lhs())->name(), "0")));
+    loop_code->insert_expression(1, new Assignment(token, static_cast<VarDecl *>(&state_variable->assignment->lhs()), new Selector(token, static_cast<VarDecl *>(&next_state_variable->assignment->lhs())->name(), "1")));
+    loop_code->insert_expression(1, new Assignment(token, new VarDecl(token, new Name(token, next_state_variable_name), nullptr, false), new Selector(token, static_cast<VarDecl *>(&next_state_variable->assignment->lhs())->name(), "0")));
 
     code_block->add_expression(while_code);
 
@@ -681,7 +681,7 @@ std::unique_ptr<If> Parser::read_if() {
     std::unique_ptr<Node> condition;
 
     if (is_keyword("let")) {
-        auto lhs = read_variable_declaration();
+        auto lhs = read_var_decl();
         return_null_if_null(lhs);
 
         Token assignment_token;
@@ -760,7 +760,7 @@ std::unique_ptr<Case> Parser::read_case() {
 
     if (is_and_skip_keyword("using")) {
         if (is_keyword("let")) {
-            assignment = std::unique_ptr<VariableDeclaration>(read_variable_declaration());
+            assignment = std::unique_ptr<VarDecl>(read_var_decl());
         } else {
             assignment = read_expression(true);
         }
@@ -927,7 +927,7 @@ std::unique_ptr<Parameter> Parser::read_parameter() {
 }
 
 std::unique_ptr<Let> Parser::read_let() {
-    auto lhs = read_variable_declaration();
+    auto lhs = read_var_decl();
     return_null_if_null(lhs);
 
     std::unique_ptr<Node> rhs;

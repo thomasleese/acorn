@@ -20,7 +20,7 @@ namespace acorn {
         void visit_block(ast::Block *node) override;
         void visit_name(ast::Name *node) override;
         void visit_selector(ast::Selector *node) override;
-        void visit_variable_declaration(ast::VariableDeclaration *node) override;
+        void visit_var_decl(ast::VarDecl *node) override;
         void visit_int(ast::Int *node) override;
         void visit_float(ast::Float *node) override;
         void visit_complex(ast::Complex *node) override;

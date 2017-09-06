@@ -36,7 +36,8 @@ namespace acorn::ast {
             NK_TypeName,
             NK_DeclName,
             NK_ParamName,
-            NK_VariableDeclaration,
+            NK_DeclHolder,
+            NK_VarDecl,
             NK_Int,
             NK_Float,
             NK_Complex,
@@ -214,6 +215,8 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<TypeName>> m_parameters;
     };
 
+    class DeclHolder;
+
     class DeclNode : public Node {
     public:
         DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<DeclName> name);
@@ -224,21 +227,50 @@ namespace acorn::ast {
 
         std::unique_ptr<DeclName> &name() { return m_name; }
 
+        DeclHolder *holder() const {
+            return m_holder;
+        }
+
+        void set_holder(DeclHolder *holder) {
+            m_holder = holder;
+        }
+
         void set_type(typesystem::Type *type) override;
 
     private:
         bool m_builtin;
         std::unique_ptr<DeclName> m_name;
+        DeclHolder *m_holder;
     };
 
-    class VariableDeclaration : public DeclNode {
+    class DeclHolder : public Node {
     public:
-        VariableDeclaration(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type = nullptr, bool builtin = false);
+        DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance);
+
+        std::unique_ptr<DeclNode> &main_instance() {
+            return m_instances[0];
+        }
+
+        std::vector<std::unique_ptr<DeclNode>> &instances() {
+            return m_instances;
+        }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_DeclHolder;
+        }
+
+    private:
+        std::vector<std::unique_ptr<DeclNode>> m_instances;
+    };
+
+    class VarDecl : public DeclNode {
+    public:
+        VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type = nullptr, bool builtin = false);
 
         std::unique_ptr<TypeName> &given_type() { return m_given_type; }
 
         static bool classof(const Node *node) {
-            return node->kind() == NK_VariableDeclaration;
+            return node->kind() == NK_VarDecl;
         }
 
     private:
@@ -433,9 +465,9 @@ namespace acorn::ast {
 
     class Assignment : public Node {
     public:
-        Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Node> rhs);
+        Assignment(Token token, std::unique_ptr<VarDecl> lhs, std::unique_ptr<Node> rhs);
 
-        std::unique_ptr<VariableDeclaration> &lhs() { return m_lhs; }
+        std::unique_ptr<VarDecl> &lhs() { return m_lhs; }
 
         std::unique_ptr<Node> &rhs() { return m_rhs; }
 
@@ -446,7 +478,7 @@ namespace acorn::ast {
         }
 
     private:
-        std::unique_ptr<VariableDeclaration> m_lhs;
+        std::unique_ptr<VarDecl> m_lhs;
         std::unique_ptr<Node> m_rhs;
     };
 

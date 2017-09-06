@@ -37,8 +37,10 @@ std::string Node::kind_string() const {
         return "DeclName";
     case NK_ParamName:
         return "ParamName";
-    case NK_VariableDeclaration:
-        return "VariableDeclaration";
+    case NK_DeclHolder:
+        return "DeclHolder";
+    case NK_VarDecl:
+        return "VarDecl";
     case NK_Int:
         return "Int";
     case NK_Float:
@@ -164,7 +166,12 @@ void DeclNode::set_type(typesystem::Type *type) {
     m_name->set_type(type);
 }
 
-VariableDeclaration::VariableDeclaration(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin) : DeclNode(NK_VariableDeclaration, token, builtin, std::move(name)), m_given_type(std::move(type)) {
+DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance) : Node(NK_DeclHolder, token) {
+    main_instance->set_holder(this);
+    m_instances.push_back(std::move(main_instance));
+}
+
+VarDecl::VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin) : DeclNode(NK_VarDecl, token, builtin, std::move(name)), m_given_type(std::move(type)) {
 
 }
 
@@ -266,7 +273,7 @@ Cast::Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<TypeName>
 
 }
 
-Assignment::Assignment(Token token, std::unique_ptr<VariableDeclaration> lhs, std::unique_ptr<Node> rhs) : Node(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
+Assignment::Assignment(Token token, std::unique_ptr<VarDecl> lhs, std::unique_ptr<Node> rhs) : Node(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
 
 }
 
@@ -313,12 +320,12 @@ Let::Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<No
 Let::Let(Token token, std::string name, std::unique_ptr<Node> value, std::unique_ptr<Node> body) : Node(NK_Let, token), m_body(std::move(body)) {
     auto name_node = std::make_unique<DeclName>(token, name);
 
-    auto variable_declaration = std::make_unique<VariableDeclaration>(
+    auto var_decl = std::make_unique<VarDecl>(
         token, std::move(name_node), nullptr, false
     );
 
     m_assignment = std::make_unique<Assignment>(
-        token, std::move(variable_declaration), std::move(value)
+        token, std::move(var_decl), std::move(value)
     );
 }
 

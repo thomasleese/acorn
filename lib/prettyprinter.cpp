@@ -45,11 +45,11 @@ void PrettyPrinter::visit_selector(ast::Selector *node) {
 
 }
 
-void PrettyPrinter::visit_variable_declaration(ast::VariableDeclaration *node) {
-    ss << indentation() << "(VariableDeclaration [" << type_of(node) << "]\n";
+void PrettyPrinter::visit_var_decl(ast::VarDecl *node) {
+    ss << indentation() << "(VarDecl [" << type_of(node) << "]\n";
     indent++;
 
-    Visitor::visit_variable_declaration(node);
+    Visitor::visit_var_decl(node);
 
     indent--;
     ss << indentation() << ")\n";
