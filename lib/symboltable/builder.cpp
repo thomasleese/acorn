@@ -132,7 +132,7 @@ void Builder::visit_type_decl(ast::TypeDecl *node) {
     pop_scope();
 }
 
-void Builder::visit_module(ast::Module *node) {
+void Builder::visit_module_decl(ast::ModuleDecl *node) {
     symboltable::Symbol *symbol;
     if (scope()->has(node->name()->name()->value())) {
         symbol = scope()->lookup(this, node->name().get());

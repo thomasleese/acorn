@@ -82,8 +82,8 @@ void Visitor::visit_node(Node *node) {
         visit_def_decl(def_decl);
     } else if (auto type_decl = llvm::dyn_cast<TypeDecl>(node)) {
         visit_type_decl(type_decl);
-    } else if (auto module = llvm::dyn_cast<Module>(node)) {
-        visit_module(module);
+    } else if (auto module_decl = llvm::dyn_cast<ModuleDecl>(node)) {
+        visit_module_decl(module_decl);
     } else if (auto import = llvm::dyn_cast<Import>(node)) {
         visit_import(import);
     } else if (auto source_file = llvm::dyn_cast<SourceFile>(node)) {
@@ -316,7 +316,7 @@ void Visitor::visit_type_decl(TypeDecl *node) {
     }
 }
 
-void Visitor::visit_module(Module *node) {
+void Visitor::visit_module_decl(ModuleDecl *node) {
     visit_node(node->name());
     visit_node(node->body());
 }

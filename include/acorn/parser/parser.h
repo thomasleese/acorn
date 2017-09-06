@@ -76,7 +76,7 @@ namespace acorn::parser {
         std::unique_ptr<ast::DefDecl> read_def_decl();
         std::unique_ptr<ast::DeclHolder> read_def();
         std::unique_ptr<ast::TypeDecl> read_type_decl();
-        std::unique_ptr<ast::Module> read_module();
+        std::unique_ptr<ast::ModuleDecl> read_module_decl();
         std::unique_ptr<ast::Import> read_import_expression();
 
     private:

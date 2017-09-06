@@ -1051,12 +1051,12 @@ void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
     }
 }
 
-void CodeGenerator::visit_module(ast::Module *node) {
+void CodeGenerator::visit_module_decl(ast::ModuleDecl *node) {
     auto symbol = scope()->lookup(this, node->name().get());
     return_and_push_null_if_null(symbol);
 
     push_scope(symbol);
-    ast::Visitor::visit_module(node);
+    ast::Visitor::visit_module_decl(node);
     pop_scope();
 }
 

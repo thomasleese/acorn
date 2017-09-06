@@ -233,7 +233,7 @@ std::unique_ptr<Node> Parser::read_expression(bool parse_comma) {
     } else if (is_keyword("type")) {
         return read_type_decl();
     } else if (is_keyword("module")) {
-        return read_module();
+        return read_module_decl();
     } else {
         auto unary_expression = read_unary_expression(parse_comma);
         return_null_if_null(unary_expression);
@@ -1060,7 +1060,7 @@ std::unique_ptr<TypeDecl> Parser::read_type_decl() {
     }
 }
 
-std::unique_ptr<Module> Parser::read_module() {
+std::unique_ptr<ModuleDecl> Parser::read_module_decl() {
     Token module_token;
     return_null_if_false(read_keyword("module", module_token));
 
@@ -1070,7 +1070,7 @@ std::unique_ptr<Module> Parser::read_module() {
     auto body = read_block();
     return_null_if_null(name);
 
-    return std::make_unique<Module>(
+    return std::make_unique<ModuleDecl>(
         module_token, std::move(name), std::move(body)
     );
 }

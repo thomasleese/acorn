@@ -697,7 +697,7 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
     pop_scope();
 }
 
-void TypeChecker::visit_module(ast::Module *node) {
+void TypeChecker::visit_module_decl(ast::ModuleDecl *node) {
     auto symbol = scope()->lookup(this, node->name().get());
     return_if_null(symbol);
 

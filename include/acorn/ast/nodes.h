@@ -59,7 +59,7 @@ namespace acorn::ast {
             NK_Parameter,
             NK_DefDecl,
             NK_TypeDecl,
-            NK_Module,
+            NK_ModuleDecl,
             NK_Import,
             NK_SourceFile,
         };
@@ -687,14 +687,14 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<TypeName>> m_field_types;
     };
 
-    class Module : public DeclNode {
+    class ModuleDecl : public DeclNode {
     public:
-        Module(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<Block> body);
+        ModuleDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<Block> body);
 
         std::unique_ptr<Block> &body() { return m_body; }
 
         static bool classof(const Node *node) {
-            return node->kind() == NK_Module;
+            return node->kind() == NK_ModuleDecl;
         }
 
     private:

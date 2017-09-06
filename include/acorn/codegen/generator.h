@@ -122,7 +122,7 @@ namespace acorn::codegen {
         void visit_parameter(ast::Parameter *node) override;
         void visit_def_decl(ast::DefDecl *node) override;
         void visit_type_decl(ast::TypeDecl *node) override;
-        void visit_module(ast::Module *node) override;
+        void visit_module_decl(ast::ModuleDecl *node) override;
         void visit_import(ast::Import *node) override;
         void visit_source_file(ast::SourceFile *node) override;
 

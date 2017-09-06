@@ -83,8 +83,8 @@ std::string Node::kind_string() const {
         return "DefDecl";
     case NK_TypeDecl:
         return "TypeDecl";
-    case NK_Module:
-        return "Module";
+    case NK_ModuleDecl:
+        return "ModuleDecl";
     case NK_Import:
         return "Import";
     case NK_SourceFile:
@@ -358,7 +358,7 @@ TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name, std::vector<std:
     }
 }
 
-Module::Module(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<Block> body) : DeclNode(NK_Module, token, false, std::move(name)), m_body(std::move(body)) {
+ModuleDecl::ModuleDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<Block> body) : DeclNode(NK_ModuleDecl, token, false, std::move(name)), m_body(std::move(body)) {
 
 }
 
