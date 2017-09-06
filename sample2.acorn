@@ -1,0 +1,23 @@
+type builtin Int64
+type builtin Void
+
+type Int as Int64
+
+def exit(code as Int) as Void
+  ccall exit(Int) as Void using code
+end
+
+def builtin *(a as Int64, b as Int64) as Int64
+def builtin +(a as Int64, b as Int64) as Int64
+
+def times_two{T}(a as T) as T
+  a * 2
+end
+
+def times_four{T}(a as T) as T
+  times_two{T}(a) + times_two{T}(a)
+end
+
+let a as Int = times_four{Int}(10)
+  exit(a)
+end
