@@ -72,7 +72,7 @@ namespace acorn::parser {
         std::unique_ptr<ast::Node> read_primary_expression();
         std::unique_ptr<ast::Node> read_operand_expression(bool parse_comma);
         std::unique_ptr<ast::Parameter> read_parameter();
-        std::unique_ptr<ast::LetDecl> read_let_decl();
+        std::unique_ptr<ast::Let> read_let();
         std::unique_ptr<ast::DefDecl> read_def_decl();
         std::unique_ptr<ast::DeclHolder> read_def();
         std::unique_ptr<ast::TypeDecl> read_type_decl();

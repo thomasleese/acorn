@@ -75,8 +75,8 @@ std::string Node::kind_string() const {
         return "Case";
     case NK_Switch:
         return "Switch";
-    case NK_LetDecl:
-        return "LetDecl";
+    case NK_Let:
+        return "Let";
     case NK_Parameter:
         return "Parameter";
     case NK_DefDecl:
@@ -316,11 +316,11 @@ Switch::Switch(Token token, std::unique_ptr<Node> expression, std::vector<std::u
     }
 }
 
-LetDecl::LetDecl(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body) : Node(NK_LetDecl, token), m_assignment(std::move(assignment)), m_body(std::move(body)) {
+Let::Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body) : Node(NK_Let, token), m_assignment(std::move(assignment)), m_body(std::move(body)) {
 
 }
 
-LetDecl::LetDecl(Token token, std::string name, std::unique_ptr<Node> value, std::unique_ptr<Node> body) : Node(NK_LetDecl, token), m_body(std::move(body)) {
+Let::Let(Token token, std::string name, std::unique_ptr<Node> value, std::unique_ptr<Node> body) : Node(NK_Let, token), m_body(std::move(body)) {
     auto name_node = std::make_unique<DeclName>(token, name);
 
     auto var_decl = std::make_unique<VarDecl>(

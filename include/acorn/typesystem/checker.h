@@ -77,7 +77,7 @@ namespace acorn::typesystem {
         void visit_case(ast::Case *node) override;
         void visit_switch(ast::Switch *node) override;
         void visit_parameter(ast::Parameter *node) override;
-        void visit_let_decl(ast::LetDecl *node) override;
+        void visit_let(ast::Let *node) override;
         void visit_def_decl(ast::DefDecl *node) override;
         void visit_type_decl(ast::TypeDecl *node) override;
         void visit_module_decl(ast::ModuleDecl *node) override;

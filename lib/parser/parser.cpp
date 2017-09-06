@@ -227,7 +227,7 @@ std::unique_ptr<Block> Parser::read_block(bool read_end) {
 
 std::unique_ptr<Node> Parser::read_expression(bool parse_comma) {
     if (is_keyword("let")) {
-        return read_let_decl();
+        return read_let();
     } else if (is_keyword("def")) {
         return read_def();
     } else if (is_keyword("type")) {
@@ -924,7 +924,7 @@ std::unique_ptr<Parameter> Parser::read_parameter() {
     );
 }
 
-std::unique_ptr<LetDecl> Parser::read_let_decl() {
+std::unique_ptr<Let> Parser::read_let() {
     auto lhs = read_var_decl();
     return_null_if_null(lhs);
 
@@ -949,7 +949,7 @@ std::unique_ptr<LetDecl> Parser::read_let_decl() {
         token, std::move(lhs), std::move(rhs)
     );
 
-    return std::make_unique<LetDecl>(
+    return std::make_unique<Let>(
         assignment->lhs()->token(), std::move(assignment), std::move(body)
     );
 }
