@@ -276,7 +276,7 @@ Cast::Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<TypeName>
 
 }
 
-Assignment::Assignment(Token token, std::unique_ptr<VarDecl> lhs, std::unique_ptr<Node> rhs) : Node(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
+Assignment::Assignment(Token token, std::unique_ptr<DeclHolder> lhs, std::unique_ptr<Node> rhs) : Node(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
 
 }
 
@@ -327,8 +327,12 @@ Let::Let(Token token, std::string name, std::unique_ptr<Node> value, std::unique
         token, std::move(name_node), nullptr, false
     );
 
+    auto var = std::make_unique<DeclHolder>(
+        var_decl->token(), std::move(var_decl)
+    );
+
     m_assignment = std::make_unique<Assignment>(
-        token, std::move(var_decl), std::move(value)
+        token, std::move(var), std::move(value)
     );
 }
 

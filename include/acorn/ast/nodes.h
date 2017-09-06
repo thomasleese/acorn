@@ -247,6 +247,14 @@ namespace acorn::ast {
             return m_instances[0];
         }
 
+        std::unique_ptr<DeclName> &name() {
+            return m_instances[0]->name();
+        }
+
+        bool builtin() const {
+            return m_instances[0]->builtin();
+        }
+
         std::vector<std::unique_ptr<DeclNode>> &instances() {
             return m_instances;
         }
@@ -461,20 +469,20 @@ namespace acorn::ast {
 
     class Assignment : public Node {
     public:
-        Assignment(Token token, std::unique_ptr<VarDecl> lhs, std::unique_ptr<Node> rhs);
+        Assignment(Token token, std::unique_ptr<DeclHolder> lhs, std::unique_ptr<Node> rhs);
 
-        std::unique_ptr<VarDecl> &lhs() { return m_lhs; }
+        std::unique_ptr<DeclHolder> &lhs() { return m_lhs; }
 
         std::unique_ptr<Node> &rhs() { return m_rhs; }
 
-        bool builtin() const { return m_lhs->builtin(); }
+        bool builtin() const { return m_lhs->main_instance()->builtin(); }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Assignment;
         }
 
     private:
-        std::unique_ptr<VarDecl> m_lhs;
+        std::unique_ptr<DeclHolder> m_lhs;
         std::unique_ptr<Node> m_rhs;
     };
 

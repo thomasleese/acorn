@@ -382,6 +382,15 @@ std::unique_ptr<VarDecl> Parser::read_var_decl() {
     );
 }
 
+std::unique_ptr<DeclHolder> Parser::read_var() {
+    auto instance = read_var_decl();
+    return_null_if_null(instance);
+
+    return std::make_unique<DeclHolder>(
+        instance->token(), std::move(instance)
+    );
+}
+
 std::unique_ptr<Int> Parser::read_int() {
     return_null_if_false(read_token(Token::Int, token));
     return std::make_unique<Int>(token, token.lexeme);
@@ -679,7 +688,7 @@ std::unique_ptr<If> Parser::read_if() {
     std::unique_ptr<Node> condition;
 
     if (is_keyword("let")) {
-        auto lhs = read_var_decl();
+        auto lhs = read_var();
         return_null_if_null(lhs);
 
         Token assignment_token;
@@ -925,7 +934,7 @@ std::unique_ptr<Parameter> Parser::read_parameter() {
 }
 
 std::unique_ptr<Let> Parser::read_let() {
-    auto lhs = read_var_decl();
+    auto lhs = read_var();
     return_null_if_null(lhs);
 
     std::unique_ptr<Node> rhs;

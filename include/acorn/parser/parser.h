@@ -49,6 +49,7 @@ namespace acorn::parser {
         std::unique_ptr<ast::ParamName> read_param_name();
         std::unique_ptr<ast::ParamName> read_param_operator();
         std::unique_ptr<ast::VarDecl> read_var_decl();
+        std::unique_ptr<ast::DeclHolder> read_var();
         std::unique_ptr<ast::Int> read_int();
         std::unique_ptr<ast::Float> read_float();
         std::unique_ptr<ast::String> read_string();
