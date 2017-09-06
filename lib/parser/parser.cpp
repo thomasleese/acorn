@@ -231,9 +231,9 @@ std::unique_ptr<Node> Parser::read_expression(bool parse_comma) {
     } else if (is_keyword("def")) {
         return read_def();
     } else if (is_keyword("type")) {
-        return read_type_decl();
+        return read_type();
     } else if (is_keyword("module")) {
-        return read_module_decl();
+        return read_module();
     } else {
         auto unary_expression = read_unary_expression(parse_comma);
         return_null_if_null(unary_expression);
@@ -1060,6 +1060,13 @@ std::unique_ptr<TypeDecl> Parser::read_type_decl() {
     }
 }
 
+std::unique_ptr<DeclHolder> Parser::read_type() {
+    auto instance = read_type_decl();
+    return_null_if_null(instance);
+
+    return std::make_unique<DeclHolder>(instance->token(), std::move(instance));
+}
+
 std::unique_ptr<ModuleDecl> Parser::read_module_decl() {
     Token module_token;
     return_null_if_false(read_keyword("module", module_token));
@@ -1073,6 +1080,13 @@ std::unique_ptr<ModuleDecl> Parser::read_module_decl() {
     return std::make_unique<ModuleDecl>(
         module_token, std::move(name), std::move(body)
     );
+}
+
+std::unique_ptr<DeclHolder> Parser::read_module() {
+    auto instance = read_module_decl();
+    return_null_if_null(instance);
+
+    return std::make_unique<DeclHolder>(instance->token(), std::move(instance));
 }
 
 std::unique_ptr<Import> Parser::read_import_expression() {
