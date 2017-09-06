@@ -139,14 +139,19 @@ DeclName::DeclName(Token token, std::string name) : DeclName(token, std::make_un
 
 }
 
-ParamName::ParamName(Token token, std::string value) : Node(NK_ParamName, token), m_value(value) {
+ParamName::ParamName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters) :
+    Node(NK_ParamName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) {
 
 }
 
-ParamName::ParamName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters) : ParamName(token, value) {
-    for (auto &parameter : parameters) {
-        m_parameters.push_back(std::move(parameter));
-    }
+ParamName::ParamName(Token token, std::unique_ptr<Name> name) :
+    Node(NK_ParamName, token), m_name(std::move(name)) {
+
+}
+
+ParamName::ParamName(Token token, std::string name) :
+    ParamName(token, std::make_unique<Name>(token, name)) {
+
 }
 
 DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<DeclName> name) : Node(kind, token), m_builtin(builtin), m_name(std::move(name)) {

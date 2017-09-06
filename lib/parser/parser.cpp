@@ -260,56 +260,6 @@ std::unique_ptr<Name> Parser::read_operator() {
     return std::make_unique<Name>(name_token, name_token.lexeme);
 }
 
-std::unique_ptr<ParamName> Parser::read_param_name() {
-    Token name_token;
-    return_null_if_false(read_token(Token::Name, name_token));
-
-    std::vector<std::unique_ptr<TypeName>> parameters;
-
-    if (is_and_skip_token(Token::OpenBrace)) {
-        while (!is_token(Token::CloseBrace)) {
-            auto parameter = read_type_name();
-            return_null_if_null(parameter);
-            parameters.push_back(std::move(parameter));
-
-            if (!is_and_skip_token(Token::Comma)) {
-                break;
-            }
-        }
-
-        return_null_if_false(skip_token(Token::CloseBrace));
-    }
-
-    return std::make_unique<ParamName>(
-        name_token, name_token.lexeme, std::move(parameters)
-    );
-}
-
-std::unique_ptr<ParamName> Parser::read_param_operator() {
-    Token name_token;
-    return_null_if_false(read_token(Token::Operator, name_token));
-
-    std::vector<std::unique_ptr<TypeName>> parameters;
-
-    if (is_and_skip_token(Token::OpenBrace)) {
-        while (!is_token(Token::CloseBrace)) {
-            auto parameter = read_type_name();
-            return_null_if_null(parameter);
-            parameters.push_back(std::move(parameter));
-
-            if (!is_and_skip_token(Token::Comma)) {
-                break;
-            }
-        }
-
-        return_null_if_false(skip_token(Token::CloseBrace));
-    }
-
-    return std::make_unique<ParamName>(
-        name_token, name_token.lexeme, std::move(parameters)
-    );
-}
-
 std::unique_ptr<TypeName> Parser::read_type_name() {
     auto name = read_name();
 
@@ -360,6 +310,54 @@ std::unique_ptr<ast::DeclName> Parser::read_decl_name(bool can_be_operator) {
     }
 
     return std::make_unique<DeclName>(
+        name->token(), std::move(name), std::move(parameters)
+    );
+}
+
+std::unique_ptr<ParamName> Parser::read_param_name() {
+    auto name = read_name();
+
+    std::vector<std::unique_ptr<TypeName>> parameters;
+
+    if (is_and_skip_token(Token::OpenBrace)) {
+        while (!is_token(Token::CloseBrace)) {
+            auto parameter = read_type_name();
+            return_null_if_null(parameter);
+            parameters.push_back(std::move(parameter));
+
+            if (!is_and_skip_token(Token::Comma)) {
+                break;
+            }
+        }
+
+        return_null_if_false(skip_token(Token::CloseBrace));
+    }
+
+    return std::make_unique<ParamName>(
+        name->token(), std::move(name), std::move(parameters)
+    );
+}
+
+std::unique_ptr<ParamName> Parser::read_param_operator() {
+    auto name = read_operator();
+
+    std::vector<std::unique_ptr<TypeName>> parameters;
+
+    if (is_and_skip_token(Token::OpenBrace)) {
+        while (!is_token(Token::CloseBrace)) {
+            auto parameter = read_type_name();
+            return_null_if_null(parameter);
+            parameters.push_back(std::move(parameter));
+
+            if (!is_and_skip_token(Token::Comma)) {
+                break;
+            }
+        }
+
+        return_null_if_false(skip_token(Token::CloseBrace));
+    }
+
+    return std::make_unique<ParamName>(
         name->token(), std::move(name), std::move(parameters)
     );
 }

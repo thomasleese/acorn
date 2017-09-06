@@ -145,6 +145,10 @@ namespace acorn::ast {
             return m_parameters;
         }
 
+        bool is_list() const {
+            return false;
+        }
+
         bool has_parameters() const {
             return m_parameters.size() > 0;
         }
@@ -191,11 +195,16 @@ namespace acorn::ast {
 
     class ParamName : public Node {
     public:
-        ParamName(Token token, std::string value);
-        ParamName(Token token, std::string value, std::vector<std::unique_ptr<TypeName>> parameters);
+        ParamName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters);
+        ParamName(Token token, std::unique_ptr<Name> name);
+        ParamName(Token token, std::string name);
+
+        std::unique_ptr<Name> &name() {
+            return m_name;
+        }
 
         const std::string &value() const {
-            return m_value;
+            return m_name->value();
         }
 
         std::vector<std::unique_ptr<TypeName>> &parameters() {
@@ -211,7 +220,7 @@ namespace acorn::ast {
         }
 
     private:
-        std::string m_value;
+        std::unique_ptr<Name> m_name;
         std::vector<std::unique_ptr<TypeName>> m_parameters;
     };
 
