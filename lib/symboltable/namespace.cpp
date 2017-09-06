@@ -65,7 +65,7 @@ Symbol *Namespace::lookup(Reporter *diagnostics, ast::DeclName *name) const {
 }
 
 Symbol *Namespace::lookup(Reporter *diagnostics, ast::ParamName *name) const {
-    return lookup(diagnostics, name, name->value());
+    return lookup(diagnostics, name->name().get());
 }
 
 Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const {

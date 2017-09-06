@@ -37,7 +37,7 @@ Symbol::Symbol(ast::DeclName *name, bool builtin) : Symbol(name->name().get(), b
 
 }
 
-Symbol::Symbol(ast::ParamName *name, bool builtin) : Symbol(name->value(), builtin) {
+Symbol::Symbol(ast::ParamName *name, bool builtin) : Symbol(name->name().get(), builtin) {
 
 }
 

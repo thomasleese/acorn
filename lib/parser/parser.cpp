@@ -830,7 +830,7 @@ std::unique_ptr<Node> Parser::read_binary_expression(std::unique_ptr<Node> lhs, 
         auto rhs = read_operand_expression(true);
         return_null_if_null(rhs);
 
-        while ((is_token(Token::Operator) || is_token(Token::Assignment)) && m_operator_precendence[front_token().lexeme] > m_operator_precendence[op->value()]) {
+        while ((is_token(Token::Operator) || is_token(Token::Assignment)) && m_operator_precendence[front_token().lexeme] > m_operator_precendence[op->name()->value()]) {
             rhs = read_binary_expression(std::move(rhs), m_operator_precendence[front_token().lexeme]);
         }
 

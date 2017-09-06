@@ -137,10 +137,6 @@ namespace acorn::ast {
             return m_name;
         }
 
-        const std::string &value() const {
-            return m_name->value();
-        }
-
         std::vector<std::unique_ptr<TypeName>> &parameters() {
             return m_parameters;
         }
@@ -172,10 +168,6 @@ namespace acorn::ast {
             return m_name;
         }
 
-        const std::string &value() const {
-            return m_name->value();
-        }
-
         std::vector<std::unique_ptr<Name>> &parameters() {
             return m_parameters;
         }
@@ -201,10 +193,6 @@ namespace acorn::ast {
 
         std::unique_ptr<Name> &name() {
             return m_name;
-        }
-
-        const std::string &value() const {
-            return m_name->value();
         }
 
         std::vector<std::unique_ptr<TypeName>> &parameters() {

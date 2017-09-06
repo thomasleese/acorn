@@ -193,7 +193,7 @@ void CodeGenerator::prepare_method_parameters(ast::DefInstance *node, llvm::Func
 }
 
 llvm::Value *CodeGenerator::generate_builtin_variable(ast::VarDecl *node) {
-    auto name = node->name()->value();
+    auto name = node->name()->name()->value();
 
     if (name == "true") {
         return m_ir_builder->getInt1(1);
@@ -206,7 +206,7 @@ llvm::Value *CodeGenerator::generate_builtin_variable(ast::VarDecl *node) {
 }
 
 void CodeGenerator::generate_builtin_method_body(ast::DefInstance *node, llvm::Function *function) {
-    std::string name = node->name()->value();
+    auto name = node->name()->name()->value();
 
     if (name == "*") {
         auto a_value = m_ir_builder->CreateLoad(scope()->lookup(this, node, "a")->llvm_value());
@@ -261,10 +261,11 @@ void CodeGenerator::generate_builtin_method_body(ast::DefInstance *node, llvm::F
 
 llvm::Value *CodeGenerator::generate_llvm_value(ast::Node *node) {
     visit_node(node);
+
     auto value = pop_llvm_value();
 
     if (value == nullptr) {
-        logger->critical("CodeGenerator::generate_llvm_value pop_llvm_value returned null");
+        logger->critical("CodeGenerator::generate_llvm_value pop_llvm_value for {} returned null", node->to_string());
     }
 
     return value;
@@ -546,7 +547,7 @@ void CodeGenerator::visit_var_decl(ast::VarDecl *node) {
         auto llvm_initialiser = take_initialiser();
         return_and_push_null_if_null(llvm_initialiser);
 
-        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
+        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->name()->value());
         symbol->set_llvm_value(variable);
 
         m_ir_builder->SetInsertPoint(&m_init_variables_function->getEntryBlock());
@@ -554,7 +555,7 @@ void CodeGenerator::visit_var_decl(ast::VarDecl *node) {
         auto insert_function = m_ir_builder->GetInsertBlock()->getParent();
         m_ir_builder->SetInsertPoint(&insert_function->getEntryBlock().front());
 
-        symbol->set_llvm_value(m_ir_builder->CreateAlloca(llvm_type, 0, node->name()->value()));
+        symbol->set_llvm_value(m_ir_builder->CreateAlloca(llvm_type, 0, node->name()->name()->value()));
     }
 
     pop_insert_point();
@@ -779,7 +780,7 @@ void CodeGenerator::visit_selector(ast::Selector *node) {
         auto instance = generate_llvm_value(operand);
         return_if_null(instance);
 
-        if (node->field()->value() == "new") {
+        if (node->field()->name()->value() == "new") {
             push_llvm_value(instance);
         } else {
             report(UndefinedError(node, "unsupported selector"));
@@ -793,7 +794,7 @@ void CodeGenerator::visit_selector(ast::Selector *node) {
 
         auto record = dynamic_cast<typesystem::Record *>(operand->type());
 
-        int index = record->get_field_index(node->field()->value());
+        int index = record->get_field_index(node->field()->name()->value());
         auto value = m_ir_builder->CreateLoad(m_ir_builder->CreateInBoundsGEP(actual_thing, build_gep_index({ 0, index })));
         push_llvm_value(value);
     } else {
@@ -920,7 +921,7 @@ void CodeGenerator::visit_def_instance(ast::DefInstance *node) {
         function_symbol->set_llvm_value(
             create_global_variable(
                 llvm_function_type, llvm_initialiser,
-                node->name()->value()
+                node->name()->name()->value()
             )
         );
     }
@@ -1007,7 +1008,7 @@ void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
         auto llvm_initialiser = take_initialiser();
 
         // variable to hold the type
-        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->value());
+        auto variable = create_global_variable(llvm_type, llvm_initialiser, node->name()->name()->value());
         return_and_push_null_if_null(variable);
 
         symbol->set_llvm_value(variable);
@@ -1016,7 +1017,7 @@ void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
         auto function_type = node_type->constructor();
         auto method_type = function_type->get_method(0);
 
-        std::string mangled_name = codegen::mangle_method(node->name()->value(), method_type);
+        std::string mangled_name = codegen::mangle_method(node->name()->name()->value(), method_type);
 
         auto llvm_method_type = llvm::cast<llvm::StructType>(generate_type(method_type));
 

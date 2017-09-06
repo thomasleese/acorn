@@ -86,7 +86,7 @@ typesystem::Type *TypeChecker::instance_type(ast::TypeName *name) {
 }
 
 typesystem::Type *TypeChecker::builtin_type_from_name(ast::DeclName *node) {
-    auto name = node->value();
+    auto name = node->name()->value();
 
     if (name == "Void") {
         return new typesystem::VoidType();
@@ -457,7 +457,7 @@ void TypeChecker::visit_selector(ast::Selector *node) {
 
         node->set_type(child_symbol->type());
     } else if (record_type != nullptr) {
-        if (node->field()->value() == "new") {
+        if (node->field()->name()->value() == "new") {
             node->set_type(record_type->constructor());
         } else {
             report(UndefinedError(node->field().get(), "new"));
@@ -465,7 +465,7 @@ void TypeChecker::visit_selector(ast::Selector *node) {
     } else if (record != nullptr) {
         auto field = node->field().get();
 
-        auto field_type = record->child_type(field->value());
+        auto field_type = record->child_type(field->name()->value());
         if (field_type != nullptr) {
             node->set_type(field_type);
         } else {
@@ -641,7 +641,7 @@ void TypeChecker::visit_def_instance(ast::DefInstance *node) {
 }
 
 void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
-    auto symbol = scope()->lookup(this, node, node->name()->value());
+    auto symbol = scope()->lookup(this, node, node->name()->name()->value());
 
     if (node->builtin()) {
         node->set_type(builtin_type_from_name(node->name().get()));

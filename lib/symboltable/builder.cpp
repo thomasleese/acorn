@@ -72,7 +72,7 @@ void Builder::visit_def_instance(ast::DefInstance *node) {
     auto name = node->name().get();
 
     Symbol *function_symbol;
-    if (scope()->has(name->value(), false)) {
+    if (scope()->has(name->name()->value(), false)) {
         // we don't want to look in any parent scope when we're
         // defining a new function; it should follow the notion of
         // variables, i.e. we are hiding the previous binding
@@ -134,7 +134,7 @@ void Builder::visit_type_decl(ast::TypeDecl *node) {
 
 void Builder::visit_module(ast::Module *node) {
     symboltable::Symbol *symbol;
-    if (scope()->has(node->name()->value())) {
+    if (scope()->has(node->name()->name()->value())) {
         symbol = scope()->lookup(this, node->name().get());
     } else {
         symbol = new Symbol(node->name().get(), false);

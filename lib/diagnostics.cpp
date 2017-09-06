@@ -89,7 +89,7 @@ UndefinedError::UndefinedError(ast::Name *name) : UndefinedError(name, name->val
 
 }
 
-UndefinedError::UndefinedError(ast::ParamName *name) : UndefinedError(name, name->value() + " is not defined in scope.") {
+UndefinedError::UndefinedError(ast::ParamName *name) : UndefinedError(name->name().get()) {
 
 }
 
