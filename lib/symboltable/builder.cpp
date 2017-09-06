@@ -68,7 +68,7 @@ void Builder::visit_parameter(ast::Parameter *node) {
     scope()->insert(this, node, std::move(symbol));
 }
 
-void Builder::visit_def_instance(ast::DefInstance *node) {
+void Builder::visit_def_decl(ast::DefDecl *node) {
     auto name = node->name().get();
 
     Symbol *function_symbol;

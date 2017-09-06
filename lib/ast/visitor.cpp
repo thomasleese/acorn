@@ -78,8 +78,8 @@ void Visitor::visit_node(Node *node) {
         visit_let(let);
     } else if (auto parameter = llvm::dyn_cast<Parameter>(node)) {
         visit_parameter(parameter);
-    } else if (auto def_instance = llvm::dyn_cast<DefInstance>(node)) {
-        visit_def_instance(def_instance);
+    } else if (auto def_decl = llvm::dyn_cast<DefDecl>(node)) {
+        visit_def_decl(def_decl);
     } else if (auto type_decl = llvm::dyn_cast<TypeDecl>(node)) {
         visit_type_decl(type_decl);
     } else if (auto module = llvm::dyn_cast<Module>(node)) {
@@ -284,7 +284,7 @@ void Visitor::visit_let(Let *node) {
     }
 }
 
-void Visitor::visit_def_instance(DefInstance *node) {
+void Visitor::visit_def_decl(DefDecl *node) {
     visit_node(node->name());
 
     for (auto &parameter : node->parameters()) {

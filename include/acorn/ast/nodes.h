@@ -57,7 +57,7 @@ namespace acorn::ast {
             NK_Switch,
             NK_Let,
             NK_Parameter,
-            NK_DefInstance,
+            NK_DefDecl,
             NK_TypeDecl,
             NK_Module,
             NK_Import,
@@ -639,9 +639,9 @@ namespace acorn::ast {
         std::unique_ptr<Node> m_body;
     };
 
-    class DefInstance : public DeclNode {
+    class DefDecl : public DeclNode {
     public:
-        DefInstance(Token token, std::unique_ptr<DeclName> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type = nullptr);
+        DefDecl(Token token, std::unique_ptr<DeclName> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type = nullptr);
 
         std::vector<std::unique_ptr<Parameter>> &parameters() {
             return m_parameters;
@@ -652,7 +652,7 @@ namespace acorn::ast {
         std::unique_ptr<TypeName> &return_type() { return m_return_type; }
 
         static bool classof(const Node *node) {
-            return node->kind() == NK_DefInstance;
+            return node->kind() == NK_DefDecl;
         }
 
     private:

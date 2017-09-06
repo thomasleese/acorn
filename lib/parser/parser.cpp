@@ -954,7 +954,7 @@ std::unique_ptr<Let> Parser::read_let() {
     );
 }
 
-std::unique_ptr<DefInstance> Parser::read_def_instance() {
+std::unique_ptr<DefDecl> Parser::read_def_decl() {
     Token def_token;
     return_null_if_false(read_keyword("def", def_token));
 
@@ -1000,14 +1000,14 @@ std::unique_ptr<DefInstance> Parser::read_def_instance() {
         return_null_if_false(skip_deindent_and_end_token());
     }
 
-    return std::make_unique<DefInstance>(
+    return std::make_unique<DefDecl>(
         def_token, std::move(name), builtin, std::move(parameters),
         std::move(body), std::move(return_type)
     );
 }
 
 std::unique_ptr<DeclHolder> Parser::read_def() {
-    auto instance = read_def_instance();
+    auto instance = read_def_decl();
     return_null_if_null(instance);
 
     return std::make_unique<DeclHolder>(instance->token(), std::move(instance));

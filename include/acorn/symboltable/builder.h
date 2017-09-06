@@ -38,7 +38,7 @@ namespace acorn::symboltable {
 
         void visit_var_decl(ast::VarDecl *node) override;
         void visit_parameter(ast::Parameter *node) override;
-        void visit_def_instance(ast::DefInstance *node) override;
+        void visit_def_decl(ast::DefDecl *node) override;
         void visit_type_decl(ast::TypeDecl *node) override;
         void visit_module(ast::Module *node) override;
 

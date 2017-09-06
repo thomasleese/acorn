@@ -161,7 +161,7 @@ llvm::GlobalVariable *CodeGenerator::create_global_variable(llvm::Type *type, ll
     return variable;
 }
 
-void CodeGenerator::prepare_method_parameters(ast::DefInstance *node, llvm::Function *function) {
+void CodeGenerator::prepare_method_parameters(ast::DefDecl *node, llvm::Function *function) {
     auto name = node->name().get();
 
     for (auto &param : name->parameters()) {
@@ -205,7 +205,7 @@ llvm::Value *CodeGenerator::generate_builtin_variable(ast::VarDecl *node) {
     return nullptr;
 }
 
-void CodeGenerator::generate_builtin_method_body(ast::DefInstance *node, llvm::Function *function) {
+void CodeGenerator::generate_builtin_method_body(ast::DefDecl *node, llvm::Function *function) {
     auto name = node->name()->name()->value();
 
     if (name == "*") {
@@ -910,7 +910,7 @@ void CodeGenerator::visit_parameter(ast::Parameter *node) {
     push_llvm_value(nullptr);
 }
 
-void CodeGenerator::visit_def_instance(ast::DefInstance *node) {
+void CodeGenerator::visit_def_decl(ast::DefDecl *node) {
     auto function_symbol = scope()->lookup(this, node->name().get());
     auto function_type = static_cast<typesystem::Function *>(function_symbol->type());
 
