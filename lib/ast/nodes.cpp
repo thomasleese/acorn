@@ -81,8 +81,6 @@ std::string Node::kind_string() const {
         return "Parameter";
     case NK_DefInstance:
         return "DefInstance";
-    case NK_Def:
-        return "Def";
     case NK_TypeDecl:
         return "TypeDecl";
     case NK_Module:
@@ -340,10 +338,6 @@ Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::u
 
 DefInstance::DefInstance(Token token, std::unique_ptr<DeclName> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type) : DeclNode(NK_DefInstance, token, builtin, std::move(name)), m_parameters(std::move(parameters)), m_return_type(std::move(return_type)), m_body(std::move(body)) {
 
-}
-
-Def::Def(Token token, std::unique_ptr<DefInstance> main_instance) : Node(NK_Def, std::move(token)) {
-    m_instances.push_back(std::move(main_instance));
 }
 
 TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name) : DeclNode(NK_TypeDecl, token, true, std::move(name)) {

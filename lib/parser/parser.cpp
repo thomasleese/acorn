@@ -1006,13 +1006,11 @@ std::unique_ptr<DefInstance> Parser::read_def_instance() {
     );
 }
 
-std::unique_ptr<Def> Parser::read_def() {
-    auto def_token = front_token();
-
+std::unique_ptr<DeclHolder> Parser::read_def() {
     auto instance = read_def_instance();
     return_null_if_null(instance);
 
-    return std::make_unique<Def>(def_token, std::move(instance));
+    return std::make_unique<DeclHolder>(instance->token(), std::move(instance));
 }
 
 std::unique_ptr<TypeDecl> Parser::read_type_decl() {

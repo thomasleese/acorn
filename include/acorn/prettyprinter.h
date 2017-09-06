@@ -19,7 +19,7 @@ namespace acorn {
     public:
         void visit_block(ast::Block *node) override;
         void visit_name(ast::Name *node) override;
-        void visit_selector(ast::Selector *node) override;
+        void visit_decl_holder(ast::DeclHolder *node) override;
         void visit_var_decl(ast::VarDecl *node) override;
         void visit_int(ast::Int *node) override;
         void visit_float(ast::Float *node) override;
@@ -32,6 +32,7 @@ namespace acorn {
         void visit_ccall(ast::CCall *node) override;
         void visit_cast(ast::Cast *node) override;
         void visit_assignment(ast::Assignment *node) override;
+        void visit_selector(ast::Selector *node) override;
         void visit_while(ast::While *node) override;
         void visit_if(ast::If *node) override;
         void visit_return(ast::Return *node) override;
@@ -39,7 +40,6 @@ namespace acorn {
         void visit_switch(ast::Switch *node) override;
         void visit_parameter(ast::Parameter *node) override;
         void visit_let(ast::Let *node) override;
-        void visit_def(ast::Def *node) override;
         void visit_def_instance(ast::DefInstance *node) override;
         void visit_type_decl(ast::TypeDecl *node) override;
         void visit_module(ast::Module *node) override;
