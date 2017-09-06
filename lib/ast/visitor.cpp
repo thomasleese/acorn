@@ -74,8 +74,8 @@ void Visitor::visit_node(Node *node) {
         visit_case(case_);
     } else if (auto switch_ = llvm::dyn_cast<Switch>(node)) {
         visit_switch(switch_);
-    } else if (auto let = llvm::dyn_cast<Let>(node)) {
-        visit_let(let);
+    } else if (auto let_decl = llvm::dyn_cast<LetDecl>(node)) {
+        visit_let_decl(let_decl);
     } else if (auto parameter = llvm::dyn_cast<Parameter>(node)) {
         visit_parameter(parameter);
     } else if (auto def_decl = llvm::dyn_cast<DefDecl>(node)) {
@@ -276,7 +276,7 @@ void Visitor::visit_parameter(Parameter *node) {
     visit_node(node->given_type());
 }
 
-void Visitor::visit_let(Let *node) {
+void Visitor::visit_let_decl(LetDecl *node) {
     visit_node(node->assignment());
 
     if (node->body()) {

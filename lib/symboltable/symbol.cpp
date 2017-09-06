@@ -63,7 +63,7 @@ bool Symbol::is_type() const {
 }
 
 bool Symbol::is_variable() const {
-    return dynamic_cast<ast::Let *>(m_node) != nullptr;
+    return dynamic_cast<ast::LetDecl *>(m_node) != nullptr;
 }
 
 void Symbol::copy_type_from(ast::Node *node) {

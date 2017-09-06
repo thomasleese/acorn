@@ -35,7 +35,7 @@ namespace acorn::ast {
     class Case;
     class Switch;
     class Parameter;
-    class Let;
+    class LetDecl;
     class DefDecl;
     class TypeDecl;
     class ModuleDecl;
@@ -81,7 +81,7 @@ namespace acorn::ast {
         virtual void visit_case(Case *node);
         virtual void visit_switch(Switch *node);
         virtual void visit_parameter(Parameter *node);
-        virtual void visit_let(Let *node);
+        virtual void visit_let_decl(LetDecl *node);
         virtual void visit_def_decl(DefDecl *node);
         virtual void visit_type_decl(TypeDecl *node);
         virtual void visit_module_decl(ModuleDecl *node);

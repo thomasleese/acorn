@@ -55,7 +55,7 @@ namespace acorn::ast {
             NK_Spawn,
             NK_Case,
             NK_Switch,
-            NK_Let,
+            NK_LetDecl,
             NK_Parameter,
             NK_DefDecl,
             NK_TypeDecl,
@@ -621,17 +621,17 @@ namespace acorn::ast {
         std::unique_ptr<TypeName> m_given_type;
     };
 
-    class Let : public Node {
+    class LetDecl : public Node {
     public:
-        Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body);
-        Let(Token token, std::string name, std::unique_ptr<Node> value = nullptr, std::unique_ptr<Node> body = nullptr);
+        LetDecl(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body);
+        LetDecl(Token token, std::string name, std::unique_ptr<Node> value = nullptr, std::unique_ptr<Node> body = nullptr);
 
         std::unique_ptr<Assignment> &assignment() { return m_assignment; }
 
         std::unique_ptr<Node> &body() { return m_body; }
 
         static bool classof(const Node *node) {
-            return node->kind() == NK_Let;
+            return node->kind() == NK_LetDecl;
         }
 
     private:
