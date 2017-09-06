@@ -17,7 +17,7 @@ using namespace acorn::ast;
 
 static auto logger = spdlog::get("acorn");
 
-void Visitor::visit(Node *node) {
+void Visitor::visit_node(Node *node) {
     if (node == nullptr) {
         logger->warn("Visitor::visit given a null node");
     }
@@ -95,7 +95,7 @@ void Visitor::visit(Node *node) {
 
 void Visitor::visit_block(Block *node) {
     for (auto &expression : node->expressions()) {
-        visit(expression);
+        visit_node(expression);
     }
 }
 
@@ -104,38 +104,40 @@ void Visitor::visit_name(Name *node) {
 }
 
 void Visitor::visit_type_name(TypeName *node) {
-    visit(node->name());
+    visit_node(node->name());
 
     for (auto &parameter : node->parameters()) {
-        visit(parameter);
+        visit_node(parameter);
     }
 }
 
 void Visitor::visit_decl_name(DeclName *node) {
-    visit(node->name());
+    visit_node(node->name());
 
     for (auto &parameter : node->parameters()) {
-        visit(parameter);
+        visit_node(parameter);
     }
 }
 
 void Visitor::visit_param_name(ParamName *node) {
+    visit_node(node->name());
+
     for (auto &parameter : node->parameters()) {
-        visit(parameter);
+        visit_node(parameter);
     }
 }
 
 void Visitor::visit_decl_holder(DeclHolder *node) {
     for (auto &instance : node->instances()) {
-        visit(instance);
+        visit_node(instance);
     }
 }
 
 void Visitor::visit_var_decl(VarDecl *node) {
-    visit(node->name());
+    visit_node(node->name());
 
     if (node->given_type()) {
-        visit(node->given_type());
+        visit_node(node->given_type());
     }
 }
 
@@ -157,13 +159,13 @@ void Visitor::visit_string(String *node) {
 
 void Visitor::visit_list(List *node) {
     for (auto &element : node->elements()) {
-        visit(element);
+        visit_node(element);
     }
 }
 
 void Visitor::visit_tuple(Tuple *node) {
     for (auto &element : node->elements()) {
-        visit(element);
+        visit_node(element);
     }
 }
 
@@ -172,161 +174,161 @@ void Visitor::visit_dictionary(Dictionary *node) {
     auto &values = node->values();
 
     for (size_t i = 0; i < keys.size(); i++) {
-        visit(keys[i]);
-        visit(values[i]);
+        visit_node(keys[i]);
+        visit_node(values[i]);
     }
 
 }
 
 void Visitor::visit_call(Call *node) {
-    visit(node->operand());
+    visit_node(node->operand());
 
     for (auto &positional_argument : node->positional_arguments()) {
-        visit(positional_argument);
+        visit_node(positional_argument);
     }
 
     for (auto &keyword_argument : node->keyword_arguments()) {
-        visit(keyword_argument.second);
+        visit_node(keyword_argument.second);
     }
 
 }
 
 void Visitor::visit_ccall(CCall *node) {
     for (auto &parameter : node->parameters()) {
-        visit(parameter);
+        visit_node(parameter);
     }
 
-    visit(node->return_type());
+    visit_node(node->return_type());
 
     for (auto &argument : node->arguments()) {
-        visit(argument);
+        visit_node(argument);
     }
 }
 
 void Visitor::visit_cast(Cast *node) {
-    visit(node->operand());
-    visit(node->new_type());
+    visit_node(node->operand());
+    visit_node(node->new_type());
 }
 
 void Visitor::visit_assignment(Assignment *node) {
-    visit(node->lhs());
+    visit_node(node->lhs());
 
     if (!node->builtin()) {
-        visit(node->rhs());
+        visit_node(node->rhs());
     }
 }
 
 void Visitor::visit_selector(Selector *node) {
     if (node->operand()) {
-        visit(node->operand());
+        visit_node(node->operand());
     }
 
-    visit(node->field());
+    visit_node(node->field());
 }
 
 void Visitor::visit_while(While *node) {
-    visit(node->condition());
-    visit(node->body());
+    visit_node(node->condition());
+    visit_node(node->body());
 }
 
 void Visitor::visit_if(If *node) {
-    visit(node->condition());
+    visit_node(node->condition());
 
-    visit(node->true_case());
+    visit_node(node->true_case());
 
     if (node->false_case()) {
-        visit(node->false_case());
+        visit_node(node->false_case());
     }
 }
 
 void Visitor::visit_return(Return *node) {
-    visit(node->expression());
+    visit_node(node->expression());
 }
 
 void Visitor::visit_spawn(Spawn *node) {
-    visit(node->call());
+    visit_node(node->call());
 }
 
 void Visitor::visit_case(Case *node) {
-    visit(node->condition());
+    visit_node(node->condition());
 
     if (node->assignment()) {
-        visit(node->assignment());
+        visit_node(node->assignment());
     }
 
-    visit(node->body());
+    visit_node(node->body());
 }
 
 void Visitor::visit_switch(Switch *node) {
-    visit(node->expression());
+    visit_node(node->expression());
 
     for (auto &case_ : node->cases()) {
-        visit(case_);
+        visit_node(case_);
     }
 
     if (node->default_case()) {
-        visit(node->default_case());
+        visit_node(node->default_case());
     }
 }
 
 void Visitor::visit_parameter(Parameter *node) {
-    visit(node->name());
-    visit(node->given_type());
+    visit_node(node->name());
+    visit_node(node->given_type());
 }
 
 void Visitor::visit_let(Let *node) {
-    visit(node->assignment());
+    visit_node(node->assignment());
 
     if (node->body()) {
-        visit(node->body());
+        visit_node(node->body());
     }
 }
 
 void Visitor::visit_def_instance(DefInstance *node) {
-    visit(node->name());
+    visit_node(node->name());
 
     for (auto &parameter : node->parameters()) {
-        visit(parameter);
+        visit_node(parameter);
     }
 
     if (node->builtin() || node->return_type()) {
-        visit(node->return_type());
+        visit_node(node->return_type());
     }
 
     if (!node->builtin()) {
-        visit(node->body());
+        visit_node(node->body());
     }
 }
 
 void Visitor::visit_type_decl(TypeDecl *node) {
-    visit(node->name());
+    visit_node(node->name());
 
     if (node->alias()) {
-        visit(node->alias());
+        visit_node(node->alias());
     } else {
         auto &field_names = node->field_names();
         auto &field_types = node->field_types();
 
         for (size_t i = 0; i < field_names.size(); i++) {
-            visit(field_names[i]);
-            visit(field_types[i]);
+            visit_node(field_names[i]);
+            visit_node(field_types[i]);
         }
     }
 }
 
 void Visitor::visit_module(Module *node) {
-    visit(node->name());
-    visit(node->body());
+    visit_node(node->name());
+    visit_node(node->body());
 }
 
 void Visitor::visit_import(Import *node) {
-    visit(node->path());
+    visit_node(node->path());
 }
 
 void Visitor::visit_source_file(SourceFile *node) {
     for (auto &import : node->imports()) {
-        visit(import);
+        visit_node(import);
     }
 
-    visit(node->code());
+    visit_node(node->code());
 }

@@ -20,7 +20,7 @@ static auto logger = spdlog::stdout_color_mt("acorn");
 
 void pretty_print(std::unique_ptr<ast::SourceFile> &source_file) {
     PrettyPrinter pp;
-    pp.visit(source_file.get());
+    pp.visit_source_file(source_file.get());
     pp.print();
 }
 
@@ -37,7 +37,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
     logger->info("Building symbol table...");
 
     symboltable::Builder symbol_table_builder(root_namespace);
-    symbol_table_builder.visit(source_file.get());
+    symbol_table_builder.visit_source_file(source_file.get());
     assert(symbolTableBuilder.is_at_root());
 
     return_null_if_has_errors(symbol_table_builder);
@@ -47,7 +47,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
     logger->info("Running type checker...");
 
     typesystem::TypeChecker type_checker(root_namespace);
-    type_checker.visit(source_file.get());
+    type_checker.visit_source_file(source_file.get());
 
     return_null_if_has_errors(type_checker);
 

@@ -100,11 +100,11 @@ void Builder::visit_def_instance(ast::DefInstance *node) {
     }
 
     for (auto &parameter : node->parameters()) {
-        visit(parameter.get());
+        visit_node(parameter.get());
     }
 
     if (!node->builtin()) {
-        visit(node->body().get());
+        visit_node(node->body().get());
     }
 
     pop_scope();
@@ -142,6 +142,6 @@ void Builder::visit_module(ast::Module *node) {
     }
 
     push_scope(symbol);
-    visit(node->body().get());
+    visit_node(node->body().get());
     pop_scope();
 }

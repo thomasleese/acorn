@@ -46,16 +46,12 @@ namespace acorn::ast {
     public:
         virtual ~Visitor() = default;
 
-        void visit(Node *node);
-
-        void visit_node(Node *node) {
-            visit(node);
-        }
+        virtual void visit_node(Node *node);
 
     private:
         template <typename T>
-        void visit(std::unique_ptr<T> &node) {
-            visit(node.get());
+        void visit_node(std::unique_ptr<T> &node) {
+            visit_node(node.get());
         }
 
     public:
