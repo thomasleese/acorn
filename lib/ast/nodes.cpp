@@ -316,11 +316,11 @@ Switch::Switch(Token token, std::unique_ptr<Node> expression, std::vector<std::u
     }
 }
 
-Let::Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body) : Node(NK_Let, token), m_assignment(std::move(assignment)), m_body(std::move(body)) {
+Let::Let(Token token, std::unique_ptr<Assignment> assignment) : Node(NK_Let, token), m_assignment(std::move(assignment)) {
 
 }
 
-Let::Let(Token token, std::string name, std::unique_ptr<Node> value, std::unique_ptr<Node> body) : Node(NK_Let, token), m_body(std::move(body)) {
+Let::Let(Token token, std::string name, std::unique_ptr<Node> value) : Node(NK_Let, token) {
     auto name_node = std::make_unique<DeclName>(token, name);
 
     auto var_decl = std::make_unique<VarDecl>(

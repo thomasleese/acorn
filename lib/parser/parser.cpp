@@ -946,20 +946,12 @@ std::unique_ptr<Let> Parser::read_let() {
         return_null_if_null(rhs);
     }
 
-    std::unique_ptr<Node> body;
-
-    if (is_and_skip_token(Token::Indent)) {
-        body = read_expression();
-        return_null_if_null(body);
-        return_null_if_false(skip_deindent_and_end_token());
-    }
-
     auto assignment = std::make_unique<Assignment>(
         token, std::move(lhs), std::move(rhs)
     );
 
     return std::make_unique<Let>(
-        assignment->lhs()->token(), std::move(assignment), std::move(body)
+        assignment->lhs()->token(), std::move(assignment)
     );
 }
 

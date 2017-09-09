@@ -278,10 +278,6 @@ void Visitor::visit_parameter(Parameter *node) {
 
 void Visitor::visit_let(Let *node) {
     visit_node(node->assignment());
-
-    if (node->body()) {
-        visit_node(node->body());
-    }
 }
 
 void Visitor::visit_def_decl(DefDecl *node) {

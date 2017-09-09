@@ -631,12 +631,10 @@ namespace acorn::ast {
 
     class Let : public Node {
     public:
-        Let(Token token, std::unique_ptr<Assignment> assignment, std::unique_ptr<Node> body);
-        Let(Token token, std::string name, std::unique_ptr<Node> value = nullptr, std::unique_ptr<Node> body = nullptr);
+        Let(Token token, std::unique_ptr<Assignment> assignment);
+        Let(Token token, std::string name, std::unique_ptr<Node> value = nullptr);
 
         std::unique_ptr<Assignment> &assignment() { return m_assignment; }
-
-        std::unique_ptr<Node> &body() { return m_body; }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Let;
@@ -644,7 +642,6 @@ namespace acorn::ast {
 
     private:
         std::unique_ptr<Assignment> m_assignment;
-        std::unique_ptr<Node> m_body;
     };
 
     class DefDecl : public DeclNode {

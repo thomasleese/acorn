@@ -552,11 +552,7 @@ void TypeChecker::visit_parameter(ast::Parameter *node) {
 void TypeChecker::visit_let(ast::Let *node) {
     Visitor::visit_let(node);
 
-    if (node->body()) {
-        node->copy_type_from(node->body());
-    } else {
-        node->copy_type_from(node->assignment().get());
-    }
+    node->copy_type_from(node->assignment().get());
 }
 
 void TypeChecker::visit_def_decl(ast::DefDecl *node) {
