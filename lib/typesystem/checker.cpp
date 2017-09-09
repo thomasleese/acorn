@@ -216,6 +216,11 @@ void TypeChecker::check_not_null(ast::Node *node) {
     }
 }
 
+void TypeChecker::visit_node(ast::Node *node) {
+    ast::Visitor::visit_node(node);
+    check_not_null(node);
+}
+
 void TypeChecker::visit_block(ast::Block *node) {
     ast::Visitor::visit_block(node);
 
@@ -553,6 +558,8 @@ void TypeChecker::visit_let(ast::Let *node) {
     Visitor::visit_let(node);
 
     node->copy_type_from(node->assignment().get());
+
+    check_not_null(node);
 }
 
 void TypeChecker::visit_def_decl(ast::DefDecl *node) {

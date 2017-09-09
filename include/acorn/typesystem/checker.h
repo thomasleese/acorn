@@ -54,6 +54,7 @@ namespace acorn::typesystem {
         void check_not_null(ast::Node *expression);
 
     public:
+        void visit_node(ast::Node *node) override;
         void visit_block(ast::Block *node) override;
         void visit_name(ast::Name *node) override;
         void visit_type_name(ast::TypeName *node) override;
