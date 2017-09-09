@@ -137,6 +137,11 @@ DeclName::DeclName(Token token, std::string name) : DeclName(token, std::make_un
 
 }
 
+void DeclName::set_type(typesystem::Type *type) {
+    Node::set_type(type);
+    m_name->set_type(type);
+}
+
 ParamName::ParamName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters) :
     Node(NK_ParamName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) {
 
@@ -172,6 +177,11 @@ void DeclNode::set_type(typesystem::Type *type) {
 DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance) : Node(NK_DeclHolder, token) {
     main_instance->set_holder(this);
     m_instances.push_back(std::move(main_instance));
+}
+
+void DeclHolder::set_type(typesystem::Type *type) {
+    Node::set_type(type);
+    m_instances[0]->set_type(type);
 }
 
 VarDecl::VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin) : DeclNode(NK_VarDecl, token, builtin, std::move(name)), m_given_type(std::move(type)) {

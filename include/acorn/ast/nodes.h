@@ -175,6 +175,8 @@ namespace acorn::ast {
             return m_parameters.size() > 0;
         }
 
+        void set_type(typesystem::Type *type) override;
+
         static bool classof(const Node *node) {
             return node->kind() == NK_DeclName;
         }
@@ -258,6 +260,8 @@ namespace acorn::ast {
         std::vector<std::unique_ptr<DeclNode>> &instances() {
             return m_instances;
         }
+
+        void set_type(typesystem::Type *type) override;
 
         static bool classof(const Node *node) {
             return node->kind() == NK_DeclHolder;

@@ -211,8 +211,7 @@ void TypeChecker::check_types(ast::Node *lhs, ast::Node *rhs) {
 
 void TypeChecker::check_not_null(ast::Node *node) {
     if (!node->has_type()) {
-        auto message = "No type given for: " + node->token().to_string();
-        logger->critical(message);
+        logger->critical("No type given for: {}", node->to_string());
     }
 }
 
@@ -243,15 +242,24 @@ void TypeChecker::visit_name(ast::Name *node) {
 }
 
 void TypeChecker::visit_type_name(ast::TypeName *node) {
-    auto symbol = scope()->lookup(this, node);
-    return_if_null(symbol);
+    ast::Visitor::visit_type_name(node);
 
-    node->set_type(find_type(node));
+    node->copy_type_from(node->name().get());
+}
+
+void TypeChecker::visit_param_name(ast::ParamName *node) {
+    ast::Visitor::visit_param_name(node);
+
+    node->copy_type_from(node->name().get());
+}
+
+void TypeChecker::visit_decl_holder(ast::DeclHolder *node) {
+    ast::Visitor::visit_decl_holder(node);
+
+    node->copy_type_from(node->main_instance().get());
 }
 
 void TypeChecker::visit_var_decl(ast::VarDecl *node) {
-    visit_node(node->name().get());
-
     auto symbol = scope()->lookup(this, node->name().get());
 
     if (node->given_type()) {
@@ -421,7 +429,7 @@ void TypeChecker::visit_assignment(ast::Assignment *node) {
 
     visit_node(lhs);
     if (!lhs->has_type()) {
-        lhs->copy_type_from(node->rhs());
+        lhs->copy_type_from(rhs);
     }
 
     return_if_null_type(lhs);

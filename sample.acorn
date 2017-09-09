@@ -16,5 +16,4 @@ def builtin +(a as Float64, b as Float64) as Float64
 #let a = pi{Float} * 2
 #let b = pi{Int} * 2
 
-let code = 2
-exit(2)
+exit(let code = 2)
