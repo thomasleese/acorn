@@ -46,11 +46,7 @@ void PrettyPrinter::visit_non_terminal(ast::Node *node) {
 }
 
 std::string PrettyPrinter::indentation() {
-    std::string s;
-    for (int i = 0; i < m_indent; i++) {
-        s += " ";
-    }
-    return s;
+    return std::string(m_indent, ' ');
 }
 
 std::string PrettyPrinter::str() {

@@ -44,6 +44,7 @@ namespace acorn::ast {
 
     class Visitor {
     public:
+        Visitor();
         virtual ~Visitor() = default;
 
         virtual void visit_node(Node *node);
@@ -87,6 +88,9 @@ namespace acorn::ast {
         virtual void visit_module_decl(ModuleDecl *node);
         virtual void visit_import(Import *node);
         virtual void visit_source_file(SourceFile *node);
+
+    private:
+        int m_debug_indentation;
     };
 
 }
