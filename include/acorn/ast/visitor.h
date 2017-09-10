@@ -14,6 +14,7 @@ namespace acorn::ast {
     class TypeName;
     class DeclName;
     class ParamName;
+    class SpecialisedDecl;
     class DeclHolder;
     class VarDecl;
     class Int;
@@ -61,6 +62,7 @@ namespace acorn::ast {
         virtual void visit_type_name(TypeName *node);
         virtual void visit_decl_name(DeclName *node);
         virtual void visit_param_name(ParamName *node);
+        virtual void visit_specialised_decl(SpecialisedDecl *node);
         virtual void visit_decl_holder(DeclHolder *node);
         virtual void visit_var_decl(VarDecl *node);
         virtual void visit_int(Int *node);

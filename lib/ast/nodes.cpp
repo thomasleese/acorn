@@ -39,6 +39,8 @@ std::string Node::kind_string() const {
         return "DeclName";
     case NK_ParamName:
         return "ParamName";
+    case NK_SpecialisedDecl:
+        return "SpecialisedDecl";
     case NK_DeclHolder:
         return "DeclHolder";
     case NK_VarDecl:
@@ -233,6 +235,17 @@ DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::string name)
 void DeclNode::set_type(typesystem::Type *type) {
     Node::set_type(type);
     m_name->set_type(type);
+}
+
+SpecialisedDecl::SpecialisedDecl(Token token, std::unique_ptr<DeclNode> declaration)
+    :Node (NK_SpecialisedDecl, token), m_declaration(std::move(declaration)) {
+
+}
+
+SpecialisedDecl *SpecialisedDecl::clone() const {
+    auto cloned_declaration = unique_ptr<DeclNode>(m_declaration->clone());
+
+    return new SpecialisedDecl(token(), std::move(cloned_declaration));
 }
 
 DeclHolder::DeclHolder(Token token, std::vector<unique_ptr<DeclNode>> instances)

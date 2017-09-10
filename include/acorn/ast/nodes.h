@@ -36,6 +36,7 @@ namespace acorn::ast {
             NK_TypeName,
             NK_DeclName,
             NK_ParamName,
+            NK_SpecialisedDecl,
             NK_DeclHolder,
             NK_VarDecl,
             NK_Int,
@@ -256,6 +257,24 @@ namespace acorn::ast {
         std::unique_ptr<DeclName> m_name;
 
         DeclHolder *m_holder;
+    };
+
+    class SpecialisedDecl : public Node {
+    public:
+        SpecialisedDecl(Token token, std::unique_ptr<DeclNode> declaration);
+
+        SpecialisedDecl *clone() const override;
+
+        std::unique_ptr<DeclNode> &declaration() {
+            return m_declaration;
+        }
+
+        static bool classof(const Node *node) {
+            return node->kind() == NK_SpecialisedDecl;
+        }
+
+    private:
+        std::unique_ptr<DeclNode> m_declaration;
     };
 
     class DeclHolder : public Node {
