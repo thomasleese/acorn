@@ -204,6 +204,17 @@ ParamName::ParamName(Token token, std::string name) :
 
 }
 
+ParamName *ParamName::clone() const {
+    auto cloned_name = unique_ptr<Name>(m_name->clone());
+
+    std::vector<std::unique_ptr<TypeName>> cloned_parameters;
+    for (auto &parameter : m_parameters) {
+        cloned_parameters.push_back(unique_ptr<TypeName>(parameter->clone()));
+    }
+
+    return new ParamName(token(), std::move(cloned_name), std::move(cloned_parameters));
+}
+
 DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<DeclName> name) : Node(kind, token), m_builtin(builtin), m_name(std::move(name)) {
 
 }

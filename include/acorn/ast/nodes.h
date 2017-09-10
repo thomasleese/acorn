@@ -206,6 +206,8 @@ namespace acorn::ast {
         ParamName(Token token, std::unique_ptr<Name> name);
         ParamName(Token token, std::string name);
 
+        ParamName *clone() const override;
+
         std::unique_ptr<Name> &name() {
             return m_name;
         }

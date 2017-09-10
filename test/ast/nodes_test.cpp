@@ -49,3 +49,12 @@ TEST(ast_nodes_test, decl_name_clone)
     EXPECT_FALSE(decl_name1 == decl_name2);
     EXPECT_FALSE(decl_name1->name() == decl_name2->name());
 }
+
+TEST(ast_nodes_test, param_name_clone)
+{
+    auto param_name1 = new DeclName(token, make_unique<Name>(token, "name"));
+    auto param_name2 = param_name1->clone();
+
+    EXPECT_FALSE(param_name1 == param_name2);
+    EXPECT_FALSE(param_name1->name() == param_name2->name());
+}
