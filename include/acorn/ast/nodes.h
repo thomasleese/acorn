@@ -255,9 +255,10 @@ namespace acorn::ast {
 
         void set_type(typesystem::Type *type) override;
 
-    private:
+    protected:
         bool m_builtin;
         std::unique_ptr<DeclName> m_name;
+
         DeclHolder *m_holder;
     };
 
@@ -298,6 +299,8 @@ namespace acorn::ast {
     public:
         VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type = nullptr, bool builtin = false);
 
+        VarDecl *clone() const override;
+
         std::unique_ptr<TypeName> &given_type() { return m_given_type; }
 
         static bool classof(const Node *node) {
@@ -311,6 +314,8 @@ namespace acorn::ast {
     class Int : public Node {
     public:
         Int(Token token, std::string value);
+
+        Int *clone() const override;
 
         std::string value() const { return m_value; }
 
@@ -326,6 +331,8 @@ namespace acorn::ast {
     public:
         Float(Token token, std::string value);
 
+        Float *clone() const override;
+
         std::string value() const { return m_value; }
 
         static bool classof(const Node *node) {
@@ -338,7 +345,9 @@ namespace acorn::ast {
 
     class Complex : public Node {
     public:
-        using Node::Node;
+        Complex(Token token);
+
+        Complex *clone() const override;
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Complex;
@@ -348,6 +357,8 @@ namespace acorn::ast {
     class String : public Node {
     public:
         String(Token token, std::string value);
+
+        String *clone() const override;
 
         std::string value() const { return m_value; }
 

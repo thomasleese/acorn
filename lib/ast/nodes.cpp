@@ -262,20 +262,55 @@ void DeclHolder::set_type(typesystem::Type *type) {
     m_instances[0]->set_type(type);
 }
 
-VarDecl::VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin) : DeclNode(NK_VarDecl, token, builtin, std::move(name)), m_given_type(std::move(type)) {
+VarDecl::VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin)
+    : DeclNode(NK_VarDecl, token, builtin, std::move(name)), m_given_type(std::move(type)) {
 
 }
 
-Int::Int(Token token, std::string value) : Node(NK_Int, token), m_value(value) {
+VarDecl *VarDecl::clone() const {
+    auto cloned_name = unique_ptr<DeclName>(m_name->clone());
+
+    unique_ptr<TypeName> cloned_type;
+    if (m_given_type) {
+        cloned_type = unique_ptr<TypeName>(m_given_type->clone());
+    }
+
+    return new VarDecl(token(), std::move(cloned_name), std::move(cloned_type), m_builtin);
+}
+
+Int::Int(Token token, std::string value)
+    : Node(NK_Int, token), m_value(value) {
 
 }
 
-Float::Float(Token token, std::string value) : Node(NK_Float, token), m_value(value) {
+Int *Int::clone() const {
+    return new Int(token(), m_value);
+}
+
+Float::Float(Token token, std::string value)
+    : Node(NK_Float, token), m_value(value) {
 
 }
 
-String::String(Token token, std::string value) : Node(NK_String, token), m_value(value) {
+Float *Float::clone() const {
+    return new Float(token(), m_value);
+}
 
+Complex::Complex(Token token) : Node(NK_Complex, token) {
+
+}
+
+Complex *Complex::clone() const {
+    return new Complex(token());
+}
+
+String::String(Token token, std::string value)
+    : Node(NK_String, token), m_value(value) {
+
+}
+
+String *String::clone() const {
+    return new String(token(), m_value);
 }
 
 Sequence::Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Node>> elements) : Node(kind, token) {
@@ -284,11 +319,13 @@ Sequence::Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Node>
     }
 }
 
-List::List(Token token, std::vector<std::unique_ptr<Node>> elements) : Sequence(NK_List, token, std::move(elements)) {
+List::List(Token token, std::vector<std::unique_ptr<Node>> elements)
+    : Sequence(NK_List, token, std::move(elements)) {
 
 }
 
-Tuple::Tuple(Token token, std::vector<std::unique_ptr<Node>> elements) : Sequence(NK_Tuple, token, std::move(elements)) {
+Tuple::Tuple(Token token, std::vector<std::unique_ptr<Node>> elements)
+    : Sequence(NK_Tuple, token, std::move(elements)) {
 
 }
 
