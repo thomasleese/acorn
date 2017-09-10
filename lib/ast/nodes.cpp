@@ -163,12 +163,25 @@ DeclName::DeclName(Token token, std::unique_ptr<Name> name, std::vector<std::uni
 
 }
 
-DeclName::DeclName(Token token, std::unique_ptr<Name> name) : Node(NK_DeclName, token), m_name(std::move(name)) {
+DeclName::DeclName(Token token, std::unique_ptr<Name> name)
+    : DeclName(token, std::move(name), std::vector<unique_ptr<Name>>()) {
 
 }
 
-DeclName::DeclName(Token token, std::string name) : DeclName(token, std::make_unique<Name>(token, name)) {
+DeclName::DeclName(Token token, std::string name)
+    : DeclName(token, std::make_unique<Name>(token, name)) {
 
+}
+
+DeclName *DeclName::clone() const {
+    auto cloned_name = unique_ptr<Name>(m_name->clone());
+
+    std::vector<std::unique_ptr<Name>> cloned_parameters;
+    for (auto &parameter : m_parameters) {
+        cloned_parameters.push_back(unique_ptr<Name>(parameter->clone()));
+    }
+
+    return new DeclName(token(), std::move(cloned_name), std::move(cloned_parameters));
 }
 
 void DeclName::set_type(typesystem::Type *type) {

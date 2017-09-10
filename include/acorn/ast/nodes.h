@@ -175,6 +175,8 @@ namespace acorn::ast {
         DeclName(Token token, std::unique_ptr<Name> name);
         DeclName(Token token, std::string name);
 
+        DeclName *clone() const override;
+
         std::unique_ptr<Name> &name() {
             return m_name;
         }
