@@ -2,35 +2,17 @@
 // Created by Thomas Leese on 12/01/2017.
 //
 
-#include <iostream>
-#include <memory>
-#include <sstream>
-
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
+#include <llvm/IR/Instructions.h>
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Verifier.h>
-#include <llvm/IR/Instructions.h>
-#include <llvm/Support/Casting.h>
-#include <llvm/IR/LegacyPassManager.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Transforms/Scalar.h>
-#include <llvm/Transforms/IPO.h>
-
-#include "acorn/ast/nodes.h"
-#include "acorn/diagnostics.h"
-#include "acorn/symboltable/namespace.h"
-#include "acorn/symboltable/symbol.h"
-#include "acorn/typesystem/types.h"
-#include "acorn/utils.h"
 
 #include "acorn/codegen/irbuilder.h"
 
 using namespace acorn;
 using namespace acorn::codegen;
-using namespace acorn::diagnostics;
 
 IrBuilder::IrBuilder(llvm::LLVMContext &context) : m_ir_builder(new llvm::IRBuilder<>(context)) {
 

@@ -14,6 +14,10 @@ namespace acorn {
 
     namespace ast {
         class Node;
+        class Name;
+        class TypeName;
+        class DeclName;
+        class ParamName;
     }
 
     namespace typesystem {
