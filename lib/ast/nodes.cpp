@@ -215,15 +215,18 @@ ParamName *ParamName::clone() const {
     return new ParamName(token(), std::move(cloned_name), std::move(cloned_parameters));
 }
 
-DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<DeclName> name) : Node(kind, token), m_builtin(builtin), m_name(std::move(name)) {
+DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<DeclName> name)
+    : Node(kind, token), m_builtin(builtin), m_name(std::move(name)) {
 
 }
 
-DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<Name> name) : DeclNode(kind, token, builtin, std::make_unique<DeclName>(token, std::move(name))) {
+DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<Name> name)
+    : DeclNode(kind, token, builtin, std::make_unique<DeclName>(token, std::move(name))) {
 
 }
 
-DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::string name) : DeclNode(kind, token, builtin, std::make_unique<Name>(token, name)) {
+DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::string name)
+    : DeclNode(kind, token, builtin, std::make_unique<Name>(token, name)) {
 
 }
 
@@ -232,9 +235,26 @@ void DeclNode::set_type(typesystem::Type *type) {
     m_name->set_type(type);
 }
 
-DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance) : Node(NK_DeclHolder, token) {
+DeclHolder::DeclHolder(Token token, std::vector<unique_ptr<DeclNode>> instances)
+    : Node(NK_DeclHolder, token), m_instances(std::move(instances)) {
+    for (auto &instance : m_instances) {
+        instance->set_holder(this);
+    }
+}
+
+DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance)
+    : DeclHolder(token, std::vector<unique_ptr<DeclNode>>()) {
     main_instance->set_holder(this);
     m_instances.push_back(std::move(main_instance));
+}
+
+DeclHolder *DeclHolder::clone() const {
+    std::vector<std::unique_ptr<DeclNode>> cloned_instances;
+    for (auto &instance : m_instances) {
+        cloned_instances.push_back(unique_ptr<DeclNode>(instance->clone()));
+    }
+
+    return new DeclHolder(token(), std::move(cloned_instances));
 }
 
 void DeclHolder::set_type(typesystem::Type *type) {

@@ -237,6 +237,10 @@ namespace acorn::ast {
         DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<Name> name);
         DeclNode(NodeKind kind, Token token, bool builtin, std::string name);
 
+        virtual DeclNode *clone() const override {
+            return nullptr;
+        }
+
         bool builtin() const { return m_builtin; }
 
         std::unique_ptr<DeclName> &name() { return m_name; }
@@ -259,7 +263,10 @@ namespace acorn::ast {
 
     class DeclHolder : public Node {
     public:
+        DeclHolder(Token token, std::vector<std::unique_ptr<DeclNode>> instances);
         DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance);
+
+        DeclHolder *clone() const override;
 
         std::unique_ptr<DeclNode> &main_instance() {
             return m_instances[0];
