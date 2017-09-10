@@ -36,7 +36,7 @@ namespace acorn::typesystem {
 
     class Visitor {
     public:
-        virtual ~Visitor();
+        virtual ~Visitor() = default;
 
         virtual void visit(ParameterType *type) = 0;
         virtual void visit(VoidType *type) = 0;

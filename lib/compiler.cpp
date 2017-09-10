@@ -2,7 +2,6 @@
 // Created by Thomas Leese on 14/03/2016.
 //
 
-#include <cstdio>
 #include <iostream>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -11,7 +10,6 @@
 #include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
 #include <llvm/ExecutionEngine/Orc/LambdaResolver.h>
 #include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
-#include <llvm/IR/Mangler.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/TargetRegistry.h>
