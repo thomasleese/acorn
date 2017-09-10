@@ -374,17 +374,21 @@ namespace acorn::ast {
     public:
         Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Node>> elements);
 
+        virtual Sequence *clone() const override = 0;
+
         std::vector<std::unique_ptr<Node>> &elements() {
             return m_elements;
         }
 
-    private:
+    protected:
         std::vector<std::unique_ptr<Node>> m_elements;
     };
 
     class List : public Sequence {
     public:
         List(Token token, std::vector<std::unique_ptr<Node>> elements);
+
+        List *clone() const;
 
         static bool classof(const Node *node) {
             return node->kind() == NK_List;
@@ -394,6 +398,8 @@ namespace acorn::ast {
     class Tuple : public Sequence {
     public:
         Tuple(Token token, std::vector<std::unique_ptr<Node>> elements);
+
+        Tuple *clone() const;
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Tuple;

@@ -324,9 +324,27 @@ List::List(Token token, std::vector<std::unique_ptr<Node>> elements)
 
 }
 
+List *List::clone() const {
+    std::vector<unique_ptr<Node>> cloned_elements;
+    for (auto &element : m_elements) {
+        cloned_elements.push_back(unique_ptr<Node>(element->clone()));
+    }
+
+    return new List(token(), std::move(cloned_elements));
+}
+
 Tuple::Tuple(Token token, std::vector<std::unique_ptr<Node>> elements)
     : Sequence(NK_Tuple, token, std::move(elements)) {
 
+}
+
+Tuple *Tuple::clone() const {
+    std::vector<unique_ptr<Node>> cloned_elements;
+    for (auto &element : m_elements) {
+        cloned_elements.push_back(unique_ptr<Node>(element->clone()));
+    }
+
+    return new Tuple(token(), std::move(cloned_elements));
 }
 
 Dictionary::Dictionary(Token token, std::vector<std::unique_ptr<Node>> keys, std::vector<std::unique_ptr<Node>> values) : Node(NK_Dictionary, token) {
