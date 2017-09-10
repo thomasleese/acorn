@@ -248,31 +248,34 @@ SpecialisedDecl *SpecialisedDecl::clone() const {
     return new SpecialisedDecl(token(), std::move(cloned_declaration));
 }
 
-DeclHolder::DeclHolder(Token token, std::vector<unique_ptr<DeclNode>> instances)
-    : Node(NK_DeclHolder, token), m_instances(std::move(instances)) {
-    for (auto &instance : m_instances) {
+DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std::vector<unique_ptr<DeclNode>> specialised_instances)
+    : Node(NK_DeclHolder, token), m_main_instance(std::move(main_instance)), m_specialised_instances(std::move(specialised_instances)) {
+    m_main_instance->set_holder(this);
+
+    for (auto &instance : m_specialised_instances) {
         instance->set_holder(this);
     }
 }
 
 DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance)
-    : DeclHolder(token, std::vector<unique_ptr<DeclNode>>()) {
-    main_instance->set_holder(this);
-    m_instances.push_back(std::move(main_instance));
+    : DeclHolder(token, std::move(main_instance), std::vector<unique_ptr<DeclNode>>()) {
+
 }
 
 DeclHolder *DeclHolder::clone() const {
-    std::vector<std::unique_ptr<DeclNode>> cloned_instances;
-    for (auto &instance : m_instances) {
-        cloned_instances.push_back(unique_ptr<DeclNode>(instance->clone()));
+    auto cloned_main_instance = unique_ptr<DeclNode>(m_main_instance->clone());
+
+    std::vector<std::unique_ptr<DeclNode>> cloned_specialised_instances;
+    for (auto &instance : m_specialised_instances) {
+        cloned_specialised_instances.push_back(unique_ptr<DeclNode>(instance->clone()));
     }
 
-    return new DeclHolder(token(), std::move(cloned_instances));
+    return new DeclHolder(token(), std::move(cloned_main_instance), std::move(cloned_specialised_instances));
 }
 
 void DeclHolder::set_type(typesystem::Type *type) {
     Node::set_type(type);
-    m_instances[0]->set_type(type);
+    m_main_instance->set_type(type);
 }
 
 VarDecl::VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin)

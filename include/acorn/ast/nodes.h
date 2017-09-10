@@ -279,25 +279,25 @@ namespace acorn::ast {
 
     class DeclHolder : public Node {
     public:
-        DeclHolder(Token token, std::vector<std::unique_ptr<DeclNode>> instances);
+        DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std::vector<std::unique_ptr<DeclNode>> specialised_instances);
         DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance);
 
         DeclHolder *clone() const override;
 
         std::unique_ptr<DeclNode> &main_instance() {
-            return m_instances[0];
+            return m_main_instance;
         }
 
         std::unique_ptr<DeclName> &name() {
-            return m_instances[0]->name();
+            return m_main_instance->name();
         }
 
         bool builtin() const {
-            return m_instances[0]->builtin();
+            return m_main_instance->builtin();
         }
 
-        std::vector<std::unique_ptr<DeclNode>> &instances() {
-            return m_instances;
+        std::vector<std::unique_ptr<DeclNode>> &specialised_instances() {
+            return m_specialised_instances;
         }
 
         void set_type(typesystem::Type *type) override;
@@ -307,7 +307,8 @@ namespace acorn::ast {
         }
 
     private:
-        std::vector<std::unique_ptr<DeclNode>> m_instances;
+        std::unique_ptr<DeclNode> m_main_instance;
+        std::vector<std::unique_ptr<DeclNode>> m_specialised_instances;
     };
 
     class VarDecl : public DeclNode {

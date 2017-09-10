@@ -142,7 +142,9 @@ void Visitor::visit_specialised_decl(SpecialisedDecl *node) {
 }
 
 void Visitor::visit_decl_holder(DeclHolder *node) {
-    for (auto &instance : node->instances()) {
+    visit_node(node->main_instance());
+
+    for (auto &instance : node->specialised_instances()) {
         visit_node(instance);
     }
 }
