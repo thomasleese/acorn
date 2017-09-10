@@ -13,7 +13,7 @@
 using namespace acorn;
 using namespace acorn::ast;
 
-using std::unique_ptr;
+using std::make_unique, std::unique_ptr;
 
 Node::Node(NodeKind kind, Token token) : m_kind(std::move(kind)), m_token(std::move(token)), m_type(nullptr) {
 
@@ -248,7 +248,7 @@ SpecialisedDecl *SpecialisedDecl::clone() const {
     return new SpecialisedDecl(token(), std::move(cloned_declaration));
 }
 
-DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std::vector<unique_ptr<DeclNode>> specialised_instances)
+DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std::vector<unique_ptr<SpecialisedDecl>> specialised_instances)
     : Node(NK_DeclHolder, token), m_main_instance(std::move(main_instance)), m_specialised_instances(std::move(specialised_instances)) {
     m_main_instance->set_holder(this);
 
@@ -258,19 +258,27 @@ DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std
 }
 
 DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance)
-    : DeclHolder(token, std::move(main_instance), std::vector<unique_ptr<DeclNode>>()) {
+    : DeclHolder(token, std::move(main_instance), std::vector<unique_ptr<SpecialisedDecl>>()) {
 
 }
 
 DeclHolder *DeclHolder::clone() const {
     auto cloned_main_instance = unique_ptr<DeclNode>(m_main_instance->clone());
 
-    std::vector<std::unique_ptr<DeclNode>> cloned_specialised_instances;
+    std::vector<std::unique_ptr<SpecialisedDecl>> cloned_specialised_instances;
     for (auto &instance : m_specialised_instances) {
-        cloned_specialised_instances.push_back(unique_ptr<DeclNode>(instance->clone()));
+        cloned_specialised_instances.push_back(unique_ptr<SpecialisedDecl>(instance->clone()));
     }
 
     return new DeclHolder(token(), std::move(cloned_main_instance), std::move(cloned_specialised_instances));
+}
+
+void DeclHolder::create_specialisation() {
+    auto cloned_decl = unique_ptr<DeclNode>(m_main_instance->clone());
+
+    auto specialised_decl = make_unique<SpecialisedDecl>(token(), std::move(cloned_decl));
+
+    m_specialised_instances.push_back(std::move(specialised_decl));
 }
 
 void DeclHolder::set_type(typesystem::Type *type) {

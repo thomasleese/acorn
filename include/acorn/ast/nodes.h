@@ -269,6 +269,10 @@ namespace acorn::ast {
             return m_declaration;
         }
 
+        void set_holder(DeclHolder *holder) {
+            m_declaration->set_holder(holder);
+        }
+
         static bool classof(const Node *node) {
             return node->kind() == NK_SpecialisedDecl;
         }
@@ -279,7 +283,7 @@ namespace acorn::ast {
 
     class DeclHolder : public Node {
     public:
-        DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std::vector<std::unique_ptr<DeclNode>> specialised_instances);
+        DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std::vector<std::unique_ptr<SpecialisedDecl>> specialised_instances);
         DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance);
 
         DeclHolder *clone() const override;
@@ -296,9 +300,11 @@ namespace acorn::ast {
             return m_main_instance->builtin();
         }
 
-        std::vector<std::unique_ptr<DeclNode>> &specialised_instances() {
+        std::vector<std::unique_ptr<SpecialisedDecl>> &specialised_instances() {
             return m_specialised_instances;
         }
+
+        void create_specialisation();
 
         void set_type(typesystem::Type *type) override;
 
@@ -308,7 +314,7 @@ namespace acorn::ast {
 
     private:
         std::unique_ptr<DeclNode> m_main_instance;
-        std::vector<std::unique_ptr<DeclNode>> m_specialised_instances;
+        std::vector<std::unique_ptr<SpecialisedDecl>> m_specialised_instances;
     };
 
     class VarDecl : public DeclNode {
