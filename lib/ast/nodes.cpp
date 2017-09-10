@@ -109,14 +109,30 @@ std::string Node::type_name() const {
     return m_type->name();
 }
 
-Block::Block(Token token, std::vector<std::unique_ptr<Node>> expressions) : Node(NK_Block, token) {
-    for (auto &expression : expressions) {
-        m_expressions.push_back(std::move(expression));
+Block::Block(Token token, std::vector<std::unique_ptr<Node>> expressions)
+    : Node(NK_Block, token), m_expressions(std::move(expressions)) {
+
+}
+
+Block::Block(Token token, std::unique_ptr<Node> expression) : Node(NK_Block, token) {
+    m_expressions.push_back(std::move(expression));
+}
+
+Block *Block::clone() const {
+    std::vector<std::unique_ptr<Node>> cloned_expressions;
+    for (auto &expression : m_expressions) {
+        cloned_expressions.push_back(std::unique_ptr<Node>(expression->clone()));
     }
+
+    return new Block(token(), std::move(cloned_expressions));
 }
 
 Name::Name(Token token, std::string value) : Node(NK_Name, token), m_value(value) {
 
+}
+
+Name *Name::clone() const {
+    return new Name(token(), m_value);
 }
 
 TypeName::TypeName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters)

@@ -67,6 +67,10 @@ namespace acorn::ast {
         Node(NodeKind kind, Token token);
         virtual ~Node() = default;
 
+        virtual Node *clone() const {
+            return nullptr;
+        }
+
         std::string to_string() const;
 
         NodeKind kind() const { return m_kind; }
@@ -99,6 +103,9 @@ namespace acorn::ast {
     class Block : public Node {
     public:
         Block(Token token, std::vector<std::unique_ptr<Node>> expressions);
+        Block(Token token, std::unique_ptr<Node> expression);
+
+        Block *clone() const override;
 
         std::vector<std::unique_ptr<Node>> &expressions() {
             return m_expressions;
@@ -115,6 +122,8 @@ namespace acorn::ast {
     class Name : public Node {
     public:
         Name(Token token, std::string value);
+
+        Name *clone() const override;
 
         const std::string &value() const {
             return m_value;

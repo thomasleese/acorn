@@ -1,7 +1,9 @@
 enable_testing()
 
-set(TEST_FILES parser/keywords_test.cpp
-               parser/token_test.cpp)
+set(TEST_FILES
+    ast/nodes_test.cpp
+    parser/keywords_test.cpp
+    parser/token_test.cpp)
 
 include_directories(${GTEST_INCLUDE_DIRS})
 
