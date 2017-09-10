@@ -13,6 +13,8 @@
 using namespace acorn;
 using namespace acorn::ast;
 
+using std::unique_ptr;
+
 Node::Node(NodeKind kind, Token token) : m_kind(std::move(kind)), m_token(std::move(token)), m_type(nullptr) {
 
 }
@@ -138,6 +140,22 @@ Name *Name::clone() const {
 TypeName::TypeName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters)
     : Node(NK_TypeName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) {
 
+}
+
+TypeName::TypeName(Token token, std::unique_ptr<Name> name)
+    : TypeName(token, std::move(name), std::vector<std::unique_ptr<TypeName>>()) {
+
+}
+
+TypeName *TypeName::clone() const {
+    auto cloned_name = unique_ptr<Name>(m_name->clone());
+
+    std::vector<std::unique_ptr<TypeName>> cloned_parameters;
+    for (auto &parameter : m_parameters) {
+        cloned_parameters.push_back(unique_ptr<TypeName>(parameter->clone()));
+    }
+
+    return new TypeName(token(), std::move(cloned_name), std::move(cloned_parameters));
 }
 
 DeclName::DeclName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters)

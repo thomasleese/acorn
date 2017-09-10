@@ -140,6 +140,9 @@ namespace acorn::ast {
     class TypeName : public Node {
     public:
         TypeName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters);
+        TypeName(Token token, std::unique_ptr<Name> name);
+
+        TypeName *clone() const override;
 
         std::unique_ptr<Name> &name() {
             return m_name;
