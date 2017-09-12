@@ -13,7 +13,8 @@
 using namespace acorn;
 using namespace acorn::ast;
 
-using std::make_unique, std::unique_ptr;
+using std::make_unique;
+using std::unique_ptr;
 
 Node::Node(NodeKind kind, Token token) : m_kind(std::move(kind)), m_token(std::move(token)), m_type(nullptr) {
 

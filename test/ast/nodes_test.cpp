@@ -2,7 +2,8 @@
 
 #include "acorn/ast/nodes.h"
 
-using std::make_unique, std::unique_ptr;
+using std::make_unique;
+using std::unique_ptr;
 
 using namespace acorn;
 using namespace acorn::ast;

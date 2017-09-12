@@ -11,9 +11,9 @@
 
 namespace acorn::parser {
 
-    class Lexer : public diagnostics::Reporter {
+    class Scanner : public diagnostics::Reporter {
     public:
-        Lexer(std::string filename);
+        Scanner(std::string filename);
 
         bool next_token(Token &token);
 

@@ -7,7 +7,7 @@ set(LIB_FILES ast/visitor.cpp
               compiler.cpp
               diagnostics.cpp
               parser/keywords.cpp
-              parser/lexer.cpp
+              parser/scanner.cpp
               parser/parser.cpp
               parser/token.cpp
               prettyprinter.cpp

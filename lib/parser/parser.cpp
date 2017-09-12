@@ -10,7 +10,7 @@
 
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
-#include "acorn/parser/lexer.h"
+#include "acorn/parser/scanner.h"
 #include "acorn/utils.h"
 
 #include "acorn/parser/parser.h"
@@ -25,7 +25,7 @@ static auto logger = spdlog::get("acorn");
 // useful variable for storing the current token
 static Token token;
 
-Parser::Parser(Lexer &lexer) : m_lexer(lexer) {
+Parser::Parser(Scanner &scanner) : m_scanner(scanner) {
     logger->debug("Initialising parser...");
 
     m_operator_precendence["+"] = 1;
@@ -46,12 +46,12 @@ std::unique_ptr<SourceFile> Parser::parse(std::string name) {
 
         std::string filename = "../library/" + import->path()->value() + ".acorn";
 
-        Lexer lexer(filename);
-        Parser parser(lexer);
+        Scanner scanner(filename);
+        Parser parser(scanner);
 
         auto imported_module = parser.parse(filename);
 
-        if (lexer.has_errors() || parser.has_errors()) {
+        if (scanner.has_errors() || parser.has_errors()) {
             continue;
         }
 
@@ -83,7 +83,7 @@ bool Parser::next_non_newline_token() {
     bool found = false;
     Token token;
 
-    while (m_lexer.next_token(token)) {
+    while (m_scanner.next_token(token)) {
         if (token.kind != Token::Newline) {
             found = true;
             break;

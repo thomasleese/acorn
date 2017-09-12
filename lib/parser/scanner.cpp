@@ -14,7 +14,7 @@
 
 #include "acorn/parser/keywords.h"
 
-#include "acorn/parser/lexer.h"
+#include "acorn/parser/scanner.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;
@@ -22,8 +22,8 @@ using namespace acorn::parser;
 
 static auto logger = spdlog::get("acorn");
 
-Lexer::Lexer(std::string filename) {
-    logger->info("Initialising lexer for: {}", filename);
+Scanner::Scanner(std::string filename) {
+    logger->info("Initialising scanner for: {}", filename);
 
     m_filename = filename;
 
@@ -45,7 +45,7 @@ Lexer::Lexer(std::string filename) {
     update_indentation(token);
 }
 
-bool Lexer::next_token(Token &token) {
+bool Scanner::next_token(Token &token) {
     if (m_token_buffer.size()) {
         token = m_token_buffer.front();
         m_token_buffer.pop_front();
@@ -103,17 +103,17 @@ bool Lexer::next_token(Token &token) {
     return true;
 }
 
-int Lexer::get() {
+int Scanner::get() {
     int c = m_data[m_pos];
     m_pos++;
     return c;
 }
 
-void Lexer::unget() {
+void Scanner::unget() {
     m_pos--;
 }
 
-Token Lexer::make_token(Token::Kind kind) const {
+Token Scanner::make_token(Token::Kind kind) const {
     Token token;
     token.kind = kind;
     token.location.filename = m_filename;
@@ -123,7 +123,7 @@ Token Lexer::make_token(Token::Kind kind) const {
     return token;
 }
 
-unsigned int Lexer::skip_whitespace() {
+unsigned int Scanner::skip_whitespace() {
     unsigned int count = 1;
 
     int c = get();
@@ -140,7 +140,7 @@ unsigned int Lexer::skip_whitespace() {
     return count;
 }
 
-void Lexer::skip_comment() {
+void Scanner::skip_comment() {
     int c = get();
     if (c != '#') {
         // obviously not a comment
@@ -162,17 +162,17 @@ void Lexer::skip_comment() {
     unget();
 }
 
-void Lexer::next_line() {
+void Scanner::next_line() {
     m_current_line_number++;
     m_current_column = 1;
     update_current_line();
 }
 
-void Lexer::update_current_line() {
+void Scanner::update_current_line() {
     std::getline(std::istringstream(m_data.substr(m_pos, m_data.size())), m_current_line);
 }
 
-void Lexer::update_indentation(Token &token) {
+void Scanner::update_indentation(Token &token) {
     int level = skip_whitespace();
     if (m_indentation.back() == level) {
         // do nothing
@@ -192,7 +192,7 @@ void Lexer::update_indentation(Token &token) {
     }
 }
 
-bool Lexer::read_name(Token &token) {
+bool Scanner::read_name(Token &token) {
     std::string buffer = m_data.substr(m_pos, m_data.size());
 
     boost::smatch matcher;
@@ -216,7 +216,7 @@ bool Lexer::read_name(Token &token) {
     return false;
 }
 
-bool Lexer::read_keyword(Token &token) const {
+bool Scanner::read_keyword(Token &token) const {
     if (is_keyword(token.lexeme)) {
         token.kind = Token::Keyword;
         return true;
@@ -225,7 +225,7 @@ bool Lexer::read_keyword(Token &token) const {
     }
 }
 
-bool Lexer::read_number(Token &token) {
+bool Scanner::read_number(Token &token) {
     int ch = get();
 
     if (!isdigit(ch)) {
@@ -254,7 +254,7 @@ bool is_quote_char(int ch) {
     return ch == '"';
 }
 
-bool Lexer::read_string(Token &token) {
+bool Scanner::read_string(Token &token) {
     int ch = get();
 
     if (!is_quote_char(ch)) {
@@ -274,7 +274,7 @@ bool Lexer::read_string(Token &token) {
     return true;
 }
 
-bool Lexer::read_delimiter(Token &token) {
+bool Scanner::read_delimiter(Token &token) {
     int ch = get();
 
     // the following two lines are reversed in the default case below
@@ -358,7 +358,7 @@ bool is_two_char_operator(char c1, char c2) {
     }
 }
 
-bool Lexer::read_operator(Token &token) {
+bool Scanner::read_operator(Token &token) {
     int ch = get();
     int ch2 = get();
 

@@ -34,7 +34,7 @@ class Transformer(Visitor):
 
 ## Stages
 
-- Lexer -> Tokens
+- Scanner -> Tokens
 - Parser -> AST, Symbol Table
 - Intermediate Representation (Macro expansion) -> Lowered AST
 - Type Checker -> Typed AST

@@ -5,7 +5,7 @@
 #include "acorn/ast/nodes.h"
 #include "acorn/codegen/generator.h"
 #include "acorn/compiler.h"
-#include "acorn/parser/lexer.h"
+#include "acorn/parser/scanner.h"
 #include "acorn/parser/parser.h"
 #include "acorn/prettyprinter.h"
 #include "acorn/symboltable/builder.h"
@@ -25,12 +25,12 @@ void pretty_print(std::unique_ptr<ast::SourceFile> &source_file) {
 }
 
 ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_namespace) {
-    Lexer lexer(filename);
+    Scanner scanner(filename);
 
-    Parser parser(lexer);
+    Parser parser(scanner);
     auto source_file = parser.parse(filename);
 
-    if (lexer.has_errors() || parser.has_errors() || !source_file) {
+    if (scanner.has_errors() || parser.has_errors() || !source_file) {
         return nullptr;
     }
 

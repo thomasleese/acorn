@@ -12,12 +12,12 @@
 
 namespace acorn::parser {
 
-    class Lexer;
+    class Scanner;
 
     class Parser : public diagnostics::Reporter {
 
     public:
-        explicit Parser(Lexer &lexer);
+        explicit Parser(Scanner &scanner);
         ~Parser() = default;
 
         std::unique_ptr<ast::SourceFile> parse(std::string name);
@@ -83,7 +83,7 @@ namespace acorn::parser {
         std::unique_ptr<ast::Import> read_import_expression();
 
     private:
-        Lexer &m_lexer;
+        Scanner &m_scanner;
         std::deque<Token> m_tokens;
         std::map<std::string, int> m_operator_precendence;
 
