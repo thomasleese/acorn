@@ -43,6 +43,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
     return_null_if_has_errors(symbol_table_builder);
 
     pretty_print(source_file);
+    std::cout << root_namespace->to_string() << std::endl;
 
     logger->info("Running type checker...");
 
@@ -53,7 +54,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
 
     pretty_print(source_file);
 
-    //std::cout << root_namespace->to_string() << std::endl;
+    std::cout << root_namespace->to_string() << std::endl;
 
     return source_file.release();
 }

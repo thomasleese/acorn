@@ -20,6 +20,7 @@ namespace acorn::symboltable {
 
     public:
         void push_scope(Symbol *symbol);
+        void push_scope(Symbol &symbol);
         void push_scope(Namespace *name_space);
         void pop_scope();
         Namespace *scope() const;
@@ -35,6 +36,8 @@ namespace acorn::symboltable {
 
         bool is_at_root() const;
         Namespace *root_namespace();
+
+        void visit_decl_name(ast::DeclName *node) override;
 
         void visit_var_decl(ast::VarDecl *node) override;
         void visit_parameter(ast::Parameter *node) override;

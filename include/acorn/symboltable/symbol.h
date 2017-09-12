@@ -43,6 +43,7 @@ namespace acorn::symboltable {
         void set_name(std::string name) { m_name = name; }
 
         bool builtin() const { return m_builtin; }
+        void set_builtin(bool builtin) { m_builtin = builtin; }
 
         bool has_type() const { return m_type != nullptr; }
         typesystem::Type *type() const { return m_type; }

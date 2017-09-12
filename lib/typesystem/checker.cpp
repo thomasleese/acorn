@@ -262,12 +262,16 @@ void TypeChecker::visit_decl_holder(ast::DeclHolder *node) {
 void TypeChecker::visit_var_decl(ast::VarDecl *node) {
     auto symbol = scope()->lookup(this, node->name().get());
 
+    push_scope(symbol);
+
     if (node->given_type()) {
         visit_node(node->given_type().get());
 
         node->set_type(instance_type(node->given_type().get()));
         symbol->copy_type_from(node);
     }
+
+    pop_scope();
 }
 
 void TypeChecker::visit_int(ast::Int *node) {

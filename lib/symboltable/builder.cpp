@@ -25,6 +25,10 @@ void ScopeFollower::push_scope(symboltable::Symbol *symbol) {
     push_scope(symbol->scope());
 }
 
+void ScopeFollower::push_scope(symboltable::Symbol &symbol) {
+    push_scope(symbol.scope());
+}
+
 void ScopeFollower::push_scope(symboltable::Namespace *name_space) {
     m_scope.push_back(name_space);
 }
@@ -49,15 +53,25 @@ Namespace *Builder::root_namespace() {
     return m_root;
 }
 
+void Builder::visit_decl_name(ast::DeclName *node) {
+    auto symbol = new Symbol(node->name().get(), false);
+    scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
+
+    push_scope(symbol);
+
+    for (auto &parameter : node->parameters()) {
+        auto parameter_symbol = std::make_unique<Symbol>(parameter.get(), false);
+        scope()->insert(this, parameter.get(), std::move(parameter_symbol));
+    }
+
+    pop_scope();
+}
+
 void Builder::visit_var_decl(ast::VarDecl *node) {
     Visitor::visit_var_decl(node);
 
-    if (node->name()->has_parameters()) {
-        logger->warn("Builder::visit_var_decl name has parameters");
-    }
-
-    auto symbol = std::make_unique<Symbol>(node->name().get(), node->builtin());
-    scope()->insert(this, node, std::move(symbol));
+    auto symbol = scope()->lookup(this, node->name().get());
+    symbol->set_builtin(node->builtin());
 }
 
 void Builder::visit_parameter(ast::Parameter *node) {
