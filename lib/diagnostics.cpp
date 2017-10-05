@@ -89,7 +89,7 @@ UndefinedError::UndefinedError(ast::Name *name) : UndefinedError(name, name->val
 
 }
 
-UndefinedError::UndefinedError(ast::ParamName *name) : UndefinedError(name->name().get()) {
+UndefinedError::UndefinedError(ast::ParamName *name) : UndefinedError(name->name()) {
 
 }
 

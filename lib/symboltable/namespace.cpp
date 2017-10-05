@@ -56,15 +56,15 @@ Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *name) const {
 }
 
 Symbol *Namespace::lookup(Reporter *diagnostics, ast::TypeName *name) const {
-    return lookup(diagnostics, name->name().get());
+    return lookup(diagnostics, name->name());
 }
 
 Symbol *Namespace::lookup(Reporter *diagnostics, ast::DeclName *name) const {
-    return lookup(diagnostics, name->name().get());
+    return lookup(diagnostics, name->name());
 }
 
 Symbol *Namespace::lookup(Reporter *diagnostics, ast::ParamName *name) const {
-    return lookup(diagnostics, name->name().get());
+    return lookup(diagnostics, name->name());
 }
 
 Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const {

@@ -243,14 +243,12 @@ void TypeChecker::visit_name(ast::Name *node) {
 
 void TypeChecker::visit_type_name(ast::TypeName *node) {
     ast::Visitor::visit_type_name(node);
-
-    node->copy_type_from(node->name().get());
+    node->copy_type_from(node->name());
 }
 
 void TypeChecker::visit_param_name(ast::ParamName *node) {
     ast::Visitor::visit_param_name(node);
-
-    node->copy_type_from(node->name().get());
+    node->copy_type_from(node->name());
 }
 
 void TypeChecker::visit_decl_holder(ast::DeclHolder *node) {

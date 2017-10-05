@@ -54,7 +54,7 @@ Namespace *Builder::root_namespace() {
 }
 
 void Builder::visit_decl_name(ast::DeclName *node) {
-    auto symbol = new Symbol(node->name().get(), false);
+    auto symbol = new Symbol(node->name(), false);
     scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
 
     push_scope(symbol);

@@ -143,20 +143,20 @@ namespace acorn::ast {
 
         TypeName *clone() const override;
 
-        std::unique_ptr<Name> &name() {
-            return m_name;
+        Name *name() const {
+            return m_name.get();
         }
 
         std::vector<std::unique_ptr<TypeName>> &parameters() {
             return m_parameters;
         }
 
-        bool is_list() const {
-            return false;
-        }
-
         bool has_parameters() const {
             return m_parameters.size() > 0;
+        }
+
+        bool is_list() const {
+            return false;
         }
 
         static bool classof(const Node *node) {
@@ -176,8 +176,8 @@ namespace acorn::ast {
 
         DeclName *clone() const override;
 
-        std::unique_ptr<Name> &name() {
-            return m_name;
+        Name *name() const {
+            return m_name.get();
         }
 
         std::vector<std::unique_ptr<Name>> &parameters() {
@@ -207,8 +207,8 @@ namespace acorn::ast {
 
         ParamName *clone() const override;
 
-        std::unique_ptr<Name> &name() {
-            return m_name;
+        Name *name() const {
+            return m_name.get();
         }
 
         std::vector<std::unique_ptr<TypeName>> &parameters() {
