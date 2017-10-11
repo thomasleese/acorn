@@ -23,6 +23,24 @@ namespace acorn {
     using parser::Token;
 }
 
+template <typename T>
+static const std::vector<T *> unique_ptr_vector_to_ptr_vector(const std::vector<std::unique_ptr<T>> &vector) {
+    std::vector<T *> pointers;
+    for (auto &ptr : vector) {
+        pointers.push_back(ptr.get());
+    }
+    return pointers;
+}
+
+template <typename T, typename U>
+static const std::map<T, U *> unique_ptr_map_to_ptr_map(const std::map<T, std::unique_ptr<U>> &map) {
+    std::map<T, U *> pointers;
+    for (auto &entry : map) {
+        pointers[entry.first] = entry.second.get();
+    }
+    return pointers;
+}
+
 namespace acorn::ast {
 
     class Visitor;
@@ -106,8 +124,8 @@ namespace acorn::ast {
 
         Block *clone() const override;
 
-        std::vector<std::unique_ptr<Node>> &expressions() {
-            return m_expressions;
+        const std::vector<Node *> expressions() const {
+            return unique_ptr_vector_to_ptr_vector(m_expressions);
         }
 
         static bool classof(const Node *node) {
@@ -147,8 +165,8 @@ namespace acorn::ast {
             return m_name.get();
         }
 
-        std::vector<std::unique_ptr<TypeName>> &parameters() {
-            return m_parameters;
+        const std::vector<TypeName *> parameters() const {
+            return unique_ptr_vector_to_ptr_vector(m_parameters);
         }
 
         bool has_parameters() const {
@@ -180,8 +198,8 @@ namespace acorn::ast {
             return m_name.get();
         }
 
-        std::vector<std::unique_ptr<Name>> &parameters() {
-            return m_parameters;
+        const std::vector<Name *> parameters() const {
+            return unique_ptr_vector_to_ptr_vector(m_parameters);
         }
 
         bool has_parameters() const {
@@ -211,8 +229,8 @@ namespace acorn::ast {
             return m_name.get();
         }
 
-        std::vector<std::unique_ptr<TypeName>> &parameters() {
-            return m_parameters;
+        const std::vector<TypeName *> parameters() const {
+            return unique_ptr_vector_to_ptr_vector(m_parameters);
         }
 
         bool has_parameters() const {
@@ -238,9 +256,13 @@ namespace acorn::ast {
 
         virtual DeclNode *clone() const override = 0;
 
-        bool builtin() const { return m_builtin; }
+        bool builtin() const {
+            return m_builtin;
+        }
 
-        std::unique_ptr<DeclName> &name() { return m_name; }
+        DeclName *name() const {
+            return m_name.get();
+        }
 
         DeclHolder *holder() const {
             return m_holder;
@@ -265,8 +287,8 @@ namespace acorn::ast {
 
         SpecialisedDecl *clone() const override;
 
-        std::unique_ptr<DeclNode> &declaration() {
-            return m_declaration;
+        DeclNode *declaration() const {
+            return m_declaration.get();
         }
 
         void set_holder(DeclHolder *holder) {
@@ -288,11 +310,11 @@ namespace acorn::ast {
 
         DeclHolder *clone() const override;
 
-        std::unique_ptr<DeclNode> &main_instance() {
-            return m_main_instance;
+        DeclNode *main_instance() const {
+            return m_main_instance.get();
         }
 
-        std::unique_ptr<DeclName> &name() {
+        DeclName *name() const {
             return m_main_instance->name();
         }
 
@@ -323,7 +345,9 @@ namespace acorn::ast {
 
         VarDecl *clone() const override;
 
-        std::unique_ptr<TypeName> &given_type() { return m_given_type; }
+        TypeName *given_type() const {
+            return m_given_type.get();
+        }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_VarDecl;
@@ -339,7 +363,9 @@ namespace acorn::ast {
 
         Int *clone() const override;
 
-        std::string value() const { return m_value; }
+        std::string value() const {
+            return m_value;
+        }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Int;
@@ -355,7 +381,9 @@ namespace acorn::ast {
 
         Float *clone() const override;
 
-        std::string value() const { return m_value; }
+        std::string value() const {
+            return m_value;
+        }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Float;
@@ -382,7 +410,9 @@ namespace acorn::ast {
 
         String *clone() const override;
 
-        std::string value() const { return m_value; }
+        std::string value() const {
+            return m_value;
+        }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_String;
@@ -398,8 +428,8 @@ namespace acorn::ast {
 
         virtual Sequence *clone() const override = 0;
 
-        std::vector<std::unique_ptr<Node>> &elements() {
-            return m_elements;
+        const std::vector<Node *> elements() const {
+            return unique_ptr_vector_to_ptr_vector(m_elements);
         }
 
     protected:
@@ -434,11 +464,17 @@ namespace acorn::ast {
 
         Dictionary *clone() const;
 
-        bool has_elements() const { return !m_keys.empty(); }
+        bool has_elements() const {
+            return !m_keys.empty();
+        }
 
-        std::vector<std::unique_ptr<Node>> &keys() { return m_keys; }
+        const std::vector<Node *> keys() const {
+            return unique_ptr_vector_to_ptr_vector(m_keys);
+        }
 
-        std::vector<std::unique_ptr<Node>> &values() { return m_values; }
+        const std::vector<Node *> values() const {
+            return unique_ptr_vector_to_ptr_vector(m_values);
+        }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Dictionary;
@@ -458,28 +494,49 @@ namespace acorn::ast {
 
         Call *clone() const;
 
-        std::unique_ptr<Node> &operand() { return m_operand; }
+        Node *operand() const {
+            return m_operand.get();
+        }
 
-        typesystem::Type *operand_type() const { return m_operand->type(); }
+        typesystem::Type *operand_type() const {
+            return m_operand->type();
+        }
 
-        std::vector<std::unique_ptr<Node>> &positional_arguments() {
-            return m_positional_arguments;
+        const std::vector<Node *> positional_arguments() const {
+            return unique_ptr_vector_to_ptr_vector(m_positional_arguments);
         }
 
         std::vector<typesystem::Type *> positional_argument_types() const;
 
-        std::map<std::string, std::unique_ptr<Node>> &keyword_arguments() { return m_keyword_arguments; }
+        const std::map<std::string, Node *> keyword_arguments() const {
+            return unique_ptr_map_to_ptr_map(m_keyword_arguments);
+        }
 
         std::map<std::string, typesystem::Type *> keyword_argument_types() const;
 
-        void add_inferred_type_parameter(typesystem::ParameterType *parameter, typesystem::Type *type) { m_inferred_type_parameters[parameter] = type; }
-        std::map<typesystem::ParameterType *, typesystem::Type *> inferred_type_parameters() const { return m_inferred_type_parameters; }
+        void add_inferred_type_parameter(typesystem::ParameterType *parameter, typesystem::Type *type) {
+            m_inferred_type_parameters[parameter] = type;
+        }
 
-        void set_method_index(int index) { m_method_index = index; }
-        int get_method_index() const { return m_method_index; }
+        std::map<typesystem::ParameterType *, typesystem::Type *> inferred_type_parameters() const {
+            return m_inferred_type_parameters;
+        }
 
-        void set_method_specialisation_index(int index) { m_method_specialisation_index = index; }
-        int get_method_specialisation_index() const { return m_method_specialisation_index; }
+        void set_method_index(int index) {
+            m_method_index = index;
+        }
+
+        int get_method_index() const {
+            return m_method_index;
+        }
+
+        void set_method_specialisation_index(int index) {
+            m_method_specialisation_index = index;
+        }
+
+        int get_method_specialisation_index() const {
+            return m_method_specialisation_index;
+        }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Call;
@@ -503,13 +560,21 @@ namespace acorn::ast {
 
         CCall *clone() const;
 
-        std::unique_ptr<Name> &name() { return m_name; }
+        Name *name() const {
+            return m_name.get();
+        }
 
-        std::vector<std::unique_ptr<TypeName>> &parameters() { return m_parameters; }
+        const std::vector<TypeName *> parameters() const {
+            return unique_ptr_vector_to_ptr_vector(m_parameters);
+        }
 
-        std::unique_ptr<TypeName> &return_type() { return m_return_type; }
+        TypeName *return_type() const {
+            return m_return_type.get();
+        }
 
-        std::vector<std::unique_ptr<Node>> &arguments() { return m_arguments; }
+        const std::vector<Node *> arguments() const {
+            return unique_ptr_vector_to_ptr_vector(m_arguments);
+        }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_CCall;
@@ -528,9 +593,13 @@ namespace acorn::ast {
 
         Cast *clone() const;
 
-        std::unique_ptr<Node> &operand() { return m_operand; }
+        Node *operand() const {
+            return m_operand.get();
+        }
 
-        std::unique_ptr<TypeName> &new_type() { return m_new_type; }
+        TypeName *new_type() const {
+            return m_new_type.get();
+        }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Cast;
@@ -547,9 +616,13 @@ namespace acorn::ast {
 
         Assignment *clone() const;
 
-        std::unique_ptr<DeclHolder> &lhs() { return m_lhs; }
+        DeclHolder *lhs() const {
+            return m_lhs.get();
+        }
 
-        std::unique_ptr<Node> &rhs() { return m_rhs; }
+        Node *rhs() const {
+            return m_rhs.get();
+        }
 
         bool builtin() const { return m_lhs->main_instance()->builtin(); }
 
@@ -722,11 +795,17 @@ namespace acorn::ast {
 
         Parameter *clone() const;
 
-        bool inout() const { return m_inout; }
+        bool inout() const {
+            return m_inout;
+        }
 
-        std::unique_ptr<Name> &name() { return m_name; }
+        Name *name() const {
+            return m_name.get();
+        }
 
-        std::unique_ptr<TypeName> &given_type() { return m_given_type; }
+        TypeName *given_type() const {
+            return m_given_type.get();
+        }
 
         static bool classof(const Node *node) {
             return node->kind() == NK_Parameter;

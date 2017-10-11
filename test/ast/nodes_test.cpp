@@ -17,8 +17,8 @@ TEST(ast_nodes_test, block_clone)
 
     EXPECT_FALSE(block1 == block2);
 
-    auto name1 = dynamic_cast<Name *>(block1->expressions()[0].get());
-    auto name2 = dynamic_cast<Name *>(block2->expressions()[0].get());
+    auto name1 = static_cast<Name *>(block1->expressions()[0]);
+    auto name2 = static_cast<Name *>(block2->expressions()[0]);
 
     EXPECT_FALSE(name1 == name2);
     EXPECT_TRUE(name1->value() == name2->value());

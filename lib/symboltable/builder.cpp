@@ -60,8 +60,8 @@ void Builder::visit_decl_name(ast::DeclName *node) {
     push_scope(symbol);
 
     for (auto &parameter : node->parameters()) {
-        auto parameter_symbol = std::make_unique<Symbol>(parameter.get(), false);
-        scope()->insert(this, parameter.get(), std::move(parameter_symbol));
+        auto parameter_symbol = std::make_unique<Symbol>(parameter, false);
+        scope()->insert(this, parameter, std::move(parameter_symbol));
     }
 
     pop_scope();
@@ -70,19 +70,19 @@ void Builder::visit_decl_name(ast::DeclName *node) {
 void Builder::visit_var_decl(ast::VarDecl *node) {
     Visitor::visit_var_decl(node);
 
-    auto symbol = scope()->lookup(this, node->name().get());
+    auto symbol = scope()->lookup(this, node->name());
     symbol->set_builtin(node->builtin());
 }
 
 void Builder::visit_parameter(ast::Parameter *node) {
     Visitor::visit_parameter(node);
 
-    auto symbol = std::make_unique<Symbol>(node->name().get(), false);
+    auto symbol = std::make_unique<Symbol>(node->name(), false);
     scope()->insert(this, node, std::move(symbol));
 }
 
 void Builder::visit_def_decl(ast::DefDecl *node) {
-    auto name = node->name().get();
+    auto name = node->name();
 
     Symbol *function_symbol;
     if (scope()->has(name->name()->value(), false)) {
@@ -108,12 +108,12 @@ void Builder::visit_def_decl(ast::DefDecl *node) {
     push_scope(symbol);
 
     for (auto &parameter : name->parameters()) {
-        auto sym = std::make_unique<Symbol>(parameter.get(), false);
-        scope()->insert(this, parameter.get(), std::move(sym));
+        auto sym = std::make_unique<Symbol>(parameter, false);
+        scope()->insert(this, parameter, std::move(sym));
     }
 
     for (auto &parameter : node->parameters()) {
-        visit_node(parameter.get());
+        visit_node(parameter);
     }
 
     if (!node->builtin()) {
@@ -125,14 +125,14 @@ void Builder::visit_def_decl(ast::DefDecl *node) {
 }
 
 void Builder::visit_type_decl(ast::TypeDecl *node) {
-    auto symbol = new Symbol(node->name().get(), node->builtin());
+    auto symbol = new Symbol(node->name(), node->builtin());
     scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
 
     push_scope(symbol);
 
     for (auto &parameter : node->name()->parameters()) {
         auto sym = std::make_unique<Symbol>(parameter->value(), false);
-        scope()->insert(this, parameter.get(), std::move(sym));
+        scope()->insert(this, parameter, std::move(sym));
     }
 
     if (node->alias()) {
@@ -148,9 +148,9 @@ void Builder::visit_type_decl(ast::TypeDecl *node) {
 void Builder::visit_module_decl(ast::ModuleDecl *node) {
     symboltable::Symbol *symbol;
     if (scope()->has(node->name()->name()->value())) {
-        symbol = scope()->lookup(this, node->name().get());
+        symbol = scope()->lookup(this, node->name());
     } else {
-        symbol = new Symbol(node->name().get(), false);
+        symbol = new Symbol(node->name(), false);
         scope()->insert(this, node, std::unique_ptr<Symbol>(symbol));
     }
 

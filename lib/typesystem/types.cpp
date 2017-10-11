@@ -1106,17 +1106,7 @@ std::vector<T> Method::ordered_arguments(std::vector<T> positional_arguments, st
 }
 
 std::vector<ast::Node *> Method::ordered_arguments(ast::Call *call, bool *valid) {
-    std::vector<ast::Node *> positional_arguments;
-    for (auto &p : call->positional_arguments()) {
-        positional_arguments.push_back(p.get());
-    }
-
-    std::map<std::string, ast::Node *> keyword_arguments;
-    for (auto &entry : call->keyword_arguments()) {
-        keyword_arguments[entry.first] = entry.second.get();
-    }
-
-    return ordered_arguments(positional_arguments, keyword_arguments, valid);
+    return ordered_arguments(call->positional_arguments(), call->keyword_arguments(), valid);
 }
 
 std::vector<Type *> Method::ordered_argument_types(ast::Call *call, bool *valid) {

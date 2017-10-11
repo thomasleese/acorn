@@ -50,17 +50,8 @@ typesystem::TypeType *TypeChecker::find_type(ast::Node *node, std::string name, 
     }
 }
 
-typesystem::TypeType *TypeChecker::find_type(ast::Node *node, std::string name) {
-    return find_type(node, name, std::vector<ast::TypeName *>());
-}
-
 typesystem::TypeType *TypeChecker::find_type(ast::TypeName *type) {
-    std::vector<ast::TypeName *> parameters;
-    for (auto &p : type->parameters()) {
-        parameters.push_back(p.get());
-    }
-
-    return find_type(type, type->name()->value(), parameters);
+    return find_type(type, type->name()->value(), type->parameters());
 }
 
 typesystem::Type *TypeChecker::instance_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters) {
@@ -72,17 +63,8 @@ typesystem::Type *TypeChecker::instance_type(ast::Node *node, std::string name, 
     return type_constructor->create(this, node);
 }
 
-typesystem::Type *TypeChecker::instance_type(ast::Node *node, std::string name) {
-    return instance_type(node, name, std::vector<ast::TypeName *>());
-}
-
 typesystem::Type *TypeChecker::instance_type(ast::TypeName *name) {
-    std::vector<ast::TypeName *> parameters;
-    for (auto &p : name->parameters()) {
-        parameters.push_back(p.get());
-    }
-
-    return instance_type(name, name->name()->value(), parameters);
+    return instance_type(name, name->name()->value(), name->parameters());
 }
 
 typesystem::Type *TypeChecker::builtin_type_from_name(ast::DeclName *node) {
@@ -228,7 +210,7 @@ void TypeChecker::visit_block(ast::Block *node) {
     if (expressions.empty()) {
         node->set_type(new typesystem::Void());
     } else {
-        node->copy_type_from(expressions.back().get());
+        node->copy_type_from(expressions.back());
     }
 
     check_not_null(node);
@@ -254,18 +236,18 @@ void TypeChecker::visit_param_name(ast::ParamName *node) {
 void TypeChecker::visit_decl_holder(ast::DeclHolder *node) {
     ast::Visitor::visit_decl_holder(node);
 
-    node->copy_type_from(node->main_instance().get());
+    node->copy_type_from(node->main_instance());
 }
 
 void TypeChecker::visit_var_decl(ast::VarDecl *node) {
-    auto symbol = scope()->lookup(this, node->name().get());
+    auto symbol = scope()->lookup(this, node->name());
 
     push_scope(symbol);
 
     if (node->given_type()) {
-        visit_node(node->given_type().get());
+        visit_node(node->given_type());
 
-        node->set_type(instance_type(node->given_type().get()));
+        node->set_type(instance_type(node->given_type()));
         symbol->copy_type_from(node);
     }
 
@@ -352,7 +334,7 @@ void TypeChecker::visit_call(ast::Call *node) {
     auto function = dynamic_cast<typesystem::Function *>(node->operand_type());
     if (function == nullptr) {
         node->set_type(new typesystem::Function());
-        report(TypeMismatchError(node->operand().get(), node));
+        report(TypeMismatchError(node->operand(), node));
         delete node->type();
         node->set_type(nullptr);
         // FIXME make the construct accept a type directly
@@ -403,21 +385,21 @@ void TypeChecker::visit_ccall(ast::CCall *node) {
     ast::Visitor::visit_ccall(node);
 
     for (auto &param : node->parameters()) {
-        param->set_type(instance_type(param.get()));
+        param->set_type(instance_type(param));
     }
 
     // TODO check arg and param typesystem match
 
-    node->set_type(instance_type(node->return_type().get()));
+    node->set_type(instance_type(node->return_type()));
 }
 
 void TypeChecker::visit_cast(ast::Cast *node) {
     ast::Visitor::visit_cast(node);
-    node->set_type(instance_type(node->new_type().get()));
+    node->set_type(instance_type(node->new_type()));
 }
 
 void TypeChecker::visit_assignment(ast::Assignment *node) {
-    auto symbol = scope()->lookup(this, node->lhs()->name().get());
+    auto symbol = scope()->lookup(this, node->lhs()->name());
     return_if_null(symbol);
 
     auto rhs = node->rhs().get();
@@ -550,10 +532,10 @@ void TypeChecker::visit_parameter(ast::Parameter *node) {
     return_if_null(symbol);
 
     if (node->given_type()) {
-        visit_node(node->given_type().get());
+        visit_node(node->given_type());
         return_if_null(node->given_type());
 
-        node->set_type(instance_type(node->given_type().get()));
+        node->set_type(instance_type(node->given_type()));
     } else {
         auto type = new typesystem::ParameterType();
         node->set_type(type->create(this, node));
@@ -573,7 +555,7 @@ void TypeChecker::visit_let(ast::Let *node) {
 }
 
 void TypeChecker::visit_def_decl(ast::DefDecl *node) {
-    auto name = node->name().get();
+    auto name = node->name();
 
     auto function_symbol = scope()->lookup(this, name);
     if (!function_symbol->has_type()) {
@@ -589,9 +571,9 @@ void TypeChecker::visit_def_decl(ast::DefDecl *node) {
     bool is_generic = false;
 
     for (auto &parameter : name->parameters()) {
-        auto parameter_symbol = scope()->lookup(this, parameter.get());
+        auto parameter_symbol = scope()->lookup(this, parameter);
         parameter_symbol->set_type(new typesystem::ParameterType());
-        visit_node(parameter.get());
+        visit_node(parameter);
         is_generic = true;
     }
 
@@ -657,7 +639,7 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
     auto symbol = scope()->lookup(this, node, node->name()->name()->value());
 
     if (node->builtin()) {
-        node->set_type(builtin_type_from_name(node->name().get()));
+        node->set_type(builtin_type_from_name(node->name()));
         symbol->copy_type_from(node);
         return;
     }
@@ -665,16 +647,16 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
     push_scope(symbol);
 
     std::vector<typesystem::ParameterType *> input_parameters;
-    for (auto &t : node->name()->parameters()) {
-        auto sym = scope()->lookup(this, t.get());
+    for (auto &parameter : node->name()->parameters()) {
+        auto sym = scope()->lookup(this, parameter);
         sym->set_type(new typesystem::ParameterType());
 
-        visit_node(t.get());
+        visit_node(parameter);
 
-        auto param = dynamic_cast<typesystem::ParameterType *>(t->type());
-        assert(param);
+        auto parameter_type = dynamic_cast<typesystem::ParameterType *>(parameter->type());
+        assert(parameter_type);
 
-        input_parameters.push_back(param);
+        input_parameters.push_back(parameter_type);
     }
 
     typesystem::Type *type;
@@ -711,7 +693,7 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
 }
 
 void TypeChecker::visit_module_decl(ast::ModuleDecl *node) {
-    auto symbol = scope()->lookup(this, node->name().get());
+    auto symbol = scope()->lookup(this, node->name());
     return_if_null(symbol);
 
     push_scope(symbol);

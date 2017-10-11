@@ -33,12 +33,10 @@ namespace acorn::typesystem {
     private:
         typesystem::TypeType *find_type_constructor(ast::Node *node, std::string name);
 
-        typesystem::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters);
-        typesystem::TypeType *find_type(ast::Node *node, std::string name);
+        typesystem::TypeType *find_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters = std::vector<ast::TypeName *>());
         typesystem::TypeType *find_type(ast::TypeName *name);
 
-        typesystem::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters);
-        typesystem::Type *instance_type(ast::Node *node, std::string name);
+        typesystem::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters = std::vector<ast::TypeName *>());
         typesystem::Type *instance_type(ast::TypeName *name);
 
         typesystem::Type *builtin_type_from_name(ast::DeclName *node);
