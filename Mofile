@@ -1,0 +1,12 @@
+tasks:
+  bootstrap:
+    steps:
+      - brew: cmake
+
+  build:
+    description: Build
+    steps:
+      - cd build && cmake -DCMAKE_BUILD_TYPE=Debug ..
+      - cd build && make
+    after:
+      - bootstrap
