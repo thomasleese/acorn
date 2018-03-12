@@ -20,3 +20,4 @@ addons:
       - clang-6.0
       - llvm-6.0-dev
       - libboost-regex-dev
+      - libedit-dev
