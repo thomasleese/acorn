@@ -29,6 +29,8 @@ SCENARIO("example programs") {
     GIVEN("a program which should compile") {
         //REQUIRE(compile_and_run("basic_generics"));
         //REQUIRE(compile_and_run("basic_operator"));
+        //REQUIRE(compile_and_run("generics_1"));
+        //REQUIRE(compile_and_run("generics_2"));
         //REQUIRE(compile_and_run("int_variable"));
         //REQUIRE(compile_and_run("json"));
         //REQUIRE(compile_and_run("minimal"));
