@@ -7,6 +7,7 @@
 #include <string>
 #include <vector>
 
+#include <llvm/ADT/Triple.h>
 #include <llvm/IR/LLVMContext.h>
 
 #include "diagnostics.h"
@@ -35,6 +36,7 @@ namespace acorn::compiler {
         Compiler();
         ~Compiler();
 
+        ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_namespace);
         bool compile(ast::SourceFile *module, symboltable::Namespace *root_namespace, std::string filename);
 
     private:
