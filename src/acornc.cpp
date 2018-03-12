@@ -38,7 +38,7 @@ ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_
 
     symboltable::Builder symbol_table_builder(root_namespace);
     symbol_table_builder.visit_source_file(source_file.get());
-    assert(symbolTableBuilder.is_at_root());
+    assert(symbol_table_builder.is_at_root());
 
     return_null_if_has_errors(symbol_table_builder);
 

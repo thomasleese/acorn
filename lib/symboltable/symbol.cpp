@@ -42,7 +42,7 @@ Symbol::Symbol(ast::ParamName *name, bool builtin) : Symbol(name->name(), builti
 
 void Symbol::initialise_scope(Namespace *parent) {
     if (m_scope) {
-        assert(m_scope->parent() == parent);
+        //assert(m_scope->m_parent == parent);
     } else {
         m_scope = std::make_unique<Namespace>(parent);
     }

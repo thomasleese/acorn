@@ -20,6 +20,23 @@ add_library(acorn
   typesystem/checker.cpp
 )
 
-target_include_directories(acorn PUBLIC ../include)
+llvm_map_components_to_libnames(LLVM_LIBS all)
+
+target_include_directories(acorn
+  PUBLIC ../include ${LLVM_INCLUDE_DIRS}
+  PRIVATE ${Boost_INCLUDE_DIRS} ${ICU_INCLUDE_DIRS} ${SPDLOG_INCLUDE_DIRS}
+)
+
+target_link_libraries(acorn
+  PUBLIC ${LLVM_LIBS} ${Boost_LIBRARIES} ${ICU_LIBRARIES} z ncurses
+)
+
 target_compile_features(acorn PUBLIC cxx_std_17)
-target_compile_options(acorn PUBLIC -Wall -pedantic)
+
+target_compile_options(acorn
+  PUBLIC -Wall -pedantic ${LLVM_CXX_FLAGS}
+)
+
+target_compile_definitions(acorn
+  PUBLIC ${LLVM_DEFINITIONS}
+)
