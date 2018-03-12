@@ -15,12 +15,15 @@ end
 hello()
 ```
 
+## How to build?
+
+```bash
+$ cmake --build build --config Debug
+```
+
 ## How to use?
 
-    $ mkdir build
-    $ cd build
-    $ cmake ..
-    $ make
-    $ cd ..
-    $ ./build/acorn test.acorn
-    $ ./test
+```bash
+$ ./build/src/acornc test.acorn
+$ ./test
+```
