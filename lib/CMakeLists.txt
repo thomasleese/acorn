@@ -7,7 +7,6 @@ add_library(acorn
   codegen/mangler.cpp
   compiler.cpp
   diagnostics.cpp
-  parser/keywords.cpp
   parser/scanner.cpp
   parser/parser.cpp
   parser/token.cpp

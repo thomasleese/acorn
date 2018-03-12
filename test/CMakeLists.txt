@@ -1,7 +1,6 @@
 add_executable(acorntest
   acorntest.cpp
   ast/nodes.cpp
-  parser/keywords.cpp
   parser/token.cpp
 )
 

@@ -12,8 +12,6 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
-#include "acorn/parser/keywords.h"
-
 #include "acorn/parser/scanner.h"
 
 using namespace acorn;

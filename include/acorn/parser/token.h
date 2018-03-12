@@ -8,6 +8,8 @@
 
 namespace acorn::parser {
 
+    bool is_keyword(const std::string &name);
+
     class SourceLocation {
     public:
         std::string to_string() const;
