@@ -3,15 +3,25 @@ language: cpp
 compiler: clang
 
 script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug ..
+  - cd ..
   - cmake --build build --config Debug
   - ./build/test/acorntest
+
+env:
+  CXX=clang++-6.0
+  CC=clang-6.0
 
 addons:
   apt:
     sources:
+      - ubuntu-toolchain-r-test
       - llvm-toolchain-trusty-6.0
     packages:
       - cmake
-      - llvm-6.0-dev
       - clang-6.0
+      - llvm-6.0-dev
       - libboost-regex-dev
+      - libspdlog-dev
