@@ -12,8 +12,6 @@
 #include <spdlog/spdlog.h>
 #include <spdlog/fmt/ostr.h>
 
-#include "acorn/parser/keywords.h"
-
 #include "acorn/parser/scanner.h"
 
 using namespace acorn;
@@ -23,17 +21,25 @@ using namespace acorn::parser;
 static auto logger = spdlog::get("acorn");
 
 Scanner::Scanner(std::string filename) {
+    std::ifstream stream;
+    stream.open(filename.c_str());
+    Scanner(stream, filename);
+    stream.close();
+}
+
+Scanner::Scanner(std::istream &stream, std::string filename) {
+    std::stringstream ss;
+    ss << stream.rdbuf();
+
+    Scanner(ss.str(), filename);
+}
+
+Scanner::Scanner(std::string data, std::string filename) {
     logger->info("Initialising scanner for: {}", filename);
 
     m_filename = filename;
 
-    std::ifstream stream;
-    stream.open(filename.c_str());
-
-    std::stringstream ss;
-    ss << stream.rdbuf();
-
-    m_data = ss.str();
+    m_data = data;
     m_pos = 0;
 
     m_current_line_number = 0;
@@ -94,7 +100,7 @@ bool Scanner::next_token(Token &token) {
     } else if (read_delimiter(token)) {
         // do nothing :)
     } else {
-        report(SyntaxError(token, "code"));
+        report(SyntaxError(token, "valid token"));
         return false;
     }
 
@@ -251,7 +257,7 @@ bool Scanner::read_number(Token &token) {
 }
 
 bool is_quote_char(int ch) {
-    return ch == '"';
+    return ch == '"' || ch == '\'';
 }
 
 bool Scanner::read_string(Token &token) {
