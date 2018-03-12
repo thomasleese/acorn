@@ -1,24 +1,25 @@
-#include "gtest/gtest.h"
+#include "catch.hpp"
 
 #include "acorn/parser/keywords.h"
 
 using acorn::parser::is_keyword;
 
-TEST(parser_keywords_test, is_keyword_valid)
-{
-    EXPECT_TRUE(is_keyword("let"));
-    EXPECT_TRUE(is_keyword("def"));
-    EXPECT_TRUE(is_keyword("if"));
-    EXPECT_TRUE(is_keyword("unless"));
-}
+SCENARIO("checking if something is a keyword") {
+    GIVEN("a string") {
+        WHEN("it is a keyword") {
+            REQUIRE(is_keyword("let"));
+            REQUIRE(is_keyword("def"));
+            REQUIRE(is_keyword("if"));
+            REQUIRE(is_keyword("unless"));
+        }
 
-TEST(parser_keywords_test, is_keyword_empty)
-{
-    EXPECT_FALSE(is_keyword(""));
-}
+        WHEN("it is empty") {
+            REQUIRE(!is_keyword(""));
+        }
 
-TEST(parser_keywords_test, is_keyword_invalid)
-{
-    EXPECT_FALSE(is_keyword("not a keyword"));
-    EXPECT_FALSE(is_keyword("23891h91"));
+        WHEN("it is not a keyword") {
+            REQUIRE(!is_keyword("not a keyword"));
+            REQUIRE(!is_keyword("23891h91"));
+        }
+    }
 }
