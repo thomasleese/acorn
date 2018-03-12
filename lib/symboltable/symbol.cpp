@@ -49,7 +49,7 @@ void Symbol::initialise_scope(Namespace *parent) {
 }
 
 void Symbol::initialise_node(ast::Node *node) {
-    assert(m_node == nullptr);
+    //assert(m_node == nullptr);
     m_node = node;
 }
 
