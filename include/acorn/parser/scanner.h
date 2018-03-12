@@ -14,6 +14,8 @@ namespace acorn::parser {
     class Scanner : public diagnostics::Reporter {
     public:
         Scanner(std::string filename);
+        Scanner(std::istream &stream, std::string filename);
+        Scanner(std::string data, std::string filename);
 
         bool next_token(Token &token);
 

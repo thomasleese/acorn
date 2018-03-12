@@ -21,17 +21,25 @@ using namespace acorn::parser;
 static auto logger = spdlog::get("acorn");
 
 Scanner::Scanner(std::string filename) {
+    std::ifstream stream;
+    stream.open(filename.c_str());
+    Scanner(stream, filename);
+    stream.close();
+}
+
+Scanner::Scanner(std::istream &stream, std::string filename) {
+    std::stringstream ss;
+    ss << stream.rdbuf();
+
+    Scanner(ss.str(), filename);
+}
+
+Scanner::Scanner(std::string data, std::string filename) {
     logger->info("Initialising scanner for: {}", filename);
 
     m_filename = filename;
 
-    std::ifstream stream;
-    stream.open(filename.c_str());
-
-    std::stringstream ss;
-    ss << stream.rdbuf();
-
-    m_data = ss.str();
+    m_data = data;
     m_pos = 0;
 
     m_current_line_number = 0;
