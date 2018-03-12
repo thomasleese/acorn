@@ -5,6 +5,7 @@ project(acorn VERSION 0.1.0 LANGUAGES CXX)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
 add_subdirectory(cmake/gtest)
+add_subdirectory(cmake/catch)
 
 find_package(PkgConfig REQUIRED)
 

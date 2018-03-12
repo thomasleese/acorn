@@ -13,6 +13,6 @@ target_include_directories(acorntest
   PRIVATE ${GTEST_INCLUDE_DIRS}
 )
 
-target_link_libraries(acorntest acorn ${LIBS} ${GTEST_LIBS})
+target_link_libraries(acorntest catch acorn ${LIBS} ${GTEST_LIBS})
 
 add_test(acorntest acorntest)
