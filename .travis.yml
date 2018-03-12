@@ -5,7 +5,7 @@ compiler: clang
 script:
   - mkdir build
   - cd build
-  - CXX=clang++-6.0 cmake -DCMAKE_BUILD_TYPE=Debug -DLLVM_DIR=/usr/lib/llvm-6.0/cmake ..
+  - cmake -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_BUILD_TYPE=Debug -DLLVM_DIR=/usr/lib/llvm-6.0/cmake ..
   - cd ..
   - cmake --build build --config Debug
   - ./build/test/acorntest
