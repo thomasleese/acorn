@@ -25,21 +25,5 @@ int main(int argc, char *argv[]) {
     std::string filename = argv[1];
 
     compiler::Compiler compiler;
-
-    auto root_namespace = std::make_unique<symboltable::Namespace>(nullptr);
-
-    auto source_file = compiler.parse(filename, root_namespace.get());
-    if (source_file == nullptr) {
-        return 1;
-    }
-
-    pretty_print(source_file);
-
-    if (!compiler.compile(source_file, root_namespace.get(), filename)) {
-        return 2;
-    }
-
-    delete source_file;
-
-    return 0;
+    return compiler.parse_and_compile(filename);
 }

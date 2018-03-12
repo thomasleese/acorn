@@ -8,5 +8,4 @@ def exit(code as Int)
 end
 
 let a = 0
-  exit(a)
-end
+exit(a)

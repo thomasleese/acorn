@@ -39,6 +39,8 @@ namespace acorn::compiler {
         ast::SourceFile *parse(const std::string filename, symboltable::Namespace *root_namespace);
         bool compile(ast::SourceFile *module, symboltable::Namespace *root_namespace, std::string filename);
 
+        int parse_and_compile(const std::string filename);
+
     private:
         llvm::Triple get_triple() const;
         llvm::TargetMachine *get_target_machine(llvm::Triple triple) const;

@@ -135,6 +135,25 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
     return true;
 }
 
+int Compiler::parse_and_compile(const std::string filename) {
+    auto root_namespace = std::make_unique<symboltable::Namespace>(nullptr);
+
+    auto source_file = parse(filename, root_namespace.get());
+    if (source_file == nullptr) {
+        return 2;
+    }
+
+    //pretty_print(source_file);
+
+    if (!compile(source_file, root_namespace.get(), filename)) {
+        return 1;
+    }
+
+    delete source_file;
+
+    return 0;
+}
+
 llvm::Triple Compiler::get_triple() const {
     llvm::Triple triple(llvm::sys::getDefaultTargetTriple());
 
