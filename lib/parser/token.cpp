@@ -19,11 +19,15 @@ static set<string> keywords = {
     "repeat", "unless", "mutable", "spawn", "ccall", "using", "new", "inout",
     "protocol", "enum", "switch", "case", "default", "module", "builtin",
     "class", "interface", "static", "public", "private", "protected", "goto",
-    "global", "virtual", "pass", "assert", "del"
+    "global", "virtual", "pass", "assert", "del",
 };
 
 bool acorn::parser::is_keyword(const string &name) {
     return keywords.find(name) != keywords.end();
+}
+
+SourceLocation::SourceLocation() : line_number(0), column(0) {
+
 }
 
 string SourceLocation::to_string() const {
@@ -34,6 +38,18 @@ string SourceLocation::to_string() const {
 
 ostream &parser::operator<<(ostream &stream, const SourceLocation &location) {
     return stream << location.to_string();
+}
+
+Token::Token() {
+
+}
+
+Token::Token(Kind kind) : kind(kind) {
+
+}
+
+Token::Token(Kind kind, std::string lexeme) : kind(kind), lexeme(lexeme) {
+
 }
 
 string Token::kind_to_string(const Kind &kind) {
@@ -105,6 +121,14 @@ string Token::to_string() const {
         << " '" << lexeme_string() << "'"
         << " " << location << ")";
     return ss.str();
+}
+
+bool Token::operator==(const Token &token) {
+    return kind == token.kind && lexeme == token.lexeme;
+}
+
+bool Token::operator!=(const Token &token) {
+    return !(*this == token);
 }
 
 ostream &parser::operator<<(ostream &stream, const Token &token) {

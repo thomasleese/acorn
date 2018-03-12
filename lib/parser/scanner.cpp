@@ -100,7 +100,7 @@ bool Scanner::next_token(Token &token) {
     } else if (read_delimiter(token)) {
         // do nothing :)
     } else {
-        report(SyntaxError(token, "code"));
+        report(SyntaxError(token, "valid token"));
         return false;
     }
 
@@ -257,7 +257,7 @@ bool Scanner::read_number(Token &token) {
 }
 
 bool is_quote_char(int ch) {
-    return ch == '"';
+    return ch == '"' || ch == '\'';
 }
 
 bool Scanner::read_string(Token &token) {

@@ -2,11 +2,7 @@
 
 #include "catch.hpp"
 
-#include <spdlog/spdlog.h>
-
 #include "acorn/compiler.h"
-
-static auto logger = spdlog::stdout_color_mt("acorn");
 
 bool compile_and_run(const std::string filename) {
     std::string full_filename = "test/examples/" + filename + ".acorn";
