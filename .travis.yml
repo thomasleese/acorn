@@ -5,14 +5,10 @@ compiler: clang
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Debug ..
+  - CXX=clang++-6.0 cmake -DCMAKE_BUILD_TYPE=Debug ..
   - cd ..
-  - cmake --build build --config Debug
+  - CXX=clang++-6.0 cmake --build build --config Debug
   - ./build/test/acorntest
-
-env:
-  CXX=clang++-6.0
-  CC=clang-6.0
 
 addons:
   apt:
