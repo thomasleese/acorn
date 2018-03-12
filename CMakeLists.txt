@@ -3,11 +3,11 @@ cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 project(acorn VERSION 0.1.0 LANGUAGES CXX)
 
 add_subdirectory(cmake/catch)
+add_subdirectory(cmake/spdlog)
 
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(ICU REQUIRED icu-uc)
-pkg_check_modules(SPDLOG REQUIRED spdlog)
 
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED OFF)
