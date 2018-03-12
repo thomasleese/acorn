@@ -124,7 +124,7 @@ bool CodeGenerator::verify_function(ast::Node *node, llvm::Function *function) {
     std::string str;
     llvm::raw_string_ostream stream(str);
     if (llvm::verifyFunction(*function, &stream)) {
-        function->dump();
+        function->print(llvm::errs(), nullptr);
         logger->critical(stream.str());
         return false;
     } else {
@@ -1038,7 +1038,7 @@ void CodeGenerator::visit_type_decl(ast::TypeDecl *node) {
         auto instance = m_ir_builder->CreateAlloca(llvm_specialised_method_type->getReturnType());
 
         int i = 0;
-        for (auto &arg : method->getArgumentList()) {
+        for (auto &arg : method->args()) {
             auto ptr = create_inbounds_gep(instance, { 0, i });
             m_ir_builder->CreateStore(&arg, ptr);
             i++;
@@ -1101,7 +1101,7 @@ void CodeGenerator::visit_source_file(ast::SourceFile *node) {
         std::string str;
         llvm::raw_string_ostream stream(str);
         if (llvm::verifyModule(*m_module, &stream)) {
-            m_module->dump();
+            m_module->print(llvm::errs(), nullptr);
             logger->critical(stream.str());
         }
     } else {

@@ -402,14 +402,14 @@ void TypeChecker::visit_assignment(ast::Assignment *node) {
     auto symbol = scope()->lookup(this, node->lhs()->name());
     return_if_null(symbol);
 
-    auto rhs = node->rhs().get();
+    auto rhs = node->rhs();
 
     if (!node->builtin()) {
         visit_node(rhs);
         return_if_null_type(rhs);
     }
 
-    auto lhs = node->lhs().get();
+    auto lhs = node->lhs();
 
     visit_node(lhs);
     if (!lhs->has_type()) {

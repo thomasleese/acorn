@@ -11,6 +11,10 @@
 
 #include "diagnostics.h"
 
+namespace llvm {
+    class TargetMachine;
+}
+
 namespace acorn {
 
     namespace ast {

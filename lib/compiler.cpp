@@ -9,7 +9,7 @@
 #include <llvm/ExecutionEngine/Orc/CompileUtils.h>
 #include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
 #include <llvm/ExecutionEngine/Orc/LambdaResolver.h>
-#include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
+#include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
 #include <llvm/Support/DynamicLibrary.h>
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/TargetRegistry.h>
@@ -73,12 +73,12 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
 
     llvm_module->setTargetTriple(triple.str());
 
-    llvm_module->dump();
+    llvm_module->print(llvm::errs(), nullptr);
 
     llvm::legacy::PassManager pass_manager;
 
     std::error_code error_code;
-    llvm::tool_output_file output_file(output_name, error_code, llvm::sys::fs::F_None);
+    llvm::ToolOutputFile output_file(output_name, error_code, llvm::sys::fs::F_None);
 
     target_machine->addPassesToEmitFile(pass_manager, output_file.os(), llvm::TargetMachine::CGFT_ObjectFile);
 
@@ -139,6 +139,6 @@ llvm::TargetMachine *Compiler::get_target_machine(llvm::Triple triple) const {
 
     return target->createTargetMachine(
         triple.str(), cpu, target_features, target_options,
-        llvm::Reloc::PIC_, llvm::CodeModel::Default, opt_level
+        llvm::Reloc::PIC_, llvm::CodeModel::Medium, opt_level
     );
 }

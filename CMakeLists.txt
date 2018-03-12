@@ -1,8 +1,8 @@
-cmake_minimum_required(VERSION 3.2)
+cmake_minimum_required(VERSION 3.2 FATAL_ERROR)
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/modules")
 
-project(Acorn)
+project(Acorn VERSION 0.1.0 LANGUAGES CXX)
 
 add_subdirectory(cmake/gtest)
 
@@ -29,7 +29,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++1z")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LLVM_CXX_FLAGS} -Wall -pedantic")
 set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${LLVM_LD_FLAGS}")
 
-set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-style=file;-checks=-*,bugprone-*,clang-analyzer-*")
+#set(CMAKE_CXX_CLANG_TIDY "clang-tidy;-style=file;-checks=-*,bugprone-*,clang-analyzer-*")
 
 include_directories(include)
 
