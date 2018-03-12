@@ -5,13 +5,13 @@ compiler: clang
 script:
   - mkdir build
   - cd build
-  - CXX=clang++-6.0 cmake -DCMAKE_BUILD_TYPE=Debug ..
+  - cmake -DCMAKE_CXX_COMPILER=clang++-6.0 -DCMAKE_BUILD_TYPE=Debug -DLLVM_DIR=/usr/lib/llvm-6.0/cmake ..
   - cd ..
-  - CXX=clang++-6.0 cmake --build build --config Debug
+  - cmake --build build --config Debug
   - ./build/test/acorntest
 
 env:
-  - LLVM_VERSION=6.0.0 LLVM_CONFIG=llvm-config-6.0
+  - LD_LIBRARY_PATH=/usr/lib/llvm-6.0/lib/
 
 addons:
   apt:
@@ -23,3 +23,4 @@ addons:
       - clang-6.0
       - llvm-6.0-dev
       - libboost-regex-dev
+      - libedit-dev

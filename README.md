@@ -1,5 +1,7 @@
 ![Acorn - Elegant and Simple Programming Language](logo.png)
 
+![Travis Build Status](https://img.shields.io/travis/thomasleese/acorn.svg)
+
 > Acorn is a elegant, minimalistic, high-level programming language implemented
 > in C++ with LLVM. It borrows ideas from MATLAB, Julia, Python, Ruby and many
 > other languages. It supports features such as multiple-dispatch, operating
