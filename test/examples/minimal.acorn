@@ -7,4 +7,5 @@ def exit(code as Int)
   ccall exit(Int) as Void using code
 end
 
-exit(0)
+let a = 0
+exit(a)
