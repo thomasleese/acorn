@@ -37,12 +37,14 @@ bool keywords_match(Scanner &scanner, std::vector<Token> &expected_tokens) {
     return true;
 }
 
-SCENARIO("scanner source code for tokens") {
+SCENARIO("scanning source code for tokens") {
     GIVEN("a string of source code") {
         WHEN("it is realistic") {
             std::string code =
                 "def main(a as Int)\n"
-                "  test(a)\n"
+                "  if a == 0\n"
+                "    test(a)\n"
+                "  end\n"
                 "end\n";
 
             Scanner scanner(code, "realistic.acorn");
@@ -57,10 +59,19 @@ SCENARIO("scanner source code for tokens") {
                 Token(Token::CloseParenthesis, ")"),
                 Token(Token::Newline, "\n"),
                 Token(Token::Indent),
+                Token(Token::Keyword, "if"),
+                Token(Token::Name, "a"),
+                Token(Token::Operator, "=="),
+                Token(Token::Int, "0"),
+                Token(Token::Newline, "\n"),
+                Token(Token::Indent),
                 Token(Token::Name, "test"),
                 Token(Token::OpenParenthesis, "("),
                 Token(Token::Name, "a"),
                 Token(Token::CloseParenthesis, ")"),
+                Token(Token::Newline, "\n"),
+                Token(Token::Deindent),
+                Token(Token::Keyword, "end"),
                 Token(Token::Newline, "\n"),
                 Token(Token::Deindent),
                 Token(Token::Keyword, "end"),
