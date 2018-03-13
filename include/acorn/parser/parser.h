@@ -9,6 +9,7 @@
 #include <string>
 
 #include "../ast/visitor.h"
+#include "../diagnostics.h"
 
 namespace acorn::parser {
 
