@@ -1,11 +1,10 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #pragma once
 
 #include <exception>
 #include <string>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "parser/token.h"
 
@@ -106,7 +105,6 @@ namespace acorn::diagnostics {
     };
 
     class Reporter {
-
     public:
         Reporter();
 
@@ -116,7 +114,15 @@ namespace acorn::diagnostics {
 
     private:
         bool m_has_errors;
+        std::shared_ptr<spdlog::logger> m_logger;
+    };
 
+    class Logging {
+    public:
+        Logging();
+
+    protected:
+        std::shared_ptr<spdlog::logger> m_logger;
     };
 
 }

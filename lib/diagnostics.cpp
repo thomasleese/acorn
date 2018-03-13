@@ -127,9 +127,35 @@ ConstantAssignmentError::ConstantAssignmentError(ast::Node *node)
     m_message = "Variable is not mutable.";
 }
 
-Reporter::Reporter() : m_has_errors(false) { }
+Reporter::Reporter() : m_has_errors(false) {
+    auto logger = spdlog::get("acorn");
+    if (logger == nullptr) {
+        logger = spdlog::stderr_color_mt("acorn");
+    }
+
+    assert(logger != nullptr);
+
+    logger->set_level(spdlog::level::warn);
+    logger->set_pattern("%v");
+
+    m_logger = logger;
+}
 
 void Reporter::report(const CompilerError &error) {
-    std::cerr << error << std::endl;
+    m_logger->error("{}", error);
     m_has_errors = true;
+}
+
+Logging::Logging() {
+    auto logger = spdlog::get("console");
+    if (logger == nullptr) {
+        logger = spdlog::stdout_color_mt("console");
+    }
+
+    assert(logger != nullptr);
+
+    logger->set_level(spdlog::level::trace);
+    logger->set_pattern("[%H:%M:%S] [%l] %v");
+
+    m_logger = logger;
 }
