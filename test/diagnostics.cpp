@@ -10,7 +10,7 @@ SCENARIO("logging") {
         Logger logger;
 
         THEN("it should initialise an spdlog") {
-            REQUIRE(spdlog::get("console"));
+            REQUIRE(spdlog::get("acorn"));
         }
     }
 }
@@ -18,10 +18,6 @@ SCENARIO("logging") {
 SCENARIO("reporting errors") {
     GIVEN("a reporter") {
         Reporter reporter;
-
-        THEN("it should initialise an spdlog") {
-            REQUIRE(spdlog::get("errors"));
-        }
 
         WHEN("it is given an error to report on") {
             reporter.report(CompilerError(SourceLocation("filename")));

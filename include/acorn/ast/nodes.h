@@ -82,8 +82,6 @@ namespace acorn::ast {
         Node(NodeKind kind, Token token);
         virtual ~Node() = default;
 
-        virtual Node *clone() const = 0;
-
         std::string to_string() const;
 
         NodeKind kind() const { return m_kind; }
@@ -118,8 +116,6 @@ namespace acorn::ast {
         Block(Token token, std::vector<std::unique_ptr<Node>> expressions);
         Block(Token token, std::unique_ptr<Node> expression);
 
-        Block *clone() const override;
-
         const std::vector<Node *> expressions() const {
             return unique_ptr_vector_to_ptr_vector(m_expressions);
         }
@@ -135,8 +131,6 @@ namespace acorn::ast {
     class Name : public Node {
     public:
         Name(Token token, std::string value);
-
-        Name *clone() const override;
 
         const std::string &value() const {
             return m_value;
@@ -154,8 +148,6 @@ namespace acorn::ast {
     public:
         TypeName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters);
         TypeName(Token token, std::unique_ptr<Name> name);
-
-        TypeName *clone() const override;
 
         Name *name() const {
             return m_name.get();
@@ -188,8 +180,6 @@ namespace acorn::ast {
         DeclName(Token token, std::unique_ptr<Name> name);
         DeclName(Token token, std::string name);
 
-        DeclName *clone() const override;
-
         Name *name() const {
             return m_name.get();
         }
@@ -218,8 +208,6 @@ namespace acorn::ast {
         ParamName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters);
         ParamName(Token token, std::unique_ptr<Name> name);
         ParamName(Token token, std::string name);
-
-        ParamName *clone() const override;
 
         Name *name() const {
             return m_name.get();
@@ -250,8 +238,6 @@ namespace acorn::ast {
         DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<Name> name);
         DeclNode(NodeKind kind, Token token, bool builtin, std::string name);
 
-        virtual DeclNode *clone() const override = 0;
-
         bool builtin() const {
             return m_builtin;
         }
@@ -281,8 +267,6 @@ namespace acorn::ast {
     public:
         SpecialisedDecl(Token token, std::unique_ptr<DeclNode> declaration);
 
-        SpecialisedDecl *clone() const override;
-
         DeclNode *declaration() const {
             return m_declaration.get();
         }
@@ -303,8 +287,6 @@ namespace acorn::ast {
     public:
         DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std::vector<std::unique_ptr<SpecialisedDecl>> specialised_instances);
         DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance);
-
-        DeclHolder *clone() const override;
 
         DeclNode *main_instance() const {
             return m_main_instance.get();
@@ -339,8 +321,6 @@ namespace acorn::ast {
     public:
         VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type = nullptr, bool builtin = false);
 
-        VarDecl *clone() const override;
-
         TypeName *given_type() const {
             return m_given_type.get();
         }
@@ -356,8 +336,6 @@ namespace acorn::ast {
     class Int : public Node {
     public:
         Int(Token token, std::string value);
-
-        Int *clone() const override;
 
         std::string value() const {
             return m_value;
@@ -375,8 +353,6 @@ namespace acorn::ast {
     public:
         Float(Token token, std::string value);
 
-        Float *clone() const override;
-
         std::string value() const {
             return m_value;
         }
@@ -393,8 +369,6 @@ namespace acorn::ast {
     public:
         Complex(Token token);
 
-        Complex *clone() const override;
-
         static bool classof(const Node *node) {
             return node->kind() == NK_Complex;
         }
@@ -403,8 +377,6 @@ namespace acorn::ast {
     class String : public Node {
     public:
         String(Token token, std::string value);
-
-        String *clone() const override;
 
         std::string value() const {
             return m_value;
@@ -422,8 +394,6 @@ namespace acorn::ast {
     public:
         Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Node>> elements);
 
-        virtual Sequence *clone() const override = 0;
-
         const std::vector<Node *> elements() const {
             return unique_ptr_vector_to_ptr_vector(m_elements);
         }
@@ -436,8 +406,6 @@ namespace acorn::ast {
     public:
         List(Token token, std::vector<std::unique_ptr<Node>> elements);
 
-        List *clone() const;
-
         static bool classof(const Node *node) {
             return node->kind() == NK_List;
         }
@@ -447,8 +415,6 @@ namespace acorn::ast {
     public:
         Tuple(Token token, std::vector<std::unique_ptr<Node>> elements);
 
-        Tuple *clone() const;
-
         static bool classof(const Node *node) {
             return node->kind() == NK_Tuple;
         }
@@ -457,8 +423,6 @@ namespace acorn::ast {
     class Dictionary : public Node {
     public:
         Dictionary(Token token, std::vector<std::unique_ptr<Node>> keys, std::vector<std::unique_ptr<Node>> values);
-
-        Dictionary *clone() const;
 
         bool has_elements() const {
             return !m_keys.empty();
@@ -487,8 +451,6 @@ namespace acorn::ast {
         Call(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Node> arg1 = nullptr, std::unique_ptr<Node> arg2 = nullptr);
         Call(Token token, std::string name, std::unique_ptr<Node> arg1 = nullptr, std::unique_ptr<Node> arg2 = nullptr);
         Call(Token token, std::string name, std::vector<std::unique_ptr<Node>> arguments);
-
-        Call *clone() const;
 
         Node *operand() const {
             return m_operand.get();
@@ -554,8 +516,6 @@ namespace acorn::ast {
     public:
         CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters, std::unique_ptr<TypeName> given_return_type, std::vector<std::unique_ptr<Node>> arguments);
 
-        CCall *clone() const;
-
         Name *name() const {
             return m_name.get();
         }
@@ -587,8 +547,6 @@ namespace acorn::ast {
     public:
         Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<TypeName> new_type);
 
-        Cast *clone() const;
-
         Node *operand() const {
             return m_operand.get();
         }
@@ -609,8 +567,6 @@ namespace acorn::ast {
     class Assignment : public Node {
     public:
         Assignment(Token token, std::unique_ptr<DeclHolder> lhs, std::unique_ptr<Node> rhs);
-
-        Assignment *clone() const;
 
         DeclHolder *lhs() const {
             return m_lhs.get();
@@ -636,8 +592,6 @@ namespace acorn::ast {
         Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<ParamName> field);
         Selector(Token token, std::unique_ptr<Node> operand, std::string field);
 
-        Selector *clone() const;
-
         std::unique_ptr<Node> &operand() { return m_operand; }
 
         std::unique_ptr<ParamName> &field() { return m_field; }
@@ -655,8 +609,6 @@ namespace acorn::ast {
     public:
         While(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> body);
 
-        While *clone() const;
-
         std::unique_ptr<Node> &condition() { return m_condition; }
 
         std::unique_ptr<Node> &body() { return m_body; }
@@ -673,8 +625,6 @@ namespace acorn::ast {
     class If : public Node {
     public:
         If(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> true_case, std::unique_ptr<Node> false_case);
-
-        If *clone() const;
 
         std::unique_ptr<Node> &condition() { return m_condition; }
 
@@ -696,8 +646,6 @@ namespace acorn::ast {
     public:
         Return(Token token, std::unique_ptr<Node> expression);
 
-        Return *clone() const;
-
         std::unique_ptr<Node> &expression() { return m_expression; }
 
         static bool classof(const Node *node) {
@@ -712,8 +660,6 @@ namespace acorn::ast {
     public:
         Spawn(Token token, std::unique_ptr<Call> call);
 
-        Spawn *clone() const;
-
         std::unique_ptr<Call> &call() { return m_call; }
 
         static bool classof(const Node *node) {
@@ -727,8 +673,6 @@ namespace acorn::ast {
     class Case : public Node {
     public:
         Case(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> assignment, std::unique_ptr<Node> body);
-
-        Case *clone() const;
 
         std::unique_ptr<Node> &condition() { return m_condition; }
         std::unique_ptr<Node> &assignment() { return m_assignment; }
@@ -747,8 +691,6 @@ namespace acorn::ast {
     class Switch : public Node {
     public:
         Switch(Token token, std::unique_ptr<Node> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Node> default_case = nullptr);
-
-        Switch *clone() const;
 
         std::unique_ptr<Node> &expression() { return m_expression; }
 
@@ -773,8 +715,6 @@ namespace acorn::ast {
         Let(Token token, std::unique_ptr<Assignment> assignment);
         Let(Token token, std::string name, std::unique_ptr<Node> value = nullptr);
 
-        Let *clone() const;
-
         std::unique_ptr<Assignment> &assignment() { return m_assignment; }
 
         static bool classof(const Node *node) {
@@ -788,8 +728,6 @@ namespace acorn::ast {
     class Parameter : public Node {
     public:
         explicit Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<TypeName> given_type);
-
-        Parameter *clone() const;
 
         bool inout() const {
             return m_inout;
@@ -817,8 +755,6 @@ namespace acorn::ast {
     public:
         DefDecl(Token token, std::unique_ptr<DeclName> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type = nullptr);
 
-        DefDecl *clone() const;
-
         std::vector<std::unique_ptr<Parameter>> &parameters() {
             return m_parameters;
         }
@@ -842,8 +778,6 @@ namespace acorn::ast {
         TypeDecl(Token token, std::unique_ptr<DeclName> name);
         TypeDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> alias);
         TypeDecl(Token token, std::unique_ptr<DeclName> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<TypeName>> field_types);
-
-        TypeDecl *clone() const;
 
         std::unique_ptr<TypeName> &alias() { return m_alias; }
 
@@ -869,8 +803,6 @@ namespace acorn::ast {
     public:
         ModuleDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<Block> body);
 
-        ModuleDecl *clone() const;
-
         std::unique_ptr<Block> &body() { return m_body; }
 
         static bool classof(const Node *node) {
@@ -885,8 +817,6 @@ namespace acorn::ast {
     public:
         Import(Token token, std::unique_ptr<String> path);
 
-        Import *clone() const;
-
         std::unique_ptr<String> &path() { return m_path; }
 
         static bool classof(const Node *node) {
@@ -900,8 +830,6 @@ namespace acorn::ast {
     class SourceFile : public Node {
     public:
         SourceFile(Token token, std::string name, std::vector<std::unique_ptr<SourceFile>> imports, std::unique_ptr<Block> code);
-
-        SourceFile *clone() const;
 
         std::string name() const { return m_name; }
 

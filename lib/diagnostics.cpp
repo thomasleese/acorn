@@ -125,7 +125,7 @@ ConstantAssignmentError::ConstantAssignmentError(ast::Node *node)
 
 Logger::Logger(const char *name) {
     if (name == nullptr) {
-        name = "console";
+        name = "acorn";
     }
 
     auto spdlog = spdlog::get(name);
@@ -143,21 +143,9 @@ Logger::Logger(const char *name) {
     m_spdlog = spdlog;
 }
 
-Reporter::Reporter() : m_has_errors(false) {
-    auto spdlog = spdlog::get("errors");
-    if (spdlog == nullptr) {
-        spdlog = spdlog::stderr_color_mt("errors");
-
-        spdlog->set_level(spdlog::level::warn);
-        spdlog->set_pattern("%v");
-    }
-
-    assert(spdlog != nullptr);
-
-    m_logger = spdlog;
-}
+Reporter::Reporter() : m_has_errors(false) { }
 
 void Reporter::report(const CompilerError &error) {
-    m_logger->error("{}", error);
+    std::cerr << error << std::endl;
     m_has_errors = true;
 }
