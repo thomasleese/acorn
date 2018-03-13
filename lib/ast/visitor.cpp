@@ -5,6 +5,7 @@
 #include <llvm/Support/Casting.h>
 
 #include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "acorn/ast/nodes.h"
 #include "acorn/utils.h"
@@ -97,7 +98,7 @@ void Visitor::visit_node(Node *node) {
     } else if (auto source_file = llvm::dyn_cast<SourceFile>(node)) {
         visit_source_file(source_file);
     } else {
-        logger->warn("Unknown node type: {}", node->token().to_string());
+        logger->warn("Unknown node type: {}", node->token());
     }
 
     m_debug_indentation--;

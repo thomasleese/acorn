@@ -104,7 +104,7 @@ bool Scanner::next_token(Token &token) {
         return false;
     }
 
-    logger->debug(token.to_string());
+    logger->debug("{}", token);
 
     return true;
 }

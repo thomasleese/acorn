@@ -30,14 +30,8 @@ SourceLocation::SourceLocation() : line_number(0), column(0) {
 
 }
 
-string SourceLocation::to_string() const {
-    stringstream ss;
-    ss << filename << "[" << line_number << "," << column << "]";
-    return ss.str();
-}
-
 ostream &parser::operator<<(ostream &stream, const SourceLocation &location) {
-    return stream << location.to_string();
+    return stream << location.filename << "[" << location.line_number << "," << location.column << "]";
 }
 
 Token::Token() {
@@ -115,14 +109,6 @@ string Token::lexeme_string() const {
     }
 }
 
-string Token::to_string() const {
-    ostringstream ss;
-    ss << "Token(" << kind_string()
-        << " '" << lexeme_string() << "'"
-        << " " << location << ")";
-    return ss.str();
-}
-
 bool Token::operator==(const Token &token) {
     return kind == token.kind && lexeme == token.lexeme;
 }
@@ -132,5 +118,5 @@ bool Token::operator!=(const Token &token) {
 }
 
 ostream &parser::operator<<(ostream &stream, const Token &token) {
-    return stream << "Token(" << token.to_string();
+    return stream << "Token(" << token.kind_string() << ' ' << token.lexeme_string() << ' ' << token.location << ')';
 }

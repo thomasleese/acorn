@@ -22,7 +22,7 @@ Node::Node(NodeKind kind, Token token) : m_kind(std::move(kind)), m_token(std::m
 
 std::string Node::to_string() const {
     std::stringstream ss;
-    ss << kind_string() << "(" << m_token.to_string() << ")";
+    ss << kind_string() << "(" << m_token << ")";
     return ss.str();
 }
 

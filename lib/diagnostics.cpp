@@ -66,13 +66,13 @@ SyntaxError::SyntaxError(const SourceLocation &location, std::string got, std::s
 SyntaxError::SyntaxError(const Token &token, std::string expectation) : CompilerError(token) {
     m_prefix = "Invalid syntax";
 
-    std::string got = token.lexeme;
-
-    if (got.empty()) {
-        got = "(" + token.to_string() + ")";
+    if (token.lexeme.empty()) {
+        std::stringstream ss;
+        ss << '(' << token << ')';
+        make_message(ss.str(), expectation);
+    } else {
+        make_message(token.lexeme, expectation);
     }
-
-    makeMessage(got, expectation);
 }
 
 SyntaxError::SyntaxError(const Token &token, Token::Kind kind) :
@@ -80,7 +80,7 @@ SyntaxError::SyntaxError(const Token &token, Token::Kind kind) :
 
 }
 
-void SyntaxError::makeMessage(std::string got, std::string expectation) {
+void SyntaxError::make_message(std::string got, std::string expectation) {
     std::stringstream ss;
     ss << "Got: " << got << "\n";
     ss << "Expected: " << expectation;

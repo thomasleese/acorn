@@ -14,8 +14,6 @@ namespace acorn::parser {
     public:
         SourceLocation();
 
-        std::string to_string() const;
-
     private:
         friend std::ostream &operator<<(std::ostream &stream, const SourceLocation &source_location);
 
@@ -63,7 +61,6 @@ namespace acorn::parser {
 
         std::string kind_string() const;
         std::string lexeme_string() const;
-        std::string to_string() const;
 
         bool operator==(const Token &token);
         bool operator!=(const Token &token);

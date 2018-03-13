@@ -59,7 +59,7 @@ namespace acorn::diagnostics {
         SyntaxError(const Token &token, Token::Kind kind);
 
     private:
-        void makeMessage(std::string got, std::string expectation);
+        void make_message(std::string got, std::string expectation);
     };
 
     class UndefinedError : public CompilerError {
