@@ -13,41 +13,30 @@ using namespace acorn;
 using namespace acorn::parser;
 
 static set<string> keywords = {
-    "let", "def", "type", "as", "while", "for", "in", "if", "else", "not",
-    "and", "or", "end", "continue", "break", "try", "except", "raise",
-    "finally", "from", "import", "return", "with", "yield", "async", "await",
-    "repeat", "unless", "mutable", "spawn", "ccall", "using", "new", "inout",
-    "protocol", "enum", "switch", "case", "default", "module", "builtin",
-    "class", "interface", "static", "public", "private", "protected", "goto",
-    "global", "virtual", "pass", "assert", "del",
+    "let", "def", "type", "as", "while", "for", "in", "if", "else", "not", "and", "or", "end", "continue", "break",
+    "try", "except", "raise", "finally", "from", "import", "return", "with", "yield", "async", "await", "repeat",
+    "unless", "mutable", "spawn", "ccall", "using", "new", "inout", "protocol", "enum", "switch", "case", "default",
+    "module", "builtin", "class", "interface", "static", "public", "private", "protected", "goto", "global", "virtual",
+    "pass", "assert", "del",
 };
 
 bool acorn::parser::is_keyword(const string &name) {
     return keywords.find(name) != keywords.end();
 }
 
-SourceLocation::SourceLocation() : line_number(0), column(0) {
-
-}
+SourceLocation::SourceLocation(std::string filename, std::string line, int line_number, int column)
+    : filename(filename), line(line), line_number(0), column(0) { }
 
 ostream &parser::operator<<(ostream &stream, const SourceLocation &location) {
     return stream << location.filename << ":" << location.line_number << ":" << location.column;
 }
 
-Token::Token() {
-
-}
-
-Token::Token(Kind kind) : kind(kind) {
-
-}
-
-Token::Token(Kind kind, std::string lexeme) : kind(kind), lexeme(lexeme) {
-
-}
+Token::Token(Kind kind, std::string lexeme) : kind(kind), lexeme(lexeme) { }
 
 string Token::kind_to_string(const Kind &kind) {
     switch (kind) {
+        case Unknown:
+            return "<unknown>";
         case EndOfFile:
             return "EOF";
         case Newline:

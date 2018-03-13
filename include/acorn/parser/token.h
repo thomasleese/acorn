@@ -12,7 +12,7 @@ namespace acorn::parser {
 
     class SourceLocation {
     public:
-        SourceLocation();
+        SourceLocation(std::string filename = "<unknown>", std::string line = "", int line_number = 0, int column = 0);
 
     private:
         friend std::ostream &operator<<(std::ostream &stream, const SourceLocation &source_location);
@@ -27,6 +27,8 @@ namespace acorn::parser {
     class Token {
     public:
         enum Kind {
+            Unknown,
+
             EndOfFile,
             Newline,
             Indent,
@@ -53,9 +55,7 @@ namespace acorn::parser {
             Name,
         };
 
-        Token();
-        Token(Kind kind);
-        Token(Kind kind, std::string lexeme);
+        Token(Kind kind = Unknown, std::string lexeme = "");
 
         static std::string kind_to_string(const Kind &kind);
 
