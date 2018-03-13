@@ -83,7 +83,7 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
     auto output_name = filename + ".o";
     auto module_name = filename.substr(0, filename.find_last_of("."));
 
-    m_logger.info("Compiling {} to {}.", filename, output_name);
+    m_logger.info("{} -> {}", filename, output_name);
 
     auto triple = get_triple();
     auto target_machine = get_target_machine(triple);
@@ -101,7 +101,7 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
 
     delete module;
 
-    m_logger.debug("Generating object file...");
+    m_logger.debug("generating object file");
 
     llvm_module->setTargetTriple(triple.str());
 
