@@ -19,7 +19,23 @@ add_library(acorn
   typesystem/checker.cpp
 )
 
-llvm_map_components_to_libnames(LLVM_LIBS all)
+llvm_map_components_to_libnames(LLVM_LIBS
+  core codegen support
+  aarch64asmparser aarch64codegen aarch64desc aarch64info
+  amdgpuasmparser amdgpucodegen amdgpudesc amdgpuinfo
+  armasmparser armcodegen armdesc arminfo
+  bpfasmparser bpfcodegen bpfdesc bpfinfo
+  hexagonasmparser hexagoncodegen hexagondesc hexagoninfo
+  lanaiasmparser lanaicodegen lanaidesc lanaiinfo
+  msp430codegen msp430desc msp430info
+  mipsasmparser mipscodegen mipsdesc mipsinfo
+  nvptxcodegen nvptxdesc nvptxinfo
+  sparcasmparser sparccodegen sparcdesc sparcinfo
+  systemzasmparser systemzcodegen systemzdesc systemzinfo
+  powerpcasmparser powerpccodegen powerpcdesc powerpcinfo
+  x86asmparser x86codegen x86desc x86info
+  xcorecodegen xcoredesc xcoreinfo
+)
 
 target_include_directories(acorn
   PUBLIC ../include ${LLVM_INCLUDE_DIRS}
@@ -27,7 +43,8 @@ target_include_directories(acorn
 )
 
 target_link_libraries(acorn
-  PUBLIC spdlog ${LLVM_LIBS} ${Boost_LIBRARIES} ${ICU_LIBRARIES} z ncurses
+  PUBLIC spdlog
+  PRIVATE ${LLVM_LIBS} ${Boost_LIBRARIES} ${ICU_LIBRARIES} z ncurses
 )
 
 target_compile_features(acorn PUBLIC cxx_std_17)
