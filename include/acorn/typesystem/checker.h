@@ -54,7 +54,6 @@ namespace acorn::typesystem {
         void visit_name(ast::Name *node) override;
         void visit_type_name(ast::TypeName *node) override;
         void visit_param_name(ast::ParamName *node) override;
-        void visit_decl_holder(ast::DeclHolder *node) override;
         void visit_var_decl(ast::VarDecl *node) override;
         void visit_int(ast::Int *node) override;
         void visit_float(ast::Float *node) override;

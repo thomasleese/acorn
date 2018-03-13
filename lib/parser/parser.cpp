@@ -221,11 +221,11 @@ std::unique_ptr<Node> Parser::read_expression(bool parse_comma) {
     if (is_keyword("let")) {
         return read_let();
     } else if (is_keyword("def")) {
-        return read_def();
+        return read_def_decl();
     } else if (is_keyword("type")) {
-        return read_type();
+        return read_type_decl();
     } else if (is_keyword("module")) {
-        return read_module();
+        return read_module_decl();
     } else {
         auto unary_expression = read_unary_expression(parse_comma);
         return_null_if_null(unary_expression);
@@ -371,15 +371,6 @@ std::unique_ptr<VarDecl> Parser::read_var_decl() {
 
     return std::make_unique<VarDecl>(
         let_token, std::move(name), std::move(type_name), builtin
-    );
-}
-
-std::unique_ptr<DeclHolder> Parser::read_var() {
-    auto instance = read_var_decl();
-    return_null_if_null(instance);
-
-    return std::make_unique<DeclHolder>(
-        instance->token(), std::move(instance)
     );
 }
 
@@ -682,7 +673,7 @@ std::unique_ptr<If> Parser::read_if() {
     std::unique_ptr<Node> condition;
 
     if (is_keyword("let")) {
-        auto lhs = read_var();
+        auto lhs = read_var_decl();
         return_null_if_null(lhs);
 
         Token assignment_token;
@@ -930,7 +921,7 @@ std::unique_ptr<Parameter> Parser::read_parameter() {
 }
 
 std::unique_ptr<Let> Parser::read_let() {
-    auto lhs = read_var();
+    auto lhs = read_var_decl();
     return_null_if_null(lhs);
 
     std::unique_ptr<Node> rhs;
@@ -1003,13 +994,6 @@ std::unique_ptr<DefDecl> Parser::read_def_decl() {
     );
 }
 
-std::unique_ptr<DeclHolder> Parser::read_def() {
-    auto instance = read_def_decl();
-    return_null_if_null(instance);
-
-    return std::make_unique<DeclHolder>(instance->token(), std::move(instance));
-}
-
 std::unique_ptr<TypeDecl> Parser::read_type_decl() {
     Token type_token;
     return_null_if_false(read_keyword("type", type_token));
@@ -1057,13 +1041,6 @@ std::unique_ptr<TypeDecl> Parser::read_type_decl() {
     }
 }
 
-std::unique_ptr<DeclHolder> Parser::read_type() {
-    auto instance = read_type_decl();
-    return_null_if_null(instance);
-
-    return std::make_unique<DeclHolder>(instance->token(), std::move(instance));
-}
-
 std::unique_ptr<ModuleDecl> Parser::read_module_decl() {
     Token module_token;
     return_null_if_false(read_keyword("module", module_token));
@@ -1077,13 +1054,6 @@ std::unique_ptr<ModuleDecl> Parser::read_module_decl() {
     return std::make_unique<ModuleDecl>(
         module_token, std::move(name), std::move(body)
     );
-}
-
-std::unique_ptr<DeclHolder> Parser::read_module() {
-    auto instance = read_module_decl();
-    return_null_if_null(instance);
-
-    return std::make_unique<DeclHolder>(instance->token(), std::move(instance));
 }
 
 std::unique_ptr<Import> Parser::read_import_expression() {
