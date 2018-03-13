@@ -682,6 +682,8 @@ std::unique_ptr<Block> Parser::read_for() {
 }
 
 std::unique_ptr<If> Parser::read_if() {
+    logger->debug("Reading an if");
+
     Token if_token;
     return_null_if_false(read_keyword("if", if_token));
 
@@ -707,6 +709,8 @@ std::unique_ptr<If> Parser::read_if() {
     return_null_if_null(condition);
 
     return_null_if_false(skip_token(Token::Indent));
+
+    logger->debug("Reading if true case");
 
     auto true_case = read_expression();
     std::unique_ptr<Node> false_case;
