@@ -125,7 +125,7 @@ ConstantAssignmentError::ConstantAssignmentError(ast::Node *node)
 
 Logger::Logger(const char *name) {
     if (name == nullptr) {
-        name = "console";
+        name = "acorn";
     }
 
     auto spdlog = spdlog::get(name);

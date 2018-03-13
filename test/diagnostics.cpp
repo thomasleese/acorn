@@ -10,7 +10,7 @@ SCENARIO("logging") {
         Logger logger;
 
         THEN("it should initialise an spdlog") {
-            REQUIRE(spdlog::get("console"));
+            REQUIRE(spdlog::get("acorn"));
         }
     }
 }
