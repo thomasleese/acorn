@@ -34,9 +34,10 @@ namespace acorn::diagnostics {
         explicit CompilerError(const Token &token);
         explicit CompilerError(ast::Node *node);
 
-        void print() const;
-
     private:
+        template<typename OStream>
+        friend OStream& operator<<(OStream& os, const CompilerError &error);
+
         parser::SourceLocation m_location;
 
     protected:

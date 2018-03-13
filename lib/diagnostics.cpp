@@ -26,20 +26,27 @@ CompilerError::CompilerError(ast::Node *node) : CompilerError(node->token()) {
 
 }
 
-void CompilerError::print() const {
-    std::cout << m_prefix << " in " << m_location.filename << " on line " << m_location.line_number << " column " << m_location.column << std::endl;
-    std::cout << std::endl;
+template<typename OStream>
+OStream& diagnostics::operator<<(OStream& os, const CompilerError &error) {
+    os
+        << error.m_prefix
+        << " in " << error.m_location.filename
+        << " on line " << error.m_location.line_number
+        << " column " << error.m_location.column << std::endl
 
-    std::cout << "    " << m_location.line << std::endl;
+        << std::endl
 
-    std::cout << "    ";
-    for (int i = 1; i < m_location.column; i++) {
-        std::cout << " ";
+        << "    " << error.m_location.line << std::endl
+
+        << "    ";
+
+    for (int i = 1; i < error.m_location.column; i++) {
+        os << " ";
     }
-    std::cout << "^" << std::endl;
-    std::cout << std::endl;
 
-    std::cout << m_message << std::endl;
+    os << "^" << std::endl << std::endl << error.m_message;
+
+    return os;
 }
 
 FileNotFoundError::FileNotFoundError(const Token &token) : CompilerError(token) {
@@ -153,7 +160,7 @@ Reporter::Reporter() : m_has_errors(false) {
 }
 
 void Reporter::report(const CompilerError &error) {
-    error.print();
+    std::cerr << error << std::endl;
     m_has_errors = true;
 }
 
