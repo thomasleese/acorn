@@ -1,12 +1,6 @@
-//
-// Created by Thomas Leese on 12/01/2017.
-//
-
 #include <iostream>
 #include <set>
 #include <sstream>
-
-#include <spdlog/spdlog.h>
 
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
@@ -20,8 +14,6 @@
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::typesystem;
-
-static auto logger = spdlog::get("acorn");
 
 TypeChecker::TypeChecker(symboltable::Namespace *scope) {
     push_scope(scope);
@@ -113,7 +105,7 @@ typesystem::Type *TypeChecker::builtin_type_from_name(ast::DeclName *node) {
     } else if (name == "Type") {
         return new typesystem::TypeDescriptionType();
     } else {
-        logger->critical("Unknown builtin type: {}", name);
+        m_logger.critical("Unknown builtin type: {}", name);
         return nullptr;
     }
 }
@@ -193,7 +185,7 @@ void TypeChecker::check_types(ast::Node *lhs, ast::Node *rhs) {
 
 void TypeChecker::check_not_null(ast::Node *node) {
     if (!node->has_type()) {
-        logger->critical("No type given for: {}", node->to_string());
+        m_logger.critical("No type given for: {}", node->to_string());
     }
 }
 
@@ -364,7 +356,7 @@ void TypeChecker::visit_call(ast::Call *node) {
 
     if (method->is_generic()) {
         if (!infer_call_type_parameters(node, method->parameter_types(), method->ordered_argument_types(node))) {
-            logger->critical("Could not infer type parameters.");
+            m_logger.critical("Could not infer type parameters.");
             return;
         }
 

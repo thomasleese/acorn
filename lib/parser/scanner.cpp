@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 13/03/2016.
-//
-
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -9,16 +5,11 @@
 #include <boost/regex/icu.hpp>
 #include <unicode/unistr.h>
 
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
-
 #include "acorn/parser/scanner.h"
 
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::parser;
-
-static auto logger = spdlog::get("acorn");
 
 Scanner::Scanner(std::string filename) {
     std::ifstream stream;
@@ -35,7 +26,7 @@ Scanner::Scanner(std::istream &stream, std::string filename) {
 }
 
 Scanner::Scanner(std::string data, std::string filename) {
-    logger->info("Initialising scanner for: {}", filename);
+    m_logger.info("Initialising scanner for: {}", filename);
 
     m_filename = filename;
 
@@ -104,7 +95,7 @@ bool Scanner::next_token(Token &token) {
         return false;
     }
 
-    logger->debug("{}", token);
+    m_logger.debug("{}", token);
 
     return true;
 }

@@ -5,12 +5,22 @@
 using namespace acorn::parser;
 using namespace acorn::diagnostics;
 
+SCENARIO("logging") {
+    GIVEN("a logger") {
+        Logger logger;
+
+        THEN("it should initialise an spdlog") {
+            REQUIRE(spdlog::get("console"));
+        }
+    }
+}
+
 SCENARIO("reporting errors") {
     GIVEN("a reporter") {
         Reporter reporter;
 
         THEN("it should initialise an spdlog") {
-            REQUIRE(spdlog::get("acorn"));
+            REQUIRE(spdlog::get("errors"));
         }
 
         WHEN("it is given an error to report on") {
@@ -19,16 +29,6 @@ SCENARIO("reporting errors") {
             THEN("it should mark the reporter as failed") {
                 REQUIRE(reporter.has_errors());
             }
-        }
-    }
-}
-
-SCENARIO("logging") {
-    GIVEN("a logging") {
-        Logging logging;
-
-        THEN("it should initialise an spdlog") {
-            REQUIRE(spdlog::get("console"));
         }
     }
 }

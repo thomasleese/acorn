@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 14/03/2016.
-//
-
 #include <iostream>
 
 #include "acorn/ast/nodes.h"

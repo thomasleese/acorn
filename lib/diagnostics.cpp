@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #include <iostream>
 #include <sstream>
 
@@ -24,7 +20,7 @@ std::ostream& diagnostics::operator<<(std::ostream& os, const CompilerError &err
     return os
         << error.m_prefix << " in " << error.m_location << std::endl << std::endl
         << "    " << error.m_location.line << std::endl
-        << "    " << std::string(error.m_location.column - 1, ' ') << '^' << std::endl << std::endl
+        << std::string(error.m_location.column + 3, ' ') << '^' << std::endl << std::endl
         << error.m_message;
 }
 
@@ -127,35 +123,41 @@ ConstantAssignmentError::ConstantAssignmentError(ast::Node *node)
     m_message = "Variable is not mutable.";
 }
 
-Reporter::Reporter() : m_has_errors(false) {
-    auto logger = spdlog::get("acorn");
-    if (logger == nullptr) {
-        logger = spdlog::stderr_color_mt("acorn");
+Logger::Logger(const char *name) {
+    if (name == nullptr) {
+        name = "console";
     }
 
-    assert(logger != nullptr);
+    auto spdlog = spdlog::get(name);
+    if (spdlog == nullptr) {
+        spdlog = spdlog::stdout_color_mt(name);
 
-    logger->set_level(spdlog::level::warn);
-    logger->set_pattern("%v");
+        spdlog->set_level(spdlog::level::trace);
+        spdlog->set_pattern("[%H:%M:%S] [%l] %v");
 
-    m_logger = logger;
+        spdlog->info("Initialising {} logger.", name);
+    }
+
+    assert(spdlog != nullptr);
+
+    m_spdlog = spdlog;
+}
+
+Reporter::Reporter() : m_has_errors(false) {
+    auto spdlog = spdlog::get("errors");
+    if (spdlog == nullptr) {
+        spdlog = spdlog::stderr_color_mt("errors");
+
+        spdlog->set_level(spdlog::level::warn);
+        spdlog->set_pattern("%v");
+    }
+
+    assert(spdlog != nullptr);
+
+    m_logger = spdlog;
 }
 
 void Reporter::report(const CompilerError &error) {
     m_logger->error("{}", error);
     m_has_errors = true;
-}
-
-Logging::Logging() {
-    auto logger = spdlog::get("console");
-    if (logger == nullptr) {
-        logger = spdlog::stdout_color_mt("console");
-    }
-
-    assert(logger != nullptr);
-
-    logger->set_level(spdlog::level::trace);
-    logger->set_pattern("[%H:%M:%S] [%l] %v");
-
-    m_logger = logger;
 }

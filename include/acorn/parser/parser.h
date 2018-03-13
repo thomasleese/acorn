@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 13/03/2016.
-//
-
 #pragma once
 
 #include <deque>
@@ -84,6 +80,7 @@ namespace acorn::parser {
         std::unique_ptr<ast::Import> read_import_expression();
 
     private:
+        diagnostics::Logger m_logger;
         Scanner &m_scanner;
         std::deque<Token> m_tokens;
         std::map<std::string, int> m_operator_precendence;

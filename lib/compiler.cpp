@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 14/03/2016.
-//
-
 #include <iostream>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -14,8 +10,6 @@
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Support/TargetRegistry.h>
 #include <llvm/Support/ToolOutputFile.h>
-
-#include <spdlog/spdlog.h>
 
 #include "acorn/ast/nodes.h"
 #include "acorn/codegen/generator.h"
@@ -33,8 +27,6 @@ using namespace acorn;
 using namespace acorn::compiler;
 using namespace acorn::diagnostics;
 using namespace acorn::parser;
-
-static auto logger = spdlog::get("acorn");
 
 Compiler::Compiler() {
     llvm::InitializeAllTargets();
@@ -63,7 +55,7 @@ ast::SourceFile *Compiler::parse(const std::string filename, symboltable::Namesp
         return nullptr;
     }
 
-    logger->info("Building symbol table...");
+    m_logger.info("Building symbol table...");
 
     symboltable::Builder symbol_table_builder(root_namespace);
     symbol_table_builder.visit_source_file(source_file.get());
@@ -71,7 +63,7 @@ ast::SourceFile *Compiler::parse(const std::string filename, symboltable::Namesp
 
     return_null_if_has_errors(symbol_table_builder);
 
-    logger->info("Running type checker...");
+    m_logger.info("Running type checker...");
 
     typesystem::TypeChecker type_checker(root_namespace);
     type_checker.visit_source_file(source_file.get());
@@ -87,7 +79,7 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
     auto output_name = filename + ".o";
     auto module_name = filename.substr(0, filename.find_last_of("."));
 
-    logger->info("Compiling {} to {}.", filename, output_name);
+    m_logger.info("Compiling {} to {}.", filename, output_name);
 
     auto triple = get_triple();
     auto target_machine = get_target_machine(triple);
@@ -105,7 +97,7 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
 
     delete module;
 
-    logger->debug("Generating object file...");
+    m_logger.debug("Generating object file...");
 
     llvm_module->setTargetTriple(triple.str());
 
@@ -123,7 +115,7 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
     output_file.keep();
     output_file.os().close();
 
-    logger->debug("Compiling object file...");
+    m_logger.debug("Compiling object file...");
 
     std::string cmd = "clang " + output_name + " -o " + module_name;
     system(cmd.c_str());

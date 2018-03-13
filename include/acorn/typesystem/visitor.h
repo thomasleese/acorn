@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 23/07/2017.
-//
-
 #pragma once
 
 namespace acorn::typesystem {

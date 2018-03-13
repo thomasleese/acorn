@@ -104,6 +104,45 @@ namespace acorn::diagnostics {
         ConstantAssignmentError(ast::Node *node);
     };
 
+    class Logger {
+    public:
+        Logger(const char *name = nullptr);
+
+        template <typename Arg1, typename... Args> void trace(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->trace(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void debug(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->debug(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void info(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->info(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void warn(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->warn(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void error(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->error(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void critical(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->critical(fmt, arg1, args...);
+        }
+
+        template <typename T> void trace(const T &msg) { m_spdlog->trace(msg); }
+        template <typename T> void debug(const T &msg) { m_spdlog->debug(msg); }
+        template <typename T> void info(const T &msg) { m_spdlog->info(msg); }
+        template <typename T> void warn(const T &msg) { m_spdlog->warn(msg); }
+        template <typename T> void error(const T &msg) { m_spdlog->error(msg); }
+        template <typename T> void critical(const T &msg) { m_spdlog->critical(msg); }
+
+    protected:
+        std::shared_ptr<spdlog::logger> m_spdlog;
+    };
+
     class Reporter {
     public:
         Reporter();
@@ -114,14 +153,6 @@ namespace acorn::diagnostics {
 
     private:
         bool m_has_errors;
-        std::shared_ptr<spdlog::logger> m_logger;
-    };
-
-    class Logging {
-    public:
-        Logging();
-
-    protected:
         std::shared_ptr<spdlog::logger> m_logger;
     };
 

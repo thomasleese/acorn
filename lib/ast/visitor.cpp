@@ -1,11 +1,4 @@
-//
-// Created by Thomas Leese on 23/07/2017.
-//
-
 #include <llvm/Support/Casting.h>
-
-#include <spdlog/spdlog.h>
-#include <spdlog/fmt/ostr.h>
 
 #include "acorn/ast/nodes.h"
 #include "acorn/utils.h"
@@ -16,16 +9,14 @@ using std::unique_ptr;
 
 using namespace acorn::ast;
 
-static auto logger = spdlog::get("acorn");
-
 Visitor::Visitor() : m_debug_indentation(0) { }
 
 void Visitor::visit_node(Node *node) {
     if (node == nullptr) {
-        logger->warn("Visitor::visit given a null node");
+        m_logger.warn("Visitor::visit given a null node");
     }
 
-    logger->debug("Visitor::visit {}{}", std::string(m_debug_indentation, ' '), node->to_string());
+    m_logger.debug("Visitor::visit {}{}", std::string(m_debug_indentation, ' '), node->to_string());
 
     m_debug_indentation++;
 
@@ -96,7 +87,7 @@ void Visitor::visit_node(Node *node) {
     } else if (auto source_file = llvm::dyn_cast<SourceFile>(node)) {
         visit_source_file(source_file);
     } else {
-        logger->warn("Unknown node type: {}", node->token());
+        m_logger.warn("Unknown node type: {}", node->token());
     }
 
     m_debug_indentation--;

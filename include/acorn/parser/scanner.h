@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 13/03/2016.
-//
-
 #pragma once
 
 #include <deque>
@@ -41,6 +37,8 @@ namespace acorn::parser {
         bool read_operator(Token &token);
 
     private:
+        diagnostics::Logger m_logger;
+
         std::string m_data;
         std::deque<int> m_indentation;
         std::deque<Token> m_token_buffer;

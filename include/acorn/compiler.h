@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 14/03/2016.
-//
-
 #pragma once
 
 #include <string>
@@ -46,6 +42,7 @@ namespace acorn::compiler {
         llvm::TargetMachine *get_target_machine(llvm::Triple triple) const;
 
     private:
+        diagnostics::Logger m_logger;
         llvm::LLVMContext m_context;
 
     };

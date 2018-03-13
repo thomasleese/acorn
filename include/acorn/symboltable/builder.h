@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #pragma once
 
 #include <map>
@@ -46,6 +42,7 @@ namespace acorn::symboltable {
         void visit_module_decl(ast::ModuleDecl *node) override;
 
     private:
+        diagnostics::Logger m_logger;
         Namespace *m_root;
     };
 

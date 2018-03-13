@@ -2,7 +2,6 @@
 #include <vector>
 
 #include <catch.hpp>
-#include <spdlog/spdlog.h>
 
 #include "acorn/ast/nodes.h"
 #include "acorn/parser/scanner.h"
@@ -10,8 +9,6 @@
 #include "acorn/parser/parser.h"
 
 using namespace acorn::parser;
-
-static auto logger = spdlog::get("acorn");
 
 SCENARIO("parsing source code into an AST") {
     GIVEN("a string of source code") {

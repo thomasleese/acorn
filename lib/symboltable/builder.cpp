@@ -1,11 +1,5 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #include <iostream>
 #include <sstream>
-
-#include <spdlog/spdlog.h>
 
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
@@ -18,8 +12,6 @@
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::symboltable;
-
-static auto logger = spdlog::get("acorn");
 
 void ScopeFollower::push_scope(symboltable::Symbol *symbol) {
     push_scope(symbol->scope());

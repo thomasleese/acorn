@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 12/01/2017.
-//
-
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Instructions.h>

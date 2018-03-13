@@ -1,11 +1,5 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #include <iostream>
 #include <sstream>
-
-#include <spdlog/spdlog.h>
 
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
@@ -17,8 +11,6 @@
 using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::symboltable;
-
-static auto logger = spdlog::get("acorn");
 
 Symbol::Symbol(std::string name, bool builtin) :
     m_name(name),
@@ -67,7 +59,7 @@ bool Symbol::is_variable() const {
 
 void Symbol::copy_type_from(ast::Node *node) {
     if (node == nullptr || node->type() == nullptr) {
-        logger->critical("Symbol::copy_type_from given a nullptr");
+        m_logger.critical("Symbol::copy_type_from given a nullptr");
         return;
     }
 
