@@ -112,7 +112,7 @@ namespace acorn::diagnostics {
 
         void report(const CompilerError &error);
 
-        bool has_errors() const;
+        bool has_errors() const { return m_has_errors; }
 
     private:
         bool m_has_errors;

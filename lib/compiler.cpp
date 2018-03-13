@@ -51,9 +51,7 @@ Compiler::Compiler() {
     llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
 }
 
-Compiler::~Compiler() {
-
-}
+Compiler::~Compiler() { }
 
 ast::SourceFile *Compiler::parse(const std::string filename, symboltable::Namespace *root_namespace) {
     Scanner scanner(filename);

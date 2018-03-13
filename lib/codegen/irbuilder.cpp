@@ -14,9 +14,8 @@
 using namespace acorn;
 using namespace acorn::codegen;
 
-IrBuilder::IrBuilder(llvm::LLVMContext &context) : m_ir_builder(new llvm::IRBuilder<>(context)) {
-
-}
+IrBuilder::IrBuilder(llvm::LLVMContext &context)
+    : m_ir_builder(new llvm::IRBuilder<>(context)) { }
 
 void IrBuilder::push_insert_point() {
     m_insert_points.push_back(m_ir_builder->saveIP());

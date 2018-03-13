@@ -107,5 +107,5 @@ bool Token::operator!=(const Token &token) {
 }
 
 ostream &parser::operator<<(ostream &stream, const Token &token) {
-    return stream << "Token(" << token.kind_string() << ' ' << token.lexeme_string() << ' ' << token.location << ')';
+    return stream << '{' << token.kind_string() << ' ' << token.lexeme_string() << ' ' << token.location << '}';
 }

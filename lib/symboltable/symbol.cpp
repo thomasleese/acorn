@@ -20,25 +20,25 @@ using namespace acorn::symboltable;
 
 static auto logger = spdlog::get("acorn");
 
-Symbol::Symbol(std::string name, bool builtin) : m_name(name), m_builtin(builtin), m_type(nullptr), m_llvm_value(nullptr), m_scope(nullptr), m_node(nullptr) {
+Symbol::Symbol(std::string name, bool builtin) :
+    m_name(name),
+    m_builtin(builtin),
+    m_type(nullptr),
+    m_llvm_value(nullptr),
+    m_scope(nullptr),
+    m_node(nullptr) { }
 
-}
+Symbol::Symbol(ast::Name *name, bool builtin) :
+    Symbol(name->value(), builtin) { }
 
-Symbol::Symbol(ast::Name *name, bool builtin) : Symbol(name->value(), builtin) {
+Symbol::Symbol(ast::TypeName *name, bool builtin) :
+    Symbol(name->name(), builtin) { }
 
-}
+Symbol::Symbol(ast::DeclName *name, bool builtin) :
+    Symbol(name->name(), builtin) { }
 
-Symbol::Symbol(ast::TypeName *name, bool builtin) : Symbol(name->name(), builtin) {
-
-}
-
-Symbol::Symbol(ast::DeclName *name, bool builtin) : Symbol(name->name(), builtin) {
-
-}
-
-Symbol::Symbol(ast::ParamName *name, bool builtin) : Symbol(name->name(), builtin) {
-
-}
+Symbol::Symbol(ast::ParamName *name, bool builtin) :
+    Symbol(name->name(), builtin) { }
 
 void Symbol::initialise_scope(Namespace *parent) {
     if (m_scope) {

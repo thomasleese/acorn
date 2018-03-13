@@ -18,9 +18,7 @@ using namespace acorn::ast;
 
 static auto logger = spdlog::get("acorn");
 
-Visitor::Visitor() : m_debug_indentation(0) {
-
-}
+Visitor::Visitor() : m_debug_indentation(0) { }
 
 void Visitor::visit_node(Node *node) {
     if (node == nullptr) {

@@ -16,9 +16,8 @@ using namespace acorn::ast;
 using std::make_unique;
 using std::unique_ptr;
 
-Node::Node(NodeKind kind, Token token) : m_kind(std::move(kind)), m_token(std::move(token)), m_type(nullptr) {
-
-}
+Node::Node(NodeKind kind, Token token)
+    : m_kind(std::move(kind)), m_token(std::move(token)), m_type(nullptr) { }
 
 std::string Node::to_string() const {
     std::stringstream ss;
@@ -26,7 +25,7 @@ std::string Node::to_string() const {
     return ss.str();
 }
 
-std::string Node::kind_string() const {
+const char *Node::kind_string() const {
     switch (m_kind) {
     case NK_Block:
         return "Block";
@@ -132,9 +131,8 @@ Block *Block::clone() const {
     return new Block(token(), std::move(cloned_expressions));
 }
 
-Name::Name(Token token, std::string value) : Node(NK_Name, token), m_value(value) {
-
-}
+Name::Name(Token token, std::string value)
+    : Node(NK_Name, token), m_value(value) { }
 
 Name *Name::clone() const {
     return new Name(token(), m_value);
@@ -146,9 +144,7 @@ TypeName::TypeName(Token token, std::unique_ptr<Name> name, std::vector<std::uni
 }
 
 TypeName::TypeName(Token token, std::unique_ptr<Name> name)
-    : TypeName(token, std::move(name), std::vector<std::unique_ptr<TypeName>>()) {
-
-}
+    : TypeName(token, std::move(name), std::vector<std::unique_ptr<TypeName>>()) { }
 
 TypeName *TypeName::clone() const {
     auto cloned_name = unique_ptr<Name>(m_name->clone());
@@ -162,19 +158,13 @@ TypeName *TypeName::clone() const {
 }
 
 DeclName::DeclName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<Name>> parameters)
-    : Node(NK_DeclName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) {
-
-}
+    : Node(NK_DeclName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) { }
 
 DeclName::DeclName(Token token, std::unique_ptr<Name> name)
-    : DeclName(token, std::move(name), std::vector<unique_ptr<Name>>()) {
-
-}
+    : DeclName(token, std::move(name), std::vector<unique_ptr<Name>>()) { }
 
 DeclName::DeclName(Token token, std::string name)
-    : DeclName(token, std::make_unique<Name>(token, name)) {
-
-}
+    : DeclName(token, std::make_unique<Name>(token, name)) { }
 
 DeclName *DeclName::clone() const {
     auto cloned_name = unique_ptr<Name>(m_name->clone());
@@ -192,20 +182,14 @@ void DeclName::set_type(typesystem::Type *type) {
     m_name->set_type(type);
 }
 
-ParamName::ParamName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters) :
-    Node(NK_ParamName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) {
+ParamName::ParamName(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters)
+    : Node(NK_ParamName, token), m_name(std::move(name)), m_parameters(std::move(parameters)) { }
 
-}
+ParamName::ParamName(Token token, std::unique_ptr<Name> name)
+    : Node(NK_ParamName, token), m_name(std::move(name)) { }
 
-ParamName::ParamName(Token token, std::unique_ptr<Name> name) :
-    Node(NK_ParamName, token), m_name(std::move(name)) {
-
-}
-
-ParamName::ParamName(Token token, std::string name) :
-    ParamName(token, std::make_unique<Name>(token, name)) {
-
-}
+ParamName::ParamName(Token token, std::string name)
+    : ParamName(token, std::make_unique<Name>(token, name)) { }
 
 ParamName *ParamName::clone() const {
     auto cloned_name = unique_ptr<Name>(m_name->clone());
@@ -219,19 +203,13 @@ ParamName *ParamName::clone() const {
 }
 
 DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<DeclName> name)
-    : Node(kind, token), m_builtin(builtin), m_name(std::move(name)) {
-
-}
+    : Node(kind, token), m_builtin(builtin), m_name(std::move(name)) { }
 
 DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::unique_ptr<Name> name)
-    : DeclNode(kind, token, builtin, std::make_unique<DeclName>(token, std::move(name))) {
-
-}
+    : DeclNode(kind, token, builtin, std::make_unique<DeclName>(token, std::move(name))) { }
 
 DeclNode::DeclNode(NodeKind kind, Token token, bool builtin, std::string name)
-    : DeclNode(kind, token, builtin, std::make_unique<Name>(token, name)) {
-
-}
+    : DeclNode(kind, token, builtin, std::make_unique<Name>(token, name)) { }
 
 void DeclNode::set_type(typesystem::Type *type) {
     Node::set_type(type);
@@ -239,9 +217,7 @@ void DeclNode::set_type(typesystem::Type *type) {
 }
 
 SpecialisedDecl::SpecialisedDecl(Token token, std::unique_ptr<DeclNode> declaration)
-    :Node (NK_SpecialisedDecl, token), m_declaration(std::move(declaration)) {
-
-}
+    : Node (NK_SpecialisedDecl, token), m_declaration(std::move(declaration)) { }
 
 SpecialisedDecl *SpecialisedDecl::clone() const {
     auto cloned_declaration = unique_ptr<DeclNode>(m_declaration->clone());
@@ -259,9 +235,7 @@ DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std
 }
 
 DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance)
-    : DeclHolder(token, std::move(main_instance), std::vector<unique_ptr<SpecialisedDecl>>()) {
-
-}
+    : DeclHolder(token, std::move(main_instance), std::vector<unique_ptr<SpecialisedDecl>>()) { }
 
 DeclHolder *DeclHolder::clone() const {
     auto cloned_main_instance = unique_ptr<DeclNode>(m_main_instance->clone());
@@ -288,9 +262,7 @@ void DeclHolder::set_type(typesystem::Type *type) {
 }
 
 VarDecl::VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin)
-    : DeclNode(NK_VarDecl, token, builtin, std::move(name)), m_given_type(std::move(type)) {
-
-}
+    : DeclNode(NK_VarDecl, token, builtin, std::move(name)), m_given_type(std::move(type)) { }
 
 VarDecl *VarDecl::clone() const {
     auto cloned_name = unique_ptr<DeclName>(m_name->clone());
@@ -304,35 +276,27 @@ VarDecl *VarDecl::clone() const {
 }
 
 Int::Int(Token token, std::string value)
-    : Node(NK_Int, token), m_value(value) {
-
-}
+    : Node(NK_Int, token), m_value(value) { }
 
 Int *Int::clone() const {
     return new Int(token(), m_value);
 }
 
 Float::Float(Token token, std::string value)
-    : Node(NK_Float, token), m_value(value) {
-
-}
+    : Node(NK_Float, token), m_value(value) { }
 
 Float *Float::clone() const {
     return new Float(token(), m_value);
 }
 
-Complex::Complex(Token token) : Node(NK_Complex, token) {
-
-}
+Complex::Complex(Token token) : Node(NK_Complex, token) { }
 
 Complex *Complex::clone() const {
     return new Complex(token());
 }
 
 String::String(Token token, std::string value)
-    : Node(NK_String, token), m_value(value) {
-
-}
+    : Node(NK_String, token), m_value(value) { }
 
 String *String::clone() const {
     return new String(token(), m_value);
@@ -345,9 +309,7 @@ Sequence::Sequence(NodeKind kind, Token token, std::vector<std::unique_ptr<Node>
 }
 
 List::List(Token token, std::vector<std::unique_ptr<Node>> elements)
-    : Sequence(NK_List, token, std::move(elements)) {
-
-}
+    : Sequence(NK_List, token, std::move(elements)) { }
 
 List *List::clone() const {
     std::vector<unique_ptr<Node>> cloned_elements;
@@ -359,9 +321,7 @@ List *List::clone() const {
 }
 
 Tuple::Tuple(Token token, std::vector<std::unique_ptr<Node>> elements)
-    : Sequence(NK_Tuple, token, std::move(elements)) {
-
-}
+    : Sequence(NK_Tuple, token, std::move(elements)) { }
 
 Tuple *Tuple::clone() const {
     std::vector<unique_ptr<Node>> cloned_elements;
@@ -411,9 +371,8 @@ Call::Call(Token token, std::unique_ptr<Node> operand, std::unique_ptr<Node> arg
     }
 }
 
-Call::Call(Token token, std::string name, std::unique_ptr<Node> arg1, std::unique_ptr<Node> arg2) : Call(token, std::make_unique<Name>(token, name), std::move(arg1), std::move(arg2)) {
-
-}
+Call::Call(Token token, std::string name, std::unique_ptr<Node> arg1, std::unique_ptr<Node> arg2)
+    : Call(token, std::make_unique<Name>(token, name), std::move(arg1), std::move(arg2)) { }
 
 Call::Call(Token token, std::string name, std::vector<std::unique_ptr<Node>> arguments) : Call(token, name) {
     for (auto &argument : arguments) {
@@ -454,9 +413,7 @@ std::map<std::string, typesystem::Type *> Call::keyword_argument_types() const {
 }
 
 CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_ptr<TypeName>> parameters, std::unique_ptr<TypeName> return_type, std::vector<std::unique_ptr<Node>> arguments)
-    : Node(NK_CCall, token), m_name(std::move(name)), m_parameters(std::move(parameters)), m_return_type(std::move(return_type)), m_arguments(std::move(arguments)) {
-
-}
+    : Node(NK_CCall, token), m_name(std::move(name)), m_parameters(std::move(parameters)), m_return_type(std::move(return_type)), m_arguments(std::move(arguments)) { }
 
 CCall *CCall::clone() const {
     auto cloned_name = unique_ptr<Name>(m_name->clone());
@@ -477,9 +434,7 @@ CCall *CCall::clone() const {
 }
 
 Cast::Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<TypeName> new_type)
-    : Node(NK_Cast, token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) {
-
-}
+    : Node(NK_Cast, token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) { }
 
 Cast *Cast::clone() const {
     auto cloned_operand = unique_ptr<Node>(m_operand->clone());
@@ -490,9 +445,7 @@ Cast *Cast::clone() const {
 }
 
 Assignment::Assignment(Token token, std::unique_ptr<DeclHolder> lhs, std::unique_ptr<Node> rhs)
-    : Node(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) {
-
-}
+    : Node(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) { }
 
 Assignment *Assignment::clone() const {
     auto cloned_lhs = unique_ptr<DeclHolder>(m_lhs->clone());
@@ -503,14 +456,10 @@ Assignment *Assignment::clone() const {
 }
 
 Selector::Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<ParamName> field)
-    : Node(NK_Selector, token), m_operand(std::move(operand)), m_field(std::move(field)) {
-
-}
+    : Node(NK_Selector, token), m_operand(std::move(operand)), m_field(std::move(field)) { }
 
 Selector::Selector(Token token, std::unique_ptr<Node> operand, std::string field)
-    : Selector(token, std::move(operand), std::make_unique<ParamName>(token, field)) {
-
-}
+    : Selector(token, std::move(operand), std::make_unique<ParamName>(token, field)) { }
 
 Selector *Selector::clone() const {
     auto cloned_operand = unique_ptr<Node>(m_operand->clone());
@@ -521,9 +470,7 @@ Selector *Selector::clone() const {
 }
 
 While::While(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> body)
-    : Node(NK_While, token), m_condition(std::move(condition)), m_body(std::move(body)) {
-
-}
+    : Node(NK_While, token), m_condition(std::move(condition)), m_body(std::move(body)) { }
 
 While *While::clone() const {
     auto cloned_condition = unique_ptr<Node>(m_condition->clone());
@@ -534,9 +481,7 @@ While *While::clone() const {
 }
 
 If::If(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> true_case, std::unique_ptr<Node> false_case)
-    : Node(NK_If, token), m_condition(std::move(condition)), m_true_case(std::move(true_case)), m_false_case(std::move(false_case)) {
-
-}
+    : Node(NK_If, token), m_condition(std::move(condition)), m_true_case(std::move(true_case)), m_false_case(std::move(false_case)) { }
 
 If *If::clone() const {
     auto cloned_condition = unique_ptr<Node>(m_condition->clone());
@@ -552,9 +497,7 @@ If *If::clone() const {
 }
 
 Return::Return(Token token, std::unique_ptr<Node> expression)
-    : Node(NK_Return, token), m_expression(std::move(expression)) {
-
-}
+    : Node(NK_Return, token), m_expression(std::move(expression)) { }
 
 Return *Return::clone() const {
     auto cloned_expression = unique_ptr<Node>(m_expression->clone());
@@ -563,9 +506,7 @@ Return *Return::clone() const {
 }
 
 Spawn::Spawn(Token token, std::unique_ptr<Call> call)
-    : Node(NK_Spawn, token), m_call(std::move(call)) {
-
-}
+    : Node(NK_Spawn, token), m_call(std::move(call)) { }
 
 Spawn *Spawn::clone() const {
     auto cloned_call = unique_ptr<Call>(m_call->clone());
@@ -574,9 +515,7 @@ Spawn *Spawn::clone() const {
 }
 
 Case::Case(Token token, std::unique_ptr<Node> condition, std::unique_ptr<Node> assignment, std::unique_ptr<Node> body)
-    : Node(NK_Case, token), m_condition(std::move(condition)), m_assignment(std::move(assignment)), m_body(std::move(body)) {
-
-}
+    : Node(NK_Case, token), m_condition(std::move(condition)), m_assignment(std::move(assignment)), m_body(std::move(body)) { }
 
 Case *Case::clone() const {
     auto cloned_condition = unique_ptr<Node>(m_condition->clone());
@@ -589,9 +528,7 @@ Case *Case::clone() const {
 }
 
 Switch::Switch(Token token, std::unique_ptr<Node> expression, std::vector<std::unique_ptr<Case>> cases, std::unique_ptr<Node> default_case)
-    : Node(NK_Switch, token), m_expression(std::move(expression)), m_cases(std::move(cases)), m_default_case(std::move(default_case)) {
-
-}
+    : Node(NK_Switch, token), m_expression(std::move(expression)), m_cases(std::move(cases)), m_default_case(std::move(default_case)) { }
 
 Switch *Switch::clone() const {
     auto cloned_expression = unique_ptr<Node>(m_expression->clone());
@@ -607,9 +544,7 @@ Switch *Switch::clone() const {
 }
 
 Let::Let(Token token, std::unique_ptr<Assignment> assignment)
-    : Node(NK_Let, token), m_assignment(std::move(assignment)) {
-
-}
+    : Node(NK_Let, token), m_assignment(std::move(assignment)) { }
 
 Let::Let(Token token, std::string name, std::unique_ptr<Node> value) : Node(NK_Let, token) {
     auto name_node = std::make_unique<DeclName>(token, name);
@@ -634,9 +569,7 @@ Let *Let::clone() const {
 }
 
 Parameter::Parameter(Token token, bool inout, std::unique_ptr<Name> name, std::unique_ptr<TypeName> given_type)
-    : Node(NK_Parameter, token), m_inout(inout), m_name(std::move(name)), m_given_type(std::move(given_type)) {
-
-}
+    : Node(NK_Parameter, token), m_inout(inout), m_name(std::move(name)), m_given_type(std::move(given_type)) { }
 
 Parameter *Parameter::clone() const {
     auto cloned_name = unique_ptr<Name>(m_name->clone());
@@ -647,9 +580,7 @@ Parameter *Parameter::clone() const {
 }
 
 DefDecl::DefDecl(Token token, std::unique_ptr<DeclName> name, bool builtin, std::vector<std::unique_ptr<Parameter>> parameters, std::unique_ptr<Node> body, std::unique_ptr<TypeName> return_type)
-    : DeclNode(NK_DefDecl, token, builtin, std::move(name)), m_parameters(std::move(parameters)), m_return_type(std::move(return_type)), m_body(std::move(body)) {
-
-}
+    : DeclNode(NK_DefDecl, token, builtin, std::move(name)), m_parameters(std::move(parameters)), m_return_type(std::move(return_type)), m_body(std::move(body)) { }
 
 DefDecl *DefDecl::clone() const {
     auto cloned_name = unique_ptr<DeclName>(m_name->clone());
@@ -670,19 +601,13 @@ DefDecl *DefDecl::clone() const {
 }
 
 TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name)
-    : DeclNode(NK_TypeDecl, token, true, std::move(name)) {
-
-}
+    : DeclNode(NK_TypeDecl, token, true, std::move(name)) { }
 
 TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> alias)
-    : DeclNode(NK_TypeDecl, token, false, std::move(name)), m_alias(std::move(alias)) {
-
-}
+    : DeclNode(NK_TypeDecl, token, false, std::move(name)), m_alias(std::move(alias)) { }
 
 TypeDecl::TypeDecl(Token token, std::unique_ptr<DeclName> name, std::vector<std::unique_ptr<Name>> field_names, std::vector<std::unique_ptr<TypeName>> field_types)
-    : DeclNode(NK_TypeDecl, token, false, std::move(name)), m_field_names(std::move(field_names)), m_field_types(std::move(field_types)) {
-
-}
+    : DeclNode(NK_TypeDecl, token, false, std::move(name)), m_field_names(std::move(field_names)), m_field_types(std::move(field_types)) { }
 
 TypeDecl *TypeDecl::clone() const {
     auto cloned_name = unique_ptr<DeclName>(m_name->clone());
@@ -709,9 +634,7 @@ TypeDecl *TypeDecl::clone() const {
 }
 
 ModuleDecl::ModuleDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<Block> body)
-    : DeclNode(NK_ModuleDecl, token, false, std::move(name)), m_body(std::move(body)) {
-
-}
+    : DeclNode(NK_ModuleDecl, token, false, std::move(name)), m_body(std::move(body)) { }
 
 ModuleDecl *ModuleDecl::clone() const {
     auto cloned_name = unique_ptr<DeclName>(m_name->clone());
@@ -722,9 +645,7 @@ ModuleDecl *ModuleDecl::clone() const {
 }
 
 Import::Import(Token token, std::unique_ptr<String> path)
-    : Node(NK_Import, token), m_path(std::move(path)) {
-
-}
+    : Node(NK_Import, token), m_path(std::move(path)) { }
 
 Import *Import::clone() const {
     auto cloned_path = unique_ptr<String>(m_path->clone());
@@ -733,9 +654,7 @@ Import *Import::clone() const {
 }
 
 SourceFile::SourceFile(Token token, std::string name, std::vector<std::unique_ptr<SourceFile>> imports, std::unique_ptr<Block> code)
-    : Node(NK_SourceFile, token), m_name(name), m_imports(std::move(imports)), m_code(std::move(code)) {
-
-}
+    : Node(NK_SourceFile, token), m_name(name), m_imports(std::move(imports)), m_code(std::move(code)) { }
 
 SourceFile *SourceFile::clone() const {
     std::vector<unique_ptr<SourceFile>> cloned_imports;

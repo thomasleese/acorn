@@ -11,9 +11,7 @@
 
 using namespace acorn;
 
-PrettyPrinter::PrettyPrinter() : m_indent(0) {
-
-}
+PrettyPrinter::PrettyPrinter() : m_indent(0) { }
 
 void PrettyPrinter::visit_node(ast::Node *node) {
     if (auto name = llvm::dyn_cast<ast::Name>(node)) {
