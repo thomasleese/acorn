@@ -17,15 +17,17 @@ using namespace acorn::parser;
 // useful variable for storing the current token
 static Token token;
 
-Parser::Parser(Scanner &scanner) : m_scanner(scanner) {
-    m_logger.debug("Initialising parser...");
+Parser::Parser(Scanner &scanner) :
+    m_logger("acorn.parser"),
+    m_scanner(scanner) {
+    m_logger.info("initialising");
 
     m_operator_precendence["+"] = 1;
     m_operator_precendence["-"] = 1;
 }
 
 std::unique_ptr<SourceFile> Parser::parse(std::string name) {
-    m_logger.info("Parsing: {}", name);
+    m_logger.info("parsing {}", name);
 
     return_null_if_false(fill_token());
     Token source_token = front_token();

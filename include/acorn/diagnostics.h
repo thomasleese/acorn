@@ -45,8 +45,8 @@ namespace acorn::diagnostics {
 
     class FileNotFoundError : public CompilerError {
     public:
-        FileNotFoundError(const Token &token);
-        FileNotFoundError(ast::Node *node);
+        FileNotFoundError(const Token &token, const char *filename);
+        FileNotFoundError(ast::Node *node, const char *filename);
     };
 
     class SyntaxError : public CompilerError {

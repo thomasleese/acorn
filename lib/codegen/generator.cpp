@@ -28,7 +28,7 @@ using namespace acorn::codegen;
 using namespace acorn::diagnostics;
 
 CodeGenerator::CodeGenerator(symboltable::Namespace *scope, llvm::DataLayout *data_layout)
-    : IrBuilder(m_context), m_module(nullptr) {
+    : ast::Visitor("acorn.codegen"), IrBuilder(m_context), m_module(nullptr) {
     push_scope(scope);
 
     m_md_builder = std::make_unique<llvm::MDBuilder>(m_context);

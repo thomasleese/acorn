@@ -13,6 +13,10 @@ namespace acorn::parser {
         Scanner(std::istream &stream, std::string filename);
         Scanner(std::string data, std::string filename);
 
+    private:
+        void initialise_with_data(std::string data);
+
+    public:
         bool next_token(Token &token);
 
     private:
