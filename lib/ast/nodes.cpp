@@ -35,10 +35,6 @@ const char *Node::kind_string() const {
         return "DeclName";
     case NK_ParamName:
         return "ParamName";
-    case NK_SpecialisedDecl:
-        return "SpecialisedDecl";
-    case NK_DeclHolder:
-        return "DeclHolder";
     case NK_VarDecl:
         return "VarDecl";
     case NK_Int:
@@ -166,34 +162,6 @@ void DeclNode::set_type(typesystem::Type *type) {
     m_name->set_type(type);
 }
 
-SpecialisedDecl::SpecialisedDecl(Token token, std::unique_ptr<DeclNode> declaration)
-    : Node (NK_SpecialisedDecl, token), m_declaration(std::move(declaration)) { }
-
-DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance, std::vector<unique_ptr<SpecialisedDecl>> specialised_instances)
-    : Node(NK_DeclHolder, token), m_main_instance(std::move(main_instance)), m_specialised_instances(std::move(specialised_instances)) {
-    m_main_instance->set_holder(this);
-
-    for (auto &instance : m_specialised_instances) {
-        instance->set_holder(this);
-    }
-}
-
-DeclHolder::DeclHolder(Token token, std::unique_ptr<DeclNode> main_instance)
-    : DeclHolder(token, std::move(main_instance), std::vector<unique_ptr<SpecialisedDecl>>()) { }
-
-void DeclHolder::create_specialisation() {
-    /*auto cloned_decl = unique_ptr<DeclNode>(m_main_instance->clone());
-
-    auto specialised_decl = make_unique<SpecialisedDecl>(token(), std::move(cloned_decl));
-
-    m_specialised_instances.push_back(std::move(specialised_decl));*/
-}
-
-void DeclHolder::set_type(typesystem::Type *type) {
-    Node::set_type(type);
-    m_main_instance->set_type(type);
-}
-
 VarDecl::VarDecl(Token token, std::unique_ptr<DeclName> name, std::unique_ptr<TypeName> type, bool builtin)
     : DeclNode(NK_VarDecl, token, builtin, std::move(name)), m_given_type(std::move(type)) { }
 
@@ -276,7 +244,7 @@ CCall::CCall(Token token, std::unique_ptr<Name> name, std::vector<std::unique_pt
 Cast::Cast(Token token, std::unique_ptr<Node> operand, std::unique_ptr<TypeName> new_type)
     : Node(NK_Cast, token), m_operand(std::move(operand)), m_new_type(std::move(new_type)) { }
 
-Assignment::Assignment(Token token, std::unique_ptr<DeclHolder> lhs, std::unique_ptr<Node> rhs)
+Assignment::Assignment(Token token, std::unique_ptr<VarDecl> lhs, std::unique_ptr<Node> rhs)
     : Node(NK_Assignment, token), m_lhs(std::move(lhs)), m_rhs(std::move(rhs)) { }
 
 Selector::Selector(Token token, std::unique_ptr<Node> operand, std::unique_ptr<ParamName> field)
@@ -313,12 +281,8 @@ Let::Let(Token token, std::string name, std::unique_ptr<Node> value) : Node(NK_L
         token, std::move(name_node), nullptr, false
     );
 
-    auto var = std::make_unique<DeclHolder>(
-        var_decl->token(), std::move(var_decl)
-    );
-
     m_assignment = std::make_unique<Assignment>(
-        token, std::move(var), std::move(value)
+        token, std::move(var_decl), std::move(value)
     );
 }
 

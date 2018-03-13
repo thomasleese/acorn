@@ -739,8 +739,7 @@ void CodeGenerator::visit_assignment(ast::Assignment *node) {
     llvm::Value *rhs_value = nullptr;
 
     if (node->builtin()) {
-        auto var = static_cast<ast::VarDecl *>(node->lhs()->main_instance());
-        rhs_value = generate_builtin_variable(var);
+        rhs_value = generate_builtin_variable(node->lhs());
     } else {
         rhs_value = generate_llvm_value(node->rhs());
     }

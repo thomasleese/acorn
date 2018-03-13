@@ -225,12 +225,6 @@ void TypeChecker::visit_param_name(ast::ParamName *node) {
     node->copy_type_from(node->name());
 }
 
-void TypeChecker::visit_decl_holder(ast::DeclHolder *node) {
-    ast::Visitor::visit_decl_holder(node);
-
-    node->copy_type_from(node->main_instance());
-}
-
 void TypeChecker::visit_var_decl(ast::VarDecl *node) {
     auto symbol = scope()->lookup(this, node->name());
 
