@@ -722,7 +722,7 @@ std::unique_ptr<If> Parser::read_if() {
             return_null_if_false(skip_deindent_and_end_token());
         }
     } else {
-        return_null_if_false(skip_deindent_and_end_token());
+        return_null_if_false(skip_keyword("end")); // deindent was handled before the else
     }
 
     return std::make_unique<If>(
