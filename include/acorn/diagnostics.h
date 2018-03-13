@@ -35,8 +35,7 @@ namespace acorn::diagnostics {
         explicit CompilerError(ast::Node *node);
 
     private:
-        template<typename OStream>
-        friend OStream& operator<<(OStream& os, const CompilerError &error);
+        friend std::ostream& operator<<(std::ostream& os, const CompilerError &error);
 
         parser::SourceLocation m_location;
 

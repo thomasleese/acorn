@@ -31,7 +31,7 @@ SourceLocation::SourceLocation() : line_number(0), column(0) {
 }
 
 ostream &parser::operator<<(ostream &stream, const SourceLocation &location) {
-    return stream << location.filename << "[" << location.line_number << "," << location.column << "]";
+    return stream << location.filename << ":" << location.line_number << ":" << location.column;
 }
 
 Token::Token() {

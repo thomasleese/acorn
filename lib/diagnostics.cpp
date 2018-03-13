@@ -26,27 +26,12 @@ CompilerError::CompilerError(ast::Node *node) : CompilerError(node->token()) {
 
 }
 
-template<typename OStream>
-OStream& diagnostics::operator<<(OStream& os, const CompilerError &error) {
-    os
-        << error.m_prefix
-        << " in " << error.m_location.filename
-        << " on line " << error.m_location.line_number
-        << " column " << error.m_location.column << std::endl
-
-        << std::endl
-
+std::ostream& diagnostics::operator<<(std::ostream& os, const CompilerError &error) {
+    return os
+        << error.m_prefix << " in " << error.m_location << std::endl << std::endl
         << "    " << error.m_location.line << std::endl
-
-        << "    ";
-
-    for (int i = 1; i < error.m_location.column; i++) {
-        os << " ";
-    }
-
-    os << "^" << std::endl << std::endl << error.m_message;
-
-    return os;
+        << "    " << std::string(error.m_location.column - 1, ' ') << '^' << std::endl << std::endl
+        << error.m_message;
 }
 
 FileNotFoundError::FileNotFoundError(const Token &token) : CompilerError(token) {
