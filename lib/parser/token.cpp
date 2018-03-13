@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 12/01/2017.
-//
-
 #include <set>
 #include <sstream>
 
@@ -13,47 +9,30 @@ using namespace acorn;
 using namespace acorn::parser;
 
 static set<string> keywords = {
-    "let", "def", "type", "as", "while", "for", "in", "if", "else", "not",
-    "and", "or", "end", "continue", "break", "try", "except", "raise",
-    "finally", "from", "import", "return", "with", "yield", "async", "await",
-    "repeat", "unless", "mutable", "spawn", "ccall", "using", "new", "inout",
-    "protocol", "enum", "switch", "case", "default", "module", "builtin",
-    "class", "interface", "static", "public", "private", "protected", "goto",
-    "global", "virtual", "pass", "assert", "del",
+    "let", "def", "type", "as", "while", "for", "in", "if", "else", "not", "and", "or", "end", "continue", "break",
+    "try", "except", "raise", "finally", "from", "import", "return", "with", "yield", "async", "await", "repeat",
+    "unless", "mutable", "spawn", "ccall", "using", "new", "inout", "protocol", "enum", "switch", "case", "default",
+    "module", "builtin", "class", "interface", "static", "public", "private", "protected", "goto", "global", "virtual",
+    "pass", "assert", "del",
 };
 
 bool acorn::parser::is_keyword(const string &name) {
     return keywords.find(name) != keywords.end();
 }
 
-SourceLocation::SourceLocation() : line_number(0), column(0) {
-
-}
-
-string SourceLocation::to_string() const {
-    stringstream ss;
-    ss << filename << "[" << line_number << "," << column << "]";
-    return ss.str();
-}
+SourceLocation::SourceLocation(std::string filename, std::string line, int line_number, int column)
+    : filename(filename), line(line), line_number(0), column(0) { }
 
 ostream &parser::operator<<(ostream &stream, const SourceLocation &location) {
-    return stream << location.to_string();
+    return stream << location.filename << ":" << location.line_number << ":" << location.column;
 }
 
-Token::Token() {
-
-}
-
-Token::Token(Kind kind) : kind(kind) {
-
-}
-
-Token::Token(Kind kind, std::string lexeme) : kind(kind), lexeme(lexeme) {
-
-}
+Token::Token(Kind kind, std::string lexeme) : kind(kind), lexeme(lexeme) { }
 
 string Token::kind_to_string(const Kind &kind) {
     switch (kind) {
+        case Unknown:
+            return "<unknown>";
         case EndOfFile:
             return "EOF";
         case Newline:
@@ -115,14 +94,6 @@ string Token::lexeme_string() const {
     }
 }
 
-string Token::to_string() const {
-    ostringstream ss;
-    ss << "Token(" << kind_string()
-        << " '" << lexeme_string() << "'"
-        << " " << location << ")";
-    return ss.str();
-}
-
 bool Token::operator==(const Token &token) {
     return kind == token.kind && lexeme == token.lexeme;
 }
@@ -132,5 +103,5 @@ bool Token::operator!=(const Token &token) {
 }
 
 ostream &parser::operator<<(ostream &stream, const Token &token) {
-    return stream << "Token(" << token.to_string();
+    return stream << '{' << token.kind_string() << ' ' << token.lexeme_string() << ' ' << token.location << '}';
 }

@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 12/01/2017.
-//
-
 #pragma once
 
 #include <string>
@@ -9,6 +5,7 @@
 #include <llvm/IR/MDBuilder.h>
 
 #include "../ast/visitor.h"
+#include "../diagnostics.h"
 #include "../symboltable/builder.h"
 #include "../typesystem/visitor.h"
 
@@ -127,6 +124,8 @@ namespace acorn::codegen {
         void visit_source_file(ast::SourceFile *node) override;
 
     private:
+        diagnostics::Logger m_logger;
+
         llvm::LLVMContext m_context;
         std::unique_ptr<llvm::Module> m_module;
         std::unique_ptr<llvm::MDBuilder> m_md_builder;

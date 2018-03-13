@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 12/01/2017.
-//
-
 #include <llvm/IR/Constants.h>
 #include <llvm/IR/DerivedTypes.h>
 #include <llvm/IR/Instructions.h>
@@ -14,9 +10,8 @@
 using namespace acorn;
 using namespace acorn::codegen;
 
-IrBuilder::IrBuilder(llvm::LLVMContext &context) : m_ir_builder(new llvm::IRBuilder<>(context)) {
-
-}
+IrBuilder::IrBuilder(llvm::LLVMContext &context)
+    : m_ir_builder(new llvm::IRBuilder<>(context)) { }
 
 void IrBuilder::push_insert_point() {
     m_insert_points.push_back(m_ir_builder->saveIP());

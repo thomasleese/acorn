@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 14/03/2016.
-//
-
 #include <iostream>
 
 #include "acorn/ast/nodes.h"
@@ -11,9 +7,7 @@
 
 using namespace acorn;
 
-PrettyPrinter::PrettyPrinter() : m_indent(0) {
-
-}
+PrettyPrinter::PrettyPrinter() : m_indent(0) { }
 
 void PrettyPrinter::visit_node(ast::Node *node) {
     if (auto name = llvm::dyn_cast<ast::Name>(node)) {

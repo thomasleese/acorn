@@ -1,11 +1,5 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #include <iostream>
 #include <sstream>
-
-#include <spdlog/spdlog.h>
 
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
@@ -18,27 +12,25 @@ using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::symboltable;
 
-static auto logger = spdlog::get("acorn");
+Symbol::Symbol(std::string name, bool builtin) :
+    m_name(name),
+    m_builtin(builtin),
+    m_type(nullptr),
+    m_llvm_value(nullptr),
+    m_scope(nullptr),
+    m_node(nullptr) { }
 
-Symbol::Symbol(std::string name, bool builtin) : m_name(name), m_builtin(builtin), m_type(nullptr), m_llvm_value(nullptr), m_scope(nullptr), m_node(nullptr) {
+Symbol::Symbol(ast::Name *name, bool builtin) :
+    Symbol(name->value(), builtin) { }
 
-}
+Symbol::Symbol(ast::TypeName *name, bool builtin) :
+    Symbol(name->name(), builtin) { }
 
-Symbol::Symbol(ast::Name *name, bool builtin) : Symbol(name->value(), builtin) {
+Symbol::Symbol(ast::DeclName *name, bool builtin) :
+    Symbol(name->name(), builtin) { }
 
-}
-
-Symbol::Symbol(ast::TypeName *name, bool builtin) : Symbol(name->name(), builtin) {
-
-}
-
-Symbol::Symbol(ast::DeclName *name, bool builtin) : Symbol(name->name(), builtin) {
-
-}
-
-Symbol::Symbol(ast::ParamName *name, bool builtin) : Symbol(name->name(), builtin) {
-
-}
+Symbol::Symbol(ast::ParamName *name, bool builtin) :
+    Symbol(name->name(), builtin) { }
 
 void Symbol::initialise_scope(Namespace *parent) {
     if (m_scope) {
@@ -67,7 +59,7 @@ bool Symbol::is_variable() const {
 
 void Symbol::copy_type_from(ast::Node *node) {
     if (node == nullptr || node->type() == nullptr) {
-        logger->critical("Symbol::copy_type_from given a nullptr");
+        m_logger.critical("Symbol::copy_type_from given a nullptr");
         return;
     }
 

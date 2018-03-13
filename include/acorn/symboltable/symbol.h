@@ -1,10 +1,8 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #pragma once
 
 #include <string>
+
+#include "../diagnostics.h"
 
 namespace llvm {
     class Value;
@@ -68,6 +66,8 @@ namespace acorn::symboltable {
         std::string to_string(int indent = 0) const;
 
     private:
+        diagnostics::Logger m_logger;
+
         std::string m_name;
         bool m_builtin;
         typesystem::Type *m_type;

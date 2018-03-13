@@ -1,12 +1,6 @@
-//
-// Created by Thomas Leese on 13/03/2016.
-//
-
 #include <iostream>
 #include <memory>
 #include <sstream>
-
-#include <spdlog/spdlog.h>
 
 #include "acorn/ast/nodes.h"
 #include "acorn/diagnostics.h"
@@ -20,20 +14,18 @@ using namespace acorn::ast;
 using namespace acorn::diagnostics;
 using namespace acorn::parser;
 
-static auto logger = spdlog::get("acorn");
-
 // useful variable for storing the current token
 static Token token;
 
 Parser::Parser(Scanner &scanner) : m_scanner(scanner) {
-    logger->debug("Initialising parser...");
+    m_logger.debug("Initialising parser...");
 
     m_operator_precendence["+"] = 1;
     m_operator_precendence["-"] = 1;
 }
 
 std::unique_ptr<SourceFile> Parser::parse(std::string name) {
-    logger->info("Parsing: {}", name);
+    m_logger.info("Parsing: {}", name);
 
     return_null_if_false(fill_token());
     Token source_token = front_token();
@@ -682,7 +674,7 @@ std::unique_ptr<Block> Parser::read_for() {
 }
 
 std::unique_ptr<If> Parser::read_if() {
-    logger->debug("Reading an if");
+    m_logger.debug("Reading an if");
 
     Token if_token;
     return_null_if_false(read_keyword("if", if_token));
@@ -710,7 +702,7 @@ std::unique_ptr<If> Parser::read_if() {
 
     return_null_if_false(skip_token(Token::Indent));
 
-    logger->debug("Reading if true case");
+    m_logger.debug("Reading if true case");
 
     auto true_case = read_expression();
     std::unique_ptr<Node> false_case;

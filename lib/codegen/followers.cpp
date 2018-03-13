@@ -1,9 +1,3 @@
-//
-// Created by Thomas Leese on 12/01/2017.
-//
-
-#include <spdlog/spdlog.h>
-
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Constant.h>
 #include <llvm/IR/Value.h>
@@ -12,8 +6,6 @@
 
 using namespace acorn;
 using namespace acorn::codegen;
-
-static auto logger = spdlog::get("acorn");
 
 void ValueFollower::push_llvm_value(llvm::Value *value) {
     m_llvm_value_stack.push_back(value);
@@ -25,7 +17,7 @@ bool ValueFollower::has_llvm_value() const {
 
 llvm::Value *ValueFollower::pop_llvm_value() {
     if (!has_llvm_value()) {
-        logger->warn("ValueFollower::pop_llvm_value with nothing available");
+        m_logger.warn("ValueFollower::pop_llvm_value with nothing available");
         return nullptr;
     }
 
@@ -44,7 +36,7 @@ void TypeFollower::push_llvm_type(llvm::Type *type) {
 
 llvm::Type *TypeFollower::pop_llvm_type() {
     if (!has_llvm_type()) {
-        logger->warn("TypeFollower::pop_llvm_type with nothing available");
+        m_logger.warn("TypeFollower::pop_llvm_type with nothing available");
         return nullptr;
     }
 
@@ -67,7 +59,7 @@ void InitialiserFollower::push_llvm_initialiser(llvm::Constant *initialiser) {
 
 llvm::Constant *InitialiserFollower::pop_llvm_initialiser() {
     if (!has_llvm_initialiser()) {
-        logger->warn("InitialiserFollower::pop_llvm_initialiser with nothing available");
+        m_logger.warn("InitialiserFollower::pop_llvm_initialiser with nothing available");
         return nullptr;
     }
 

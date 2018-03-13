@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #include <iostream>
 #include <sstream>
 
@@ -14,66 +10,48 @@ using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::parser;
 
-CompilerError::CompilerError(const SourceLocation &location) : m_location(location) {
+CompilerError::CompilerError(const SourceLocation &location) : m_location(location) { }
 
-}
+CompilerError::CompilerError(const Token &token) : CompilerError(token.location) { }
 
-CompilerError::CompilerError(const Token &token) : CompilerError(token.location) {
+CompilerError::CompilerError(ast::Node *node) : CompilerError(node->token()) { }
 
-}
-
-CompilerError::CompilerError(ast::Node *node) : CompilerError(node->token()) {
-
-}
-
-void CompilerError::print() const {
-    std::cout << m_prefix << " in " << m_location.filename << " on line " << m_location.line_number << " column " << m_location.column << std::endl;
-    std::cout << std::endl;
-
-    std::cout << "    " << m_location.line << std::endl;
-
-    std::cout << "    ";
-    for (int i = 1; i < m_location.column; i++) {
-        std::cout << " ";
-    }
-    std::cout << "^" << std::endl;
-    std::cout << std::endl;
-
-    std::cout << m_message << std::endl;
+std::ostream& diagnostics::operator<<(std::ostream& os, const CompilerError &error) {
+    return os
+        << error.m_prefix << " in " << error.m_location << std::endl << std::endl
+        << "    " << error.m_location.line << std::endl
+        << std::string(error.m_location.column + 3, ' ') << '^' << std::endl << std::endl
+        << error.m_message;
 }
 
 FileNotFoundError::FileNotFoundError(const Token &token) : CompilerError(token) {
     m_prefix = "File not found";
 }
 
-FileNotFoundError::FileNotFoundError(ast::Node *node) : CompilerError(node) {
-    m_prefix = "File not found";
-}
+FileNotFoundError::FileNotFoundError(ast::Node *node) : FileNotFoundError(node->token()) { }
 
-SyntaxError::SyntaxError(const SourceLocation &location, std::string got, std::string expectation) : CompilerError(location) {
+SyntaxError::SyntaxError(const SourceLocation &location, std::string got, std::string expectation)
+    : CompilerError(location) {
     m_prefix = "Invalid syntax";
-
     m_message = "Got: " + got + "\nExpected: " + expectation;
 }
 
 SyntaxError::SyntaxError(const Token &token, std::string expectation) : CompilerError(token) {
     m_prefix = "Invalid syntax";
 
-    std::string got = token.lexeme;
-
-    if (got.empty()) {
-        got = "(" + token.to_string() + ")";
+    if (token.lexeme.empty()) {
+        std::stringstream ss;
+        ss << '(' << token << ')';
+        make_message(ss.str(), expectation);
+    } else {
+        make_message(token.lexeme, expectation);
     }
-
-    makeMessage(got, expectation);
 }
 
 SyntaxError::SyntaxError(const Token &token, Token::Kind kind) :
-        SyntaxError(token, Token::kind_to_string(kind)) {
+    SyntaxError(token, Token::kind_to_string(kind)) { }
 
-}
-
-void SyntaxError::makeMessage(std::string got, std::string expectation) {
+void SyntaxError::make_message(std::string got, std::string expectation) {
     std::stringstream ss;
     ss << "Got: " << got << "\n";
     ss << "Expected: " << expectation;
@@ -85,22 +63,20 @@ UndefinedError::UndefinedError(ast::Node *node, std::string message) : CompilerE
     m_message = message;
 }
 
-UndefinedError::UndefinedError(ast::Name *name) : UndefinedError(name, name->value() + " is not defined in scope.") {
+UndefinedError::UndefinedError(ast::Name *name)
+    : UndefinedError(name, name->value() + " is not defined in scope.") { }
 
-}
+UndefinedError::UndefinedError(ast::ParamName *name)
+    : UndefinedError(name->name()) { }
 
-UndefinedError::UndefinedError(ast::ParamName *name) : UndefinedError(name->name()) {
-
-}
-
-TooManyDefinedError::TooManyDefinedError(ast::Node *node, std::string name) :
-        CompilerError(node) {
+TooManyDefinedError::TooManyDefinedError(ast::Node *node, std::string name)
+    : CompilerError(node) {
     m_prefix = "Too many defined error";
     m_message = name + " has multiple definitions.";
 }
 
-RedefinedError::RedefinedError(ast::Node *node, std::string name) :
-        CompilerError(node) {
+RedefinedError::RedefinedError(ast::Node *node, std::string name)
+    : CompilerError(node) {
     m_prefix = "Redefined error";
     m_message = name + " is already defined in this scope.";
 }
@@ -110,8 +86,8 @@ InvalidTypeConstructor::InvalidTypeConstructor(ast::Node *node) : CompilerError(
     m_message = "This is not a type type.";
 }
 
-InvalidTypeParameters::InvalidTypeParameters(ast::Node *node, unsigned long given_no, unsigned long expected_no) :
-        CompilerError(node) {
+InvalidTypeParameters::InvalidTypeParameters(ast::Node *node, unsigned long given_no, unsigned long expected_no)
+    : CompilerError(node) {
     m_prefix = "Invalid type parameters";
 
     std::stringstream ss;
@@ -119,15 +95,14 @@ InvalidTypeParameters::InvalidTypeParameters(ast::Node *node, unsigned long give
     m_message = ss.str();
 }
 
-TypeMismatchError::TypeMismatchError(ast::Node *node1, ast::Node *node2) : TypeMismatchError(node1, node1->type(), node2 ? node2->type() : nullptr) {
+TypeMismatchError::TypeMismatchError(ast::Node *node1, ast::Node *node2)
+    : TypeMismatchError(node1, node1->type(), node2 ? node2->type() : nullptr) { }
 
-}
+TypeMismatchError::TypeMismatchError(ast::Node *node, typesystem::Type *type1, typesystem::Type *type2)
+    : TypeMismatchError(node, type1->name(), type2->name()) { }
 
-TypeMismatchError::TypeMismatchError(ast::Node *node, typesystem::Type *type1, typesystem::Type *type2) : TypeMismatchError(node, type1->name(), type2->name()) {
-
-}
-
-TypeMismatchError::TypeMismatchError(ast::Node *node, std::string type1, std::string type2) : CompilerError(node) {
+TypeMismatchError::TypeMismatchError(ast::Node *node, std::string type1, std::string type2)
+    : CompilerError(node) {
     m_prefix = "Invalid typesystem";
 
     std::stringstream ss;
@@ -136,27 +111,53 @@ TypeMismatchError::TypeMismatchError(ast::Node *node, std::string type1, std::st
     m_message = ss.str();
 }
 
-TypeInferenceError::TypeInferenceError(ast::Node *node) :
-            CompilerError(node) {
+TypeInferenceError::TypeInferenceError(ast::Node *node)
+    : CompilerError(node) {
     m_prefix = "Type inference error";
     m_message = "Try specifying the type you want.";
 }
 
-ConstantAssignmentError::ConstantAssignmentError(ast::Node *node) :
-        CompilerError(node) {
+ConstantAssignmentError::ConstantAssignmentError(ast::Node *node)
+    : CompilerError(node) {
     m_prefix = "Assignment to constant";
     m_message = "Variable is not mutable.";
 }
 
-Reporter::Reporter() : m_has_errors(false) {
+Logger::Logger(const char *name) {
+    if (name == nullptr) {
+        name = "console";
+    }
 
+    auto spdlog = spdlog::get(name);
+    if (spdlog == nullptr) {
+        spdlog = spdlog::stdout_color_mt(name);
+
+        spdlog->set_level(spdlog::level::trace);
+        spdlog->set_pattern("[%H:%M:%S] [%l] %v");
+
+        spdlog->info("Initialising {} logger.", name);
+    }
+
+    assert(spdlog != nullptr);
+
+    m_spdlog = spdlog;
+}
+
+Reporter::Reporter() : m_has_errors(false) {
+    auto spdlog = spdlog::get("errors");
+    if (spdlog == nullptr) {
+        spdlog = spdlog::stderr_color_mt("errors");
+
+        spdlog->set_level(spdlog::level::warn);
+        spdlog->set_pattern("%v");
+    }
+
+    assert(spdlog != nullptr);
+
+    m_logger = spdlog;
 }
 
 void Reporter::report(const CompilerError &error) {
-    error.print();
+    m_logger->error("{}", error);
     m_has_errors = true;
-}
-
-bool Reporter::has_errors() const {
-    return m_has_errors;
 }

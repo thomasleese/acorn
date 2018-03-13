@@ -1,12 +1,9 @@
-//
-// Created by Thomas Leese on 12/01/2017.
-//
-
 #pragma once
 
 #include <vector>
 
 #include "../ast/visitor.h"
+#include "../diagnostics.h"
 #include "../symboltable/builder.h"
 
 namespace acorn {
@@ -86,6 +83,7 @@ namespace acorn::typesystem {
         void visit_source_file(ast::SourceFile *node) override;
 
     private:
+        diagnostics::Logger m_logger;
         std::vector<ast::DefDecl *> m_function_stack;
 
     };

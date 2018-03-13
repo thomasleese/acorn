@@ -1,11 +1,9 @@
-//
-// Created by Thomas Leese on 23/07/2017.
-//
-
 #pragma once
 
 #include <vector>
 #include <memory>
+
+#include "../diagnostics.h"
 
 namespace acorn::ast {
 
@@ -93,6 +91,7 @@ namespace acorn::ast {
 
     private:
         int m_debug_indentation;
+        diagnostics::Logger m_logger;
     };
 
 }

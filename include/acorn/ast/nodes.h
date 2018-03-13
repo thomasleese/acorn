@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 12/01/2017.
-//
-
 #pragma once
 
 #include <map>
@@ -91,7 +87,7 @@ namespace acorn::ast {
         std::string to_string() const;
 
         NodeKind kind() const { return m_kind; }
-        std::string kind_string() const;
+        const char *kind_string() const;
 
         Token token() const { return m_token; }
 

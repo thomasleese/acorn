@@ -1,10 +1,8 @@
-//
-// Created by Thomas Leese on 12/01/2017.
-//
-
 #pragma once
 
 #include <vector>
+
+#include "../diagnostics.h"
 
 namespace llvm {
     class Value;
@@ -22,6 +20,7 @@ namespace acorn::codegen {
         llvm::Value *llvm_value() const;
 
     private:
+        diagnostics::Logger m_logger;
         std::vector<llvm::Value *> m_llvm_value_stack;
     };
 
@@ -33,6 +32,7 @@ namespace acorn::codegen {
         llvm::Type *llvm_type() const;
 
     private:
+        diagnostics::Logger m_logger;
         std::vector<llvm::Type *> m_llvm_type_stack;
     };
 
@@ -44,6 +44,7 @@ namespace acorn::codegen {
         llvm::Constant *llvm_initialiser() const;
 
     private:
+        diagnostics::Logger m_logger;
         std::vector<llvm::Constant *> m_llvm_initialiser_stack;
     };
 

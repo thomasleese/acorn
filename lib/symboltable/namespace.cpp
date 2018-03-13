@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #include <iostream>
 #include <sstream>
 
@@ -16,13 +12,9 @@ using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::symboltable;
 
-Namespace::Namespace(Namespace *parent) : m_parent(parent) {
+Namespace::Namespace(Namespace *parent) : m_parent(parent) { }
 
-}
-
-Namespace::~Namespace() {
-
-}
+Namespace::~Namespace() { }
 
 bool Namespace::has(std::string name, bool follow_parents) const {
     auto it = m_symbols.find(name);

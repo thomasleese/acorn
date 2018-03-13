@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 14/08/2017.
-//
-
 #pragma once
 
 #define return_if_null(thing) \

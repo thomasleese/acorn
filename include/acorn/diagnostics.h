@@ -1,11 +1,10 @@
-//
-// Created by Thomas Leese on 15/03/2016.
-//
-
 #pragma once
 
 #include <exception>
 #include <string>
+
+#include <spdlog/spdlog.h>
+#include <spdlog/fmt/ostr.h>
 
 #include "parser/token.h"
 
@@ -34,9 +33,9 @@ namespace acorn::diagnostics {
         explicit CompilerError(const Token &token);
         explicit CompilerError(ast::Node *node);
 
-        void print() const;
-
     private:
+        friend std::ostream& operator<<(std::ostream& os, const CompilerError &error);
+
         parser::SourceLocation m_location;
 
     protected:
@@ -58,7 +57,7 @@ namespace acorn::diagnostics {
         SyntaxError(const Token &token, Token::Kind kind);
 
     private:
-        void makeMessage(std::string got, std::string expectation);
+        void make_message(std::string got, std::string expectation);
     };
 
     class UndefinedError : public CompilerError {
@@ -105,18 +104,56 @@ namespace acorn::diagnostics {
         ConstantAssignmentError(ast::Node *node);
     };
 
-    class Reporter {
+    class Logger {
+    public:
+        Logger(const char *name = nullptr);
 
+        template <typename Arg1, typename... Args> void trace(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->trace(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void debug(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->debug(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void info(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->info(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void warn(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->warn(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void error(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->error(fmt, arg1, args...);
+        }
+
+        template <typename Arg1, typename... Args> void critical(const char *fmt, const Arg1 &arg1, const Args &... args) {
+            m_spdlog->critical(fmt, arg1, args...);
+        }
+
+        template <typename T> void trace(const T &msg) { m_spdlog->trace(msg); }
+        template <typename T> void debug(const T &msg) { m_spdlog->debug(msg); }
+        template <typename T> void info(const T &msg) { m_spdlog->info(msg); }
+        template <typename T> void warn(const T &msg) { m_spdlog->warn(msg); }
+        template <typename T> void error(const T &msg) { m_spdlog->error(msg); }
+        template <typename T> void critical(const T &msg) { m_spdlog->critical(msg); }
+
+    protected:
+        std::shared_ptr<spdlog::logger> m_spdlog;
+    };
+
+    class Reporter {
     public:
         Reporter();
 
         void report(const CompilerError &error);
 
-        bool has_errors() const;
+        bool has_errors() const { return m_has_errors; }
 
     private:
         bool m_has_errors;
-
+        std::shared_ptr<spdlog::logger> m_logger;
     };
 
 }

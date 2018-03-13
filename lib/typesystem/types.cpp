@@ -1,7 +1,3 @@
-//
-// Created by Thomas Leese on 18/03/2016.
-//
-
 #include <cstring>
 #include <sstream>
 #include <iostream>
@@ -16,17 +12,11 @@ using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::typesystem;
 
-Type::Type() {
+Type::Type() { }
 
-}
+Type::Type(std::vector<Type *> parameters) : m_parameters(parameters) { }
 
-Type::Type(std::vector<Type *> parameters) : m_parameters(parameters) {
-
-}
-
-Type::~Type() {
-
-}
+Type::~Type() { }
 
 bool Type::is_compatible(const Type *other) const {
     auto name1 = name();
@@ -38,9 +28,7 @@ std::vector<typesystem::Type *> Type::parameters() const {
     return m_parameters;
 }
 
-TypeType::TypeType() {
-
-}
+TypeType::TypeType() { }
 
 TypeType::TypeType(std::vector<TypeType *> parameters) {
     for (auto t : parameters) {
@@ -148,9 +136,7 @@ void BooleanType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-IntegerType::IntegerType(unsigned int size) : m_size(size) {
-
-}
+IntegerType::IntegerType(unsigned int size) : m_size(size) { }
 
 std::string IntegerType::name() const {
     std::stringstream ss;
@@ -179,9 +165,7 @@ void IntegerType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-UnsignedIntegerType::UnsignedIntegerType(unsigned int size) : m_size(size) {
-
-}
+UnsignedIntegerType::UnsignedIntegerType(unsigned int size) : m_size(size) { }
 
 std::string UnsignedIntegerType::name() const {
     std::stringstream ss;

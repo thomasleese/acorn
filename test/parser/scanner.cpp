@@ -2,13 +2,10 @@
 #include <vector>
 
 #include <catch.hpp>
-#include <spdlog/spdlog.h>
 
 #include "acorn/parser/scanner.h"
 
 using namespace acorn::parser;
-
-static auto logger = spdlog::get("acorn");
 
 bool keywords_match(Scanner &scanner, std::vector<Token> &expected_tokens) {
     int i = 0;
