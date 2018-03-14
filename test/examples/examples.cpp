@@ -24,16 +24,8 @@ bool compile_and_run(const std::string filename) {
 
 SCENARIO("example programs") {
     GIVEN("a program which should compile") {
-        // REQUIRE(compile_and_run("basic_generics"));
-        // REQUIRE(compile_and_run("basic_operator"));
-        // REQUIRE(compile_and_run("generics_1"));
-        // REQUIRE(compile_and_run("generics_2"));
-        // REQUIRE(compile_and_run("int_variable"));
-        // REQUIRE(compile_and_run("json"));
         REQUIRE(compile_and_run("generics"));
         REQUIRE(compile_and_run("minimal"));
-        // REQUIRE(compile_and_run("multiple_methods"));
-        // REQUIRE(compile_and_run("records"));
-        // REQUIRE(compile_and_run("single_method"));
+        REQUIRE(compile_and_run("records"));
     }
 }

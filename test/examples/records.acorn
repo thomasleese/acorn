@@ -1,4 +1,11 @@
-import "base/os"
+type builtin Int64
+type builtin Void
+
+type Int as Int64
+
+def exit(code as Int)
+  ccall exit(Int) as Void using code
+end
 
 type Vector2
   x as Int
@@ -8,5 +15,5 @@ end
 #def builtin Vector2.new(x as Int, y as Int) as Vector2
 
 let v = Vector2.new(y: 10, x: 0)
-  exit(v.x)
-end
+
+exit(v.x)
