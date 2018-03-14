@@ -671,7 +671,7 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
             field_types.push_back(type_type);
         }
 
-        type = new typesystem::RecordType(input_parameters, field_names, field_types);
+        type = new typesystem::RecordType(input_parameters, field_names, field_types, this, node);
     }
 
     node->set_type(type);

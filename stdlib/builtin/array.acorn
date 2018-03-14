@@ -1,0 +1,5 @@
+type Array{T}
+  elements as UnsafePointer{T}
+  length as Int
+  capacity as Int
+end
