@@ -1,7 +1,0 @@
-import "base/os"
-
-def get_a_zero
-  0
-end
-
-exit(get_a_zero())
