@@ -29,7 +29,6 @@ namespace acorn {
 
     public:
         std::string str();
-        void print();
 
     private:
         int m_indent;

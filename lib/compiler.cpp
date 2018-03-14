@@ -137,7 +137,9 @@ int Compiler::parse_and_compile(const std::string filename) {
         return 2;
     }
 
-    //pretty_print(source_file);
+    PrettyPrinter pp;
+    pp.visit_source_file(source_file);
+    m_logger.debug(pp.str());
 
     if (!compile(source_file, root_namespace.get(), filename)) {
         return 1;
