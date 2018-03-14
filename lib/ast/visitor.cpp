@@ -265,7 +265,10 @@ void Visitor::visit_switch(Switch *node) {
 
 void Visitor::visit_parameter(Parameter *node) {
     visit_node(node->name());
-    visit_node(node->given_type());
+
+    if (node->given_type()) {
+        visit_node(node->given_type());
+    }
 }
 
 void Visitor::visit_let(Let *node) {

@@ -12,9 +12,11 @@ def test_explicit{T}(x as T) as T
   x
 end
 
-def test_implicit{T}(x as T)
+def test_implicit(x)
   x
 end
+
+# def test{T:Int}(x as T) as T
 
 let a = test_explicit(0)
 let b = test_implicit(10.4)

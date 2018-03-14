@@ -990,9 +990,11 @@ std::unique_ptr<DefDecl> Parser::read_def_decl() {
         return_null_if_false(skip_deindent_and_end_token());
     }
 
+    auto block = std::make_unique<Block>(body->token(), std::move(body));
+
     return std::make_unique<DefDecl>(
         def_token, std::move(name), builtin, std::move(parameters),
-        std::move(body), std::move(return_type)
+        std::move(block), std::move(return_type)
     );
 }
 

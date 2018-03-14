@@ -214,6 +214,8 @@ void TypeChecker::visit_name(ast::Name *node) {
     return_if_null(symbol);
 
     node->set_type(symbol->type());
+
+    check_not_null(node);
 }
 
 void TypeChecker::visit_type_name(ast::TypeName *node) {
