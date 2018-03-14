@@ -22,10 +22,6 @@ bool Type::is_compatible(const Type *other) const {
     return name1 == name2;
 }
 
-std::vector<typesystem::Type *> Type::parameters() const {
-    return m_parameters;
-}
-
 TypeType::TypeType() { }
 
 TypeType::TypeType(std::vector<TypeType *> parameters) {

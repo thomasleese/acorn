@@ -36,6 +36,12 @@ namespace acorn::typesystem {
         virtual std::string mangled_name() const = 0;
 
         virtual bool is_abstract() const {
+            for (auto &type : m_parameters) {
+                if (type->is_abstract()) {
+                    return true;
+                }
+            }
+
             return false;
         }
 
@@ -45,7 +51,9 @@ namespace acorn::typesystem {
 
         virtual Type *with_parameters(std::vector<Type *> parameters) = 0;
 
-        std::vector<Type *> parameters() const;
+        std::vector<Type *> parameters() const {
+            return m_parameters;
+        }
 
         virtual void accept(Visitor *visitor) = 0;
 
@@ -53,8 +61,15 @@ namespace acorn::typesystem {
         std::vector<Type *> m_parameters;
     };
 
+    class AbstractType : public Type {
+    public:
+        bool is_abstract() const {
+            return true;
+        }
+    };
+
     // type "type"s -- i.e. the type of concrete typesystem
-    class TypeType : public Type {
+    class TypeType : public AbstractType {
     public:
         explicit TypeType();
         explicit TypeType(std::vector<TypeType *> parameters);
@@ -265,7 +280,7 @@ namespace acorn::typesystem {
 
     };
 
-    class ModuleType : public Type {
+    class ModuleType : public AbstractType {
     public:
         std::string name() const;
         std::string mangled_name() const;
@@ -292,17 +307,13 @@ namespace acorn::typesystem {
     };
 
     // constructed typesystem
-    class Parameter : public Type {
+    class Parameter : public AbstractType {
 
     public:
         Parameter(ParameterType *constructor);
 
         std::string name() const override;
         std::string mangled_name() const override;
-
-        bool is_abstract() const override {
-            return true;
-        }
 
         ParameterType *type() const override;
 
