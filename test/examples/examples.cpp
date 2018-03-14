@@ -30,6 +30,7 @@ SCENARIO("example programs") {
         // REQUIRE(compile_and_run("generics_2"));
         // REQUIRE(compile_and_run("int_variable"));
         // REQUIRE(compile_and_run("json"));
+        REQUIRE(compile_and_run("generics"));
         REQUIRE(compile_and_run("minimal"));
         // REQUIRE(compile_and_run("multiple_methods"));
         // REQUIRE(compile_and_run("records"));

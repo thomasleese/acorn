@@ -1,0 +1,10 @@
+import "base"
+
+def test{T}(x as T) as T
+  x
+end
+
+let a = test(0)
+let b = test(10.4)
+
+exit(a)

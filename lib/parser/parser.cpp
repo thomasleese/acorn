@@ -38,15 +38,15 @@ std::unique_ptr<SourceFile> Parser::parse(std::string name) {
         auto import = read_import_expression();
         return_null_if_null(import);
 
-        std::string filename = "../library/" + import->path()->value() + ".acorn";
+        std::string filename = "stdlib/" + import->path()->value() + ".acorn";
 
         Scanner scanner(filename);
         Parser parser(scanner);
 
         auto imported_module = parser.parse(filename);
 
-        if (scanner.has_errors() || parser.has_errors()) {
-            continue;
+        if (scanner.has_errors() || parser.has_errors() || !imported_module) {
+            return nullptr;
         }
 
         imports.push_back(std::move(imported_module));
