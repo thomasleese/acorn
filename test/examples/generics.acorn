@@ -16,9 +16,14 @@ def test_implicit(x)
   x
 end
 
+def test_multiple{T}(x as T, y as T) as T
+  x
+end
+
 # def test{T:Int}(x as T) as T
 
 let a = test_explicit(0)
 let b = test_implicit(10.4)
+let c = test_multiple(0, 10)
 
-exit(a)
+exit(c)
