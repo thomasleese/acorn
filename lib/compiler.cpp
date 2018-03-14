@@ -121,7 +121,7 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
 
     m_logger.debug("Compiling object file...");
 
-    std::string cmd = "clang -Wl,-no_pie " + output_name + " -o " + module_name;
+    std::string cmd = "clang " + output_name + " -o " + module_name;
     system(cmd.c_str());
 
     remove(output_name.c_str());
@@ -188,6 +188,6 @@ llvm::TargetMachine *Compiler::get_target_machine(llvm::Triple triple) const {
 
     return target->createTargetMachine(
         triple.str(), cpu, target_features, target_options,
-        llvm::Reloc::PIC_, llvm::CodeModel::Medium, opt_level
+        llvm::Reloc::DynamicNoPIC, llvm::CodeModel::Small, opt_level
     );
 }
