@@ -1,9 +1,0 @@
-module Yaml
-    type Yaml
-        bool as Maybe{Bool}
-    end
-
-    def read(filename as String) as Yaml
-        return Yaml.new(bool: false)
-    end
-end
