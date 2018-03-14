@@ -16,16 +16,10 @@ Type::Type() { }
 
 Type::Type(std::vector<Type *> parameters) : m_parameters(parameters) { }
 
-Type::~Type() { }
-
 bool Type::is_compatible(const Type *other) const {
     auto name1 = name();
     auto name2 = other->name();
     return name1 == name2;
-}
-
-std::vector<typesystem::Type *> Type::parameters() const {
-    return m_parameters;
 }
 
 TypeType::TypeType() { }
@@ -454,7 +448,7 @@ void RecordType::create_builtin_constructor() {
 
     auto method = new Method(field_types, this->create(nullptr, nullptr));
 
-    method->set_is_generic(false);
+    method->add_empty_specialisation();
 
     for (size_t i = 0; i < m_field_names.size(); i++) {
         method->set_parameter_name(i, m_field_names[i]);
@@ -968,7 +962,7 @@ Method::Method(std::vector<Type *> parameter_types, Type *return_type) {
     }
 }
 
-Method::Method(Type *return_type) : m_is_generic(false) {
+Method::Method(Type *return_type) {
     m_parameters.push_back(return_type);
 }
 
@@ -1011,18 +1005,6 @@ std::string Method::mangled_name() const {
 
 TypeType *Method::type() const {
     return nullptr;
-}
-
-void Method::set_is_generic(bool is_generic) {
-    m_is_generic = is_generic;
-
-    if (!is_generic) {
-        add_empty_specialisation();
-    }
-}
-
-bool Method::is_generic() const {
-    return m_is_generic;
 }
 
 std::vector<Type *> Method::parameter_types() const {

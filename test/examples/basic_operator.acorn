@@ -1,5 +1,0 @@
-import "base/os"
-
-let a = 10 - 10
-  exit(a)
-end

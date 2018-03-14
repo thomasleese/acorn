@@ -46,7 +46,3 @@ std::string PrettyPrinter::indentation() {
 std::string PrettyPrinter::str() {
     return m_ss.str();
 }
-
-void PrettyPrinter::print() {
-    std::cout << str() << std::endl;
-}

@@ -38,15 +38,15 @@ std::unique_ptr<SourceFile> Parser::parse(std::string name) {
         auto import = read_import_expression();
         return_null_if_null(import);
 
-        std::string filename = "../library/" + import->path()->value() + ".acorn";
+        std::string filename = "stdlib/" + import->path()->value() + ".acorn";
 
         Scanner scanner(filename);
         Parser parser(scanner);
 
         auto imported_module = parser.parse(filename);
 
-        if (scanner.has_errors() || parser.has_errors()) {
-            continue;
+        if (scanner.has_errors() || parser.has_errors() || !imported_module) {
+            return nullptr;
         }
 
         imports.push_back(std::move(imported_module));
@@ -981,18 +981,20 @@ std::unique_ptr<DefDecl> Parser::read_def_decl() {
         return_null_if_null(return_type);
     }
 
-    std::unique_ptr<Node> body;
+    std::unique_ptr<Block> block;
 
     if (!builtin) {
         return_null_if_false(skip_token(Token::Indent));
-        body = read_expression();
+        auto body = read_expression();
         return_null_if_null(body);
         return_null_if_false(skip_deindent_and_end_token());
+
+        block = std::make_unique<Block>(body->token(), std::move(body));
     }
 
     return std::make_unique<DefDecl>(
         def_token, std::move(name), builtin, std::move(parameters),
-        std::move(body), std::move(return_type)
+        std::move(block), std::move(return_type)
     );
 }
 
