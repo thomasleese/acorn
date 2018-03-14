@@ -351,7 +351,7 @@ void TypeChecker::visit_call(ast::Call *node) {
 
     node->set_method_index(function->index_of(method));
 
-    if (method->is_generic()) {
+    if (method->is_abstract()) {
         if (!infer_call_type_parameters(node, method->parameter_types(), method->ordered_argument_types(node))) {
             m_logger.critical("Could not infer type parameters.");
             return;
@@ -557,13 +557,10 @@ void TypeChecker::visit_def_decl(ast::DefDecl *node) {
 
     push_scope(symbol);
 
-    bool is_generic = false;
-
     for (auto &parameter : name->parameters()) {
         auto parameter_symbol = scope()->lookup(this, parameter);
         parameter_symbol->set_type(new typesystem::ParameterType());
         visit_node(parameter);
-        is_generic = true;
     }
 
     std::vector<typesystem::Type *> parameter_types;
@@ -577,10 +574,6 @@ void TypeChecker::visit_def_decl(ast::DefDecl *node) {
         }
 
         parameter_types.push_back(parameter->type());
-
-        if (parameter->type()->is_abstract()) {
-            is_generic = true;
-        }
     }
 
     if (!node->builtin()) {
@@ -609,7 +602,9 @@ void TypeChecker::visit_def_decl(ast::DefDecl *node) {
         method->set_parameter_name(i, parameter->name()->value());
     }
 
-    method->set_is_generic(is_generic);
+    if (!method->is_abstract()) {
+        method->add_empty_specialisation();
+    }
 
     auto function_type = static_cast<typesystem::Function *>(function_symbol->type());
     function_type->add_method(method);

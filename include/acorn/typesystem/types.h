@@ -474,9 +474,6 @@ namespace acorn::typesystem {
 
         TypeType *type() const;
 
-        void set_is_generic(bool is_generic);
-        bool is_generic() const;
-
         std::vector<Type *> parameter_types() const;
         int parameter_index(std::string name) const;
         Type *return_type() const;
@@ -504,7 +501,6 @@ namespace acorn::typesystem {
     private:
         std::map<Type *, bool> m_inouts;
         std::map<std::string, int> m_names;
-        bool m_is_generic;
         std::vector<std::map<typesystem::ParameterType *, typesystem::Type *> > m_specialisations;
     };
 
