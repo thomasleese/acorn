@@ -1,10 +1,22 @@
-import "base"
+type builtin Int64
+type builtin Float64
+type builtin Void
 
-def test{T}(x as T) as T
+type Int as Int64
+
+def exit(code as Int)
+  ccall exit(Int) as Void using code
+end
+
+def test_explicit{T}(x as T) as T
   x
 end
 
-let a = test(0)
-let b = test(10.4)
+def test_implicit{T}(x as T)
+  x
+end
+
+let a = test_explicit(0)
+let b = test_implicit(10.4)
 
 exit(a)

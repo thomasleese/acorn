@@ -577,7 +577,7 @@ void TypeChecker::visit_def_decl(ast::DefDecl *node) {
         parameter_types.push_back(parameter->type());
     }
 
-    if (!node->builtin() && !is_generic) {
+    if (!node->builtin()) {
         visit_node(node->body().get());
     }
 
