@@ -453,25 +453,29 @@ std::unique_ptr<Call> Parser::read_call(std::unique_ptr<Node> operand) {
     while (!is_token(Token::CloseParenthesis)) {
         auto saved_token = front_token();
 
-        std::unique_ptr<Name> name = nullptr;
+        std::unique_ptr<Name> name;
         auto expression = read_expression();
 
         if (is_and_skip_token(Token::Colon)) {
-            if (!llvm::isa<Name>(expression.get())) {
+            if (llvm::isa<Name>(expression.get())) {
+                name = std::unique_ptr<Name>(static_cast<Name *>(expression.release()));
+                expression = read_expression(false);
+            } else if (llvm::isa<ParamName>(expression.get())) {
+                auto param_name = static_cast<ParamName *>(expression.release());
+                name = std::unique_ptr<Name>(param_name->name());
+                expression = read_expression(false);
+            } else {
                 report(SyntaxError(saved_token, Token::Name));
                 return nullptr;
             }
-
-            name = std::unique_ptr<Name>(static_cast<Name *>(expression.release()));
-            expression = read_expression(false);
         }
 
         return_null_if_null(expression);
 
-        if (name == nullptr) {
-            positional_arguments.push_back(std::move(expression));
-        } else {
+        if (name) {
             keyword_arguments[name->value()] = std::move(expression);
+        } else {
+            positional_arguments.push_back(std::move(expression));
         }
 
         if (!is_and_skip_token(Token::Comma)) {
@@ -482,7 +486,8 @@ std::unique_ptr<Call> Parser::read_call(std::unique_ptr<Node> operand) {
     return_null_if_false(skip_token(Token::CloseParenthesis));
 
     return std::make_unique<Call>(
-        call_token, std::move(operand), std::move(positional_arguments), std::move(keyword_arguments)
+        call_token, std::move(operand),
+        std::move(positional_arguments), std::move(keyword_arguments)
     );
 }
 
