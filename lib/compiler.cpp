@@ -28,7 +28,7 @@ using namespace acorn::compiler;
 using namespace acorn::diagnostics;
 using namespace acorn::parser;
 
-Compiler::Compiler() {
+Compiler::Compiler() : m_logger("acorn.compiler") {
     llvm::InitializeAllTargets();
     llvm::InitializeAllTargetMCs();
     llvm::InitializeAllAsmPrinters();
@@ -46,16 +46,20 @@ Compiler::Compiler() {
 Compiler::~Compiler() { }
 
 ast::SourceFile *Compiler::parse(const std::string filename, symboltable::Namespace *root_namespace) {
-    Scanner scanner(filename);
+    m_logger.info("initialising scanner and parser");
 
+    Scanner scanner(filename);
     Parser parser(scanner);
+
+    m_logger.info("scanning and parsing file");
+
     auto source_file = parser.parse(filename);
 
     if (scanner.has_errors() || parser.has_errors() || !source_file) {
         return nullptr;
     }
 
-    m_logger.info("Building symbol table...");
+    m_logger.info("building symbol table");
 
     symboltable::Builder symbol_table_builder(root_namespace);
     symbol_table_builder.visit_source_file(source_file.get());
@@ -63,14 +67,14 @@ ast::SourceFile *Compiler::parse(const std::string filename, symboltable::Namesp
 
     return_null_if_has_errors(symbol_table_builder);
 
-    m_logger.info("Running type checker...");
+    m_logger.info("running type checker");
 
     typesystem::TypeChecker type_checker(root_namespace);
     type_checker.visit_source_file(source_file.get());
 
     return_null_if_has_errors(type_checker);
 
-    std::cout << root_namespace->to_string() << std::endl;
+    m_logger.debug(root_namespace->to_string());
 
     return source_file.release();
 }
@@ -79,7 +83,7 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
     auto output_name = filename + ".o";
     auto module_name = filename.substr(0, filename.find_last_of("."));
 
-    m_logger.info("Compiling {} to {}.", filename, output_name);
+    m_logger.info("{} -> {}", filename, output_name);
 
     auto triple = get_triple();
     auto target_machine = get_target_machine(triple);
@@ -97,7 +101,7 @@ bool Compiler::compile(ast::SourceFile *module, symboltable::Namespace *root_nam
 
     delete module;
 
-    m_logger.debug("Generating object file...");
+    m_logger.debug("generating object file");
 
     llvm_module->setTargetTriple(triple.str());
 
@@ -138,8 +142,6 @@ int Compiler::parse_and_compile(const std::string filename) {
     if (!compile(source_file, root_namespace.get(), filename)) {
         return 1;
     }
-
-    delete source_file;
 
     return 0;
 }
@@ -186,6 +188,6 @@ llvm::TargetMachine *Compiler::get_target_machine(llvm::Triple triple) const {
 
     return target->createTargetMachine(
         triple.str(), cpu, target_features, target_options,
-        llvm::Reloc::PIC_, llvm::CodeModel::Medium, opt_level
+        llvm::Reloc::DynamicNoPIC, llvm::CodeModel::Small, opt_level
     );
 }

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <memory>
 
+#include <llvm/Support/CommandLine.h>
+
 #include "acorn/compiler.h"
 #include "acorn/prettyprinter.h"
 
@@ -12,9 +14,13 @@ void pretty_print(ast::SourceFile *source_file) {
     pp.print();
 }
 
+llvm::cl::opt<std::string> input_filename(
+    llvm::cl::Positional, llvm::cl::desc("<input file>"), llvm::cl::Required
+);
+
 int main(int argc, char *argv[]) {
-    std::string filename = argv[1];
+    llvm::cl::ParseCommandLineOptions(argc, argv);
 
     compiler::Compiler compiler;
-    return compiler.parse_and_compile(filename);
+    return compiler.parse_and_compile(input_filename);
 }

@@ -15,7 +15,8 @@ using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::typesystem;
 
-TypeChecker::TypeChecker(symboltable::Namespace *scope) {
+TypeChecker::TypeChecker(symboltable::Namespace *scope) :
+    ast::Visitor("acorn.typechecker") {
     push_scope(scope);
 }
 

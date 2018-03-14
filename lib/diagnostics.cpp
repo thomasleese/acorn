@@ -24,11 +24,12 @@ std::ostream& diagnostics::operator<<(std::ostream& os, const CompilerError &err
         << error.m_message;
 }
 
-FileNotFoundError::FileNotFoundError(const Token &token) : CompilerError(token) {
+FileNotFoundError::FileNotFoundError(const Token &token, const char *filename) : CompilerError(token) {
     m_prefix = "File not found";
+    m_message = filename;
 }
 
-FileNotFoundError::FileNotFoundError(ast::Node *node) : FileNotFoundError(node->token()) { }
+FileNotFoundError::FileNotFoundError(ast::Node *node, const char *filename) : FileNotFoundError(node->token(), filename) { }
 
 SyntaxError::SyntaxError(const SourceLocation &location, std::string got, std::string expectation)
     : CompilerError(location) {
@@ -133,9 +134,9 @@ Logger::Logger(const char *name) {
         spdlog = spdlog::stdout_color_mt(name);
 
         spdlog->set_level(spdlog::level::trace);
-        spdlog->set_pattern("[%H:%M:%S] [%l] %v");
+        spdlog->set_pattern("[%H:%M:%S] %L %n - %v");
 
-        spdlog->info("Initialising {} logger.", name);
+        spdlog->info("initialising logger");
     }
 
     assert(spdlog != nullptr);

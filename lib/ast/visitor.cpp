@@ -9,14 +9,16 @@ using std::unique_ptr;
 
 using namespace acorn::ast;
 
-Visitor::Visitor() : m_debug_indentation(0) { }
+Visitor::Visitor(const char *log_name) :
+    m_debug_indentation(0),
+    m_logger(diagnostics::Logger(log_name)) { }
 
 void Visitor::visit_node(Node *node) {
     if (node == nullptr) {
-        m_logger.warn("Visitor::visit given a null node");
+        m_logger.warn("given a null node");
     }
 
-    m_logger.debug("Visitor::visit {}{}", std::string(m_debug_indentation, ' '), node->to_string());
+    m_logger.trace("{}{}", std::string(m_debug_indentation, ' '), node->to_string());
 
     m_debug_indentation++;
 

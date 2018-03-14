@@ -11,27 +11,43 @@ using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::parser;
 
-Scanner::Scanner(std::string filename) {
+Scanner::Scanner(std::string filename) : m_logger("acorn.scanner"), m_filename(filename) {
     std::ifstream stream;
     stream.open(filename.c_str());
-    Scanner(stream, filename);
-    stream.close();
-}
+    bool opened = stream.good();
 
-Scanner::Scanner(std::istream &stream, std::string filename) {
     std::stringstream ss;
     ss << stream.rdbuf();
 
-    Scanner(ss.str(), filename);
+    initialise_with_data(ss.str());
+
+    stream.close();
+
+    if (!opened) {
+        report(
+            diagnostics::FileNotFoundError(make_token(), filename.c_str())
+        );
+    }
 }
 
-Scanner::Scanner(std::string data, std::string filename) {
-    m_logger.info("Initialising scanner for: {}", filename);
+Scanner::Scanner(std::istream &stream, std::string filename) : m_logger("acorn.scanner"), m_filename(filename) {
+    std::stringstream ss;
+    ss << stream.rdbuf();
 
-    m_filename = filename;
+    initialise_with_data(ss.str());
+}
+
+Scanner::Scanner(std::string data, std::string filename) : m_logger("acorn.scanner"), m_filename(filename) {
+    initialise_with_data(data);
+}
+
+void Scanner::initialise_with_data(std::string data) {
+    m_logger.info("initialising for: {}", m_filename);
 
     m_data = data;
     m_pos = 0;
+
+    m_logger.debug("{} bytes of code to read", m_data.size());
 
     m_current_line_number = 0;
     next_line();
@@ -50,6 +66,8 @@ bool Scanner::next_token(Token &token) {
     }
 
     if (m_pos >= static_cast<int>(m_data.size())) {
+        m_logger.debug("reached end of data");
+
         token = make_token();
         token.kind = Token::EndOfFile;
         return true;
@@ -95,7 +113,7 @@ bool Scanner::next_token(Token &token) {
         return false;
     }
 
-    m_logger.debug("{}", token);
+    m_logger.trace("{}", token);
 
     return true;
 }

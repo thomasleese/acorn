@@ -33,7 +33,7 @@ symboltable::Namespace *ScopeFollower::scope() const {
     return m_scope.back();
 }
 
-Builder::Builder(Namespace *root_namespace) : m_root(root_namespace) {
+Builder::Builder(Namespace *root_namespace) : ast::Visitor("acorn.symboltable"), m_root(root_namespace) {
     push_scope(m_root);
 }
 
