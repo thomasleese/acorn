@@ -981,16 +981,16 @@ std::unique_ptr<DefDecl> Parser::read_def_decl() {
         return_null_if_null(return_type);
     }
 
-    std::unique_ptr<Node> body;
+    std::unique_ptr<Block> block;
 
     if (!builtin) {
         return_null_if_false(skip_token(Token::Indent));
-        body = read_expression();
+        auto body = read_expression();
         return_null_if_null(body);
         return_null_if_false(skip_deindent_and_end_token());
-    }
 
-    auto block = std::make_unique<Block>(body->token(), std::move(body));
+        block = std::make_unique<Block>(body->token(), std::move(body));
+    }
 
     return std::make_unique<DefDecl>(
         def_token, std::move(name), builtin, std::move(parameters),
