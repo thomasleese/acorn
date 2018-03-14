@@ -36,7 +36,7 @@ namespace acorn::typesystem {
         typesystem::Type *instance_type(ast::Node *node, std::string name, std::vector<ast::TypeName *> parameters = std::vector<ast::TypeName *>());
         typesystem::Type *instance_type(ast::TypeName *name);
 
-        typesystem::Type *builtin_type_from_name(ast::DeclName *node);
+        typesystem::Type *builtin_type_from_name(ast::TypeDecl *node);
 
         bool infer_call_type_parameters(ast::Call *call, std::vector<typesystem::Type *> parameter_types,
                                         std::vector<typesystem::Type *> argument_types);
@@ -84,7 +84,6 @@ namespace acorn::typesystem {
     private:
         diagnostics::Logger m_logger;
         std::vector<ast::DefDecl *> m_function_stack;
-
     };
 
 }

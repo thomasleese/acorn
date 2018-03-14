@@ -12,9 +12,8 @@ using namespace acorn;
 using namespace acorn::diagnostics;
 using namespace acorn::typesystem;
 
-Type::Type() { }
-
-Type::Type(std::vector<Type *> parameters) : m_parameters(parameters) { }
+Type::Type(ast::TypeDecl *decl_node, std::vector<Type *> parameters) :
+    m_decl_node(decl_node), m_parameters(parameters) { }
 
 bool Type::is_compatible(const Type *other) const {
     auto name1 = name();
@@ -22,9 +21,7 @@ bool Type::is_compatible(const Type *other) const {
     return name1 == name2;
 }
 
-TypeType::TypeType() { }
-
-TypeType::TypeType(std::vector<TypeType *> parameters) {
+TypeType::TypeType(ast::TypeDecl *decl_node, std::vector<TypeType *> parameters) : AbstractType(decl_node) {
     for (auto t : parameters) {
         m_parameters.push_back(t);
     }
@@ -35,7 +32,7 @@ std::string TypeType::mangled_name() const {
 }
 
 TypeType *TypeType::type() const {
-    return new TypeDescriptionType();
+    return new TypeDescriptionType(m_decl_node);
 }
 
 TypeType *TypeType::with_parameters(std::vector<Type *> parameters) {
@@ -86,7 +83,7 @@ std::string VoidType::name() const {
 
 Type *VoidType::create(Reporter *reporter, ast::Node *node) {
     if (m_parameters.empty()) {
-        return new Void();
+        return new Void(this);
     } else {
         reporter->report(InvalidTypeConstructor(node));
         return nullptr;
@@ -111,7 +108,7 @@ std::string BooleanType::name() const {
 
 Type *BooleanType::create(Reporter *reporter, ast::Node *node) {
     if (m_parameters.empty()) {
-        return new Boolean();
+        return new Boolean(this);
     } else {
         reporter->report(InvalidTypeConstructor(node));
         return nullptr;
@@ -130,7 +127,8 @@ void BooleanType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-IntegerType::IntegerType(unsigned int size) : m_size(size) { }
+IntegerType::IntegerType(ast::TypeDecl *decl_node, unsigned int size) :
+    TypeType(decl_node), m_size(size) { }
 
 std::string IntegerType::name() const {
     std::stringstream ss;
@@ -140,7 +138,7 @@ std::string IntegerType::name() const {
 
 Type *IntegerType::create(Reporter *reporter, ast::Node *node) {
     if (m_parameters.empty()) {
-        return new Integer(m_size);
+        return new Integer(this, m_size);
     } else {
         reporter->report(InvalidTypeConstructor(node));
         return nullptr;
@@ -159,7 +157,8 @@ void IntegerType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-UnsignedIntegerType::UnsignedIntegerType(unsigned int size) : m_size(size) { }
+UnsignedIntegerType::UnsignedIntegerType(ast::TypeDecl *decl_node, unsigned int size) :
+    TypeType(decl_node), m_size(size) { }
 
 std::string UnsignedIntegerType::name() const {
     std::stringstream ss;
@@ -169,7 +168,7 @@ std::string UnsignedIntegerType::name() const {
 
 Type *UnsignedIntegerType::create(Reporter *reporter, ast::Node *node) {
     if (m_parameters.empty()) {
-        return new UnsignedInteger(m_size);
+        return new UnsignedInteger(this, m_size);
     } else {
         reporter->report(InvalidTypeConstructor(node));
         return nullptr;
@@ -177,16 +176,19 @@ Type *UnsignedIntegerType::create(Reporter *reporter, ast::Node *node) {
 }
 
 UnsignedIntegerType *UnsignedIntegerType::with_parameters(std::vector<TypeType *> parameters) {
-    return new UnsignedIntegerType(m_size);
+    if (parameters.empty()) {
+        return this;
+    } else {
+        return nullptr;
+    }
 }
 
 void UnsignedIntegerType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-FloatType::FloatType(int size) : m_size(size) {
-
-}
+FloatType::FloatType(ast::TypeDecl *decl_node, int size) :
+    TypeType(decl_node), m_size(size) { }
 
 std::string FloatType::name() const {
     std::stringstream ss;
@@ -196,7 +198,7 @@ std::string FloatType::name() const {
 
 Type *FloatType::create(Reporter *reporter, ast::Node *node) {
     if (m_parameters.empty()) {
-        return new Float(m_size);
+        return new Float(this, m_size);
     } else {
         reporter->report(InvalidTypeConstructor(node));
         return nullptr;
@@ -215,7 +217,8 @@ void FloatType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-UnsafePointerType::UnsafePointerType(TypeType *element_type) {
+UnsafePointerType::UnsafePointerType(ast::TypeDecl *decl_node, TypeType *element_type) :
+    TypeType(decl_node) {
     if (element_type) {
         m_parameters.push_back(element_type);
     }
@@ -241,7 +244,8 @@ TypeType *UnsafePointerType::element_type() const {
 
 Type *UnsafePointerType::create(Reporter *reporter, ast::Node *node) {
     if (has_element_type()) {
-        return new UnsafePointer(element_type()->create(reporter, node));
+        auto element_type_inst = element_type()->create(reporter, node);
+        return new UnsafePointer(this, element_type_inst);
     } else {
         reporter->report(InvalidTypeParameters(node, m_parameters.size(), 1));
         return nullptr;
@@ -250,9 +254,9 @@ Type *UnsafePointerType::create(Reporter *reporter, ast::Node *node) {
 
 UnsafePointerType *UnsafePointerType::with_parameters(std::vector<TypeType *> parameters) {
     if (parameters.empty()) {
-        return new UnsafePointerType();
+        return new UnsafePointerType(m_decl_node);
     } else if (parameters.size() == 1) {
-        return new UnsafePointerType(parameters[0]);
+        return new UnsafePointerType(m_decl_node, parameters[0]);
     } else {
         return nullptr;
     }
@@ -262,20 +266,15 @@ void UnsafePointerType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-FunctionType::FunctionType() {
-
-}
-
-FunctionType::FunctionType(std::vector<TypeType *> parameters) : TypeType(parameters) {
-
-}
+FunctionType::FunctionType(ast::TypeDecl *node_decl, std::vector<TypeType *> parameters) :
+    TypeType(node_decl, parameters) { }
 
 std::string FunctionType::name() const {
     return "FunctionType";
 }
 
 Type *FunctionType::create(Reporter *reporter, ast::Node *node) {
-    Function *function = new Function();
+    auto function = new Function(this);
 
     for (auto parameter : m_parameters) {
         auto method_type = dynamic_cast<MethodType *>(parameter);
@@ -297,20 +296,15 @@ Type *FunctionType::create(Reporter *reporter, ast::Node *node) {
 }
 
 FunctionType *FunctionType::with_parameters(std::vector<TypeType *> parameters) {
-    return new FunctionType(parameters);
+    return new FunctionType(m_decl_node, parameters);
 }
 
 void FunctionType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-MethodType::MethodType() : TypeType() {
-
-}
-
-MethodType::MethodType(std::vector<TypeType *> parameters) : TypeType(parameters) {
-
-}
+MethodType::MethodType(ast::TypeDecl *decl_node, std::vector<TypeType *> parameters) :
+    TypeType(decl_node, parameters) { }
 
 std::string MethodType::name() const {
     return "MethodType";
@@ -331,46 +325,48 @@ Type *MethodType::create(Reporter *reporter, ast::Node *node) {
         parameter_types.push_back(type);
     }
 
-    return new Method(parameter_types, return_type);
+    return new Method(this, parameter_types, return_type);
 }
 
 MethodType *MethodType::with_parameters(std::vector<TypeType *> parameters) {
-    return new MethodType(parameters);
+    return new MethodType(m_decl_node, parameters);
 }
 
 void MethodType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-RecordType::RecordType(Reporter *reporter, ast::Node *node) : m_reporter(reporter), m_node(node) {
-    m_constructor = new Function();
+RecordType::RecordType(ast::TypeDecl *decl_node, Reporter *reporter) :
+    TypeType(decl_node), m_reporter(reporter) {
+    m_constructor = new Function(new FunctionType(decl_node));
 }
 
-RecordType::RecordType(std::vector<ParameterType *> input_parameters,
+RecordType::RecordType(ast::TypeDecl *decl_node,
+                       std::vector<ParameterType *> input_parameters,
                        std::vector<std::string> field_names,
                        std::vector<TypeType *> field_types,
-                       Reporter *reporter, ast::Node *node) :
+                       Reporter *reporter) :
+    TypeType(decl_node),
     m_reporter(reporter),
-    m_node(node),
     m_input_parameters(input_parameters),
     m_field_names(field_names),
     m_field_types(field_types) {
-    m_constructor = new Function();
+    m_constructor = new Function(new FunctionType(decl_node));
     create_builtin_constructor();
 }
 
-RecordType::RecordType(std::vector<ParameterType *> input_parameters,
+RecordType::RecordType(ast::TypeDecl *decl_node,
+                       std::vector<ParameterType *> input_parameters,
                        std::vector<std::string> field_names,
                        std::vector<TypeType *> field_types,
                        std::vector<TypeType *> parameters,
-                       Reporter *reporter, ast::Node *node) :
-    TypeType(parameters),
+                       Reporter *reporter) :
+    TypeType(decl_node, parameters),
     m_reporter(reporter),
-    m_node(node),
     m_input_parameters(input_parameters),
     m_field_names(field_names),
     m_field_types(field_types) {
-    m_constructor = new Function();
+    m_constructor = new Function(new FunctionType(decl_node));
     create_builtin_constructor();
 }
 
@@ -427,7 +423,7 @@ Type *RecordType::create(Reporter *reporter, ast::Node *node) {
             field_types.push_back(result);
         }
 
-        return new Record(m_field_names, field_types);
+        return new Record(this, m_field_names, field_types);
     } else {
         reporter->report(InvalidTypeParameters(node, m_parameters.size(), m_input_parameters.size()));
         return nullptr;
@@ -435,7 +431,7 @@ Type *RecordType::create(Reporter *reporter, ast::Node *node) {
 }
 
 RecordType *RecordType::with_parameters(std::vector<TypeType *> parameters) {
-    return new RecordType(m_input_parameters, m_field_names, m_field_types, parameters, m_reporter, m_node);
+    return new RecordType(m_decl_node, m_input_parameters, m_field_names, m_field_types, parameters, m_reporter);
 }
 
 void RecordType::accept(Visitor *visitor) {
@@ -446,11 +442,11 @@ void RecordType::create_builtin_constructor() {
     std::vector<Type *> field_types;
 
     for (auto &type : m_field_types) {
-        auto result = type->create(m_reporter, m_node);
+        auto result = type->create(m_reporter, m_decl_node);
         field_types.push_back(result);
     }
 
-    auto method = new Method(field_types, create(m_reporter, m_node));
+    auto method = new Method(new MethodType(m_decl_node), field_types, create(m_reporter, m_decl_node));
 
     method->add_empty_specialisation();
 
@@ -461,13 +457,8 @@ void RecordType::create_builtin_constructor() {
     m_constructor->add_method(method);
 }
 
-TupleType::TupleType() {
-
-}
-
-TupleType::TupleType(std::vector<TypeType *> parameters) : TypeType(parameters) {
-
-}
+TupleType::TupleType(ast::TypeDecl *decl_node, diagnostics::Reporter *reporter, std::vector<TypeType *> parameters) :
+    RecordType(decl_node, reporter) { }
 
 std::string TupleType::name() const {
     return "TupleType";
@@ -486,32 +477,20 @@ Type *TupleType::create(Reporter *reporter, ast::Node *node) {
             parameters.push_back(tt->create(reporter, node));
         }
 
-        return new Tuple(parameters);
+        return new Tuple(this, parameters);
     }
 }
 
 TupleType *TupleType::with_parameters(std::vector<TypeType *> parameters) {
-    return new TupleType(parameters);
+    return new TupleType(m_decl_node, m_reporter, parameters);
 }
 
 void TupleType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-AliasType::AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters) :
-        m_alias(alias),
-        m_input_parameters(input_parameters)
-{
-
-}
-
-AliasType::AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters, std::vector<TypeType *> parameters) :
-        TypeType(parameters),
-        m_alias(alias),
-        m_input_parameters(input_parameters)
-{
-
-}
+AliasType::AliasType(ast::TypeDecl *decl_node, TypeType *alias, std::vector<ParameterType *> input_parameters, std::vector<TypeType *> parameters) :
+    TypeType(decl_node, parameters), m_alias(alias), m_input_parameters(input_parameters) { }
 
 std::string AliasType::name() const {
     return m_alias->name();
@@ -540,12 +519,15 @@ Type *AliasType::create(Reporter *reporter, ast::Node *node) {
 }
 
 AliasType *AliasType::with_parameters(std::vector<TypeType *> parameters) {
-    return new AliasType(m_alias, m_input_parameters, parameters);
+    return new AliasType(m_decl_node, m_alias, m_input_parameters, parameters);
 }
 
 void AliasType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
+
+ModuleType::ModuleType(ast::TypeDecl *decl_node) :
+    AbstractType(decl_node) { }
 
 std::string ModuleType::name() const {
     return "ModuleType";
@@ -567,7 +549,7 @@ void ModuleType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-TypeDescriptionType::TypeDescriptionType(TypeType *type) {
+TypeDescriptionType::TypeDescriptionType(ast::TypeDecl *decl_node, TypeType *type) : TypeType(decl_node) {
     if (type) {
         m_parameters.push_back(type);
     }
@@ -600,9 +582,9 @@ Type *TypeDescriptionType::create(Reporter *reporter, ast::Node *node) {
 
 TypeDescriptionType *TypeDescriptionType::with_parameters(std::vector<TypeType *> parameters) {
     if (parameters.empty()) {
-        return new TypeDescriptionType();
+        return new TypeDescriptionType(m_decl_node);
     } else if (parameters.size() == 1) {
-        return new TypeDescriptionType(parameters[0]);
+        return new TypeDescriptionType(m_decl_node, parameters[0]);
     } else {
         return nullptr;
     }
@@ -612,9 +594,8 @@ void TypeDescriptionType::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Parameter::Parameter(ParameterType *constructor) : m_constructor(constructor) {
-
-}
+Parameter::Parameter(ParameterType *type) :
+    AbstractType(type->decl_node()), m_type(type) { }
 
 std::string Parameter::name() const {
     return "Parameter";
@@ -622,10 +603,6 @@ std::string Parameter::name() const {
 
 std::string Parameter::mangled_name() const {
     return "p";
-}
-
-ParameterType *Parameter::type() const {
-    return m_constructor;
 }
 
 bool Parameter::is_compatible(const Type *other) const {
@@ -644,17 +621,8 @@ void Parameter::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-std::string Void::name() const {
-    return "Void";
-}
-
-std::string Void::mangled_name() const {
-    return "v";
-}
-
-VoidType *Void::type() const {
-    return new VoidType();
-}
+Void::Void(VoidType *type) :
+    Type(type->decl_node()), m_type(type) { }
 
 Void *Void::with_parameters(std::vector<Type *> parameters) {
     if (parameters.empty()) {
@@ -668,17 +636,8 @@ void Void::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-std::string Boolean::name() const {
-    return "Boolean";
-}
-
-std::string Boolean::mangled_name() const {
-    return "b";
-}
-
-BooleanType *Boolean::type() const {
-    return new BooleanType();
-}
+Boolean::Boolean(BooleanType *type) :
+    Type(type->decl_node()), m_type(type) { }
 
 Boolean *Boolean::with_parameters(std::vector<Type *> parameters) {
     if (parameters.empty()) {
@@ -692,9 +651,8 @@ void Boolean::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Integer::Integer(unsigned int size) : m_size(size) {
-
-}
+Integer::Integer(IntegerType *type, unsigned int size) :
+    Type(type->decl_node()), m_type(type), m_size(size) { }
 
 std::string Integer::name() const {
     std::stringstream ss;
@@ -706,14 +664,6 @@ std::string Integer::mangled_name() const {
     std::stringstream ss;
     ss << "i" << m_size;
     return ss.str();
-}
-
-IntegerType *Integer::type() const {
-    return new IntegerType(m_size);
-}
-
-unsigned int Integer::size() const {
-    return m_size;
 }
 
 Integer *Integer::with_parameters(std::vector<Type *> parameters) {
@@ -728,9 +678,8 @@ void Integer::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-UnsignedInteger::UnsignedInteger(unsigned int size) : m_size(size) {
-
-}
+UnsignedInteger::UnsignedInteger(UnsignedIntegerType *type, unsigned int size) :
+    Type(type->decl_node()), m_type(type), m_size(size) { }
 
 std::string UnsignedInteger::name() const {
     std::stringstream ss;
@@ -742,14 +691,6 @@ std::string UnsignedInteger::mangled_name() const {
     std::stringstream ss;
     ss << "ui" << m_size;
     return ss.str();
-}
-
-UnsignedIntegerType *UnsignedInteger::type() const {
-    return new UnsignedIntegerType(m_size);
-}
-
-unsigned int UnsignedInteger::size() const {
-    return m_size;
 }
 
 UnsignedInteger *UnsignedInteger::with_parameters(std::vector<Type *> parameters) {
@@ -764,9 +705,8 @@ void UnsignedInteger::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Float::Float(unsigned int size) : m_size(size) {
-
-}
+Float::Float(FloatType *type, unsigned int size) :
+    Type(type->decl_node()), m_type(type), m_size(size) { }
 
 std::string Float::name() const {
     std::stringstream ss;
@@ -778,14 +718,6 @@ std::string Float::mangled_name() const {
     std::stringstream ss;
     ss << "f" << m_size;
     return ss.str();
-}
-
-FloatType *Float::type() const {
-    return new FloatType(m_size);
-}
-
-unsigned int Float::size() const {
-    return m_size;
 }
 
 Float *Float::with_parameters(std::vector<Type *> parameters) {
@@ -800,7 +732,8 @@ void Float::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-UnsafePointer::UnsafePointer(Type *element_type) {
+UnsafePointer::UnsafePointer(UnsafePointerType *type, Type *element_type) :
+    Type(type->decl_node()), m_type(type) {
     m_parameters.push_back(element_type);
 }
 
@@ -816,15 +749,6 @@ std::string UnsafePointer::mangled_name() const {
     return ss.str();
 }
 
-UnsafePointerType *UnsafePointer::type() const {
-    return new UnsafePointerType();
-}
-
-Type *UnsafePointer::element_type() const {
-    assert(m_parameters.size() == 1);
-    return m_parameters[0];
-}
-
 bool UnsafePointer::is_compatible(const Type *other) const {
     auto other_pointer = dynamic_cast<const UnsafePointer *>(other);
     if (other_pointer) {
@@ -836,7 +760,7 @@ bool UnsafePointer::is_compatible(const Type *other) const {
 
 UnsafePointer *UnsafePointer::with_parameters(std::vector<Type *> parameters) {
     if (parameters.size() == 1) {
-        return new UnsafePointer(parameters[0]);
+        return new UnsafePointer(m_type, parameters[0]);
     } else {
         return nullptr;
     }
@@ -846,9 +770,10 @@ void UnsafePointer::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Record::Record(std::vector<std::string> field_names, std::vector<Type *> field_types) :
-        m_field_names(field_names)
-{
+Record::Record(RecordType *type, std::vector<std::string> field_names, std::vector<Type *> field_types) :
+    Type(type->decl_node()),
+    m_type(type),
+    m_field_names(field_names) {
     m_parameters = field_types;
 }
 
@@ -915,10 +840,6 @@ std::string Record::mangled_name() const {
     return ss.str();
 }
 
-RecordType *Record::type() const {
-    return new RecordType(nullptr, nullptr);
-}
-
 bool Record::is_compatible(const Type *other) const {
     auto other_record = dynamic_cast<const Record *>(other);
     if (other_record) {
@@ -939,14 +860,14 @@ bool Record::is_compatible(const Type *other) const {
 }
 
 Record *Record::with_parameters(std::vector<Type *> parameters) {
-    return new Record(m_field_names, parameters);
+    return new Record(m_type, m_field_names, parameters);
 }
 
 void Record::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Tuple::Tuple(std::vector<Type *> field_types) : Record(std::vector<std::string>(), field_types) {
+Tuple::Tuple(TupleType *type, std::vector<Type *> field_types) : Record(type, std::vector<std::string>(), field_types) {
     for (size_t i = 0; i < field_types.size(); i++) {
         std::stringstream ss;
         ss << i;
@@ -958,28 +879,28 @@ void Tuple::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
-Method::Method(std::vector<Type *> parameter_types, Type *return_type) {
+Method::Method(MethodType *type, Type *return_type) : Type(type->decl_node()), m_type(type) {
     m_parameters.push_back(return_type);
+}
+
+Method::Method(MethodType *type, std::vector<Type *> parameter_types, Type *return_type) :
+    Method(type, return_type) {
     for (auto p : parameter_types) {
         assert(p);
         m_parameters.push_back(p);
     }
 }
 
-Method::Method(Type *return_type) {
-    m_parameters.push_back(return_type);
-}
-
-Method::Method(Type *parameter1_type, Type *return_type) : Method(return_type) {
+Method::Method(MethodType *type, Type *parameter1_type, Type *return_type) : Method(type, return_type) {
     m_parameters.push_back(parameter1_type);
 }
 
-Method::Method(Type *parameter1_type, Type *parameter2_type, Type *return_type) : Method(return_type) {
+Method::Method(MethodType *type, Type *parameter1_type, Type *parameter2_type, Type *return_type) : Method(type, return_type) {
     m_parameters.push_back(parameter1_type);
     m_parameters.push_back(parameter2_type);
 }
 
-Method::Method(Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type) : Method(return_type) {
+Method::Method(MethodType *type, Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type) : Method(type, return_type) {
     m_parameters.push_back(parameter1_type);
     m_parameters.push_back(parameter2_type);
     m_parameters.push_back(parameter3_type);
@@ -1005,10 +926,6 @@ std::string Method::mangled_name() const {
         ss << type->mangled_name();
     }
     return ss.str();
-}
-
-TypeType *Method::type() const {
-    return nullptr;
 }
 
 std::vector<Type *> Method::parameter_types() const {
@@ -1144,6 +1061,8 @@ void Method::accept(Visitor *visitor) {
     visitor->visit(this);
 }
 
+Function::Function(FunctionType *type) : Type(type->decl_node()), m_type(type) { }
+
 std::string Function::name() const {
     std::stringstream ss;
     ss << "Function{";
@@ -1164,10 +1083,6 @@ std::string Function::mangled_name() const {
         ss << method->mangled_name();
     }
     return ss.str();
-}
-
-FunctionType *Function::type() const {
-    return new FunctionType();
 }
 
 void Function::add_method(Method *method) {
