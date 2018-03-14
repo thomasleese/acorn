@@ -30,10 +30,14 @@ namespace acorn::typesystem {
     public:
         explicit Type();
         explicit Type(std::vector<Type *> parameters);
-        virtual ~Type();
+        virtual ~Type() = default;
 
         virtual std::string name() const = 0;
         virtual std::string mangled_name() const = 0;
+
+        virtual bool is_abstract() const {
+            return false;
+        }
 
         virtual bool is_compatible(const Type *other) const;
 
@@ -293,16 +297,20 @@ namespace acorn::typesystem {
     public:
         Parameter(ParameterType *constructor);
 
-        std::string name() const;
-        std::string mangled_name() const;
+        std::string name() const override;
+        std::string mangled_name() const override;
 
-        ParameterType *type() const;
+        bool is_abstract() const override {
+            return true;
+        }
 
-        bool is_compatible(const Type *other) const;
+        ParameterType *type() const override;
 
-        Parameter *with_parameters(std::vector<Type *> parameters);
+        bool is_compatible(const Type *other) const override;
 
-        void accept(Visitor *visitor);
+        Parameter *with_parameters(std::vector<Type *> parameters) override;
+
+        void accept(Visitor *visitor) override;
 
     private:
         ParameterType *m_constructor;

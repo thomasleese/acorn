@@ -575,6 +575,10 @@ void TypeChecker::visit_def_decl(ast::DefDecl *node) {
         }
 
         parameter_types.push_back(parameter->type());
+
+        if (parameter->type()->is_abstract()) {
+            is_generic = true;
+        }
     }
 
     if (!node->builtin()) {

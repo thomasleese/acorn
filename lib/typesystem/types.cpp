@@ -16,8 +16,6 @@ Type::Type() { }
 
 Type::Type(std::vector<Type *> parameters) : m_parameters(parameters) { }
 
-Type::~Type() { }
-
 bool Type::is_compatible(const Type *other) const {
     auto name1 = name();
     auto name2 = other->name();
