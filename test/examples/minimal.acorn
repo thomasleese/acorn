@@ -1,11 +1,4 @@
-type builtin Int64
-type builtin Void
-
-type Int as Int64
-
-def exit(code as Int)
-  ccall exit(Int) as Void using code
-end
+import "builtin"
 
 let a = 0
 exit(a)

@@ -1,0 +1,7 @@
+def exit(code as Int)
+  ccall exit(Int) as Void using code
+end
+
+def abort
+  ccall abort() as Void
+end

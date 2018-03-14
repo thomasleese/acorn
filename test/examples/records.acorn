@@ -1,12 +1,10 @@
-import "base/os"
+import "builtin"
 
 type Vector2
   x as Int
   y as Int
 end
 
-#def builtin Vector2.new(x as Int, y as Int) as Vector2
-
 let v = Vector2.new(y: 10, x: 0)
-  exit(v.x)
-end
+
+exit(v.x)

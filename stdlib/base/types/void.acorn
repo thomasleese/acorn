@@ -1,3 +1,0 @@
-type builtin Void
-
-let builtin nil as Void
