@@ -1,6 +1,7 @@
 type builtin Int64
 type builtin Float64
 type builtin Void
+type builtin UnsafePointer{T}
 
 type Int as Int64
 
@@ -20,6 +21,10 @@ end
 
 def test_multiple{T}(x as T, y as T) as T
   x
+end
+
+def test_inner{T}(x as UnsafePointer{T})
+    x
 end
 
 # def test{T:Int}(x as T) as T
