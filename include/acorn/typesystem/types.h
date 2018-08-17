@@ -6,31 +6,32 @@
 #include <map>
 
 namespace acorn {
-
     namespace ast {
         class Node;
         class Node;
         class Call;
+        class TypeDecl;
     }
 
     namespace diagnostics {
         class Reporter;
     }
-
 }
 
 namespace acorn::typesystem {
 
     class Visitor;
-
     class TypeType;
 
     class Type {
 
     public:
-        explicit Type();
-        explicit Type(std::vector<Type *> parameters);
+        explicit Type(ast::TypeDecl *m_decl_node, std::vector<Type *> parameters = {});
         virtual ~Type() = default;
+
+        ast::TypeDecl *decl_node() const {
+            return m_decl_node;
+        }
 
         virtual std::string name() const = 0;
         virtual std::string mangled_name() const = 0;
@@ -58,11 +59,14 @@ namespace acorn::typesystem {
         virtual void accept(Visitor *visitor) = 0;
 
     protected:
+        ast::TypeDecl *m_decl_node;
         std::vector<Type *> m_parameters;
     };
 
     class AbstractType : public Type {
     public:
+        using Type::Type;
+
         bool is_abstract() const {
             return true;
         }
@@ -71,9 +75,8 @@ namespace acorn::typesystem {
     // type "type"s -- i.e. the type of concrete typesystem
     class TypeType : public AbstractType {
     public:
-        explicit TypeType();
-        explicit TypeType(std::vector<TypeType *> parameters);
-        virtual Type *create(diagnostics::Reporter *diagnostics, ast::Node *node) = 0;
+        explicit TypeType(ast::TypeDecl *decl_node, std::vector<TypeType *> parameters = {});
+        virtual Type *create(diagnostics::Reporter *reporter, ast::Node *node) = 0;
 
         std::string mangled_name() const;
 
@@ -85,11 +88,13 @@ namespace acorn::typesystem {
 
     class ParameterType : public TypeType {
     public:
+        using TypeType::TypeType;
+
         std::string name() const;
 
         bool is_compatible(const Type *other) const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         ParameterType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -98,9 +103,11 @@ namespace acorn::typesystem {
 
     class VoidType : public TypeType {
     public:
+        using TypeType::TypeType;
+
         std::string name() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         VoidType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -109,9 +116,11 @@ namespace acorn::typesystem {
 
     class BooleanType : public TypeType {
     public:
+        using TypeType::TypeType;
+
         std::string name() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         BooleanType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -120,11 +129,11 @@ namespace acorn::typesystem {
 
     class IntegerType : public TypeType {
     public:
-        IntegerType(unsigned int size);
+        IntegerType(ast::TypeDecl *decl_node, unsigned int size);
 
         std::string name() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         IntegerType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -136,11 +145,11 @@ namespace acorn::typesystem {
 
     class UnsignedIntegerType : public TypeType {
     public:
-        UnsignedIntegerType(unsigned int size);
+        UnsignedIntegerType(ast::TypeDecl *decl_node, unsigned int size);
 
         std::string name() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         UnsignedIntegerType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -152,11 +161,11 @@ namespace acorn::typesystem {
 
     class FloatType : public TypeType {
     public:
-        FloatType(int size);
+        FloatType(ast::TypeDecl *decl_node, int size);
 
         std::string name() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         FloatType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -168,14 +177,14 @@ namespace acorn::typesystem {
 
     class UnsafePointerType : public TypeType {
     public:
-        explicit UnsafePointerType(TypeType *element_type = nullptr);
+        explicit UnsafePointerType(ast::TypeDecl *decl_node, TypeType *element_type = nullptr);
 
         std::string name() const;
 
         bool has_element_type() const;
         TypeType *element_type() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         UnsafePointerType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -184,12 +193,11 @@ namespace acorn::typesystem {
 
     class FunctionType : public TypeType {
     public:
-        FunctionType();
-        FunctionType(std::vector<TypeType *> parameters);
+        explicit FunctionType(ast::TypeDecl *decl_node, std::vector<TypeType *> parameters = {});
 
         std::string name() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         FunctionType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -198,12 +206,11 @@ namespace acorn::typesystem {
 
     class MethodType : public TypeType {
     public:
-        MethodType();
-        MethodType(std::vector<TypeType *> parameters);
+        explicit MethodType(ast::TypeDecl *decl_node, std::vector<TypeType *> parameters = {});
 
         std::string name() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         MethodType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -215,20 +222,22 @@ namespace acorn::typesystem {
     class RecordType : public TypeType {
 
     public:
-        RecordType();
-        RecordType(std::vector<ParameterType *> input_parameters,
-                   std::vector<std::string> field_names,
-                   std::vector<TypeType *> field_types);
-        RecordType(std::vector<ParameterType *> input_parameters,
+        RecordType(ast::TypeDecl *decl_node, diagnostics::Reporter *reporter);
+        RecordType(ast::TypeDecl *decl_node, std::vector<ParameterType *> input_parameters,
                    std::vector<std::string> field_names,
                    std::vector<TypeType *> field_types,
-                   std::vector<TypeType *> parameters);
+                   diagnostics::Reporter *reporter);
+        RecordType(ast::TypeDecl *decl_node, std::vector<ParameterType *> input_parameters,
+                   std::vector<std::string> field_names,
+                   std::vector<TypeType *> field_types,
+                   std::vector<TypeType *> parameters,
+                   diagnostics::Reporter *reporter);
 
         std::string name() const;
 
         Function *constructor() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         RecordType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -237,6 +246,9 @@ namespace acorn::typesystem {
     private:
         void create_builtin_constructor();
 
+    protected:
+        diagnostics::Reporter *m_reporter;
+
         std::vector<ParameterType *> m_input_parameters;
         std::vector<std::string> m_field_names;
         std::vector<TypeType *> m_field_types;
@@ -244,14 +256,13 @@ namespace acorn::typesystem {
 
     };
 
-    class TupleType : public TypeType {
+    class TupleType : public RecordType {
     public:
-        TupleType();
-        explicit TupleType(std::vector<TypeType *> parameters);
+        explicit TupleType(ast::TypeDecl *decl_node, diagnostics::Reporter *reporter, std::vector<TypeType *> parameters = {});
 
         std::string name() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         TupleType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -261,12 +272,11 @@ namespace acorn::typesystem {
     class AliasType : public TypeType {
 
     public:
-        AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters);
-        AliasType(TypeType *alias, std::vector<ParameterType *> input_parameters, std::vector<TypeType *> parameters);
+        AliasType(ast::TypeDecl *decl_node, TypeType *alias, std::vector<ParameterType *> input_parameters, std::vector<TypeType *> parameters = {});
 
         std::string name() const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         AliasType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -282,6 +292,8 @@ namespace acorn::typesystem {
 
     class ModuleType : public AbstractType {
     public:
+        ModuleType(ast::TypeDecl *decl_node);
+
         std::string name() const;
         std::string mangled_name() const;
 
@@ -293,13 +305,13 @@ namespace acorn::typesystem {
 
     class TypeDescriptionType : public TypeType {
     public:
-        explicit TypeDescriptionType(TypeType *type = nullptr);
+        explicit TypeDescriptionType(ast::TypeDecl *decl_node, TypeType *type = nullptr);
 
         std::string name() const;
 
         bool is_compatible(const Type *other) const;
 
-        Type *create(diagnostics::Reporter *diagnostics, ast::Node *node);
+        Type *create(diagnostics::Reporter *reporter, ast::Node *node);
 
         TypeDescriptionType *with_parameters(std::vector<TypeType *> parameters);
 
@@ -310,12 +322,14 @@ namespace acorn::typesystem {
     class Parameter : public AbstractType {
 
     public:
-        Parameter(ParameterType *constructor);
+        Parameter(ParameterType *type);
 
         std::string name() const override;
         std::string mangled_name() const override;
 
-        ParameterType *type() const override;
+        ParameterType *type() const override {
+            return m_type;
+        }
 
         bool is_compatible(const Type *other) const override;
 
@@ -324,112 +338,158 @@ namespace acorn::typesystem {
         void accept(Visitor *visitor) override;
 
     private:
-        ParameterType *m_constructor;
+        ParameterType *m_type;
 
     };
 
     class Void : public Type {
     public:
-        std::string name() const;
-        std::string mangled_name() const;
+        explicit Void(VoidType *type);
 
-        VoidType *type() const;
+        std::string name() const {
+            return "Void";
+        }
+
+        std::string mangled_name() const {
+            return "v";
+        }
+
+        VoidType *type() const {
+            return m_type;
+        }
 
         Void *with_parameters(std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
+
+    private:
+        VoidType *m_type;
     };
 
     class Boolean : public Type {
     public:
-        std::string name() const;
-        std::string mangled_name() const;
+        explicit Boolean(BooleanType *type);
 
-        BooleanType *type() const;
+        std::string name() const {
+            return "Boolean";
+        }
+
+        std::string mangled_name() const {
+            return "b";
+        }
+
+        BooleanType *type() const {
+            return m_type;
+        }
 
         Boolean *with_parameters(std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
+
+    private:
+        BooleanType *m_type;
     };
 
     class Integer : public Type {
     public:
-        explicit Integer(unsigned int size);
+        Integer(IntegerType *type, unsigned int size);
 
         std::string name() const;
         std::string mangled_name() const;
 
-        IntegerType *type() const;
+        IntegerType *type() const {
+            return m_type;
+        }
 
-        unsigned int size() const;
+        unsigned int size() const {
+            return m_size;
+        }
 
         Integer *with_parameters(std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
     private:
+        IntegerType *m_type;
         unsigned int m_size;
     };
 
     class UnsignedInteger : public Type {
     public:
-        explicit UnsignedInteger(unsigned int size);
+        UnsignedInteger(UnsignedIntegerType *type, unsigned int size);
 
         std::string name() const;
         std::string mangled_name() const;
 
-        UnsignedIntegerType *type() const;
+        UnsignedIntegerType *type() const {
+            return m_type;
+        }
 
-        unsigned int size() const;
+        unsigned int size() const {
+            return m_size;
+        }
 
         UnsignedInteger *with_parameters(std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
     private:
+        UnsignedIntegerType *m_type;
         unsigned int m_size;
     };
 
     class Float : public Type {
     public:
-        explicit Float(unsigned int size);
+        Float(FloatType *type, unsigned int size);
 
         std::string name() const;
         std::string mangled_name() const;
 
-        FloatType *type() const;
+        FloatType *type() const {
+            return m_type;
+        }
 
-        unsigned int size() const;
+        unsigned int size() const {
+            return m_size;
+        }
 
         Float *with_parameters(std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
 
     private:
+        FloatType *m_type;
         unsigned int m_size;
     };
 
     class UnsafePointer : public Type {
     public:
-        explicit UnsafePointer(Type *element_type);
+        UnsafePointer(UnsafePointerType *type, Type *element_type);
 
         std::string name() const;
         std::string mangled_name() const;
 
-        UnsafePointerType *type() const;
+        UnsafePointerType *type() const {
+            return m_type;
+        }
 
-        Type *element_type() const;
+        Type *element_type() const {
+            return m_parameters[0];
+        }
 
         bool is_compatible(const Type *other) const;
 
         UnsafePointer *with_parameters(std::vector<Type *> parameters);
 
         void accept(Visitor *visitor);
+
+    private:
+        UnsafePointerType *m_type;
     };
 
     class Record : public Type {
     public:
-        Record(std::vector<std::string> field_names, std::vector<Type *> field_types);
+        Record(RecordType *type, std::vector<std::string> field_names, std::vector<Type *> field_types);
 
         bool has_field(std::string name);
         long get_field_index(std::string name);
@@ -442,7 +502,9 @@ namespace acorn::typesystem {
         std::string name() const;
         std::string mangled_name() const;
 
-        RecordType *type() const;
+        RecordType *type() const {
+            return m_type;
+        }
 
         bool is_compatible(const Type *other) const;
 
@@ -451,28 +513,31 @@ namespace acorn::typesystem {
         void accept(Visitor *visitor);
 
     protected:
+        RecordType *m_type;
         std::vector<std::string> m_field_names;
     };
 
     class Tuple : public Record {
     public:
-        Tuple(std::vector<Type *> field_types);
+        Tuple(TupleType *type, std::vector<Type *> field_types);
 
         void accept(Visitor *visitor);
     };
 
     class Method : public Type {
     public:
-        Method(std::vector<Type *> parameter_types, Type *return_type);
-        Method(Type *return_type);
-        Method(Type *parameter1_type, Type *return_type);
-        Method(Type *parameter1_type, Type *parameter2_type, Type *return_type);
-        Method(Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type);
+        Method(MethodType *type, Type *return_type);
+        Method(MethodType *type, std::vector<Type *> parameter_types, Type *return_type);
+        Method(MethodType *type, Type *parameter1_type, Type *return_type);
+        Method(MethodType *type, Type *parameter1_type, Type *parameter2_type, Type *return_type);
+        Method(MethodType *type, Type *parameter1_type, Type *parameter2_type, Type *parameter3_type, Type *return_type);
 
         std::string name() const;
         std::string mangled_name() const;
 
-        TypeType *type() const;
+        TypeType *type() const {
+            return m_type;
+        }
 
         std::vector<Type *> parameter_types() const;
         int parameter_index(std::string name) const;
@@ -499,6 +564,7 @@ namespace acorn::typesystem {
         void accept(Visitor *visitor);
 
     private:
+        MethodType *m_type;
         std::map<Type *, bool> m_inouts;
         std::map<std::string, int> m_names;
         std::vector<std::map<typesystem::ParameterType *, typesystem::Type *> > m_specialisations;
@@ -506,10 +572,14 @@ namespace acorn::typesystem {
 
     class Function : public Type {
     public:
+        explicit Function(FunctionType *type);
+
         std::string name() const;
         std::string mangled_name() const;
 
-        FunctionType *type() const;
+        FunctionType *type() const {
+            return m_type;
+        }
 
         void add_method(Method *method);
         Method *find_method(ast::Node *node, std::vector<Type *> positional_arguments, std::map<std::string, Type *> keyword_arguments) const;
@@ -527,6 +597,7 @@ namespace acorn::typesystem {
         void accept(Visitor *visitor);
 
     private:
+        FunctionType *m_type;
         std::map<Method *, int> m_llvm_index;
     };
 

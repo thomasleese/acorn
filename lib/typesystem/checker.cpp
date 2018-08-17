@@ -60,51 +60,51 @@ typesystem::Type *TypeChecker::instance_type(ast::TypeName *name) {
     return instance_type(name, name->name()->value(), name->parameters());
 }
 
-typesystem::Type *TypeChecker::builtin_type_from_name(ast::DeclName *node) {
-    auto name = node->name()->value();
+typesystem::Type *TypeChecker::builtin_type_from_name(ast::TypeDecl *node) {
+    auto name = node->name()->name()->value();
 
     if (name == "Void") {
-        return new typesystem::VoidType();
+        return new typesystem::VoidType(node);
     } else if (name == "Bool") {
-        return new typesystem::BooleanType();
+        return new typesystem::BooleanType(node);
     } else if (name == "Int8") {
-        return new typesystem::IntegerType(8);
+        return new typesystem::IntegerType(node, 8);
     } else if (name == "Int16") {
-        return new typesystem::IntegerType(16);
+        return new typesystem::IntegerType(node, 16);
     } else if (name == "Int32") {
-        return new typesystem::IntegerType(32);
+        return new typesystem::IntegerType(node, 32);
     } else if (name == "Int64") {
-        return new typesystem::IntegerType(64);
+        return new typesystem::IntegerType(node, 64);
     } else if (name == "Int128") {
-        return new typesystem::IntegerType(128);
+        return new typesystem::IntegerType(node, 128);
     } else if (name == "UInt8") {
-        return new typesystem::UnsignedIntegerType(8);
+        return new typesystem::UnsignedIntegerType(node, 8);
     } else if (name == "UInt16") {
-        return new typesystem::UnsignedIntegerType(16);
+        return new typesystem::UnsignedIntegerType(node, 16);
     } else if (name == "UInt32") {
-        return new typesystem::UnsignedIntegerType(32);
+        return new typesystem::UnsignedIntegerType(node, 32);
     } else if (name == "UInt64") {
-        return new typesystem::UnsignedIntegerType(64);
+        return new typesystem::UnsignedIntegerType(node, 64);
     } else if (name == "UInt128") {
-        return new typesystem::UnsignedIntegerType(128);
+        return new typesystem::UnsignedIntegerType(node, 128);
     } else if (name == "Float16") {
-        return new typesystem::FloatType(16);
+        return new typesystem::FloatType(node, 16);
     } else if (name == "Float32") {
-        return new typesystem::FloatType(32);
+        return new typesystem::FloatType(node, 32);
     } else if (name == "Float64") {
-        return new typesystem::FloatType(64);
+        return new typesystem::FloatType(node, 64);
     } else if (name == "Float128") {
-        return new typesystem::FloatType(128);
+        return new typesystem::FloatType(node, 128);
     } else if (name == "UnsafePointer") {
-        return new typesystem::UnsafePointerType();
+        return new typesystem::UnsafePointerType(node);
     } else if (name == "Function") {
-        return new typesystem::FunctionType();
+        return new typesystem::FunctionType(node);
     } else if (name == "Method") {
-        return new typesystem::MethodType();
+        return new typesystem::MethodType(node);
     } else if (name == "Tuple") {
-        return new typesystem::TupleType();
+        return new typesystem::TupleType(node, this);
     } else if (name == "Type") {
-        return new typesystem::TypeDescriptionType();
+        return new typesystem::TypeDescriptionType(node);
     } else {
         m_logger.critical("Unknown builtin type: {}", name);
         return nullptr;
@@ -201,7 +201,7 @@ void TypeChecker::visit_block(ast::Block *node) {
     auto &expressions = node->expressions();
 
     if (expressions.empty()) {
-        node->set_type(new typesystem::Void());
+        node->set_type(instance_type(node, "Void"));
     } else {
         node->copy_type_from(expressions.back());
     }
@@ -300,7 +300,10 @@ void TypeChecker::visit_tuple(ast::Tuple *node) {
         element_types.push_back(element->type());
     }
 
-    node->set_type(new typesystem::Tuple(element_types));
+    auto tuple_type = dynamic_cast<TupleType *>(find_type(node, "Tuple"));
+    assert(tuple_type);
+
+    node->set_type(new typesystem::Tuple(tuple_type, element_types));
 }
 
 void TypeChecker::visit_dictionary(ast::Dictionary *node) {
@@ -322,7 +325,10 @@ void TypeChecker::visit_call(ast::Call *node) {
 
     auto function = dynamic_cast<typesystem::Function *>(node->operand_type());
     if (function == nullptr) {
-        node->set_type(new typesystem::Function());
+        auto function_type = dynamic_cast<FunctionType *>(find_type(node, "Function"));
+        assert(function_type);
+
+        node->set_type(new typesystem::Function(function_type));
         report(TypeMismatchError(node->operand(), node));
         delete node->type();
         node->set_type(nullptr);
@@ -526,7 +532,7 @@ void TypeChecker::visit_parameter(ast::Parameter *node) {
 
         node->set_type(instance_type(node->given_type()));
     } else {
-        auto type = new typesystem::ParameterType();
+        auto type = new typesystem::ParameterType(nullptr);
         node->set_type(type->create(this, node));
     }
 
@@ -548,7 +554,8 @@ void TypeChecker::visit_def_decl(ast::DefDecl *node) {
 
     auto function_symbol = scope()->lookup(this, name);
     if (!function_symbol->has_type()) {
-        function_symbol->set_type(new typesystem::Function());
+        auto function_type = dynamic_cast<FunctionType *>(find_type(node, "Function"));
+        function_symbol->set_type(new typesystem::Function(function_type));
     }
 
     push_scope(function_symbol);
@@ -559,7 +566,7 @@ void TypeChecker::visit_def_decl(ast::DefDecl *node) {
 
     for (auto &parameter : name->parameters()) {
         auto parameter_symbol = scope()->lookup(this, parameter);
-        parameter_symbol->set_type(new typesystem::ParameterType());
+        parameter_symbol->set_type(new typesystem::ParameterType(nullptr));
         visit_node(parameter);
     }
 
@@ -594,7 +601,9 @@ void TypeChecker::visit_def_decl(ast::DefDecl *node) {
         return;
     }
 
-    auto method = new typesystem::Method(parameter_types, return_type);
+    auto method_type = dynamic_cast<MethodType *>(find_type(node, "Method"));
+
+    auto method = new typesystem::Method(method_type, parameter_types, return_type);
 
     for (size_t i = 0; i < parameter_types.size(); i++) {
         auto &parameter = node->parameters()[i];
@@ -627,7 +636,7 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
     auto symbol = scope()->lookup(this, node, node->name()->name()->value());
 
     if (node->builtin()) {
-        node->set_type(builtin_type_from_name(node->name()));
+        node->set_type(builtin_type_from_name(node));
         symbol->copy_type_from(node);
         return;
     }
@@ -637,7 +646,7 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
     std::vector<typesystem::ParameterType *> input_parameters;
     for (auto &parameter : node->name()->parameters()) {
         auto sym = scope()->lookup(this, parameter);
-        sym->set_type(new typesystem::ParameterType());
+        sym->set_type(new typesystem::ParameterType(nullptr)); // FIXME accept parameter type node
 
         visit_node(parameter);
 
@@ -654,7 +663,7 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
         auto alias = dynamic_cast<typesystem::TypeType *>(node->alias()->type());
         assert(alias);
 
-        type = new typesystem::AliasType(alias, input_parameters);
+        type = new typesystem::AliasType(node, alias, input_parameters);
     } else {
         std::vector<std::string> field_names;
         std::vector<typesystem::TypeType *> field_types;
@@ -668,10 +677,11 @@ void TypeChecker::visit_type_decl(ast::TypeDecl *node) {
 
             auto type_type = dynamic_cast<typesystem::TypeType *>(type->type());
             assert(type_type);
+
             field_types.push_back(type_type);
         }
 
-        type = new typesystem::RecordType(input_parameters, field_names, field_types);
+        type = new typesystem::RecordType(node, input_parameters, field_names, field_types, this);
     }
 
     node->set_type(type);
@@ -686,7 +696,7 @@ void TypeChecker::visit_module_decl(ast::ModuleDecl *node) {
 
     push_scope(symbol);
 
-    auto module = new typesystem::ModuleType();
+    auto module = new typesystem::ModuleType(nullptr);
 
     visit_node(node->body().get());
 
@@ -698,7 +708,7 @@ void TypeChecker::visit_module_decl(ast::ModuleDecl *node) {
 
 void TypeChecker::visit_import(ast::Import *node) {
     Visitor::visit_import(node);
-    node->set_type(new typesystem::Void());
+    node->set_type(instance_type(node, "Void"));
 }
 
 void TypeChecker::visit_source_file(ast::SourceFile *node) {

@@ -4,6 +4,12 @@ type builtin Void
 
 let builtin nil as Void
 
+# functions
+
+type builtin Tuple
+type builtin Function
+type builtin Method
+
 # integers
 
 type builtin Int8

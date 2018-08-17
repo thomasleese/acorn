@@ -29,13 +29,13 @@ bool Namespace::has(std::string name, bool follow_parents) const {
     }
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node *current_node, std::string name) const {
+Symbol *Namespace::lookup(Reporter *reporter, ast::Node *current_node, std::string name) const {
     auto it = m_symbols.find(name);
     if (it == m_symbols.end()) {
         if (m_parent) {
-            return m_parent->lookup(diagnostics, current_node, name);
+            return m_parent->lookup(reporter, current_node, name);
         } else {
-            diagnostics->report(UndefinedError(current_node, name));
+            reporter->report(UndefinedError(current_node, name));
             return nullptr;
         }
     }
@@ -43,23 +43,23 @@ Symbol *Namespace::lookup(Reporter *diagnostics, ast::Node *current_node, std::s
     return it->second.get();
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::Name *name) const {
-    return lookup(diagnostics, name, name->value());
+Symbol *Namespace::lookup(Reporter *reporter, ast::Name *name) const {
+    return lookup(reporter, name, name->value());
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::TypeName *name) const {
-    return lookup(diagnostics, name->name());
+Symbol *Namespace::lookup(Reporter *reporter, ast::TypeName *name) const {
+    return lookup(reporter, name->name());
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::DeclName *name) const {
-    return lookup(diagnostics, name->name());
+Symbol *Namespace::lookup(Reporter *reporter, ast::DeclName *name) const {
+    return lookup(reporter, name->name());
 }
 
-Symbol *Namespace::lookup(Reporter *diagnostics, ast::ParamName *name) const {
-    return lookup(diagnostics, name->name());
+Symbol *Namespace::lookup(Reporter *reporter, ast::ParamName *name) const {
+    return lookup(reporter, name->name());
 }
 
-Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const {
+Symbol *Namespace::lookup_by_node(Reporter *reporter, ast::Node *node) const {
     for (auto &entry : m_symbols) {
         auto &symbol = entry.second;
         if (symbol->node() == node) {
@@ -68,19 +68,19 @@ Symbol *Namespace::lookup_by_node(Reporter *diagnostics, ast::Node *node) const 
     }
 
     if (m_parent) {
-        return m_parent->lookup_by_node(diagnostics, node);
+        return m_parent->lookup_by_node(reporter, node);
     } else {
-        diagnostics->report(UndefinedError(node, node->token().lexeme));
+        reporter->report(UndefinedError(node, node->token().lexeme));
         return nullptr;
     }
 }
 
-void Namespace::insert(Reporter *diagnostics, ast::Node *current_node, std::unique_ptr<Symbol> symbol) {
+void Namespace::insert(Reporter *reporter, ast::Node *current_node, std::unique_ptr<Symbol> symbol) {
     auto name = symbol->name();
 
     auto it = m_symbols.find(name);
     if (it != m_symbols.end()) {
-        diagnostics->report(RedefinedError(current_node, name));
+        reporter->report(RedefinedError(current_node, name));
     }
 
     symbol->initialise_scope(this);
@@ -89,14 +89,14 @@ void Namespace::insert(Reporter *diagnostics, ast::Node *current_node, std::uniq
     m_symbols[name] = std::move(symbol);
 }
 
-void Namespace::rename(Reporter *diagnostics, Symbol *symbol, std::string new_name) {
+void Namespace::rename(Reporter *reporter, Symbol *symbol, std::string new_name) {
     auto it = m_symbols.find(symbol->name());
     assert(it != m_symbols.end());
     it->second.release();
 
     m_symbols.erase(it);
     symbol->set_name(new_name);
-    insert(diagnostics, symbol->node(), std::unique_ptr<Symbol>(symbol));
+    insert(reporter, symbol->node(), std::unique_ptr<Symbol>(symbol));
 }
 
 unsigned long Namespace::size() const {
